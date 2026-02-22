@@ -84,7 +84,7 @@ const MonSprite = (() => {
 
 // ── Companion idle animation ───────────────────────────────
 const CompanionCanvas = (() => {
-  const CANVAS_SIZE = 160; // logical px (canvas element attribute)
+  const CANVAS_SIZE = 200; // logical px (canvas element attribute)
 
   // Placeholder sprite definition — replace with real sprite sheet later.
   // A simple pixel creature: colored body block + two eyes + blush marks.

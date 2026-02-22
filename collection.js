@@ -66,6 +66,9 @@ const Collection = (() => {
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);
       localStorage.setItem('pm_caught', JSON.stringify(list));
+      const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
+      localStorage.setItem('pm_total_catches', prev + 1);
+      if (typeof renderStats === 'function') renderStats();
       return;
     }
 
@@ -76,6 +79,10 @@ const Collection = (() => {
       tx.oncomplete = resolve;
       tx.onerror    = () => reject(tx.error);
     });
+
+    const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
+    localStorage.setItem('pm_total_catches', prev + 1);
+    if (typeof renderStats === 'function') renderStats();
 
     // Refresh grid immediately if collection screen is visible
     if (document.getElementById('screen-collection')?.classList.contains('active')) {

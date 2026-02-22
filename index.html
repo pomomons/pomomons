@@ -4,29 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PomoMons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
-    <span class="app-title">PomoMons</span>
-    <div class="player-info">
-      <span class="player-level">LVL <span id="player-level">1</span></span>
-      <div class="exp-bar-wrap" title="EXP">
-        <div class="exp-bar" id="exp-bar" style="width: 0%"></div>
-      </div>
+    <div class="logo">
+      <span class="logo-icon">🍅</span><span class="logo-pomo">POMODORO</span><span class="logo-mons">MONSTERS</span>
     </div>
+    <p class="tagline">focus · catch · collect</p>
   </header>
 
   <!-- ── Timer Screen ───────────────────────────────────── -->
   <main id="screen-timer" class="screen active">
 
-    <!-- Companion canvas -->
-    <section class="companion-area">
-      <canvas id="companion-canvas" width="160" height="160" aria-label="Your Pomomon companion"></canvas>
+    <!-- Companion (no box) -->
+    <div class="companion-area">
+      <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
-    </section>
+      <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
+    </div>
 
     <!-- Session type tabs -->
     <div class="session-tabs" role="tablist">
@@ -35,35 +36,35 @@
       <button class="tab" id="tab-long" role="tab" aria-selected="false" data-mode="long">Long Break</button>
     </div>
 
-    <!-- Timer display -->
-    <section class="timer-display" aria-live="polite">
-      <span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span>
-    </section>
+    <!-- Timer row with inline adjust arrows -->
+    <div class="timer-row">
+      <section class="timer-display" aria-live="polite">
+        <span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span>
+      </section>
+      <div class="time-adjust">
+        <button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button>
+        <button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button>
+      </div>
+    </div>
 
     <!-- Timer controls -->
     <div class="timer-controls">
       <button class="btn btn-primary" id="btn-start-pause">Start</button>
-      <button class="btn btn-ghost" id="btn-reset">Reset</button>
+      <button class="btn btn-ghost"   id="btn-reset">Reset</button>
     </div>
 
-    <!-- Session counter -->
-    <div class="session-dots" id="session-dots" aria-label="Sessions completed today">
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-    </div>
+    <button class="btn btn-collection" id="btn-go-collection">📖 Collection</button>
 
   </main>
 
   <!-- ── Collection Screen ──────────────────────────────── -->
   <main id="screen-collection" class="screen">
     <div class="collection-header">
+      <button class="btn btn-ghost btn-sm" id="btn-back">← Back</button>
       <h2 class="screen-title">Collection</h2>
-      <span class="collection-count" id="collection-count">0 / 50</span>
+      <span class="collection-count" id="collection-count">0 / 15</span>
     </div>
     <div class="collection-grid" id="collection-grid">
-      <!-- Cards injected by collection.js -->
       <p class="empty-state">Complete a focus session to encounter your first Pomomon!</p>
     </div>
   </main>
@@ -91,17 +92,34 @@
     </div>
   </div>
 
-  <!-- ── Bottom Nav ─────────────────────────────────────── -->
-  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn active" data-screen="timer" aria-label="Timer">
-      <span class="nav-icon">🍅</span>
-      <span class="nav-label">Timer</span>
-    </button>
-    <button class="nav-btn" data-screen="collection" aria-label="Collection">
-      <span class="nav-icon">📖</span>
-      <span class="nav-label">Collection</span>
-    </button>
-  </nav>
+  <!-- ── Stats Strip ────────────────────────────────────── -->
+  <footer class="stats-strip">
+    <!-- Row 1: level badge + XP numbers -->
+    <div class="stats-top">
+      <span class="level-badge">LV. <span id="player-level">1</span></span>
+      <span class="xp-text"><span id="xp-current">0</span> / <span id="xp-max">100</span> XP</span>
+    </div>
+    <!-- Row 2: full-width bar; stats appear in the unfilled right portion -->
+    <div class="stats-bottom">
+      <div class="exp-bar-wrap">
+        <div class="exp-bar" id="exp-bar" style="width:0%"></div>
+      </div>
+      <div class="stats-inline">
+        <div class="stat-item">
+          <span class="stat-val" id="stat-sessions">0</span>
+          <span class="stat-label">sessions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" id="stat-minutes">0m</span>
+          <span class="stat-label">minutes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" id="stat-catches">0</span>
+          <span class="stat-label">catches</span>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="monsters.js"></script>
   <script src="game.js"></script>

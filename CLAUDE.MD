@@ -31,4 +31,4 @@ appears. Players throw a tomato to catch it and build a collection.
 ## Key Rules
 - No external libraries unless explicitly approved
 - All Canvas drawing lives in game.js only
-- Mobile-first responsive layout
+- Desktop-first web layout — no max-width cap on body; stats strip spans full viewport width; main content column uses max-width: 680px centred
