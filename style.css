@@ -319,6 +319,28 @@ body {
   box-shadow: 2px 2px 0 #d4ac0d, 0 0 8px rgba(241,196,15,.45);
 }
 
+.mon-card-rarity {
+  font-size: .45rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gray-3);
+}
+.mon-card-rarity.uncommon { color: var(--blue); }
+.mon-card-rarity.rare     { color: var(--purple); }
+
+.mon-card.active-companion {
+  border-color: var(--green);
+  box-shadow: 2px 2px 0 var(--green-dk), 0 0 8px rgba(39,174,96,.4);
+}
+
+.mon-card-active-indicator {
+  position: absolute;
+  top: 4px; left: 6px;
+  font-size: .55rem;
+  color: var(--green);
+  line-height: 1;
+}
+
 .mon-card canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;

@@ -9,12 +9,24 @@ const MONS = [
   { id: 4, name: 'Mushamoo',   color: '#bdc3c7', accent: '#7f8c8d', rarity: 'common',   catchRate: 0.62 },
 
   // ── Uncommon (spawn weight 30%) ───────────────────────────
-  { id: 5, name: 'Lavandew',   color: '#8e44ad', accent: '#6c3483', rarity: 'uncommon', catchRate: 0.42 },
-  { id: 6, name: 'Frostee',    color: '#2980b9', accent: '#1a5276', rarity: 'uncommon', catchRate: 0.38 },
+  { id: 5,  name: 'Lavandew',  color: '#8e44ad', accent: '#6c3483', rarity: 'uncommon', catchRate: 0.42 },
+  { id: 6,  name: 'Frostee',   color: '#2980b9', accent: '#1a5276', rarity: 'uncommon', catchRate: 0.38 },
 
   // ── Rare (spawn weight 10%) ───────────────────────────────
-  { id: 7, name: 'Goldleaf',   color: '#f1c40f', accent: '#d4ac0d', rarity: 'rare',     catchRate: 0.22 },
-  { id: 8, name: 'Darkoji',    color: '#2c2c2c', accent: '#111',    rarity: 'rare',     catchRate: 0.18 },
+  { id: 7,  name: 'Goldleaf',  color: '#f1c40f', accent: '#d4ac0d', rarity: 'rare',     catchRate: 0.22 },
+  { id: 8,  name: 'Darkoji',   color: '#2c2c2c', accent: '#111',    rarity: 'rare',     catchRate: 0.18 },
+
+  // ── Feature 4 additions ───────────────────────────────────
+  // Common
+  { id: 9,  name: 'Pepperino', color: '#e67e22', accent: '#ca6f1e', rarity: 'common',   catchRate: 0.70 },
+  { id: 10, name: 'Lemonchi',  color: '#f7dc6f', accent: '#d4ac0d', rarity: 'common',   catchRate: 0.67 },
+  { id: 11, name: 'Cornie',    color: '#f0b429', accent: '#c8960c', rarity: 'common',   catchRate: 0.64 },
+  { id: 12, name: 'Berryblu',  color: '#5499c7', accent: '#2471a3', rarity: 'common',   catchRate: 0.61 },
+  // Uncommon
+  { id: 13, name: 'Grapechu',  color: '#7d3c98', accent: '#512e5f', rarity: 'uncommon', catchRate: 0.45 },
+  { id: 14, name: 'Cocobun',   color: '#795548', accent: '#4e342e', rarity: 'uncommon', catchRate: 0.40 },
+  // Rare
+  { id: 15, name: 'Mintail',   color: '#1abc9c', accent: '#148f77', rarity: 'rare',     catchRate: 0.20 },
 ];
 
 // Spawn weight per rarity tier

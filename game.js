@@ -225,6 +225,12 @@ const CompanionCanvas = (() => {
   }
 
   // ── public API ─────────────────────────────────────────
+  // Re-skin the companion with a caught mon's colours (called by collection.js).
+  function setMon(mon) {
+    SPRITE.bodyColor  = mon.color;
+    SPRITE.blushColor = mon.color + '99';
+  }
+
   function init(canvasEl) {
     canvas = canvasEl;
     ctx    = canvas.getContext('2d');
@@ -249,7 +255,7 @@ const CompanionCanvas = (() => {
     if (rafId) cancelAnimationFrame(rafId);
   }
 
-  return { init, stop };
+  return { init, stop, setMon };
 })();
 
 // ── Encounter screen ───────────────────────────────────────

@@ -94,13 +94,30 @@ const Collection = (() => {
     });
   }
 
+  // ── Internal: setActiveCompanion ────────────────────────────
+  function setActiveCompanion(mon) {
+    localStorage.setItem('pm_active', mon.id);
+    document.getElementById('companion-name').textContent = mon.name;
+    CompanionCanvas.setMon(mon);
+    render();
+  }
+
   // ── Internal: buildCard ──────────────────────────────────────
   // catchData: null (unseen) | { count, hasShiny }
-  function buildCard(mon, catchData) {
+  function buildCard(mon, catchData, activeId) {
     const card = document.createElement('div');
     card.className = 'mon-card';
-    if (!catchData)        card.classList.add('unseen');
+    if (!catchData)          card.classList.add('unseen');
     if (catchData?.hasShiny) card.classList.add('shiny');
+    if (catchData && mon.id === activeId) card.classList.add('active-companion');
+
+    // Active indicator star
+    if (catchData && mon.id === activeId) {
+      const star = document.createElement('span');
+      star.className   = 'mon-card-active-indicator';
+      star.textContent = '\u2605';
+      card.appendChild(star);
+    }
 
     // Canvas thumbnail
     const canvas  = document.createElement('canvas');
@@ -115,12 +132,25 @@ const Collection = (() => {
     nameEl.textContent = catchData ? mon.name : '???';
     card.appendChild(nameEl);
 
+    // Rarity label (caught mons only)
+    if (catchData) {
+      const rarityEl = document.createElement('p');
+      rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
+      rarityEl.textContent = mon.rarity.toUpperCase();
+      card.appendChild(rarityEl);
+    }
+
     // Count badge (only when caught more than once)
     if (catchData?.count > 1) {
       const badge = document.createElement('span');
       badge.className   = 'mon-card-count';
       badge.textContent = `\u00d7${catchData.count}`;
       card.appendChild(badge);
+    }
+
+    // Click to set as active companion
+    if (catchData) {
+      card.addEventListener('click', () => setActiveCompanion(mon));
     }
 
     return card;
@@ -166,10 +196,12 @@ const Collection = (() => {
       return;
     }
 
+    const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+
     grid.innerHTML = '';
     const fragment = document.createDocumentFragment();
     for (const mon of MONS) {
-      fragment.appendChild(buildCard(mon, caughtMap.get(mon.id) || null));
+      fragment.appendChild(buildCard(mon, caughtMap.get(mon.id) || null, activeId));
     }
     grid.appendChild(fragment);
   }

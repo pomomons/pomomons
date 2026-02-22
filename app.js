@@ -158,6 +158,16 @@ function showLevelUpBanner(level) {
 // ── Boot ──────────────────────────────────────────────────
 loadPlayerState();
 Collection.init();   // opens IndexedDB; async, non-blocking
+
+// Restore active companion from previous session
+const _activeId  = parseInt(localStorage.getItem('pm_active') || '0', 10);
+const _activeMon = _activeId && typeof MONS !== 'undefined'
+  ? MONS.find(m => m.id === _activeId) : null;
+if (_activeMon) {
+  CompanionCanvas.setMon(_activeMon);
+  document.getElementById('companion-name').textContent = _activeMon.name;
+}
+
 renderTime();
 renderDots();
 // Colon starts paused; only blinks while timer is running
