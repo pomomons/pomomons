@@ -32,3 +32,6 @@ appears. Players throw a tomato to catch it and build a collection.
 - No external libraries unless explicitly approved
 - All Canvas drawing lives in game.js only
 - Desktop-first web layout — no max-width cap on body; stats strip spans full viewport width; main content column uses max-width: 680px centred
+
+## Workflow Rules
+- After completing each set of edits and you are ready for the user's next instructions, run the following via Bash to play an audible notification: `powershell -c "[console]::beep(900,200); Start-Sleep -Milliseconds 80; [console]::beep(1200,300)"`

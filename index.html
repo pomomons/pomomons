@@ -16,7 +16,7 @@
     <div class="logo">
       <span class="logo-icon">🍅</span><span class="logo-pomo">POMODORO</span><span class="logo-mons">MONSTERS</span>
     </div>
-    <p class="tagline">focus · catch · collect</p>
+    <p class="tagline">FOCUS · CATCH · COLLECT</p>
   </header>
 
   <!-- ── Timer Screen ───────────────────────────────────── -->
@@ -31,9 +31,9 @@
 
     <!-- Session type tabs -->
     <div class="session-tabs" role="tablist">
-      <button class="tab active" id="tab-focus" role="tab" aria-selected="true" data-mode="focus">Focus</button>
-      <button class="tab" id="tab-short" role="tab" aria-selected="false" data-mode="short">Short Break</button>
-      <button class="tab" id="tab-long" role="tab" aria-selected="false" data-mode="long">Long Break</button>
+      <button class="tab active" id="tab-focus" role="tab" aria-selected="true" data-mode="focus">FOCUS</button>
+      <button class="tab" id="tab-short" role="tab" aria-selected="false" data-mode="short">SHORT BREAK</button>
+      <button class="tab" id="tab-long" role="tab" aria-selected="false" data-mode="long">LONG BREAK</button>
     </div>
 
     <!-- Timer row with inline adjust arrows -->
@@ -49,30 +49,31 @@
 
     <!-- Timer controls -->
     <div class="timer-controls">
-      <button class="btn btn-primary" id="btn-start-pause">Start</button>
-      <button class="btn btn-ghost"   id="btn-reset">Reset</button>
+      <button class="btn btn-timer-start" id="btn-start">START</button>
+      <button class="btn btn-timer-pause" id="btn-pause" disabled>PAUSE</button>
+      <button class="btn btn-timer-dark"  id="btn-reset" disabled>RESET</button>
     </div>
 
-    <button class="btn btn-collection" id="btn-go-collection">📖 Collection</button>
+    <button class="btn btn-collection" id="btn-go-collection">📖 COLLECTION</button>
 
   </main>
 
   <!-- ── Collection Screen ──────────────────────────────── -->
   <main id="screen-collection" class="screen">
     <div class="collection-header">
-      <button class="btn btn-ghost btn-sm" id="btn-back">← Back</button>
-      <h2 class="screen-title">Collection</h2>
+      <button class="btn btn-ghost btn-sm" id="btn-back">← BACK</button>
+      <h2 class="screen-title">COLLECTION</h2>
       <span class="collection-count" id="collection-count">0 / 15</span>
     </div>
     <div class="collection-grid" id="collection-grid">
-      <p class="empty-state">Complete a focus session to encounter your first Pomomon!</p>
+      <p class="empty-state">COMPLETE A FOCUS SESSION TO ENCOUNTER YOUR FIRST POMOMON!</p>
     </div>
   </main>
 
   <!-- ── Encounter Overlay ─────────────────────────────── -->
   <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
-    <p class="encounter-rarity" id="encounter-rarity">Common</p>
-    <h2 class="encounter-msg" id="encounter-msg">A wild ??? appeared!</h2>
+    <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
+    <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
 
     <canvas id="encounter-canvas" width="200" height="200" aria-label="Wild Pomomon"></canvas>
 
@@ -87,8 +88,8 @@
     <p class="encounter-sub" id="encounter-sub"></p>
 
     <div class="encounter-controls" id="encounter-controls">
-      <button class="btn btn-primary" id="btn-throw">Throw! 🍅</button>
-      <button class="btn btn-ghost"  id="btn-flee">Flee</button>
+      <button class="btn btn-primary" id="btn-throw">THROW! 🍅</button>
+      <button class="btn btn-ghost"  id="btn-flee">FLEE</button>
     </div>
   </div>
 
@@ -107,15 +108,15 @@
       <div class="stats-inline">
         <div class="stat-item">
           <span class="stat-val" id="stat-sessions">0</span>
-          <span class="stat-label">sessions</span>
+          <span class="stat-label">SESSIONS</span>
         </div>
         <div class="stat-item">
           <span class="stat-val" id="stat-minutes">0m</span>
-          <span class="stat-label">minutes</span>
+          <span class="stat-label">MINUTES</span>
         </div>
         <div class="stat-item">
           <span class="stat-val" id="stat-catches">0</span>
-          <span class="stat-label">catches</span>
+          <span class="stat-label">CATCHES</span>
         </div>
       </div>
     </div>

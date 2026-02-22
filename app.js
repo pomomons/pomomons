@@ -28,7 +28,8 @@ let sessionsToday = 0;
 const elMinutes = document.getElementById('timer-minutes');
 const elSeconds = document.getElementById('timer-seconds');
 const elColon   = document.querySelector('.timer-colon');
-const btnStart  = document.getElementById('btn-start-pause');
+const btnStart  = document.getElementById('btn-start');
+const btnPause  = document.getElementById('btn-pause');
 const btnReset  = document.getElementById('btn-reset');
 const dots      = document.querySelectorAll('.session-dots .dot');
 
@@ -59,12 +60,18 @@ function renderStats() {
   if (el('stat-catches'))  el('stat-catches').textContent  = catches;
 }
 
+function updateButtonStates() {
+  const isIdle = !running && timeLeft === MODES[currentMode];
+  btnStart.disabled = running;
+  btnPause.disabled = !running;
+  btnReset.disabled = isIdle;
+}
+
 function setMode(mode) {
   currentMode = mode;
   timeLeft    = MODES[mode];
   running     = false;
   clearInterval(intervalId);
-  btnStart.textContent = 'Start';
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   document.body.dataset.mode = mode;
@@ -74,41 +81,53 @@ function setMode(mode) {
   });
   updateBackground();
   renderTime();
+  updateButtonStates();
 }
 
-function startPause() {
-  if (running) {
-    // Pause
-    running = false;
-    clearInterval(intervalId);
-    btnStart.textContent = 'Resume';
-    elColon.style.animationPlayState = 'paused';
-    elColon.style.opacity = '1';
+function startTimer() {
+  if (running) return;
+  running = true;
+  SFX.play('start');
+  elColon.style.animationPlayState = 'running';
+  updateBackground();
+  updateButtonStates();
+  intervalId = setInterval(() => {
+    timeLeft--;
     renderTime();
-    updateBackground();
-  } else {
-    // Start / Resume
-    running = true;
-    SFX.play('start');
-    btnStart.textContent = 'Pause';
-    elColon.style.animationPlayState = 'running';
-    updateBackground();
-    intervalId = setInterval(() => {
-      timeLeft--;
-      renderTime();
-      if (timeLeft <= 0) onSessionEnd();
-    }, 1000);
-  }
+    if (timeLeft <= 0) onSessionEnd();
+  }, 1000);
+}
+
+function pauseTimer() {
+  if (!running) return;
+  running = false;
+  clearInterval(intervalId);
+  elColon.style.animationPlayState = 'paused';
+  elColon.style.opacity = '1';
+  renderTime();
+  updateBackground();
+  updateButtonStates();
+}
+
+function resetTimer() {
+  clearInterval(intervalId);
+  running = false;
+  timeLeft = MODES[currentMode];
+  elColon.style.animationPlayState = 'paused';
+  elColon.style.opacity = '1';
+  updateBackground();
+  renderTime();
+  updateButtonStates();
 }
 
 function onSessionEnd() {
   clearInterval(intervalId);
   running = false;
   SFX.play('sessionEnd');
-  btnStart.textContent = 'Start';
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   updateBackground();
+  updateButtonStates();
 
   if (currentMode === 'focus') {
     sessionsToday++;
@@ -136,8 +155,9 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ── Controls ──────────────────────────────────────────────
-btnStart.addEventListener('click', startPause);
-btnReset.addEventListener('click', () => setMode(currentMode));
+btnStart.addEventListener('click', startTimer);
+btnPause.addEventListener('click', pauseTimer);
+btnReset.addEventListener('click', resetTimer);
 
 // ── Player state (localStorage) ───────────────────────────
 function expThreshold(level) {
@@ -181,7 +201,7 @@ function showLevelUpBanner(level) {
   SFX.play('levelUp');
   const banner = document.createElement('div');
   banner.className   = 'level-up-banner';
-  banner.textContent = `Level up! LVL ${level}`;
+  banner.textContent = `LEVEL UP! LVL ${level}`;
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 2200);
 }
@@ -223,6 +243,7 @@ if (_activeMon) {
 renderTime();
 renderDots();
 updateBackground();
+updateButtonStates();
 elColon.style.animationPlayState = 'paused';
 elColon.style.opacity = '1';
 CompanionCanvas.init(document.getElementById('companion-canvas'));

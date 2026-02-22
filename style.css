@@ -243,6 +243,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .timer-controls {
   display: flex;
   gap: 12px;
+  width: 100%;
 }
 
 /* ── Buttons ─────────────────────────────────────────────── */
@@ -259,7 +260,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .btn:active {
   transform: translateY(4px);
-  box-shadow: 0 2px 0 rgba(0,0,0,.3) !important;
+  box-shadow: 0 2px 0 rgba(0,0,0,.3);
 }
 
 .btn-sm {
@@ -318,6 +319,61 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .btn-collection:active {
   transform: translateY(4px);
   box-shadow: 0 1px 0 var(--gold-dk) !important;
+}
+
+/* ── Timer action buttons ────────────────────────────────── */
+.btn-timer-start {
+  flex: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #e4e4e4 100%);
+  color: #1a1a2e;
+  border-bottom: 5px solid #b0b0b0;
+  box-shadow: none;
+}
+
+.btn-timer-start:hover:not(:disabled) {
+  filter: brightness(.95);
+  transform: translateY(-1px);
+}
+
+.btn-timer-start:active:not(:disabled) {
+  transform: translateY(5px);
+  border-bottom-width: 0;
+  box-shadow: none;
+}
+
+.btn-timer-start:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-timer-pause,
+.btn-timer-dark {
+  flex: 1;
+  background: linear-gradient(180deg, #3d3a5c 0%, #1e1b30 100%);
+  color: #fff;
+  border-bottom: 5px solid #0c0a18;
+  box-shadow: none;
+}
+
+.btn-timer-pause:hover:not(:disabled),
+.btn-timer-dark:hover:not(:disabled) {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+.btn-timer-pause:active:not(:disabled),
+.btn-timer-dark:active:not(:disabled) {
+  transform: translateY(5px);
+  border-bottom-width: 0;
+  box-shadow: none;
+}
+
+.btn-timer-pause:disabled,
+.btn-timer-dark:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ── Collection Screen ───────────────────────────────────── */
@@ -480,44 +536,38 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   letter-spacing: .05em;
 }
 
-/* Bottom row: EXP bar (left) + stats float in the empty portion (right) */
+/* Bottom row: pill bar + stats inline */
 .stats-bottom {
   flex: 1;
-  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 14px 6px;
+  gap: 12px;
 }
 
-/* Bar container is edge-to-edge */
+/* Pill track — rounded oval container */
 .exp-bar-wrap {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,.1);
+  flex: 1;
+  height: 14px;
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
   overflow: hidden;
 }
 
-/* Yellow fill — capped so it never covers the stats */
+/* Yellow fill */
 .exp-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  max-width: calc(100% - 152px);
+  height: 100%;
   background: var(--gold);
-  border-radius: 0 6px 6px 0;
-  box-shadow: 2px 0 12px rgba(255,214,0,.4);
+  border-radius: 999px;
   transition: width .4s ease;
 }
 
-/* Stats sit in the right portion of the bar row */
+/* Stats sit to the right of the pill */
 .stats-inline {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 152px;
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 0 6px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .stat-item {

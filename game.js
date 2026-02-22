@@ -394,12 +394,12 @@ const EncounterScreen = (() => {
   function showResult(caught) {
     if (caught) {
       SFX.play('catch');
-      elSub.textContent = `${st.mon.name} was caught!${st.mon.shiny ? ' ✨ Shiny!' : ''}`;
+      elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
       elSub.style.color = 'var(--green)';
       saveCaught();
       if (typeof saveExp === 'function') saveExp(25);
     } else {
-      elSub.textContent = `${st.mon.name} fled away!`;
+      elSub.textContent = `${st.mon.name} FLED AWAY!`;
       elSub.style.color = 'var(--red)';
       if (typeof saveExp === 'function') saveExp(5);
     }
@@ -465,10 +465,10 @@ const EncounterScreen = (() => {
     st.caught   = false;
 
     // Populate UI
-    elMsg.textContent = `A wild ${mon.name} appeared!`;
+    elMsg.textContent = `A WILD ${mon.name} APPEARED!`;
     elSub.textContent = '';
     elSub.style.color = '';
-    elRarity.textContent = mon.rarity.charAt(0).toUpperCase() + mon.rarity.slice(1);
+    elRarity.textContent = mon.rarity.toUpperCase();
     elRarity.className   = `encounter-rarity ${mon.rarity}`;
     updateCatchDots(mon.catchRate);
     enableButtons(false); // disabled until 'idle' phase
@@ -493,7 +493,7 @@ const EncounterScreen = (() => {
   function flee() {
     if (st.phase !== 'idle') return;
     if (typeof saveExp === 'function') saveExp(5);
-    elSub.textContent = 'You fled safely.';
+    elSub.textContent = 'YOU FLED SAFELY.';
     close();
   }
 
