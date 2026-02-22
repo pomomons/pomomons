@@ -7,8 +7,106 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>PomoMons 🍅</h1>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="app-header">
+    <span class="app-title">PomoMons</span>
+    <div class="player-info">
+      <span class="player-level">LVL <span id="player-level">1</span></span>
+      <div class="exp-bar-wrap" title="EXP">
+        <div class="exp-bar" id="exp-bar" style="width: 0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Timer Screen ───────────────────────────────────── -->
+  <main id="screen-timer" class="screen active">
+
+    <!-- Companion canvas -->
+    <section class="companion-area">
+      <canvas id="companion-canvas" width="160" height="160" aria-label="Your Pomomon companion"></canvas>
+      <p class="companion-name" id="companion-name">???</p>
+    </section>
+
+    <!-- Session type tabs -->
+    <div class="session-tabs" role="tablist">
+      <button class="tab active" id="tab-focus" role="tab" aria-selected="true" data-mode="focus">Focus</button>
+      <button class="tab" id="tab-short" role="tab" aria-selected="false" data-mode="short">Short Break</button>
+      <button class="tab" id="tab-long" role="tab" aria-selected="false" data-mode="long">Long Break</button>
+    </div>
+
+    <!-- Timer display -->
+    <section class="timer-display" aria-live="polite">
+      <span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span>
+    </section>
+
+    <!-- Timer controls -->
+    <div class="timer-controls">
+      <button class="btn btn-primary" id="btn-start-pause">Start</button>
+      <button class="btn btn-ghost" id="btn-reset">Reset</button>
+    </div>
+
+    <!-- Session counter -->
+    <div class="session-dots" id="session-dots" aria-label="Sessions completed today">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+  </main>
+
+  <!-- ── Collection Screen ──────────────────────────────── -->
+  <main id="screen-collection" class="screen">
+    <div class="collection-header">
+      <h2 class="screen-title">Collection</h2>
+      <span class="collection-count" id="collection-count">0 / 50</span>
+    </div>
+    <div class="collection-grid" id="collection-grid">
+      <!-- Cards injected by collection.js -->
+      <p class="empty-state">Complete a focus session to encounter your first Pomomon!</p>
+    </div>
+  </main>
+
+  <!-- ── Encounter Overlay ─────────────────────────────── -->
+  <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
+    <p class="encounter-rarity" id="encounter-rarity">Common</p>
+    <h2 class="encounter-msg" id="encounter-msg">A wild ??? appeared!</h2>
+
+    <canvas id="encounter-canvas" width="200" height="200" aria-label="Wild Pomomon"></canvas>
+
+    <div class="catch-dots" id="catch-dots" aria-label="Approximate catch difficulty">
+      <span class="cdot filled"></span>
+      <span class="cdot filled"></span>
+      <span class="cdot filled"></span>
+      <span class="cdot"></span>
+      <span class="cdot"></span>
+    </div>
+
+    <p class="encounter-sub" id="encounter-sub"></p>
+
+    <div class="encounter-controls" id="encounter-controls">
+      <button class="btn btn-primary" id="btn-throw">Throw! 🍅</button>
+      <button class="btn btn-ghost"  id="btn-flee">Flee</button>
+    </div>
+  </div>
+
+  <!-- ── Bottom Nav ─────────────────────────────────────── -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <button class="nav-btn active" data-screen="timer" aria-label="Timer">
+      <span class="nav-icon">🍅</span>
+      <span class="nav-label">Timer</span>
+    </button>
+    <button class="nav-btn" data-screen="collection" aria-label="Collection">
+      <span class="nav-icon">📖</span>
+      <span class="nav-label">Collection</span>
+    </button>
+  </nav>
+
+  <script src="monsters.js"></script>
+  <script src="game.js"></script>
+  <script src="collection.js"></script>
+  <script src="audio.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
-
