@@ -96,6 +96,7 @@ const Collection = (() => {
 
   // ── Internal: setActiveCompanion ────────────────────────────
   function setActiveCompanion(mon) {
+    SFX.play('select');
     localStorage.setItem('pm_active', mon.id);
     document.getElementById('companion-name').textContent = mon.name;
     CompanionCanvas.setMon(mon);

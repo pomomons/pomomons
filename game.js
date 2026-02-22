@@ -393,6 +393,7 @@ const EncounterScreen = (() => {
 
   function showResult(caught) {
     if (caught) {
+      SFX.play('catch');
       elSub.textContent = `${st.mon.name} was caught!${st.mon.shiny ? ' ✨ Shiny!' : ''}`;
       elSub.style.color = 'var(--green)';
       saveCaught();
@@ -474,6 +475,7 @@ const EncounterScreen = (() => {
 
     // Show overlay
     overlay.classList.add('active');
+    SFX.play('encounter');
 
     // Kick off rAF
     if (rafId) cancelAnimationFrame(rafId);
@@ -482,6 +484,7 @@ const EncounterScreen = (() => {
 
   function throw_() {
     if (st.phase !== 'idle') return;
+    SFX.play('throw');
     enableButtons(false);
     st.phase = 'throwing';
     st.frame = 0;

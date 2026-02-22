@@ -72,6 +72,7 @@ function startPause() {
   } else {
     // Start / Resume
     running = true;
+    SFX.play('start');
     btnStart.textContent = 'Pause';
     elColon.style.animationPlayState = 'running';
     intervalId = setInterval(() => {
@@ -85,6 +86,7 @@ function startPause() {
 function onSessionEnd() {
   clearInterval(intervalId);
   running = false;
+  SFX.play('sessionEnd');
   btnStart.textContent = 'Start';
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
@@ -148,6 +150,7 @@ function saveExp(delta) {
 }
 
 function showLevelUpBanner(level) {
+  SFX.play('levelUp');
   const banner = document.createElement('div');
   banner.className   = 'level-up-banner';
   banner.textContent = `Level up! LVL ${level}`;
