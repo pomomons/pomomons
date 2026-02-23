@@ -13,6 +13,7 @@
 
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
+    <button class="btn-audio" id="btn-audio" aria-label="Toggle sound">🔊</button>
     <div class="logo">
       <span class="logo-icon">🍅</span><span class="logo-pomo">POMODORO</span><span class="logo-mons">MONSTERS</span>
     </div>
@@ -24,16 +25,10 @@
 
     <!-- Companion (no box) -->
     <div class="companion-area">
+      <button class="btn-dex" id="btn-go-dex">DEX</button>
       <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
       <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
-    </div>
-
-    <!-- Session type tabs -->
-    <div class="session-tabs" role="tablist">
-      <button class="tab active" id="tab-focus" role="tab" aria-selected="true" data-mode="focus">FOCUS</button>
-      <button class="tab" id="tab-short" role="tab" aria-selected="false" data-mode="short">SHORT BREAK</button>
-      <button class="tab" id="tab-long" role="tab" aria-selected="false" data-mode="long">LONG BREAK</button>
     </div>
 
     <!-- Timer row with inline adjust arrows -->
@@ -47,27 +42,48 @@
       </div>
     </div>
 
-    <!-- Timer controls -->
-    <div class="timer-controls">
-      <button class="btn btn-timer-start" id="btn-start">START</button>
-      <button class="btn btn-timer-pause" id="btn-pause" disabled>PAUSE</button>
-      <button class="btn btn-timer-dark"  id="btn-reset" disabled>RESET</button>
+    <!-- Timer controls + collection grouped tightly -->
+    <div class="controls-group">
+      <div class="timer-controls">
+        <button class="btn btn-timer-start" id="btn-start">▶ START</button>
+        <div class="btn-mode-wrap" id="btn-mode-wrap">
+          <button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button>
+          <div class="mode-dropdown" id="mode-dropdown" hidden>
+            <button class="mode-option active" data-mode="focus">FOCUS</button>
+            <button class="mode-option" data-mode="short">SHORT BREAK</button>
+            <button class="mode-option" data-mode="long">LONG BREAK</button>
+          </div>
+        </div>
+        <button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button>
+      </div>
+      <div class="collection-btns">
+        <button class="btn btn-collection" id="btn-go-mymons">🗂 MY MONS</button>
+        <button class="btn btn-collection btn-collection-items" id="btn-go-items">🎒 ITEMS</button>
+      </div>
     </div>
-
-    <button class="btn btn-collection" id="btn-go-collection">📖 COLLECTION</button>
 
   </main>
 
-  <!-- ── Collection Screen ──────────────────────────────── -->
-  <main id="screen-collection" class="screen">
+  <!-- ── My Mons Screen ────────────────────────────────── -->
+  <main id="screen-mymons" class="screen">
     <div class="collection-header">
-      <button class="btn btn-ghost btn-sm" id="btn-back">← BACK</button>
-      <h2 class="screen-title">COLLECTION</h2>
-      <span class="collection-count" id="collection-count">0 / 15</span>
+      <button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button>
+      <h2 class="screen-title">MY MONS</h2>
+      <span class="collection-count" id="mymons-count">0</span>
     </div>
-    <div class="collection-grid" id="collection-grid">
-      <p class="empty-state">COMPLETE A FOCUS SESSION TO ENCOUNTER YOUR FIRST POMOMON!</p>
+    <div class="collection-grid" id="mymons-grid">
+      <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
     </div>
+  </main>
+
+  <!-- ── Dex Screen ─────────────────────────────────────── -->
+  <main id="screen-dex" class="screen">
+    <div class="collection-header">
+      <button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button>
+      <h2 class="screen-title">POMODEX</h2>
+      <span class="collection-count" id="dex-count">0 / 15</span>
+    </div>
+    <div class="collection-grid" id="dex-grid"></div>
   </main>
 
   <!-- ── Encounter Overlay ─────────────────────────────── -->

@@ -5,7 +5,8 @@ const screens = document.querySelectorAll('.screen');
 
 function showScreen(name) {
   screens.forEach(s => s.classList.toggle('active', s.id === `screen-${name}`));
-  if (name === 'collection') Collection.render();
+  if (name === 'mymons') Collection.renderMyMons();
+  if (name === 'dex')    Collection.renderDex();
 }
 
 // ── Timer state ───────────────────────────────────────────
@@ -28,10 +29,13 @@ let sessionsToday = 0;
 const elMinutes = document.getElementById('timer-minutes');
 const elSeconds = document.getElementById('timer-seconds');
 const elColon   = document.querySelector('.timer-colon');
-const btnStart  = document.getElementById('btn-start');
-const btnPause  = document.getElementById('btn-pause');
-const btnReset  = document.getElementById('btn-reset');
-const dots      = document.querySelectorAll('.session-dots .dot');
+const btnStart     = document.getElementById('btn-start');
+const btnReset     = document.getElementById('btn-reset');
+const btnMode      = document.getElementById('btn-mode');
+const modeDropdown = document.getElementById('mode-dropdown');
+const dots         = document.querySelectorAll('.session-dots .dot');
+
+const MODE_LABELS = { focus: 'FOCUS', short: 'SHORT', long: 'LONG' };
 
 // ── Background state ──────────────────────────────────────
 // Only two visual states: red (running focus) or teal (everything else)
@@ -62,8 +66,9 @@ function renderStats() {
 
 function updateButtonStates() {
   const isIdle = !running && timeLeft === MODES[currentMode];
-  btnStart.disabled = running;
-  btnPause.disabled = !running;
+  btnStart.textContent = running ? '⏸ PAUSE' : '▶ START';
+  btnStart.classList.toggle('btn-timer-start', !running);
+  btnStart.classList.toggle('btn-timer-pause', running);
   btnReset.disabled = isIdle;
 }
 
@@ -75,9 +80,9 @@ function setMode(mode) {
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   document.body.dataset.mode = mode;
-  document.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.mode === mode);
-    t.setAttribute('aria-selected', t.dataset.mode === mode ? 'true' : 'false');
+  btnMode.textContent = `${MODE_LABELS[mode]} ▼`;
+  document.querySelectorAll('.mode-option').forEach(o => {
+    o.classList.toggle('active', o.dataset.mode === mode);
   });
   updateBackground();
   renderTime();
@@ -132,6 +137,8 @@ function onSessionEnd() {
   if (currentMode === 'focus') {
     sessionsToday++;
     renderDots();
+    // Every 4th session → long break; otherwise → short break
+    const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
     // Update persistent stats
     const prevSessions = parseInt(localStorage.getItem('pm_total_sessions') || '0', 10);
     const prevMinutes  = parseInt(localStorage.getItem('pm_total_minutes')  || '0', 10);
@@ -141,22 +148,33 @@ function onSessionEnd() {
     CompanionCanvas.stop();
     EncounterScreen.start(() => {
       CompanionCanvas.init(document.getElementById('companion-canvas'));
+      setMode(nextMode);
     });
+    return;
   }
 
-  // Auto-reset to current mode's full duration
+  // Break ended — reset to full break duration (user starts it manually)
   timeLeft = MODES[currentMode];
   renderTime();
 }
 
-// ── Mode tabs ─────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => setMode(tab.dataset.mode));
+// ── Mode dropdown ─────────────────────────────────────────
+btnMode.addEventListener('click', e => {
+  e.stopPropagation();
+  modeDropdown.hidden = !modeDropdown.hidden;
 });
 
+document.querySelectorAll('.mode-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    setMode(opt.dataset.mode);
+    modeDropdown.hidden = true;
+  });
+});
+
+document.addEventListener('click', () => { modeDropdown.hidden = true; });
+
 // ── Controls ──────────────────────────────────────────────
-btnStart.addEventListener('click', startTimer);
-btnPause.addEventListener('click', pauseTimer);
+btnStart.addEventListener('click', () => running ? pauseTimer() : startTimer());
 btnReset.addEventListener('click', resetTimer);
 
 // ── Player state (localStorage) ───────────────────────────
@@ -213,8 +231,17 @@ document.body.dataset.mode = currentMode;
 Collection.init();
 
 // Navigation
-document.getElementById('btn-go-collection').addEventListener('click', () => showScreen('collection'));
-document.getElementById('btn-back').addEventListener('click', () => showScreen('timer'));
+document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
+document.getElementById('btn-go-dex').addEventListener('click',    () => showScreen('dex'));
+document.getElementById('btn-back-mymons').addEventListener('click', () => showScreen('timer'));
+document.getElementById('btn-back-dex').addEventListener('click',    () => showScreen('timer'));
+
+// Audio toggle
+const btnAudio = document.getElementById('btn-audio');
+btnAudio.addEventListener('click', () => {
+  const muted = SFX.toggle();
+  btnAudio.textContent = muted ? '🔇' : '🔊';
+});
 
 // Time adjust
 document.getElementById('btn-time-minus').addEventListener('click', () => {

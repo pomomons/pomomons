@@ -91,11 +91,19 @@ const SFX = (() => {
   };
 
   // ── Public API ───────────────────────────────────────────────
+  let muted = false;
+
   function play(name) {
+    if (muted) return;
     try {
       if (sounds[name]) sounds[name]();
     } catch (_) { /* fail silently if Web Audio is unavailable */ }
   }
 
-  return { play };
+  function toggle() {
+    muted = !muted;
+    return muted;
+  }
+
+  return { play, toggle };
 })();

@@ -84,10 +84,9 @@ const Collection = (() => {
     localStorage.setItem('pm_total_catches', prev + 1);
     if (typeof renderStats === 'function') renderStats();
 
-    // Refresh grid immediately if collection screen is visible
-    if (document.getElementById('screen-collection')?.classList.contains('active')) {
-      render();
-    }
+    // Refresh grid immediately if a collection screen is visible
+    if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
+    if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
   }
 
   // ── Internal: getAllCaught ───────────────────────────────────
@@ -107,7 +106,8 @@ const Collection = (() => {
     localStorage.setItem('pm_active', mon.id);
     document.getElementById('companion-name').textContent = mon.name;
     CompanionCanvas.setMon(mon);
-    render();
+    if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
+    if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
   }
 
   // ── Internal: buildCard ──────────────────────────────────────
@@ -164,11 +164,11 @@ const Collection = (() => {
     return card;
   }
 
-  // ── Public: render ───────────────────────────────────────────
-  async function render() {
+  // ── Public: renderDex — one card per species ─────────────────
+  async function renderDex() {
     const TOTAL_MONS = typeof MONS !== 'undefined' ? MONS.length : 0;
-    const grid  = document.getElementById('collection-grid');
-    const count = document.getElementById('collection-count');
+    const grid  = document.getElementById('dex-grid');
+    const count = document.getElementById('dex-count');
 
     if (!db) {
       if (count) count.textContent = `0 / ${TOTAL_MONS}`;
@@ -200,8 +200,8 @@ const Collection = (() => {
     if (count) count.textContent = `${caughtMap.size} / ${TOTAL_MONS}`;
 
     if (caughtMap.size === 0) {
-      grid.innerHTML = '<p class="empty-state">Complete a focus session to encounter your first Pomomon!</p>';
-      return;
+      grid.innerHTML = '';
+      // Still render all mons as unseen
     }
 
     const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
@@ -214,5 +214,78 @@ const Collection = (() => {
     grid.appendChild(fragment);
   }
 
-  return { init, addCaught, render };
+  // ── Internal: buildIndividualCard — one record per catch ─────
+  function buildIndividualCard(mon, rec, activeId) {
+    const card = document.createElement('div');
+    card.className = 'mon-card';
+    if (rec.shiny)       card.classList.add('shiny');
+    if (mon.id === activeId) card.classList.add('active-companion');
+
+    if (mon.id === activeId) {
+      const star = document.createElement('span');
+      star.className   = 'mon-card-active-indicator';
+      star.textContent = '\u2605';
+      card.appendChild(star);
+    }
+
+    const canvas  = document.createElement('canvas');
+    canvas.width  = 64;
+    canvas.height = 64;
+    MonSprite.draw(canvas, mon, { scale: 0.8, shiny: rec.shiny || false });
+    card.appendChild(canvas);
+
+    const nameEl = document.createElement('p');
+    nameEl.className   = 'mon-card-name';
+    nameEl.textContent = mon.name;
+    card.appendChild(nameEl);
+
+    const rarityEl = document.createElement('p');
+    rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
+    rarityEl.textContent = mon.rarity.toUpperCase();
+    card.appendChild(rarityEl);
+
+    card.addEventListener('click', () => setActiveCompanion(mon));
+    return card;
+  }
+
+  // ── Public: renderMyMons — every individual caught record ─────
+  async function renderMyMons() {
+    const grid  = document.getElementById('mymons-grid');
+    const count = document.getElementById('mymons-count');
+
+    if (!db) {
+      if (count) count.textContent = '0';
+      if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable.</p>';
+      return;
+    }
+
+    let allCaught;
+    try {
+      allCaught = await getAllCaught();
+    } catch (err) {
+      if (grid) grid.innerHTML = '<p class="empty-state">Could not load mons.</p>';
+      return;
+    }
+
+    if (count) count.textContent = allCaught.length;
+
+    if (allCaught.length === 0) {
+      grid.innerHTML = '<p class="empty-state">Catch your first Pomomon to see it here!</p>';
+      return;
+    }
+
+    const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+    const sorted   = [...allCaught].sort((a, b) => (b.caughtAt || 0) - (a.caughtAt || 0));
+
+    grid.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    for (const rec of sorted) {
+      const mon = MONS.find(m => m.id === rec.id);
+      if (!mon) continue;
+      fragment.appendChild(buildIndividualCard(mon, rec, activeId));
+    }
+    grid.appendChild(fragment);
+  }
+
+  return { init, addCaught, renderDex, renderMyMons };
 })();

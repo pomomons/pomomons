@@ -1,7 +1,7 @@
 /* ── Design Tokens ───────────────────────────────────────── */
 :root {
   --font-pixel:  'Press Start 2P', 'Courier New', monospace;
-  --mode-bg:     #00cc80;   /* default = teal; overridden in run-focus */
+  --mode-bg:     #00a888;   /* default = teal; overridden in run-focus */
   --gold:        #ffd600;
   --gold-dk:     #b89500;
   --green:       #2ecc71;
@@ -11,21 +11,36 @@
   --text:        #ffffff;
   --text-dim:    rgba(255,255,255,.72);
   --text-muted:  rgba(255,255,255,.42);
-  --surface:     rgba(0,0,0,.25);
-  --border:      rgba(255,255,255,.28);
-  --stats-h:     74px;
+  --surface:     rgba(0,0,0,.32);
+  --border:      rgba(255,255,255,.35);
+  --stats-h:     82px;
+
+  /* Typography scale */
+  --text-xs:     .45rem;
+  --text-sm:     .55rem;
+  --text-base:   .72rem;
+  --text-md:     .85rem;
+
+  /* Panel & button tokens */
+  --shadow-btn:   0 5px 0 #a0a0a0;
+  --shadow-btn-h: 0 7px 0 #a0a0a0;
+  --panel-bg:     rgba(0,0,0,.30);
+  --panel-border: rgba(255,255,255,.38);
+  --panel-radius: 16px;
+  --panel-shadow: 0 8px 0 rgba(0,0,0,.28);
+  --btn-press:    translateY(5px);
 }
 
 /* ── Mode backgrounds — only two states ─────────────────── */
 /* Default (idle / paused / break): teal */
-body           { background: #00cc80; }
+body           { background: #00a888; }
 
 /* Running a focus session: red */
-body.run-focus { --mode-bg: #c0392b; background: #c0392b; }
+body.run-focus { --mode-bg: #af4d4d; background: #af4d4d; }
 
 /* Encounter overlay matches body */
-.encounter-overlay                { background: #00cc80; }
-body.run-focus .encounter-overlay { background: #c0392b; }
+.encounter-overlay                { background: #00a888; }
+body.run-focus .encounter-overlay { background: #af4d4d; }
 
 /* ── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,6 +55,15 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   transition: background .4s ease;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, transparent 55%, rgba(0,0,0,.18) 100%);
+  z-index: 0;
 }
 
 /* Main content column — centred, comfortable reading width */
@@ -62,7 +86,26 @@ body {
   padding: 20px 16px 10px;
   flex-shrink: 0;
   gap: 6px;
+  position: relative;
 }
+
+.btn-audio {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(0,0,0,.22);
+  border: 2px solid rgba(255,255,255,.45);
+  border-radius: 8px;
+  font-size: 1.6rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background .15s;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.btn-audio:hover { background: rgba(255,255,255,.3); }
 
 .logo {
   display: flex;
@@ -75,28 +118,35 @@ body {
 
 .logo-icon {
   font-size: 2rem;
-  filter: drop-shadow(3px 3px 0 rgba(0,0,0,.4));
+  filter: drop-shadow(3px 3px 0 rgba(90,90,90,.4));
+  display: inline-block;
+  animation: logo-float 2.4s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
 .logo-pomo {
   font-family: var(--font-pixel);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #fff;
   letter-spacing: .06em;
-  text-shadow: 3px 3px 0 rgba(0,0,0,.5);
+  text-shadow: 3px 3px 0 rgba(0,0,0,.45);
 }
 
 .logo-mons {
   font-family: var(--font-pixel);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: var(--gold);
   letter-spacing: .06em;
-  text-shadow: 3px 3px 0 rgba(0,0,0,.5);
+  text-shadow: 3px 3px 0 rgba(0,0,0,.45);
 }
 
 .tagline {
   font-family: var(--font-pixel);
-  font-size: .45rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   letter-spacing: .12em;
 }
@@ -122,12 +172,30 @@ body {
   align-items: center;
   gap: 8px;
   width: 100%;
-  background: rgba(0,0,0,.28);
-  border: 3px solid rgba(255,255,255,.6);
-  border-radius: 20px;
-  padding: 16px 16px 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  position: relative;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  padding: 20px 16px 14px;
+  box-shadow: var(--panel-shadow);
 }
+
+.btn-dex {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 6px;
+  color: rgba(255,255,255,.8);
+  font-family: var(--font-pixel);
+  font-size: var(--text-xs);
+  padding: 5px 8px;
+  cursor: pointer;
+  letter-spacing: .05em;
+  transition: background .12s, color .12s;
+}
+.btn-dex:hover { background: rgba(255,255,255,.15); color: #fff; }
 
 #companion-canvas {
   width: 200px;
@@ -137,8 +205,8 @@ body {
 }
 
 .companion-name {
-  font-size: .65rem;
-  color: var(--text-dim);
+  font-size: var(--text-base);
+  color: var(--text);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -147,6 +215,10 @@ body {
   font-size: .5rem;
   color: var(--text-muted);
   letter-spacing: .1em;
+  background: rgba(0,0,0,.30);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.2);
 }
 
 /* ── Session tabs ────────────────────────────────────────── */
@@ -194,14 +266,20 @@ body {
 /* Timer display — CSS text */
 .timer-display {
   font-family: var(--font-pixel);
-  font-size: 3rem;
+  font-size: 4.2rem;
   color: #fff;
-  text-shadow: 5px 5px 0 rgba(0,0,0,.55);
-  letter-spacing: .05em;
+  text-shadow: 4px 4px 0 rgba(0,0,0,.45);
+  background: rgba(0,0,0,.18);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,.18);
+  letter-spacing: .08em;
 }
 
 .timer-colon {
   display: inline-block;
+  padding: 0 4px;
+  color: #fff;
   animation: blink 1s step-start infinite;
   animation-play-state: paused;
 }
@@ -212,37 +290,48 @@ body {
 .time-adjust {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .btn-adjust {
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,.45);
-  font-size: .75rem;
+  background: rgba(0,0,0,.28);
+  border: 2px solid rgba(255,255,255,.30);
+  border-radius: 8px;
+  color: rgba(255,255,255,.85);
+  font-size: .7rem;
   cursor: pointer;
-  padding: 3px 6px;
+  padding: 8px 10px;
   line-height: 1;
-  transition: color .15s, transform .1s;
+  min-width: 36px;
+  min-height: 36px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.45);
+  transition: filter .12s, transform .12s, box-shadow .12s;
   font-family: var(--font-pixel);
 }
 
-.btn-adjust:hover {
-  color: rgba(255,255,255,.95);
-  transform: scale(1.15);
-}
-
-.btn-adjust:active {
-  transform: scale(.9);
-}
+.btn-adjust:hover { filter: brightness(1.3); transform: translateY(-1px); }
+.btn-adjust:active { transform: translateY(3px); box-shadow: none; }
 
 /* Hide adjust arrows when timer is running */
 body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
-/* ── Timer controls ──────────────────────────────────────── */
-.timer-controls {
+/* ── Timer controls + tabs group ────────────────────────── */
+.controls-group {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  padding: 12px;
+  box-shadow: var(--panel-shadow);
+}
+
+.timer-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
   width: 100%;
 }
 
@@ -295,19 +384,34 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   box-shadow: 0 8px 0 rgba(0,0,0,.35);
 }
 
+/* Collection buttons row */
+.collection-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
 /* Collection button — yellow/gold */
 .btn-collection {
   background: var(--gold);
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   width: 100%;
-  font-size: .55rem;
+  font-size: var(--text-base);
   color: #1a0a00;
-  padding: 12px 20px;
+  padding: 16px 8px;
   font-family: var(--font-pixel);
   cursor: pointer;
   box-shadow: 0 5px 0 var(--gold-dk);
   transition: filter .15s, transform .12s, box-shadow .12s;
+}
+
+/* Items button — slightly darker gold to differentiate */
+.btn-collection-items {
+  background: linear-gradient(180deg, #e8c000 0%, #c8a400 100%);
+  box-shadow: 0 5px 0 #8a6e00;
 }
 
 .btn-collection:hover {
@@ -321,59 +425,118 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   box-shadow: 0 1px 0 var(--gold-dk) !important;
 }
 
-/* ── Timer action buttons ────────────────────────────────── */
-.btn-timer-start {
-  flex: 1;
-  background: linear-gradient(180deg, #ffffff 0%, #e4e4e4 100%);
-  color: #1a1a2e;
-  border-bottom: 5px solid #b0b0b0;
-  box-shadow: none;
+/* ── Mode dropdown ───────────────────────────────────────── */
+.btn-mode-wrap {
+  position: relative;
+  display: flex;
 }
 
-.btn-timer-start:hover:not(:disabled) {
-  filter: brightness(.95);
+/* Focus mode button — black with white text */
+.btn-timer-mode {
+  width: 100%;
+  background: #222;
+  color: #fff;
+  font-size: var(--text-base);
+  letter-spacing: .04em;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.7);
+  padding: 13px 8px;
+  min-height: 48px;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  transition: filter .12s, transform .12s, box-shadow .12s;
+}
+.btn-timer-mode:hover {
+  background: #333;
   transform: translateY(-1px);
+  box-shadow: 0 7px 0 rgba(0,0,0,.7);
+}
+.btn-timer-mode:active {
+  background: #1a1a1a;
+  transform: var(--btn-press);
+  box-shadow: 0 1px 0 rgba(0,0,0,.7);
 }
 
-.btn-timer-start:active:not(:disabled) {
-  transform: translateY(5px);
-  border-bottom-width: 0;
-  box-shadow: none;
+.mode-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #111827;
+  border: 2px solid rgba(255,255,255,.25);
+  border-radius: 8px;
+  z-index: 20;
+  overflow: hidden;
+  box-shadow: 0 6px 0 rgba(0,0,0,.5);
 }
 
-.btn-timer-start:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-  transform: none;
+.mode-option {
+  display: block;
+  width: 100%;
+  padding: 11px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.7);
+  font-family: var(--font-pixel);
+  font-size: var(--text-sm);
+  letter-spacing: .05em;
+  cursor: pointer;
+  text-align: center;
+  text-transform: uppercase;
 }
 
+.mode-option:last-child { border-bottom: none; }
+.mode-option:hover      { background: rgba(255,255,255,.1); color: #fff; }
+.mode-option.active     { color: var(--gold); }
+
+/* ── Timer action buttons — unified rule ─────────────────── */
+.btn-timer-start,
 .btn-timer-pause,
 .btn-timer-dark {
-  flex: 1;
-  background: linear-gradient(180deg, #3d3a5c 0%, #1e1b30 100%);
-  color: #fff;
-  border-bottom: 5px solid #0c0a18;
-  box-shadow: none;
+  width: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+  color: #111;
+  font-size: var(--text-base);
+  letter-spacing: .04em;
+  border: none;
+  border-radius: 10px;
+  box-shadow: var(--shadow-btn);
+  padding: 13px 8px;
+  min-height: 48px;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  transition: filter .12s, transform .12s, box-shadow .12s;
 }
 
+/* Hover */
+.btn-timer-start:hover:not(:disabled),
 .btn-timer-pause:hover:not(:disabled),
 .btn-timer-dark:hover:not(:disabled) {
-  filter: brightness(1.2);
+  filter: brightness(.93);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-btn-h);
 }
 
+/* Press */
+.btn-timer-start:active:not(:disabled),
 .btn-timer-pause:active:not(:disabled),
 .btn-timer-dark:active:not(:disabled) {
-  transform: translateY(5px);
-  border-bottom-width: 0;
-  box-shadow: none;
+  transform: var(--btn-press);
+  box-shadow: 0 1px 0 #a0a0a0;
+  filter: brightness(.88);
 }
 
-.btn-timer-pause:disabled,
+/* Disabled */
+.btn-timer-start:disabled,
 .btn-timer-dark:disabled {
-  opacity: 0.32;
+  background: rgba(0,0,0,.24);
+  color: rgba(255,255,255,.38);
+  box-shadow: 0 3px 0 rgba(0,0,0,.28);
   cursor: not-allowed;
   transform: none;
+  filter: none;
 }
 
 /* ── Collection Screen ───────────────────────────────────── */
@@ -391,7 +554,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--text);
-  text-shadow: 2px 2px 0 rgba(0,0,0,.3);
+  text-shadow: 1px 1px 4px rgba(0,0,0,.15);
   flex: 1;
   text-align: center;
 }
@@ -430,13 +593,13 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   gap: 3px;
   cursor: pointer;
   transition: transform .1s, box-shadow .1s;
-  box-shadow: 4px 4px 0 rgba(0,0,0,.4);
+  box-shadow: 4px 4px 0 rgba(90,90,90,.35);
   position: relative;
 }
 
 .mon-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 rgba(0,0,0,.4);
+  box-shadow: 6px 6px 0 rgba(90,90,90,.35);
 }
 
 .mon-card.unseen {
@@ -473,7 +636,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .mon-card-rarity {
-  font-size: .38rem;
+  font-size: var(--text-xs);
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -503,7 +666,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   height: var(--stats-h);
   background: #000;
-  border-top: 2px solid rgba(255,255,255,.1);
+  border-top: 3px solid rgba(255,255,255,.18);
   display: flex;
   flex-direction: column;
   z-index: 50;
@@ -521,7 +684,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   background: var(--gold);
   color: #1a0a00;
   font-family: var(--font-pixel);
-  font-size: .48rem;
+  font-size: .72rem;
   padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: .06em;
@@ -531,8 +694,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .xp-text {
   font-family: var(--font-pixel);
-  font-size: .38rem;
-  color: #777;
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,.6);
   letter-spacing: .05em;
 }
 
@@ -548,10 +711,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Pill track — rounded oval container */
 .exp-bar-wrap {
   flex: 1;
-  height: 14px;
+  height: 12px;
   background: rgba(255,255,255,.12);
   border-radius: 999px;
   overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
 }
 
 /* Yellow fill */
@@ -578,14 +742,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .stat-val {
-  font-size: .48rem;
+  font-size: var(--text-base);
   color: #fff;
   letter-spacing: .04em;
 }
 
 .stat-label {
-  font-size: .3rem;
-  color: #888;
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,.5);
   letter-spacing: .06em;
 }
 
@@ -630,7 +794,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   image-rendering: crisp-edges;
   background: rgba(0,0,0,.45);
   border: 4px solid rgba(255,255,255,.35);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.4);
+  box-shadow: 4px 4px 0 rgba(90,90,90,.35);
 }
 
 .catch-dots { display: flex; gap: 6px; }
@@ -696,5 +860,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* ── Responsive ──────────────────────────────────────────── */
 @media (min-width: 400px) {
   #companion-canvas { width: 220px; height: 220px; }
-  .timer-display { font-size: 3.5rem; }
+  .timer-display { font-size: 5rem; }
 }
+
+/* ── Panel appear animation ──────────────────────────────── */
+@keyframes panel-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.companion-area { animation: panel-appear .3s ease-out both; }
+.controls-group { animation: panel-appear .3s ease-out .08s both; }
