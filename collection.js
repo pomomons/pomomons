@@ -104,8 +104,13 @@ const Collection = (() => {
   function setActiveCompanion(mon) {
     SFX.play('select');
     localStorage.setItem('pm_active', mon.id);
-    document.getElementById('companion-name').textContent = mon.name;
-    CompanionCanvas.setMon(mon);
+    // updateCompanionDisplay is defined in app.js (loads after collection.js)
+    if (typeof updateCompanionDisplay === 'function') {
+      updateCompanionDisplay();
+    } else {
+      document.getElementById('companion-name').textContent = mon.name;
+      CompanionCanvas.setMon(mon);
+    }
     if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
     if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
   }
@@ -127,25 +132,38 @@ const Collection = (() => {
       card.appendChild(star);
     }
 
+    // Resolve current evolution stage for caught mons
+    let displayMon = mon;
+    let palLevel   = 1;
+    if (catchData) {
+      palLevel   = parseInt(localStorage.getItem(`pm_pal_level_${mon.id}`) || '1', 10);
+      displayMon = typeof getMonStage === 'function' ? getMonStage(mon, palLevel) : mon;
+    }
+
     // Canvas thumbnail
     const canvas  = document.createElement('canvas');
     canvas.width  = 64;
     canvas.height = 64;
-    MonSprite.draw(canvas, mon, { scale: 0.8, shiny: catchData?.hasShiny || false });
+    MonSprite.draw(canvas, displayMon, { scale: 0.8, shiny: catchData?.hasShiny || false });
     card.appendChild(canvas);
 
     // Name
     const nameEl = document.createElement('p');
     nameEl.className   = 'mon-card-name';
-    nameEl.textContent = catchData ? mon.name : '???';
+    nameEl.textContent = catchData ? displayMon.name : '???';
     card.appendChild(nameEl);
 
-    // Rarity label (caught mons only)
+    // Rarity + pal level (caught mons only)
     if (catchData) {
       const rarityEl = document.createElement('p');
       rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
       rarityEl.textContent = mon.rarity.toUpperCase();
       card.appendChild(rarityEl);
+
+      const lvlEl = document.createElement('p');
+      lvlEl.className   = 'mon-card-pallvl';
+      lvlEl.textContent = `LVL ${palLevel}`;
+      card.appendChild(lvlEl);
     }
 
     // Count badge (only when caught more than once)
@@ -216,9 +234,12 @@ const Collection = (() => {
 
   // ── Internal: buildIndividualCard — one record per catch ─────
   function buildIndividualCard(mon, rec, activeId) {
+    const palLevel  = parseInt(localStorage.getItem(`pm_pal_level_${mon.id}`) || '1', 10);
+    const stageMon  = typeof getMonStage === 'function' ? getMonStage(mon, palLevel) : mon;
+
     const card = document.createElement('div');
     card.className = 'mon-card';
-    if (rec.shiny)       card.classList.add('shiny');
+    if (rec.shiny)           card.classList.add('shiny');
     if (mon.id === activeId) card.classList.add('active-companion');
 
     if (mon.id === activeId) {
@@ -231,18 +252,23 @@ const Collection = (() => {
     const canvas  = document.createElement('canvas');
     canvas.width  = 64;
     canvas.height = 64;
-    MonSprite.draw(canvas, mon, { scale: 0.8, shiny: rec.shiny || false });
+    MonSprite.draw(canvas, stageMon, { scale: 0.8, shiny: rec.shiny || false });
     card.appendChild(canvas);
 
     const nameEl = document.createElement('p');
     nameEl.className   = 'mon-card-name';
-    nameEl.textContent = mon.name;
+    nameEl.textContent = stageMon.name;
     card.appendChild(nameEl);
 
     const rarityEl = document.createElement('p');
     rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
     rarityEl.textContent = mon.rarity.toUpperCase();
     card.appendChild(rarityEl);
+
+    const lvlEl = document.createElement('p');
+    lvlEl.className   = 'mon-card-pallvl';
+    lvlEl.textContent = `LVL ${palLevel}`;
+    card.appendChild(lvlEl);
 
     card.addEventListener('click', () => setActiveCompanion(mon));
     return card;
