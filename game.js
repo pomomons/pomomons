@@ -508,3 +508,200 @@ const EncounterScreen = (() => {
 
   return { start };
 })();
+
+// ── Evolution Screen ───────────────────────────────────────
+// Full-screen cinematic triggered when the active companion levels past
+// an evolution threshold. All sprite drawing uses MonSprite.drawOnCtx.
+const EvolutionScreen = (() => {
+  const SIZE = 200;
+
+  let overlay, canvas, ctx, elMsg, elSub, btnDismiss;
+  let rafId = null, onDone = null, autoDismissTimer = null;
+
+  const st = {
+    phase:    'idle',  // blackin|text1|silhouette|flash|reveal|done
+    frame:    0,
+    bobFrame: 0,
+    fromMon:  null,   // base stage (before evolution)
+    toMon:    null,   // new stage (after evolution)
+    dpr:      1,
+  };
+
+  // Draw mon as a pure-white silhouette
+  function drawSilhouette(mon, alpha, scale, bobY) {
+    const white = { ...mon, color: '#ffffff', accent: '#ffffff' };
+    MonSprite.drawOnCtx(ctx, white, SIZE / 2, SIZE / 2 + (bobY || 0),
+      { scale: scale || 1, alpha: alpha !== undefined ? alpha : 1 });
+  }
+
+  // Draw mon in full colour
+  function drawColored(mon, bobY) {
+    MonSprite.drawOnCtx(ctx, mon, SIZE / 2, SIZE / 2 + (bobY || 0), { scale: 1 });
+  }
+
+  function tick() {
+    st.frame++;
+    st.bobFrame++;
+    const f = st.frame;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    if (st.phase === 'blackin') {
+      // Silhouette of old mon fades in over 60 frames
+      drawSilhouette(st.fromMon, Math.min(1, f / 60));
+      if (f >= 60) { st.phase = 'text1'; st.frame = 0; }
+
+    } else if (st.phase === 'text1') {
+      drawSilhouette(st.fromMon, 1);
+      if (f === 1) {
+        elMsg.textContent = `WHAT? ${st.fromMon.name.toUpperCase()} IS EVOLVING!`;
+        elMsg.style.opacity = '1';
+      }
+      if (f >= 40) { st.phase = 'silhouette'; st.frame = 0; }
+
+    } else if (st.phase === 'silhouette') {
+      // Silhouette bobs gently for ~2 s
+      const bobY = Math.sin(st.bobFrame / 22) * 8;
+      drawSilhouette(st.fromMon, 1, 1, bobY);
+      if (f >= 120) {
+        st.phase = 'flash';
+        st.frame = 0;
+        elMsg.style.opacity = '0';
+      }
+
+    } else if (st.phase === 'flash') {
+      // Rapidly alternate old / new silhouette (4-frame intervals)
+      const useNew = Math.floor(f / 4) % 2 === 1;
+      drawSilhouette(useNew ? st.toMon : st.fromMon, 1);
+      if (f >= 64) { st.phase = 'reveal'; st.frame = 0; }
+
+    } else if (st.phase === 'reveal') {
+      const bobY = Math.sin(st.bobFrame / 22) * 8;
+      if (f <= 18) {
+        // Brief strobe: silhouette ↔ colour
+        if (Math.floor(f / 3) % 2 === 0) drawColored(st.toMon, bobY);
+        else drawSilhouette(st.toMon, 1, 1, bobY);
+      } else {
+        drawColored(st.toMon, bobY);
+        if (f === 19) {
+          elMsg.textContent =
+            `${st.fromMon.name.toUpperCase()} EVOLVED INTO ${st.toMon.name.toUpperCase()}!`;
+          elMsg.style.opacity = '1';
+          elSub.textContent  = 'CONGRATULATIONS!';
+          elSub.style.opacity = '1';
+        }
+      }
+      if (f >= 120) { st.phase = 'done'; st.frame = 0; }
+
+    } else if (st.phase === 'done') {
+      drawColored(st.toMon, Math.sin(st.bobFrame / 22) * 8);
+      if (f === 1) {
+        SFX.play('levelUp');
+        btnDismiss.style.opacity      = '1';
+        btnDismiss.style.pointerEvents = 'auto';
+        autoDismissTimer = setTimeout(dismiss, 4000);
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function dismiss() {
+    if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    overlay.classList.remove('active');
+    if (typeof onDone === 'function') onDone();
+  }
+
+  // params: { fromMon, toMon }   doneCb: called after dismiss
+  function start(params, doneCb) {
+    if (!overlay) {
+      overlay    = document.getElementById('evolution-overlay');
+      canvas     = document.getElementById('evolution-canvas');
+      ctx        = canvas.getContext('2d');
+      elMsg      = document.getElementById('evolution-msg');
+      elSub      = document.getElementById('evolution-sub');
+      btnDismiss = document.getElementById('btn-evo-dismiss');
+
+      st.dpr = window.devicePixelRatio || 1;
+      if (st.dpr !== 1) {
+        canvas.width  = SIZE * st.dpr;
+        canvas.height = SIZE * st.dpr;
+        ctx.scale(st.dpr, st.dpr);
+      }
+
+      btnDismiss.addEventListener('click', dismiss);
+    }
+
+    onDone        = doneCb;
+    st.fromMon    = params.fromMon;
+    st.toMon      = params.toMon;
+    st.phase      = 'blackin';
+    st.frame      = 0;
+    st.bobFrame   = 0;
+    autoDismissTimer = null;
+
+    elMsg.textContent  = '';
+    elMsg.style.opacity = '0';
+    elSub.textContent  = '';
+    elSub.style.opacity = '0';
+    btnDismiss.style.opacity      = '0';
+    btnDismiss.style.pointerEvents = 'none';
+
+    overlay.classList.add('active');
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  return { start };
+})();
+
+// ── Map icon pixel art ────────────────────────────────────
+const MapIcon = (() => {
+  // 16×16 pixel grid — colour key:
+  //   B = dark border, p = parchment, t = trail, s = start (red), g = goal (gold)
+  const COLORS = {
+    B: '#4a2e10',
+    p: '#c8965a',
+    t: '#7a5020',
+    s: '#e63030',
+    g: '#ffd600',
+  };
+
+  const MAP = [
+    'BBBBBBBBBBBBBBBB',
+    'BppppppppppppppB',
+    'BpsspppppppppppB',
+    'BpssptpppppppppB',
+    'BppppptppppppppB',
+    'BpppppptpppppppB',
+    'BppppppptppppppB',
+    'BppppppppttppppB',
+    'BppppppppptppppB',
+    'BpppppppppptpppB',
+    'BppppppppppttppB',
+    'BppppppppppptppB',
+    'BpppppppppppggpB',
+    'BpppppppppppggpB',
+    'BppppppppppppppB',
+    'BBBBBBBBBBBBBBBB',
+  ];
+
+  function draw(canvas) {
+    const ctx  = canvas.getContext('2d');
+    const rows = MAP.length;
+    const cols = MAP[0].length;
+    const pw   = canvas.width  / cols;
+    const ph   = canvas.height / rows;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    MAP.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const col = COLORS[row[x]];
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(Math.round(x * pw), Math.round(y * ph), Math.ceil(pw), Math.ceil(ph));
+      }
+    });
+  }
+
+  return { draw };
+})();

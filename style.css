@@ -184,18 +184,21 @@ body::after {
   position: absolute;
   top: 10px;
   right: 12px;
-  background: rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.3);
-  border-radius: 6px;
-  color: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.18);
+  border: 3px solid rgba(255,255,255,.4);
+  border-radius: 10px;
+  color: var(--text);
   font-family: var(--font-pixel);
-  font-size: var(--text-xs);
-  padding: 5px 8px;
+  font-size: .6rem;
+  padding: 7px 14px;
   cursor: pointer;
   letter-spacing: .05em;
-  transition: background .12s, color .12s;
+  box-shadow: 0 5px 0 rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+  transition: background .12s, transform .12s, box-shadow .12s;
 }
-.btn-dex:hover { background: rgba(255,255,255,.15); color: #fff; }
+.btn-dex:hover  { background: rgba(255,255,255,.28); transform: translateY(-1px); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
+.btn-dex:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
 
 #companion-canvas {
   width: 200px;
@@ -280,11 +283,7 @@ body::after {
   display: inline-block;
   padding: 0 4px;
   color: #fff;
-  animation: blink 1s step-start infinite;
-  animation-play-state: paused;
 }
-
-@keyframes blink { 50% { opacity: 0; } }
 
 /* Small arrow buttons for time adjustment */
 .time-adjust {
@@ -493,8 +492,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* ── Timer action buttons — unified rule ─────────────────── */
 .btn-timer-start,
-.btn-timer-pause,
-.btn-timer-dark {
+.btn-timer-pause {
   width: 100%;
   background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
   color: #111;
@@ -512,8 +510,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* Hover */
 .btn-timer-start:hover:not(:disabled),
-.btn-timer-pause:hover:not(:disabled),
-.btn-timer-dark:hover:not(:disabled) {
+.btn-timer-pause:hover:not(:disabled) {
   filter: brightness(.93);
   transform: translateY(-1px);
   box-shadow: var(--shadow-btn-h);
@@ -521,15 +518,48 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* Press */
 .btn-timer-start:active:not(:disabled),
-.btn-timer-pause:active:not(:disabled),
-.btn-timer-dark:active:not(:disabled) {
+.btn-timer-pause:active:not(:disabled) {
   transform: var(--btn-press);
   box-shadow: 0 1px 0 #a0a0a0;
   filter: brightness(.88);
 }
 
 /* Disabled */
-.btn-timer-start:disabled,
+.btn-timer-start:disabled {
+  background: rgba(0,0,0,.24);
+  color: rgba(255,255,255,.38);
+  box-shadow: 0 3px 0 rgba(0,0,0,.28);
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Reset button — black with white text */
+.btn-timer-dark {
+  width: 100%;
+  background: #222;
+  color: #fff;
+  font-size: var(--text-base);
+  letter-spacing: .04em;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.7);
+  padding: 13px 8px;
+  min-height: 48px;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  transition: filter .12s, transform .12s, box-shadow .12s;
+}
+.btn-timer-dark:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 0 rgba(0,0,0,.7);
+}
+.btn-timer-dark:active:not(:disabled) {
+  background: #1a1a1a;
+  transform: var(--btn-press);
+  box-shadow: 0 1px 0 rgba(0,0,0,.7);
+}
 .btn-timer-dark:disabled {
   background: rgba(0,0,0,.24);
   color: rgba(255,255,255,.38);
@@ -690,6 +720,57 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   letter-spacing: .06em;
   white-space: nowrap;
   box-shadow: 0 3px 0 var(--gold-dk);
+  flex-shrink: 0;
+}
+
+
+/* Map icon button — fixed just above the stats strip */
+.btn-map-icon {
+  position: fixed;
+  bottom: calc(var(--stats-h) + 10px);
+  right: 14px;
+  background: rgba(0,0,0,.45);
+  border: 2px solid rgba(255,255,255,.35);
+  border-radius: 10px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 49;
+  transition: filter .15s, transform .12s;
+}
+
+.btn-map-icon:hover  { filter: brightness(1.25); transform: scale(1.06); }
+.btn-map-icon:active { transform: scale(.92); }
+
+#map-icon-canvas {
+  display: block;
+  width: 42px;
+  height: 42px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Notification dot — absolute badge on map icon */
+.reward-dot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  background: #ff3333;
+  border-radius: 50%;
+  border: 1.5px solid #000;
+  display: none;
+  animation: reward-pulse 1s ease-in-out infinite;
+}
+
+.reward-dot.visible { display: block; }
+
+@keyframes reward-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: .75; }
 }
 
 .xp-text {
@@ -703,15 +784,15 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .stats-bottom {
   flex: 1;
   display: flex;
-  align-items: center;
-  padding: 0 14px 6px;
+  align-items: flex-start;
+  padding: 6px 14px 6px;
   gap: 12px;
 }
 
 /* Pill track — rounded oval container */
 .exp-bar-wrap {
   flex: 1;
-  height: 12px;
+  height: 22px;
   background: rgba(255,255,255,.12);
   border-radius: 999px;
   overflow: hidden;
@@ -742,7 +823,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .stat-val {
-  font-size: var(--text-base);
+  font-size: var(--text-md);
   color: #fff;
   letter-spacing: .04em;
 }
@@ -854,8 +935,179 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   box-shadow: 0 6px 20px rgba(0,0,0,.35);
   z-index: 200;
   animation: enc-levelup .4s ease;
+  text-align: center;
   white-space: nowrap;
 }
+
+.banner-sub {
+  display: block;
+  font-size: .42rem;
+  margin-top: 4px;
+  letter-spacing: .08em;
+  color: rgba(26,10,0,.75);
+}
+
+/* ── Evolution Overlay ───────────────────────────────────── */
+.evolution-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 150;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.evolution-overlay.active {
+  display: flex;
+  animation: evo-fadein 0.5s ease forwards;
+}
+
+@keyframes evo-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.evolution-msg {
+  font-family: var(--font-pixel);
+  font-size: .72rem;
+  color: #fff;
+  letter-spacing: .05em;
+  max-width: 300px;
+  line-height: 2;
+  text-align: center;
+  min-height: 3em;
+  transition: opacity .25s;
+}
+
+.evolution-sub {
+  font-family: var(--font-pixel);
+  font-size: .72rem;
+  color: var(--gold);
+  letter-spacing: .06em;
+  text-align: center;
+  min-height: 1.5em;
+  transition: opacity .25s;
+}
+
+#evolution-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 4px solid rgba(255,255,255,.2);
+  box-shadow: 0 0 40px rgba(255,255,255,.08);
+}
+
+/* Pal level badge on collection cards */
+.mon-card-pallvl {
+  font-size: var(--text-xs);
+  color: var(--gold);
+  letter-spacing: .06em;
+}
+
+/* ── Progress Screen ─────────────────────────────────────── */
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.progress-row.locked { opacity: 0.38; }
+
+.progress-row.next-goal {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(255,214,0,.28);
+}
+
+.progress-status {
+  font-size: .65rem;
+  min-width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.progress-status.unlocked { color: var(--green); }
+.progress-status.next     { color: var(--gold); }
+.progress-status.locked   { color: var(--text-muted); }
+
+.progress-lvl {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  min-width: 34px;
+  flex-shrink: 0;
+  letter-spacing: .04em;
+}
+
+.progress-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.progress-name {
+  font-size: .6rem;
+  color: var(--text);
+  letter-spacing: .05em;
+}
+
+.progress-desc {
+  font-size: .42rem;
+  color: var(--text-muted);
+  letter-spacing: .04em;
+  line-height: 1.5;
+}
+
+.progress-tag {
+  font-size: var(--text-xs);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: .06em;
+  flex-shrink: 0;
+  background: rgba(0,0,0,.3);
+}
+
+.progress-tag-item    { color: var(--gold); }
+.progress-tag-feature { color: var(--blue); }
+.progress-tag-style   { color: var(--purple); }
+
+.progress-row.claimable {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(255,214,0,.3);
+}
+
+.btn-claim {
+  font-family: var(--font-pixel);
+  font-size: var(--text-xs);
+  background: var(--gold);
+  color: #1a0a00;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  box-shadow: 0 3px 0 var(--gold-dk);
+  flex-shrink: 0;
+  transition: filter .12s, transform .12s, box-shadow .12s;
+}
+
+.btn-claim:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 5px 0 var(--gold-dk); }
+.btn-claim:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dk); }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (min-width: 400px) {

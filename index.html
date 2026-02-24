@@ -57,8 +57,8 @@
         <button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button>
       </div>
       <div class="collection-btns">
-        <button class="btn btn-collection" id="btn-go-mymons">🗂 MY MONS</button>
-        <button class="btn btn-collection btn-collection-items" id="btn-go-items">🎒 ITEMS</button>
+        <button class="btn btn-collection" id="btn-go-mymons">COLLECTION</button>
+        <button class="btn btn-collection btn-collection-items" id="btn-go-items">ITEMS</button>
       </div>
     </div>
 
@@ -86,6 +86,16 @@
     <div class="collection-grid" id="dex-grid"></div>
   </main>
 
+  <!-- ── Progress Screen ──────────────────────────────── -->
+  <main id="screen-progress" class="screen">
+    <div class="collection-header">
+      <button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button>
+      <h2 class="screen-title">LEVEL REWARDS</h2>
+      <span class="collection-count"></span>
+    </div>
+    <div class="progress-list" id="progress-list"></div>
+  </main>
+
   <!-- ── Encounter Overlay ─────────────────────────────── -->
   <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
     <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
@@ -109,6 +119,14 @@
     </div>
   </div>
 
+  <!-- ── Evolution Overlay ────────────────────────────── -->
+  <div id="evolution-overlay" class="evolution-overlay">
+    <p class="evolution-msg" id="evolution-msg"></p>
+    <canvas id="evolution-canvas" width="200" height="200" aria-label="Evolving Pomomon"></canvas>
+    <p class="evolution-sub" id="evolution-sub"></p>
+    <button class="btn btn-primary" id="btn-evo-dismiss" style="opacity:0;pointer-events:none">AWESOME!</button>
+  </div>
+
   <!-- ── Stats Strip ────────────────────────────────────── -->
   <footer class="stats-strip">
     <!-- Row 1: level badge + XP numbers -->
@@ -127,7 +145,7 @@
           <span class="stat-label">SESSIONS</span>
         </div>
         <div class="stat-item">
-          <span class="stat-val" id="stat-minutes">0m</span>
+          <span class="stat-val" id="stat-minutes">0</span>
           <span class="stat-label">MINUTES</span>
         </div>
         <div class="stat-item">
@@ -137,6 +155,12 @@
       </div>
     </div>
   </footer>
+
+  <!-- ── Map icon (floats above stats strip) ───────────────── -->
+  <button class="btn-map-icon" id="btn-map-icon" aria-label="Level rewards">
+    <canvas id="map-icon-canvas" width="16" height="16"></canvas>
+    <span class="reward-dot" id="reward-dot"></span>
+  </button>
 
   <script src="monsters.js"></script>
   <script src="game.js"></script>

@@ -1,17 +1,103 @@
 // app.js — timer logic and session/screen flow
 
+// ── Level reward milestones ────────────────────────────────
+const LEVEL_REWARDS = [
+  { level:  2, name: 'Focus Tea',      desc: '+10% XP for 1 session',          type: 'item'    },
+  { level:  5, name: 'Shiny Charm',    desc: 'Doubles shiny encounter rate',   type: 'item'    },
+  { level:  8, name: 'Rare Scanner',   desc: 'Rare mons appear more often',    type: 'feature' },
+  { level: 10, name: 'Double Tomato',  desc: 'Throw 2 tomatoes per encounter', type: 'item'    },
+  { level: 15, name: 'Golden Tomato',  desc: 'Guarantees the next catch',      type: 'item'    },
+  { level: 18, name: 'XP Share',       desc: 'Benched mons earn 25% XP too',   type: 'feature' },
+  { level: 20, name: 'Mega Tomato',    desc: '+50% catch rate for 3 sessions', type: 'item'    },
+  { level: 25, name: 'Mon Radar',      desc: 'Preview the next encounter',     type: 'feature' },
+  { level: 30, name: 'Lucky Egg',      desc: 'Double player XP for 24 hrs',   type: 'item'    },
+  { level: 35, name: 'Shiny Stone',    desc: 'Force shiny on next encounter',  type: 'item'    },
+  { level: 40, name: 'Custom Timer',   desc: 'Set custom break durations',     type: 'feature' },
+  { level: 50, name: 'Master Trainer', desc: 'Title + gold companion border',  type: 'style'   },
+  { level: 60, name: 'Evo Boost',      desc: 'Mons evolve 25% faster',         type: 'feature' },
+  { level: 75, name: 'Legend Radar',   desc: 'Legendary mons can now appear',  type: 'feature' },
+  { level:100, name: 'Pomomon Master', desc: 'Prestige mode unlocked',         type: 'style'   },
+];
+
 // ── Screen switching ──────────────────────────────────────
 const screens = document.querySelectorAll('.screen');
 
 function showScreen(name) {
   screens.forEach(s => s.classList.toggle('active', s.id === `screen-${name}`));
-  if (name === 'mymons') Collection.renderMyMons();
-  if (name === 'dex')    Collection.renderDex();
+  if (name === 'mymons')   Collection.renderMyMons();
+  if (name === 'dex')      Collection.renderDex();
+  if (name === 'progress') renderProgress();
+}
+
+// ── Progress / reward dot ─────────────────────────────────
+function updateRewardDot() {
+  const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
+  const claimed     = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
+  const hasUnclaimed = LEVEL_REWARDS.some(r => r.level <= playerLevel && !claimed.includes(r.level));
+  const dot = document.getElementById('reward-dot');
+  if (dot) dot.classList.toggle('visible', hasUnclaimed);
+}
+
+function renderProgress() {
+  const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
+  const claimed     = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
+  const list = document.getElementById('progress-list');
+  list.innerHTML = '';
+  let nextGoalAssigned = false;
+
+  LEVEL_REWARDS.forEach(reward => {
+    const unlocked  = playerLevel >= reward.level;
+    const isClaimed = claimed.includes(reward.level);
+    const isNext    = !unlocked && !nextGoalAssigned;
+    if (isNext) nextGoalAssigned = true;
+
+    const row = document.createElement('div');
+    const tagClass = 'progress-tag progress-tag-' + reward.type;
+
+    if (unlocked && !isClaimed) {
+      // Unclaimed reward — highlight and show claim button
+      row.className = 'progress-row unlocked claimable';
+      row.innerHTML =
+        `<span class="progress-status next">★</span>` +
+        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
+        `<div class="progress-info">` +
+          `<span class="progress-name">${reward.name}</span>` +
+          `<span class="progress-desc">${reward.desc}</span>` +
+        `</div>` +
+        `<button class="btn-claim" data-level="${reward.level}">CLAIM</button>`;
+    } else if (unlocked && isClaimed) {
+      row.className = 'progress-row unlocked';
+      row.innerHTML =
+        `<span class="progress-status unlocked">✓</span>` +
+        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
+        `<div class="progress-info">` +
+          `<span class="progress-name">${reward.name}</span>` +
+          `<span class="progress-desc">${reward.desc}</span>` +
+        `</div>` +
+        `<span class="${tagClass}">${reward.type.toUpperCase()}</span>`;
+    } else {
+      row.className = 'progress-row' + (isNext ? ' next-goal' : ' locked');
+      const statusIcon  = isNext ? '▶' : '—';
+      const statusClass = 'progress-status ' + (isNext ? 'next' : 'locked');
+      row.innerHTML =
+        `<span class="${statusClass}">${statusIcon}</span>` +
+        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
+        `<div class="progress-info">` +
+          `<span class="progress-name">${reward.name}</span>` +
+          `<span class="progress-desc">${reward.desc}</span>` +
+        `</div>` +
+        `<span class="${tagClass}">${reward.type.toUpperCase()}</span>`;
+    }
+
+    list.appendChild(row);
+  });
+
+  updateRewardDot();
 }
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 25 * 60,
+  focus: 5,        // ⚠ TESTING: 5 s (restore to 25 * 60)
   short: 5  * 60,
   long:  15 * 60,
 };
@@ -35,7 +121,7 @@ const btnMode      = document.getElementById('btn-mode');
 const modeDropdown = document.getElementById('mode-dropdown');
 const dots         = document.querySelectorAll('.session-dots .dot');
 
-const MODE_LABELS = { focus: 'FOCUS', short: 'SHORT', long: 'LONG' };
+const MODE_LABELS = { focus: 'FOCUS', short: 'SHORT BREAK', long: 'LONG BREAK' };
 
 // ── Background state ──────────────────────────────────────
 // Only two visual states: red (running focus) or teal (everything else)
@@ -60,7 +146,7 @@ function renderStats() {
   const catches  = parseInt(localStorage.getItem('pm_total_catches')  || '0', 10);
   const el = id => document.getElementById(id);
   if (el('stat-sessions')) el('stat-sessions').textContent = sessions;
-  if (el('stat-minutes'))  el('stat-minutes').textContent  = minutes + 'm';
+  if (el('stat-minutes'))  el('stat-minutes').textContent  = minutes;
   if (el('stat-catches'))  el('stat-catches').textContent  = catches;
 }
 
@@ -147,8 +233,19 @@ function onSessionEnd() {
     renderStats();
     CompanionCanvas.stop();
     EncounterScreen.start(() => {
-      CompanionCanvas.init(document.getElementById('companion-canvas'));
-      setMode(nextMode);
+      // Award pal XP after encounter resolves; trigger evolution screen if needed
+      const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+      const palResult = activeId ? savePalExp(activeId, 25) : null;
+
+      if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
+        EvolutionScreen.start(palResult, () => {
+          CompanionCanvas.init(document.getElementById('companion-canvas'));
+          setMode(nextMode);
+        });
+      } else {
+        CompanionCanvas.init(document.getElementById('companion-canvas'));
+        setMode(nextMode);
+      }
     });
     return;
   }
@@ -192,8 +289,67 @@ function loadPlayerState() {
   const elXpMax = document.getElementById('xp-max');
   if (elXpCur) elXpCur.textContent = exp;
   if (elXpMax) elXpMax.textContent = expMax;
-  const compLvl = document.getElementById('companion-level');
-  if (compLvl) compLvl.textContent = level;
+  // companion-level is set by updateCompanionDisplay(), not here
+}
+
+// ── Pal (companion) level system ──────────────────────────
+// Uses an exponential curve tuned so the first evolution (~lvl 16)
+// takes roughly 50-60 sessions — achievable within a few weeks of use.
+function palExpThreshold(level) {
+  return Math.round(30 * Math.pow(1.3, level - 1));
+}
+
+function getPalState(speciesId) {
+  const level = parseInt(localStorage.getItem(`pm_pal_level_${speciesId}`) || '1', 10);
+  const exp   = parseInt(localStorage.getItem(`pm_pal_exp_${speciesId}`)   || '0', 10);
+  return { level, exp };
+}
+
+// Award XP to the active companion's species. Returns an object describing
+// any level-up or evolution that occurred, or null if no active companion.
+function savePalExp(speciesId, delta) {
+  if (!speciesId || typeof MONS === 'undefined') return null;
+  const mon = MONS.find(m => m.id === speciesId);
+  if (!mon) return null;
+
+  const PAL_MAX = 100;
+  let { level, exp } = getPalState(speciesId);
+
+  const fromMon = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+
+  exp += delta;
+  let leveled = false;
+  while (exp >= palExpThreshold(level) && level < PAL_MAX) {
+    exp -= palExpThreshold(level);
+    level++;
+    leveled = true;
+  }
+  if (level >= PAL_MAX) exp = 0;
+
+  localStorage.setItem(`pm_pal_level_${speciesId}`, level);
+  localStorage.setItem(`pm_pal_exp_${speciesId}`,   exp);
+
+  const toMon  = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+  const evolved = fromMon.name !== toMon.name;
+
+  updateCompanionDisplay();
+  return { leveled, evolved, fromMon, toMon, newLevel: level };
+}
+
+// Refresh the companion area (name, pal level, canvas colours) from localStorage.
+// Called after any change to the active companion or its pal level.
+function updateCompanionDisplay() {
+  const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+  if (!activeId || typeof MONS === 'undefined') return;
+  const mon = MONS.find(m => m.id === activeId);
+  if (!mon) return;
+  const { level } = getPalState(activeId);
+  const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+  const nameEl = document.getElementById('companion-name');
+  const lvlEl  = document.getElementById('companion-level');
+  if (nameEl) nameEl.textContent = stage.name;
+  if (lvlEl)  lvlEl.textContent  = level;
+  if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon(stage);
 }
 
 function saveExp(delta) {
@@ -212,16 +368,21 @@ function saveExp(delta) {
   localStorage.setItem('pm_exp',   exp);
   loadPlayerState();
 
-  if (levelled) showLevelUpBanner(level);
+  if (levelled) {
+    showLevelUpBanner(level);
+    updateRewardDot();
+  }
 }
 
 function showLevelUpBanner(level) {
   SFX.play('levelUp');
+  const hasReward = LEVEL_REWARDS.some(r => r.level === level);
   const banner = document.createElement('div');
-  banner.className   = 'level-up-banner';
-  banner.textContent = `LEVEL UP! LVL ${level}`;
+  banner.className = 'level-up-banner';
+  banner.innerHTML  = `LEVEL UP! LVL ${level}` +
+    (hasReward ? `<span class="banner-sub">★ NEW REWARD — CHECK MAP</span>` : '');
   document.body.appendChild(banner);
-  setTimeout(() => banner.remove(), 2200);
+  setTimeout(() => banner.remove(), hasReward ? 3000 : 2200);
 }
 
 // ── Boot ──────────────────────────────────────────────────
@@ -233,8 +394,23 @@ Collection.init();
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
 document.getElementById('btn-go-dex').addEventListener('click',    () => showScreen('dex'));
-document.getElementById('btn-back-mymons').addEventListener('click', () => showScreen('timer'));
-document.getElementById('btn-back-dex').addEventListener('click',    () => showScreen('timer'));
+document.getElementById('btn-back-mymons').addEventListener('click',  () => showScreen('timer'));
+document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
+document.getElementById('btn-back-progress').addEventListener('click', () => showScreen('timer'));
+document.getElementById('btn-map-icon').addEventListener('click', () => showScreen('progress'));
+
+// Claim reward delegation
+document.getElementById('progress-list').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-claim');
+  if (!btn) return;
+  const level   = parseInt(btn.dataset.level, 10);
+  const claimed = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
+  if (!claimed.includes(level)) {
+    claimed.push(level);
+    localStorage.setItem('pm_claimed_rewards', JSON.stringify(claimed));
+  }
+  renderProgress();
+});
 
 // Audio toggle
 const btnAudio = document.getElementById('btn-audio');
@@ -258,14 +434,10 @@ document.getElementById('btn-time-plus').addEventListener('click', () => {
   if (currentMode === 'focus') setMode('focus');
 });
 
-// Restore active companion from previous session
-const _activeId  = parseInt(localStorage.getItem('pm_active') || '0', 10);
-const _activeMon = _activeId && typeof MONS !== 'undefined'
-  ? MONS.find(m => m.id === _activeId) : null;
-if (_activeMon) {
-  CompanionCanvas.setMon(_activeMon);
-  document.getElementById('companion-name').textContent = _activeMon.name;
-}
+// Restore active companion (name, pal level, evolved sprite colours)
+updateCompanionDisplay();
+updateRewardDot();
+MapIcon.draw(document.getElementById('map-icon-canvas'));
 
 renderTime();
 renderDots();
