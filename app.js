@@ -100,7 +100,7 @@ function renderProgress() {
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 3,        // ⚠ TESTING: 3 s (restore to 25 * 60)
+  focus: 25 * 60,
   short: 5  * 60,
   long:  15 * 60,
 };
