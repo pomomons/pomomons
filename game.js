@@ -397,7 +397,7 @@ const EncounterScreen = (() => {
       elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
       elSub.style.color = 'var(--green)';
       saveCaught();
-      if (typeof saveExp === 'function') saveExp(25);
+      if (typeof saveExp === 'function') saveExp(100); // ⚠ TESTING (restore to 25)
     } else {
       elSub.textContent = `${st.mon.name} FLED AWAY!`;
       elSub.style.color = 'var(--red)';

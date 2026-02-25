@@ -5,7 +5,9 @@ const Collection = (() => {
   const DB_VERSION = 1;
   const STORE_NAME = 'caught';
 
-  let db = null;
+  let db              = null;
+  let blenderReady    = false;   // event listeners attached once
+  let pendingBlend    = null;    // { key, monId, displayName, rarity }
 
   // ── IndexedDB setup ─────────────────────────────────────────
   function openDB() {
@@ -58,6 +60,39 @@ const Collection = (() => {
     } catch (err) {
       console.warn('Collection: failed to open DB', err);
     }
+
+    // Blender confirm modal — bind once
+    document.getElementById('btn-blend-yes')?.addEventListener('click', async () => {
+      if (!pendingBlend) return;
+      const { key, monId, displayName, rarity } = pendingBlend;
+      pendingBlend = null;
+      document.getElementById('blender-confirm').classList.remove('active');
+
+      try {
+        await deleteRecord(key);
+        addSmoothieItem(displayName, rarity);
+        renderSmoothieCount();
+        SFX.play('catch');
+        showBlendResult(displayName);
+
+        // Clear active companion if no more records of that species remain
+        const remaining = await getAllCaughtWithKeys();
+        const activeId  = parseInt(localStorage.getItem('pm_active') || '0', 10);
+        if (activeId === monId && !remaining.some(r => r.id === monId)) {
+          localStorage.removeItem('pm_active');
+          if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
+        }
+
+        renderMyMons();
+      } catch (err) {
+        console.warn('Blend failed', err);
+      }
+    });
+
+    document.getElementById('btn-blend-no')?.addEventListener('click', () => {
+      pendingBlend = null;
+      document.getElementById('blender-confirm').classList.remove('active');
+    });
   }
 
   // ── Public: addCaught ────────────────────────────────────────
@@ -97,6 +132,108 @@ const Collection = (() => {
       const req   = store.getAll();
       req.onsuccess = () => resolve(req.result);
       req.onerror   = () => reject(req.error);
+    });
+  }
+
+  // ── Internal: getAllCaughtWithKeys — records include their IDB primary key
+  function getAllCaughtWithKeys() {
+    return new Promise((resolve, reject) => {
+      const results = [];
+      const tx      = db.transaction(STORE_NAME, 'readonly');
+      const store   = tx.objectStore(STORE_NAME);
+      store.openCursor().onsuccess = e => {
+        const cursor = e.target.result;
+        if (cursor) {
+          results.push({ _key: cursor.primaryKey, ...cursor.value });
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // ── Internal: deleteRecord — removes one IDB record by its primary key
+  function deleteRecord(key) {
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.delete(key);
+      tx.oncomplete = resolve;
+      tx.onerror    = () => reject(tx.error);
+    });
+  }
+
+  // ── Internal: addSmoothieItem — persists a smoothie to pm_items
+  function addSmoothieItem(monName, rarity) {
+    const items = JSON.parse(localStorage.getItem('pm_items') || '[]');
+    items.push({ type: 'smoothie', name: monName + ' SMOOTHIE', rarity, blendedAt: Date.now() });
+    localStorage.setItem('pm_items', JSON.stringify(items));
+  }
+
+  // ── Internal: showBlendConfirm — populates and reveals the confirm modal
+  function showBlendConfirm(data) {
+    pendingBlend = data;
+    const overlay = document.getElementById('blender-confirm');
+    const nameEl  = document.getElementById('blend-name');
+    if (!overlay || !nameEl) return;
+    nameEl.textContent = data.displayName;
+    overlay.classList.add('active');
+  }
+
+  // ── Internal: showBlendResult — brief gold flash message after blending
+  function showBlendResult(monName) {
+    const msg = document.createElement('div');
+    msg.className   = 'blend-result-flash';
+    msg.textContent = `🥤 ${monName} SMOOTHIE OBTAINED!`;
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 2700);
+  }
+
+  // ── Internal: renderSmoothieCount — updates the smoothie tally box
+  function renderSmoothieCount() {
+    const countEl = document.getElementById('smoothie-count');
+    if (!countEl) return;
+    const items = JSON.parse(localStorage.getItem('pm_items') || '[]');
+    countEl.textContent = items.filter(i => i.type === 'smoothie').length;
+  }
+
+  // ── Internal: setupBlender — shows/hides zone, wires drop events once
+  function setupBlender() {
+    const zone = document.getElementById('blender-zone');
+    const drop = document.getElementById('blender-drop');
+    if (!zone || !drop) return;
+
+    const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
+    zone.classList.toggle('active', playerLevel >= 5);
+    if (playerLevel < 5) return;
+
+    // Pin the top of the zone to just below the app header; bottom is fixed in CSS
+    const appHeader = document.querySelector('.app-header');
+    if (appHeader) {
+      zone.style.top = (appHeader.getBoundingClientRect().bottom + 8) + 'px';
+    }
+
+    renderSmoothieCount();
+
+    if (blenderReady) return;
+    blenderReady = true;
+
+    drop.addEventListener('dragover', e => {
+      e.preventDefault();
+      drop.classList.add('drag-over');
+    });
+
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+
+    drop.addEventListener('drop', e => {
+      e.preventDefault();
+      drop.classList.remove('drag-over');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (data && data.key !== undefined) showBlendConfirm(data);
+      } catch { /* ignore malformed data */ }
     });
   }
 
@@ -270,6 +407,20 @@ const Collection = (() => {
     lvlEl.textContent = `LVL ${palLevel}`;
     card.appendChild(lvlEl);
 
+    // Make draggable for blender
+    card.setAttribute('draggable', 'true');
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        key: rec._key,
+        monId: mon.id,
+        displayName: stageMon.name,
+        rarity: mon.rarity,
+      }));
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
     card.addEventListener('click', () => setActiveCompanion(mon));
     return card;
   }
@@ -279,6 +430,8 @@ const Collection = (() => {
     const grid  = document.getElementById('mymons-grid');
     const count = document.getElementById('mymons-count');
 
+    setupBlender();
+
     if (!db) {
       if (count) count.textContent = '0';
       if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable.</p>';
@@ -287,7 +440,7 @@ const Collection = (() => {
 
     let allCaught;
     try {
-      allCaught = await getAllCaught();
+      allCaught = await getAllCaughtWithKeys();
     } catch (err) {
       if (grid) grid.innerHTML = '<p class="empty-state">Could not load mons.</p>';
       return;

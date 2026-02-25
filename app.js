@@ -3,7 +3,7 @@
 // ── Level reward milestones ────────────────────────────────
 const LEVEL_REWARDS = [
   { level:  2, name: 'Focus Tea',      desc: '+10% XP for 1 session',          type: 'item'    },
-  { level:  5, name: 'Shiny Charm',    desc: 'Doubles shiny encounter rate',   type: 'item'    },
+  { level:  5, name: 'Blender',         desc: 'Blend mons into smoothie items', type: 'feature' },
   { level:  8, name: 'Rare Scanner',   desc: 'Rare mons appear more often',    type: 'feature' },
   { level: 10, name: 'Double Tomato',  desc: 'Throw 2 tomatoes per encounter', type: 'item'    },
   { level: 15, name: 'Golden Tomato',  desc: 'Guarantees the next catch',      type: 'item'    },
@@ -27,6 +27,9 @@ function showScreen(name) {
   if (name === 'mymons')   Collection.renderMyMons();
   if (name === 'dex')      Collection.renderDex();
   if (name === 'progress') renderProgress();
+  // Blender is only visible on My Mons
+  const blenderZone = document.getElementById('blender-zone');
+  if (blenderZone && name !== 'mymons') blenderZone.classList.remove('active');
 }
 
 // ── Progress / reward dot ─────────────────────────────────
@@ -97,7 +100,7 @@ function renderProgress() {
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 5,        // ⚠ TESTING: 5 s (restore to 25 * 60)
+  focus: 3,        // ⚠ TESTING: 3 s (restore to 25 * 60)
   short: 5  * 60,
   long:  15 * 60,
 };
@@ -380,7 +383,7 @@ function showLevelUpBanner(level) {
   const banner = document.createElement('div');
   banner.className = 'level-up-banner';
   banner.innerHTML  = `LEVEL UP! LVL ${level}` +
-    (hasReward ? `<span class="banner-sub">★ NEW REWARD — CHECK MAP</span>` : '');
+    (hasReward ? `<span class="banner-sub">★ NEW REWARD — CHECK PROGRESS MAP</span>` : '');
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), hasReward ? 3000 : 2200);
 }

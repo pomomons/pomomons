@@ -71,6 +71,7 @@
       <h2 class="screen-title">MY MONS</h2>
       <span class="collection-count" id="mymons-count">0</span>
     </div>
+
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
     </div>
@@ -116,6 +117,33 @@
     <div class="encounter-controls" id="encounter-controls">
       <button class="btn btn-primary" id="btn-throw">THROW! 🍅</button>
       <button class="btn btn-ghost"  id="btn-flee">FLEE</button>
+    </div>
+  </div>
+
+  <!-- ── Blender Zone (fixed left, visible on My Mons screen) ── -->
+  <div class="blender-zone" id="blender-zone">
+    <div class="blender-drop" id="blender-drop" aria-label="Drag a mon here to blend into a smoothie">
+      <span class="blender-icon">🫙</span>
+      <span class="blender-label">BLEND</span>
+      <span class="blender-hint">DRAG<br>MON<br>HERE</span>
+    </div>
+    <div class="smoothie-box" id="smoothie-box">
+      <span class="blender-icon">🥤</span>
+      <span class="blender-label">SMOOTHIES</span>
+      <span class="smoothie-count" id="smoothie-count">0</span>
+    </div>
+  </div>
+
+  <!-- ── Blender Confirm Modal ────────────────────────── -->
+  <div id="blender-confirm" class="blender-confirm">
+    <div class="blender-confirm-box">
+      <p class="blender-confirm-title">⚠ BLEND THIS MON?</p>
+      <p class="blender-confirm-body">ARE YOU SURE YOU WANT TO BLEND<br><span id="blend-name">???</span><br>INTO A SMOOTHIE ITEM?</p>
+      <p class="blender-confirm-warn">THIS CANNOT BE UNDONE!</p>
+      <div class="blender-confirm-btns">
+        <button class="btn btn-primary" id="btn-blend-yes">BLEND IT!</button>
+        <button class="btn btn-ghost" id="btn-blend-no">CANCEL</button>
+      </div>
     </div>
   </div>
 
