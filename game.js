@@ -331,17 +331,20 @@ const EncounterScreen = (() => {
     ctx.fillStyle = '#e74c3c';
     ctx.fill();
 
-    // Shine highlight
-    ctx.beginPath();
-    ctx.arc(-r * 0.28, -r * 0.32, r * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.38)';
-    ctx.fill();
+    // Pixel shine (upper-left, square highlight like the logo)
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.fillRect(-Math.round(r * .44), -Math.round(r * .50),
+                  Math.round(r * .28),  Math.round(r * .22));
 
-    // Stem + leaf nubs (pixel style)
+    // Calyx — 5-leaf spread matching the logo 🍅
     ctx.fillStyle = '#27ae60';
-    ctx.fillRect(-3, -(r + 9), 4, 10);  // main stem
-    ctx.fillRect(-9, -(r + 3), 6,  3);  // left leaf
-    ctx.fillRect( 3, -(r + 3), 6,  3);  // right leaf
+    ctx.fillRect(-2,       -(r + 12), 4,  14); // stem
+    ctx.fillRect(-(r - 4), -(r +  3), 11,  5); // far-left leaf
+    ctx.fillRect(  r >> 2, -(r +  3), 11,  5); // far-right leaf
+    ctx.fillRect(-(r >> 1),-(r +  8),  7,  4); // mid-left leaf
+    ctx.fillRect( 2,       -(r +  8),  7,  4); // mid-right leaf
+    ctx.fillRect(-8,       -(r + 12),  5,  4); // top-left leaf
+    ctx.fillRect( 3,       -(r + 12),  5,  4); // top-right leaf
 
     ctx.restore();
   }
@@ -358,15 +361,18 @@ const EncounterScreen = (() => {
     ctx.fillStyle = '#e74c3c';
     ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(-r * 0.28, -r * 0.32, r * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.38)';
-    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.fillRect(-Math.round(r * .44), -Math.round(r * .50),
+                  Math.round(r * .28),  Math.round(r * .22));
 
     ctx.fillStyle = '#27ae60';
-    ctx.fillRect(-3, -(r + 9), 4, 10);
-    ctx.fillRect(-9, -(r + 3), 6,  3);
-    ctx.fillRect( 3, -(r + 3), 6,  3);
+    ctx.fillRect(-2,       -(r + 12), 4,  14);
+    ctx.fillRect(-(r - 4), -(r +  3), 11,  5);
+    ctx.fillRect(  r >> 2, -(r +  3), 11,  5);
+    ctx.fillRect(-(r >> 1),-(r +  8),  7,  4);
+    ctx.fillRect( 2,       -(r +  8),  7,  4);
+    ctx.fillRect(-8,       -(r + 12),  5,  4);
+    ctx.fillRect( 3,       -(r + 12),  5,  4);
 
     ctx.restore();
   }

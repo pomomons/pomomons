@@ -63,10 +63,11 @@ const SFX = (() => {
       tone(440, 'square', t + 0.13, 0.18, 0.28);
     },
 
-    // Downward whoosh → tomato thrown
+    // Squish-launch thwack + rising whoosh → tomato thrown
     throw() {
       const t = getCtx().currentTime;
-      tone({ start: 700, end: 180 }, 'square', t, 0.18, 0.22);
+      tone({ start: 260, end: 60  }, 'square',   t,        0.07, 0.40); // thwack
+      tone({ start: 150, end: 680 }, 'triangle', t + 0.05, 0.28, 0.15); // whoosh
     },
 
     // Upward sparkle sweep + ping → mon caught
