@@ -183,35 +183,43 @@ const SFX = (() => {
     let pending = [];   // { osc, env } pairs currently scheduled
     let timerId = null;
 
-    const BPM = 148;
-    const B   = 60 / BPM;   // quarter note ≈ 0.405 s
-    const e   = B / 2;      // eighth  note ≈ 0.203 s
+    const BPM = 176;
+    const B   = 60 / BPM;   // quarter note ≈ 0.341 s
+    const e   = B / 2;      // eighth  note ≈ 0.170 s
+    const s   = B / 4;      // sixteenth note ≈ 0.085 s
 
-    // 2-bar melodic phrase in D minor.
-    // Descends D5→F4 then ascends back — wave-like contour.
-    // Total duration: 12×e + 2×B = 12×0.203 + 2×0.405 ≈ 3.24 s
+    // 2-bar phrase in E minor — opens with an upward 4th leap (E5→A5)
+    // then cascades down and climbs again. 12×e + 2×B = 8×B ≈ 2.73 s
     const MELODY = [
-      [587, e], [523, e],   // D5  C5
-      [466, e], [392, e],   // Bb4 G4
-      [440, e], [392, e],   // A4  G4
-      [349, B],             // F4  (quarter — moment of tension)
-      [392, e], [440, e],   // G4  A4
-      [466, e], [523, e],   // Bb4 C5
-      [587, e], [523, e],   // D5  C5
-      [466, B],             // Bb4 (quarter — holds before loop)
+      [659, e], [880, e], [784, e], [659, e],   // E5 A5 G5 E5
+      [740, e], [659, e], [587, e], [494, e],   // F#5 E5 D5 B4
+      [659, e], [784, e], [880, e], [784, e],   // E5 G5 A5 G5
+      [740, B], [494, B],                        // F#5 B4 (quarter holds)
     ];
 
-    // Bass: 8 quarter notes = 8×B ≈ 3.24 s (matches MELODY)
+    // Root-fifth driving bass: 8×B ≈ 2.73 s (matches MELODY)
     const BASS = [
-      [147, B], [196, B], [233, B], [220, B],   // D3 G3 Bb3 A3
-      [196, B], [175, B], [196, B], [147, B],   // G3 F3 G3  D3
+      [165, B], [123, B], [110, B], [165, B],   // E3 B2 A2 E3
+      [147, B], [110, B], [123, B], [165, B],   // D3 A2 B2 E3
     ];
 
-    function schedNote(freq, startT, dur, gain) {
+    // 16th-note chord arpeggios — 32×s = 8×B — rhythmic urgency layer
+    const ARPEG = [
+      [330, s], [494, s], [659, s], [494, s],   // Em arpeg × 4
+      [330, s], [494, s], [659, s], [494, s],
+      [330, s], [494, s], [659, s], [494, s],
+      [330, s], [494, s], [659, s], [494, s],
+      [220, s], [330, s], [440, s], [330, s],   // Am arpeg × 2
+      [220, s], [330, s], [440, s], [330, s],
+      [165, s], [247, s], [330, s], [247, s],   // Em low arpeg × 2
+      [165, s], [247, s], [330, s], [247, s],
+    ];
+
+    function schedNote(freq, startT, dur, gain, type = 'square') {
       const ac  = getCtx();
       const osc = ac.createOscillator();
       const env = ac.createGain();
-      osc.type            = 'square';
+      osc.type            = type;
       osc.frequency.value = freq;
       env.gain.setValueAtTime(0, startT);
       env.gain.linearRampToValueAtTime(gain, startT + 0.01);
@@ -230,14 +238,21 @@ const SFX = (() => {
 
       let mt = t;
       for (const [freq, dur] of MELODY) {
-        if (freq) schedNote(freq, mt, dur * 0.88, 0.09);
+        if (freq) schedNote(freq, mt, dur * 0.88, 0.10);
         mt += dur;
       }
 
       let bt = t;
       for (const [freq, dur] of BASS) {
-        schedNote(freq, bt, dur * 0.82, 0.12);
+        schedNote(freq, bt, dur * 0.82, 0.13);
         bt += dur;
+      }
+
+      // 16th-note arpeggios (triangle wave, soft — adds urgency without clashing)
+      let at = t;
+      for (const [freq, dur] of ARPEG) {
+        schedNote(freq, at, dur * 0.65, 0.04, 'triangle');
+        at += dur;
       }
 
       // Re-schedule 150 ms before this loop ends to avoid gaps
