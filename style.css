@@ -905,7 +905,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .encounter-controls {
   display: flex;
   gap: 12px;
-  margin-top: 4px;
+  margin-top: auto;
 }
 
 /* ── Animations ──────────────────────────────────────────── */
