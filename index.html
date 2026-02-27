@@ -97,20 +97,16 @@
     <div class="progress-list" id="progress-list"></div>
   </main>
 
+  <!-- ── Encounter Flash (full-screen transition) ─────── -->
+  <div id="encounter-flash" class="encounter-flash"></div>
+
   <!-- ── Encounter Overlay ─────────────────────────────── -->
   <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
     <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
     <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
+    <p class="encounter-level" id="encounter-level">LVL 1</p>
 
     <canvas id="encounter-canvas" width="200" height="200" aria-label="Wild Pomomon"></canvas>
-
-    <div class="catch-dots" id="catch-dots" aria-label="Approximate catch difficulty">
-      <span class="cdot filled"></span>
-      <span class="cdot filled"></span>
-      <span class="cdot filled"></span>
-      <span class="cdot"></span>
-      <span class="cdot"></span>
-    </div>
 
     <p class="encounter-sub" id="encounter-sub"></p>
 
@@ -145,6 +141,16 @@
         <button class="btn btn-ghost" id="btn-blend-no">CANCEL</button>
       </div>
     </div>
+  </div>
+
+  <!-- ── Catch Overlay ────────────────────────────────── -->
+  <div id="catch-overlay" class="catch-overlay">
+    <p class="catch-gotcha">GOTCHA!</p>
+    <canvas id="catch-canvas" width="200" height="200" aria-label="Caught Pomomon"></canvas>
+    <h2 class="catch-name" id="catch-name">???</h2>
+    <p class="catch-sub">WAS ADDED TO YOUR COLLECTION!</p>
+    <p class="catch-shiny" id="catch-shiny"></p>
+    <button class="btn btn-primary" id="btn-catch-continue">CONTINUE!</button>
   </div>
 
   <!-- ── Evolution Overlay ────────────────────────────── -->

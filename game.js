@@ -260,12 +260,14 @@ const CompanionCanvas = (() => {
 
 // ── Encounter screen ───────────────────────────────────────
 const EncounterScreen = (() => {
-  const SIZE = 200; // logical canvas size
+  const SIZE      = 200;          // logical canvas size
+  const MON_SCALE = 1.5;          // wild mon drawn at 1.5× base size
+  const MON_CY    = SIZE * 0.38;  // mon centre-Y resting position
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
-      elMsg, elSub, elRarity, elControls,
-      btnThrow, btnFlee, catchDots;
+      elMsg, elSub, elRarity, elLevel, elControls,
+      btnThrow, btnFlee;
 
   let rafId    = null;
   let onDone   = null;
@@ -282,29 +284,90 @@ const EncounterScreen = (() => {
   };
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
-  function drawMon(cx, cy, { scale = 1, xOffset = 0, alpha = 1 } = {}) {
+  function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
     MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale, xOffset, alpha, shiny: st.mon.shiny || false });
   }
 
   // ── draw the tomato projectile ────────────────────────────
-  // t: 0→1 progress along arc
+  // t: 0→1 progress. Tomato launches from player side (bottom-right)
+  // in a high parabolic arc toward the monster, like a Pokéball throw.
   function drawTomato(t) {
-    const startX = SIZE / 2, startY = SIZE - 16;
-    const endX   = SIZE / 2, endY   = SIZE * 0.28;
-    const arcH   = 70; // px, arc peak height above straight line
+    const startX = SIZE * 0.82;
+    const startY = SIZE + 20;
+    const endX   = SIZE / 2;
+    const endY   = MON_CY;
+    const arcH   = SIZE * 0.65; // arc height
 
     const x = startX + (endX - startX) * t;
     const y = startY + (endY - startY) * t - arcH * Math.sin(Math.PI * t);
-    const r = 12 - 6 * t; // shrinks from 12→6 as it approaches mon
+
+    if (y > SIZE + 4) return;
+
+    const r     = 22;               // bigger tomato
+    const angle = Math.PI * 4 * t; // 2 full forward rotations
+
+    // Motion trail — 3 ghost echoes fading behind the ball
+    for (let i = 3; i >= 1; i--) {
+      const tp = Math.max(0, t - i * 0.036);
+      const tx = startX + (endX - startX) * tp;
+      const ty = startY + (endY - startY) * tp - arcH * Math.sin(Math.PI * tp);
+      if (ty > SIZE) continue;
+      ctx.save();
+      ctx.globalAlpha = 0.20 * (4 - i) / 3;
+      ctx.beginPath();
+      ctx.arc(Math.round(tx), Math.round(ty), Math.round(r * 0.72), 0, Math.PI * 2);
+      ctx.fillStyle = '#e74c3c';
+      ctx.fill();
+      ctx.restore();
+    }
 
     ctx.save();
+    ctx.translate(Math.round(x), Math.round(y));
+    ctx.rotate(angle);
+
+    // Body
     ctx.beginPath();
-    ctx.arc(Math.round(x), Math.round(y), Math.max(1, r), 0, Math.PI * 2);
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = '#e74c3c';
     ctx.fill();
-    // Stem
+
+    // Shine highlight
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.32, r * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.38)';
+    ctx.fill();
+
+    // Stem + leaf nubs (pixel style)
     ctx.fillStyle = '#27ae60';
-    ctx.fillRect(Math.round(x) - 1, Math.round(y) - r - 4, 2, 5);
+    ctx.fillRect(-3, -(r + 9), 4, 10);  // main stem
+    ctx.fillRect(-9, -(r + 3), 6,  3);  // left leaf
+    ctx.fillRect( 3, -(r + 3), 6,  3);  // right leaf
+
+    ctx.restore();
+  }
+
+  // ── draw tomato sitting still for shaking / result phases ─
+  function drawTomatoBall(x, y, wobble) {
+    const r = 22;
+    ctx.save();
+    ctx.translate(Math.round(x), Math.round(y));
+    ctx.rotate(wobble);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.32, r * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.38)';
+    ctx.fill();
+
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(-3, -(r + 9), 4, 10);
+    ctx.fillRect(-9, -(r + 3), 6,  3);
+    ctx.fillRect( 3, -(r + 3), 6,  3);
+
     ctx.restore();
   }
 
@@ -315,43 +378,56 @@ const EncounterScreen = (() => {
     const f  = st.frame;
 
     if (st.phase === 'appearing') {
-      // Slide down from above; ease out over 30 frames
-      const t  = Math.min(1, f / 30);
-      const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
-      const cy = SIZE * 0.32 * ease + SIZE * 0.01;
-      drawMon(cx, cy);
+      // Slide in from above; cubic ease-out over 30 frames
+      const t    = Math.min(1, f / 30);
+      const ease = 1 - Math.pow(1 - t, 3);
+      drawMon(cx, MON_CY * ease);
 
     } else if (st.phase === 'idle') {
       st.monBob++;
       st.monY = Math.sin(st.monBob / 22) * 6;
-      drawMon(cx, SIZE * 0.32 + st.monY);
+      drawMon(cx, MON_CY + st.monY);
 
     } else if (st.phase === 'throwing') {
-      // Mon stays put; tomato animates
-      drawMon(cx, SIZE * 0.32 + st.monY);
-      const t = Math.min(1, f / 40);
-      drawTomato(t);
+      const t = Math.min(1, f / 75);
+
+      // Mon fades out as the tomato closes in (absorption effect)
+      const monAlpha = t > 0.75 ? Math.max(0, 1 - (t - 0.75) / 0.25) : 1;
+      if (monAlpha > 0) {
+        drawMon(cx, MON_CY + st.monY, { alpha: monAlpha });
+      }
+
+      // Expanding white ring at impact moment
+      if (t > 0.9) {
+        const ft = (t - 0.9) / 0.1;
+        ctx.save();
+        ctx.globalAlpha = (1 - ft) * 0.8;
+        ctx.beginPath();
+        ctx.arc(cx, MON_CY, 14 + ft * 30, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (t < 1) drawTomato(t);
 
     } else if (st.phase === 'shaking') {
-      // 3 shake cycles over 30 frames
-      const xOff = Math.sin((f / 30) * Math.PI * 6) * 8;
-      drawMon(cx, SIZE * 0.32, { xOffset: xOff });
+      // Ball rocks left-right 3 times on the ground, diminishing amplitude
+      const shakeT = f / 30;
+      const wobble = Math.sin(shakeT * Math.PI * 6) * 0.28 * (1 - shakeT * 0.5);
+      drawTomatoBall(cx, MON_CY + 18, wobble);
+
+    } else if (st.phase === 'locked') {
+      // Ball sits still after the click — brief hold before congrats screen
+      drawTomatoBall(cx, MON_CY + 18, 0);
 
     } else if (st.phase === 'result') {
-      if (st.caught) {
-        // Flash then shrink to nothing
-        const t     = Math.min(1, f / 50);
-        const scale = Math.max(0, 1 - t * t); // quadratic shrink
-        const flash = Math.sin(t * Math.PI * 6); // flicker
-        const alpha = scale > 0.05 ? Math.max(0.2, 1 - Math.abs(flash) * 0.6) : 0;
-        drawMon(cx, SIZE * 0.32, { scale, alpha });
-      } else {
-        // Jump up and fly off to top-right
-        const t  = Math.min(1, f / 40);
-        const cy = SIZE * 0.32 - t * SIZE * 0.55;
-        const cx2 = cx + t * SIZE * 0.4;
-        drawMon(cx2, cy, { alpha: 1 - t * t });
-      }
+      // Escape path only (catch always succeeds currently)
+      const t   = Math.min(1, f / 40);
+      const cy2 = MON_CY - t * SIZE * 0.55;
+      const cx2 = cx + t * SIZE * 0.4;
+      drawMon(cx2, cy2, { alpha: 1 - t * t });
     }
     // 'done' phase: canvas is blank
   }
@@ -366,19 +442,28 @@ const EncounterScreen = (() => {
       st.phase = 'idle';
       st.frame = 0;
       enableButtons(true);
-    } else if (st.phase === 'throwing' && st.frame >= 40) {
+    } else if (st.phase === 'throwing' && st.frame >= 75) {
       // Catch is always successful
       st.caught = true;
       st.phase  = 'shaking';
       st.frame  = 0;
     } else if (st.phase === 'shaking' && st.frame >= 30) {
-      st.phase = 'result';
+      SFX.play('click');
+      saveCaught();
+      if (typeof saveExp === 'function') saveExp(25);
+      st.phase = 'locked';
       st.frame = 0;
-      showResult(st.caught);
-    } else if (st.phase === 'result' && st.frame >= (st.caught ? 50 : 40)) {
+    } else if (st.phase === 'locked' && st.frame >= 20) {
+      st.phase = 'done';
+      rafId = null;
+      SFX.music.stop();
+      overlay.classList.remove('active');
+      CatchScreen.start(st.mon, onDone);
+      return;
+    } else if (st.phase === 'result' && st.frame >= 40) {
       st.phase = 'done';
       close();
-      return; // stop rAF
+      return;
     }
 
     rafId = requestAnimationFrame(tick);
@@ -406,8 +491,13 @@ const EncounterScreen = (() => {
   }
 
   function saveCaught() {
+    // Use the level shown to the player at encounter start
+    const initLevel = st.monLevel || 1;
+
     const record = { id: st.mon.id, name: st.mon.name,
-                     shiny: st.mon.shiny || false, caughtAt: Date.now() };
+                     shiny: st.mon.shiny || false, caughtAt: Date.now(),
+                     palLevel: initLevel };
+
     if (typeof Collection !== 'undefined') {
       Collection.addCaught(record);
     } else {                         // fallback (IndexedDB unavailable)
@@ -417,12 +507,27 @@ const EncounterScreen = (() => {
     }
   }
 
-  // ── rarity dot display ────────────────────────────────────
-  // Maps catchRate to 1-5 filled dots (higher rate = more dots = easier)
-  function updateCatchDots(catchRate) {
-    const filled = Math.round(catchRate * 5);
-    const dotEls = catchDots.querySelectorAll('.cdot');
-    dotEls.forEach((d, i) => d.classList.toggle('filled', i < filled));
+
+  // ── JS-driven full-screen flash transition ────────────────
+  // Two white flashes → dark hold → reveal → fade out.
+  // Calls onReveal() when the encounter screen should appear.
+  function runFlashTransition(onReveal) {
+    const el = document.getElementById('encounter-flash');
+    if (!el) { onReveal(); return; }
+
+    // Start transparent black
+    el.style.transition = 'none';
+    el.style.background = '#000';
+    el.style.opacity    = '0';
+
+    // Fade to black
+    setTimeout(() => { el.style.transition = 'opacity 450ms ease'; el.style.opacity = '0.95'; }, 16);
+
+    // Reveal encounter screen beneath the darkness
+    setTimeout(onReveal, 580);
+
+    // Lift the darkness
+    setTimeout(() => { el.style.transition = 'opacity 550ms ease'; el.style.opacity = '0'; }, 700);
   }
 
   // ── public API ────────────────────────────────────────────
@@ -435,10 +540,10 @@ const EncounterScreen = (() => {
       elMsg       = document.getElementById('encounter-msg');
       elSub       = document.getElementById('encounter-sub');
       elRarity    = document.getElementById('encounter-rarity');
+      elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
       btnThrow    = document.getElementById('btn-throw');
       btnFlee     = document.getElementById('btn-flee');
-      catchDots   = document.getElementById('catch-dots');
 
       // HiDPI
       st.dpr = window.devicePixelRatio || 1;
@@ -464,22 +569,29 @@ const EncounterScreen = (() => {
     st.monY     = 0;
     st.caught   = false;
 
+    // Compute wild mon level (player level ±2) once at encounter start
+    const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
+    const offset      = Math.floor(Math.random() * 5) - 2;
+    st.monLevel       = Math.max(1, Math.min(100, playerLevel + offset));
+
     // Populate UI
     elMsg.textContent = `A WILD ${mon.name} APPEARED!`;
     elSub.textContent = '';
     elSub.style.color = '';
     elRarity.textContent = mon.rarity.toUpperCase();
     elRarity.className   = `encounter-rarity ${mon.rarity}`;
-    updateCatchDots(mon.catchRate);
+    if (elLevel) elLevel.textContent = `LVL ${st.monLevel}`;
     enableButtons(false); // disabled until 'idle' phase
 
-    // Show overlay
-    overlay.classList.add('active');
     SFX.play('encounter');
 
-    // Kick off rAF
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(tick);
+    // Flash transition, then reveal encounter overlay and start music
+    runFlashTransition(() => {
+      overlay.classList.add('active');
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tick);
+      if (typeof SFX !== 'undefined') SFX.music.start();
+    });
   }
 
   function throw_() {
@@ -499,6 +611,7 @@ const EncounterScreen = (() => {
 
   function close() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (typeof SFX !== 'undefined') SFX.music.stop();
     // Short delay so the player can read the result text
     setTimeout(() => {
       overlay.classList.remove('active');
@@ -650,6 +763,70 @@ const EvolutionScreen = (() => {
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tick);
+  }
+
+  return { start };
+})();
+
+// ── Catch Screen ───────────────────────────────────────────
+// Full-screen congratulations overlay shown after a successful catch.
+// Displays the mon sprite (bobbing), a "GOTCHA!" headline, and a fanfare.
+const CatchScreen = (() => {
+  const SIZE = 200;
+
+  let overlay, canvas, ctx, elName, elShiny, btnContinue;
+  let rafId = null, onDone = null, autoDismissTimer = null;
+
+  const st = { frame: 0, mon: null, dpr: 1 };
+
+  function tick() {
+    st.frame++;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    const bobY = Math.sin(st.frame / 22) * 6;
+    MonSprite.drawOnCtx(ctx, st.mon, SIZE / 2, SIZE / 2 + bobY,
+      { scale: 1.5, shiny: st.mon.shiny || false });
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function dismiss() {
+    if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    overlay.classList.remove('active');
+    if (typeof onDone === 'function') onDone();
+  }
+
+  function start(mon, doneCb) {
+    if (!overlay) {
+      overlay     = document.getElementById('catch-overlay');
+      canvas      = document.getElementById('catch-canvas');
+      ctx         = canvas.getContext('2d');
+      elName      = document.getElementById('catch-name');
+      elShiny     = document.getElementById('catch-shiny');
+      btnContinue = document.getElementById('btn-catch-continue');
+
+      st.dpr = window.devicePixelRatio || 1;
+      if (st.dpr !== 1) {
+        canvas.width  = SIZE * st.dpr;
+        canvas.height = SIZE * st.dpr;
+        ctx.scale(st.dpr, st.dpr);
+      }
+
+      btnContinue.addEventListener('click', dismiss);
+    }
+
+    onDone    = doneCb;
+    st.mon    = mon;
+    st.frame  = 0;
+
+    elName.textContent  = mon.name.toUpperCase();
+    elShiny.textContent = mon.shiny ? '✨ SHINY!' : '';
+
+    overlay.classList.add('active');
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+
+    SFX.play('fanfare');
+    autoDismissTimer = setTimeout(dismiss, 6000);
   }
 
   return { start };
