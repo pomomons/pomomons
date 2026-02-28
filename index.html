@@ -68,7 +68,7 @@
   <main id="screen-mymons" class="screen">
     <div class="collection-header">
       <button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button>
-      <h2 class="screen-title">MY MONS</h2>
+      <h2 class="screen-title">MONSTER COLLECTION</h2>
       <span class="collection-count" id="mymons-count">0</span>
     </div>
 
@@ -113,6 +113,7 @@
     <div class="encounter-controls" id="encounter-controls">
       <button class="btn btn-primary" id="btn-throw">THROW! 🍅</button>
       <button class="btn btn-ghost"  id="btn-flee">FLEE</button>
+      <button class="btn btn-primary" id="btn-catch-next" hidden>NEXT →</button>
     </div>
   </div>
 
@@ -141,6 +142,18 @@
         <button class="btn btn-ghost" id="btn-blend-no">CANCEL</button>
       </div>
     </div>
+  </div>
+
+  <!-- ── Mon Info Overlay ─────────────────────────────── -->
+  <div id="mon-info-overlay" class="mon-info-overlay">
+    <p class="mon-info-rarity" id="mon-info-rarity">COMMON</p>
+    <h2 class="mon-info-name" id="mon-info-name">???</h2>
+    <canvas id="mon-info-canvas" width="200" height="200" aria-label="Caught Pomomon"></canvas>
+    <div class="mon-info-evo-section">
+      <p class="mon-info-evo-title">EVOLUTION PATH</p>
+      <div class="mon-info-evo-chain" id="mon-info-evo-chain"></div>
+    </div>
+    <button class="btn btn-primary" id="btn-mon-info-done">GOT IT!</button>
   </div>
 
   <!-- ── Catch Overlay ────────────────────────────────── -->

@@ -905,8 +905,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .encounter-controls {
   display: flex;
   gap: 12px;
-  margin-top: auto;
-  margin-bottom: 32px;
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* ── Animations ──────────────────────────────────────────── */
@@ -947,6 +949,128 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   margin-top: 4px;
   letter-spacing: .08em;
   color: rgba(26,10,0,.75);
+}
+
+/* When only NEXT button is shown, centre it */
+.encounter-controls.postcatch { justify-content: center; }
+
+/* ── Mon Info Overlay ────────────────────────────────────── */
+.mon-info-overlay                { background: #00a888; }
+body.run-focus .mon-info-overlay { background: #af4d4d; }
+
+.mon-info-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 170;
+  padding: 28px 24px calc(var(--stats-h) + 16px);
+  text-align: center;
+  overflow-y: auto;
+}
+
+.mon-info-overlay.active {
+  display: flex;
+  animation: mon-info-appear .35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes mon-info-appear {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.mon-info-name {
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  color: #fff;
+  letter-spacing: .06em;
+}
+
+.mon-info-rarity {
+  font-size: .55rem;
+  letter-spacing: .15em;
+  color: var(--text-muted);
+}
+.mon-info-rarity.uncommon { color: var(--blue); }
+.mon-info-rarity.rare     { color: var(--purple); }
+
+#mon-info-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 3px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+}
+
+.mon-info-evo-section {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(0,0,0,.30);
+  border: 2px solid rgba(255,255,255,.18);
+  border-radius: 12px;
+  padding: 14px 12px;
+  margin-top: 6px;
+}
+
+.mon-info-evo-title {
+  font-size: .5rem;
+  letter-spacing: .14em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.mon-info-evo-chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.evo-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.evo-node canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 2px solid rgba(255,255,255,.22);
+  border-radius: 6px;
+}
+
+.evo-node.base canvas {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(255,214,0,.30);
+}
+
+.evo-node-name {
+  font-size: .38rem;
+  color: var(--text-dim);
+  letter-spacing: .06em;
+  max-width: 70px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.evo-node-label {
+  font-size: .32rem;
+  color: var(--text-muted);
+  letter-spacing: .05em;
+}
+
+.evo-node-label.base-label { color: var(--gold); }
+
+.evo-arrow {
+  font-size: .65rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  user-select: none;
+  margin-bottom: 20px;
 }
 
 /* ── Catch Overlay ───────────────────────────────────────── */
@@ -1187,7 +1311,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* ── Blender Zone — fixed to left edge, visible on My Mons ── */
 .blender-zone {
   position: fixed;
-  left: 14px;
+  left: max(4px, calc(25vw - 268px));
   bottom: calc(var(--stats-h) + 8px);
   /* top is set by JS (header bottom + 8px) */
   display: none;        /* hidden until .active is added */
@@ -1200,18 +1324,20 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .blender-zone.active { display: flex; }
 
-/* Shared card style for both blender boxes */
+/* Shared card style for both blender boxes — same size as a mon-card grid cell */
 .blender-drop,
 .smoothie-box {
-  width: 120px;
+  width: calc((min(100vw, 680px) - 48px) / 3);
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
   background: rgba(0,0,0,.45);
   border: 2px dashed rgba(255,255,255,.28);
-  border-radius: 10px;
+  border-radius: 8px;
   text-align: center;
   user-select: none;
 }

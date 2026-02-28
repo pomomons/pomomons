@@ -90,24 +90,42 @@ const SFX = (() => {
       tone({ start: 440, end: 660 }, 'triangle', t, 0.07, 0.18);
     },
 
-    // Short thud + metallic ping → ball locks shut after shakes
-    click() {
+    // Springy elastic bop → ball bounces on ground
+    bounce() {
       const t = getCtx().currentTime;
-      tone({ start: 180, end: 50 }, 'square', t,        0.06, 0.40);
-      tone(1400,                    'sine',   t + 0.02,  0.04, 0.20);
+      tone({ start: 480, end: 90 }, 'sine',     t,        0.07, 0.34); // elastic pitch drop
+      tone(260,                     'triangle', t + 0.01, 0.05, 0.20); // soft body thud underneath
     },
 
-    // Triumphant ascending jingle → catch confirmed
+    // Heavy impact thud → ball rocks during shake
+    shake() {
+      const t = getCtx().currentTime;
+      tone({ start: 160, end: 40  }, 'square',   t,        0.18, 0.70); // heavy low thud
+      tone({ start: 320, end: 100 }, 'square',   t,        0.10, 0.45); // mid punch layer
+      tone(95,                       'triangle', t + 0.03, 0.16, 0.35); // deep sub rumble
+    },
+
+    // Satisfying low mechanical click → ball locks shut
+    click() {
+      const t = getCtx().currentTime;
+      tone({ start: 380, end: 90 }, 'square',   t,        0.09, 0.75); // punchy mid-low click body
+      tone(900,                     'triangle', t,        0.03, 0.50); // brief mid snap on attack
+    },
+
+    // Triumphant brass trumpet fanfare → catch confirmed
     fanfare() {
       const t = getCtx().currentTime;
-      tone(523,  'square',   t,        0.09, 0.20);  // C5
-      tone(659,  'square',   t + 0.10, 0.09, 0.20);  // E5
-      tone(784,  'square',   t + 0.20, 0.09, 0.20);  // G5
-      tone(1047, 'square',   t + 0.31, 0.22, 0.22);  // C6 (peak)
-      tone(784,  'triangle', t + 0.31, 0.55, 0.10);  // G5 harmony
-      tone(988,  'square',   t + 0.55, 0.08, 0.18);  // B5
-      tone(784,  'square',   t + 0.65, 0.08, 0.18);  // G5
-      tone(523,  'square',   t + 0.75, 0.32, 0.22);  // C5 (resolution hold)
+      // Three ascending pickup notes (sawtooth = brassier timbre)
+      tone(523,  'sawtooth', t,         0.08, 0.22);  // C5
+      tone(659,  'sawtooth', t + 0.10,  0.08, 0.22);  // E5
+      tone(784,  'sawtooth', t + 0.20,  0.08, 0.24);  // G5
+      // Big C6 peak — double-layered for sustain effect
+      tone(1047, 'sawtooth', t + 0.30,  0.09, 0.30);  // C6 bright attack
+      tone(1047, 'sawtooth', t + 0.38,  0.34, 0.22);  // C6 sustain body
+      tone(784,  'triangle', t + 0.30,  0.42, 0.10);  // G5 harmony (softer)
+      // Descending resolution
+      tone(784,  'sawtooth', t + 0.76,  0.08, 0.22);  // G5
+      tone(523,  'sawtooth', t + 0.87,  0.42, 0.28);  // C5 final hold
     },
 
     // Engine rev sound → mon blended into smoothie

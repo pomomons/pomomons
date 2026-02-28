@@ -100,13 +100,13 @@ function renderProgress() {
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 25 * 60,
+  focus: 3,        // ⚠ TESTING: 3 s (restore to 25 * 60)
   short: 5  * 60,
   long:  15 * 60,
 };
 
 let focusMins   = 25;
-const MIN_FOCUS = 5, MAX_FOCUS = 90;
+const MIN_FOCUS = 1, MAX_FOCUS = 90; // ⚠ TESTING: MIN_FOCUS 1 (restore to 5)
 
 let currentMode   = 'focus';
 let timeLeft      = MODES.focus;
@@ -302,13 +302,13 @@ function palExpThreshold(level) {
   return Math.round(30 * Math.pow(1.3, level - 1));
 }
 
-function getPalState(speciesId) {
-  const level = parseInt(localStorage.getItem(`pm_pal_level_${speciesId}`) || '1', 10);
-  const exp   = parseInt(localStorage.getItem(`pm_pal_exp_${speciesId}`)   || '0', 10);
+function getPalState() {
+  const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
+  const exp   = parseInt(localStorage.getItem('pm_active_pal_exp')   || '0', 10);
   return { level, exp };
 }
 
-// Award XP to the active companion's species. Returns an object describing
+// Award XP to the active companion's record. Returns an object describing
 // any level-up or evolution that occurred, or null if no active companion.
 function savePalExp(speciesId, delta) {
   if (!speciesId || typeof MONS === 'undefined') return null;
@@ -316,7 +316,7 @@ function savePalExp(speciesId, delta) {
   if (!mon) return null;
 
   const PAL_MAX = 100;
-  let { level, exp } = getPalState(speciesId);
+  let { level, exp } = getPalState();
 
   const fromMon = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
 
@@ -329,8 +329,13 @@ function savePalExp(speciesId, delta) {
   }
   if (level >= PAL_MAX) exp = 0;
 
-  localStorage.setItem(`pm_pal_level_${speciesId}`, level);
-  localStorage.setItem(`pm_pal_exp_${speciesId}`,   exp);
+  localStorage.setItem('pm_active_pal_level', level);
+  localStorage.setItem('pm_active_pal_exp',   exp);
+
+  // On level-up, persist the new level to the IDB record
+  if (leveled && typeof Collection !== 'undefined' && Collection.updateActivePalLevel) {
+    Collection.updateActivePalLevel(level);
+  }
 
   const toMon  = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const evolved = fromMon.name !== toMon.name;
@@ -346,7 +351,7 @@ function updateCompanionDisplay() {
   if (!activeId || typeof MONS === 'undefined') return;
   const mon = MONS.find(m => m.id === activeId);
   if (!mon) return;
-  const { level } = getPalState(activeId);
+  const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
