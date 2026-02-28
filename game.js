@@ -263,7 +263,7 @@ const EncounterScreen = (() => {
   const SIZE      = 200;          // logical canvas width
   const H         = 380;          // logical canvas height — tall for long throw arc
   const MON_SCALE = 1.5;          // wild mon drawn at 1.5× base size
-  const MON_CY    = SIZE * 0.38;  // mon centre-Y resting position (76px from top)
+  const MON_CY    = H * 0.28;     // mon centre-Y resting position (28% down the tall canvas)
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
@@ -299,9 +299,9 @@ const EncounterScreen = (() => {
     const startY = st.throwStartY;  // button position in canvas coords
     const endX   = SIZE / 2;
     const endY   = MON_CY;
-    // Arc height chosen so the peak sits ~10px from the canvas top,
-    // regardless of how far below the canvas the button is.
-    const arcH   = (startY + endY) / 2 - 10;
+    // Arc height chosen so the peak sits ~30px from the canvas top
+    // (ball radius is 22px, so this keeps the full ball inside the canvas).
+    const arcH   = (startY + endY) / 2 - 30;
 
     const x = startX + (endX - startX) * t;
     const y = startY + (endY - startY) * t - arcH * Math.sin(Math.PI * t);
