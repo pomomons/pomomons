@@ -275,13 +275,15 @@ const EncounterScreen = (() => {
 
   // State machine
   const st = {
-    phase:   'idle',  // appearing|idle|throwing|shaking|result|done
-    mon:     null,
-    caught:  false,
-    frame:   0,       // general counter, reset each phase
-    dpr:     1,
-    monY:    0,       // current bob offset (idle phase)
-    monBob:  0,       // frame counter for idle bob
+    phase:        'idle',  // appearing|idle|throwing|shaking|result|done
+    mon:          null,
+    caught:       false,
+    frame:        0,       // general counter, reset each phase
+    dpr:          1,
+    monY:         0,       // current bob offset (idle phase)
+    monBob:       0,       // frame counter for idle bob
+    throwStartX:  SIZE * 0.82, // throw origin in canvas coords (set on throw)
+    throwStartY:  H + 20,      // overwritten with button position on throw
   };
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
@@ -293,11 +295,13 @@ const EncounterScreen = (() => {
   // t: 0→1 progress. Tomato launches from player side (bottom-right)
   // in a high parabolic arc toward the monster, like a Pokéball throw.
   function drawTomato(t) {
-    const startX = SIZE * 0.82;
-    const startY = H + 20;          // launches from below the tall canvas
+    const startX = st.throwStartX;
+    const startY = st.throwStartY;  // button position in canvas coords
     const endX   = SIZE / 2;
     const endY   = MON_CY;
-    const arcH   = H * 0.60;        // arc peaks ~10px from canvas top
+    // Arc height chosen so the peak sits ~10px from the canvas top,
+    // regardless of how far below the canvas the button is.
+    const arcH   = (startY + endY) / 2 - 10;
 
     const x = startX + (endX - startX) * t;
     const y = startY + (endY - startY) * t - arcH * Math.sin(Math.PI * t);
@@ -605,6 +609,14 @@ const EncounterScreen = (() => {
     if (st.phase !== 'idle') return;
     SFX.play('throw');
     enableButtons(false);
+
+    // Measure where the throw button sits relative to the canvas so the
+    // tomato arc can originate from that screen position.
+    const cr = canvas.getBoundingClientRect();
+    const br = btnThrow.getBoundingClientRect();
+    st.throwStartX = (br.left + br.width  / 2 - cr.left) * (SIZE / cr.width);
+    st.throwStartY = (br.top  + br.height / 2 - cr.top)  * (H    / cr.height);
+
     st.phase = 'throwing';
     st.frame = 0;
   }
