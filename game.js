@@ -260,9 +260,10 @@ const CompanionCanvas = (() => {
 
 // ── Encounter screen ───────────────────────────────────────
 const EncounterScreen = (() => {
-  const SIZE      = 200;          // logical canvas size
+  const SIZE      = 200;          // logical canvas width
+  const H         = 380;          // logical canvas height — tall for long throw arc
   const MON_SCALE = 1.5;          // wild mon drawn at 1.5× base size
-  const MON_CY    = SIZE * 0.38;  // mon centre-Y resting position
+  const MON_CY    = SIZE * 0.38;  // mon centre-Y resting position (76px from top)
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
@@ -293,15 +294,15 @@ const EncounterScreen = (() => {
   // in a high parabolic arc toward the monster, like a Pokéball throw.
   function drawTomato(t) {
     const startX = SIZE * 0.82;
-    const startY = SIZE + 20;
+    const startY = H + 20;          // launches from below the tall canvas
     const endX   = SIZE / 2;
     const endY   = MON_CY;
-    const arcH   = SIZE * 0.65; // arc height
+    const arcH   = H * 0.60;        // arc peaks ~10px from canvas top
 
     const x = startX + (endX - startX) * t;
     const y = startY + (endY - startY) * t - arcH * Math.sin(Math.PI * t);
 
-    if (y > SIZE + 4) return;
+    if (y > H + 4) return;
 
     const r     = 22;               // bigger tomato
     const angle = Math.PI * 4 * t; // 2 full forward rotations
@@ -311,7 +312,7 @@ const EncounterScreen = (() => {
       const tp = Math.max(0, t - i * 0.036);
       const tx = startX + (endX - startX) * tp;
       const ty = startY + (endY - startY) * tp - arcH * Math.sin(Math.PI * tp);
-      if (ty > SIZE) continue;
+      if (ty > H) continue;
       ctx.save();
       ctx.globalAlpha = 0.20 * (4 - i) / 3;
       ctx.beginPath();
@@ -379,7 +380,7 @@ const EncounterScreen = (() => {
 
   // ── phase draw dispatcher ─────────────────────────────────
   function draw() {
-    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.clearRect(0, 0, SIZE, H);
     const cx = SIZE / 2;
     const f  = st.frame;
 
@@ -395,7 +396,7 @@ const EncounterScreen = (() => {
       drawMon(cx, MON_CY + st.monY);
 
     } else if (st.phase === 'throwing') {
-      const t = Math.min(1, f / 75);
+      const t = Math.min(1, f / 90);
 
       // Mon fades out as the tomato closes in (absorption effect)
       const monAlpha = t > 0.75 ? Math.max(0, 1 - (t - 0.75) / 0.25) : 1;
@@ -448,7 +449,7 @@ const EncounterScreen = (() => {
       st.phase = 'idle';
       st.frame = 0;
       enableButtons(true);
-    } else if (st.phase === 'throwing' && st.frame >= 75) {
+    } else if (st.phase === 'throwing' && st.frame >= 90) {
       // Catch is always successful
       st.caught = true;
       st.phase  = 'shaking';
@@ -555,7 +556,7 @@ const EncounterScreen = (() => {
       st.dpr = window.devicePixelRatio || 1;
       if (st.dpr !== 1) {
         canvas.width  = SIZE * st.dpr;
-        canvas.height = SIZE * st.dpr;
+        canvas.height = H    * st.dpr;
         ctx.scale(st.dpr, st.dpr);
       }
 
