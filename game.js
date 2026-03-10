@@ -3,13 +3,99 @@
 // ── Shared sprite renderer ────────────────────────────────
 // Used by EncounterScreen (encounter canvas) and Collection (card thumbnails).
 const MonSprite = (() => {
+  // ── PNG image cache ──────────────────────────────────────
+  // Keyed by src path. Images are loaded once and reused.
+  const _imgCache = {};
+
+  function getImage(src) {
+    if (!_imgCache[src]) {
+      const img = new Image();
+      img.src = src;
+      _imgCache[src] = img;
+    }
+    return _imgCache[src];
+  }
+
+  // Pre-warm the cache for a mon so its image is ready before first draw.
+  function preload(mon) {
+    if (mon.sprite)      getImage(mon.sprite);
+    if (mon.shinySprite) getImage(mon.shinySprite);
+  }
+
   function block(ctx, color, x, y, w, h) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
+  // ── PNG path: draw image centred at (cx, cy) ────────────
+  // Supports animated sprite sheets: frames are laid out horizontally,
+  // each frame 32px wide. frame index is derived from Date.now().
+  function drawPng(ctx, src, cx, cy, { scale = 1, xOffset = 0, alpha = 1, frames = 1, fps = 8 } = {}) {
+    const img = getImage(src);
+    if (!img.complete || img.naturalWidth === 0) return false; // not ready yet
+    const frameIndex = frames > 1 ? Math.floor(Date.now() / (1000 / fps)) % frames : 0;
+    // Derive source frame size from actual image dimensions so any export
+    // resolution works — the frame is always scaled to display at 32×32 px.
+    const srcW = img.naturalWidth / frames;
+    const srcH = img.naturalHeight;
+    const size = 192 * scale;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.imageSmoothingEnabled = false; // keep pixel art crisp when scaled
+    ctx.drawImage(
+      img,
+      frameIndex * srcW, 0, srcW, srcH,                        // source: slice this frame
+      Math.round(cx - size / 2 + xOffset), Math.round(cy - size / 2), // dest position
+      Math.round(size), Math.round(size)                        // dest size
+    );
+    ctx.restore();
+    return true;
+  }
+
+  // ── Shiny sparkle — drawn on top of either PNG or block art ──
+  // spriteSize: logical px of the sprite (32 for PNG, 48 for block-art)
+  function drawSparkle(ctx, cx, cy, scale, spriteSize = 48) {
+    const bw = spriteSize * scale, bh = spriteSize * scale;
+    const ew = 10 * scale, eh = 12 * scale;
+    const x0 = cx - bw / 2;
+    const y0 = cy - bh / 2;
+    ctx.fillStyle = '#fff';
+    const sx = x0 + bw - ew + 2 * scale;
+    const sy = y0 - eh - 6 * scale;
+    ctx.fillRect(Math.round(sx),             Math.round(sy + 2 * scale), Math.round(2 * scale), Math.round(6 * scale));
+    ctx.fillRect(Math.round(sx - 2 * scale), Math.round(sy + 4 * scale), Math.round(6 * scale), Math.round(2 * scale));
+  }
+
   // Draw a mon centred on (cx, cy) into an already-obtained ctx.
+  // Uses PNG sprite if mon.sprite (or mon.shinySprite when shiny) is set
+  // and the image has loaded; falls back to block art otherwise.
   function drawOnCtx(ctx, mon, cx, cy, { scale = 1, xOffset = 0, alpha = 1, shiny = false } = {}) {
+    const spriteSrc = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+
+    if (spriteSrc) {
+      // Drop shadow sized to PNG sprite display size
+      const pw = 192 * scale, ph = 192 * scale;
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.2;
+      block(ctx, 'rgba(0,0,0,0.6)',
+        cx - pw * 0.45 + xOffset, cy + ph / 2 + 3,
+        pw * 0.9, 5 * scale
+      );
+      ctx.restore();
+
+      const drew = drawPng(ctx, spriteSrc, cx, cy, {
+        scale, xOffset, alpha,
+        frames: mon.spriteFrames || 1,
+        fps:    mon.spriteFps    || 8,
+      });
+      if (drew) {
+        if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale, 192);
+        return;
+      }
+      // Image not loaded yet — fall through to block art
+    }
+
+    // ── Block-art fallback ───────────────────────────────────
     ctx.save();
     ctx.globalAlpha = alpha;
 
@@ -61,13 +147,7 @@ const MonSprite = (() => {
     block(ctx, accentColor, mX + 8 * scale, mY,             4 * scale, 2 * scale);
 
     // Shiny sparkle (small cross above right ear)
-    if (shiny) {
-      ctx.fillStyle = '#fff';
-      const sx = x0 + bw - ew + 2 * scale;
-      const sy = y0 - eh - 6 * scale;
-      ctx.fillRect(Math.round(sx),             Math.round(sy + 2 * scale), Math.round(2 * scale), Math.round(6 * scale));
-      ctx.fillRect(Math.round(sx - 2 * scale), Math.round(sy + 4 * scale), Math.round(6 * scale), Math.round(2 * scale));
-    }
+    if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale);
 
     ctx.restore();
   }
@@ -79,20 +159,22 @@ const MonSprite = (() => {
     drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale, shiny });
   }
 
-  return { drawOnCtx, draw };
+  return { drawOnCtx, draw, getImage, preload };
 })();
 
 // ── Companion idle animation ───────────────────────────────
 const CompanionCanvas = (() => {
   const CANVAS_SIZE = 200; // logical px (canvas element attribute)
 
-  // Placeholder sprite definition — replace with real sprite sheet later.
-  // A simple pixel creature: colored body block + two eyes + blush marks.
   const SPRITE = {
-    bodyColor:  '#e74c3c',   // tomato red
+    bodyColor:  '#e74c3c',   // tomato red (block-art fallback)
     eyeColor:   '#2c2c2c',
     blushColor: '#f1948a',
     shadowColor:'rgba(0,0,0,0.15)',
+    spriteSrc:  null,        // set by setMon() when mon has a PNG sprite
+    shiny:      false,
+    frames:     1,           // sprite sheet frame count
+    fps:        8,           // animation speed
   };
 
   // Bob animation state
@@ -120,12 +202,50 @@ const CompanionCanvas = (() => {
     ctx.fillRect(px(x), px(y), px(w), px(h));
   }
 
-  // ── draw the placeholder sprite ────────────────────────
-  // The sprite is drawn centred in the canvas.
+  // ── draw the companion sprite ───────────────────────────
+  // Uses PNG if available (bob + squish via canvas transforms), else block art.
   // Origin (0,0) = top-left of canvas.
   function drawSprite(bobY, sqX, sqY) {
     const cx = CANVAS_SIZE / 2;
     const cy = CANVAS_SIZE / 2;
+
+    if (SPRITE.spriteSrc) {
+      const img = MonSprite.getImage(SPRITE.spriteSrc);
+      if (img.complete && img.naturalWidth > 0) {
+        const size = 192; // display size for PNG sprites (3× the 32px source)
+        const frameIndex = SPRITE.frames > 1
+          ? Math.floor(Date.now() / (1000 / SPRITE.fps)) % SPRITE.frames
+          : 0;
+        // Drop shadow
+        ctx.save();
+        ctx.globalAlpha = 0.25 * (1 - Math.abs(bobY) / 18);
+        ctx.fillStyle = SPRITE.shadowColor;
+        ctx.fillRect(
+          Math.round(cx - size * 0.45),
+          Math.round(cy + size / 2 + 4 + bobY * 0.3),
+          Math.round(size * 0.9), Math.round(6 * sqX)
+        );
+        ctx.restore();
+        // Sprite with bob + squish, slicing the correct frame
+        const srcW = img.naturalWidth / SPRITE.frames;
+        const srcH = img.naturalHeight;
+        ctx.save();
+        ctx.translate(cx, cy + bobY);
+        ctx.scale(sqX, sqY);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, frameIndex * srcW, 0, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
+        ctx.restore();
+        if (SPRITE.shiny) {
+          // Sparkle above top-right of sprite
+          ctx.fillStyle = '#fff';
+          const sx = cx + size / 2 - 6;
+          const sy = cy + bobY - size / 2 - 14;
+          ctx.fillRect(Math.round(sx),     Math.round(sy + 2), 2, 6);
+          ctx.fillRect(Math.round(sx - 2), Math.round(sy + 4), 6, 2);
+        }
+        return;
+      }
+    }
 
     // Body dimensions (before squish)
     const bw = 48, bh = 48;
@@ -225,10 +345,16 @@ const CompanionCanvas = (() => {
   }
 
   // ── public API ─────────────────────────────────────────
-  // Re-skin the companion with a caught mon's colours (called by collection.js).
+  // Re-skin the companion with a caught mon's colours/sprite (called by collection.js).
   function setMon(mon) {
     SPRITE.bodyColor  = mon.color;
     SPRITE.blushColor = mon.color + '99';
+    SPRITE.shiny      = mon.shiny || false;
+    SPRITE.spriteSrc  = mon.shiny ? (mon.shinySprite || mon.sprite || null)
+                                  : (mon.sprite || null);
+    SPRITE.frames     = mon.spriteFrames || 1;
+    SPRITE.fps        = mon.spriteFps    || 8;
+    if (SPRITE.spriteSrc) MonSprite.preload(mon);
   }
 
   function init(canvasEl) {
@@ -671,6 +797,7 @@ const EncounterScreen = (() => {
     const mon   = getRandomMon();
     mon.shiny   = Math.random() < (1 / 64);
     st.mon      = mon;
+    MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
     st.frame    = 0;
     st.monBob   = 0;

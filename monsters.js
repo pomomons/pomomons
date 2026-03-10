@@ -1,9 +1,17 @@
 // monsters.js — Pomomon roster data
 // All Canvas drawing is in game.js. This file is data only.
+//
+// To add a PNG sprite for a mon, set the optional fields:
+//   sprite:        'assets/sprites/tomatchi.png'       // normal variant — static (32×32) or sheet (96×32 etc.)
+//   shinySprite:   'assets/sprites/tomatchi-shiny.png' // shiny variant (optional; falls back to sprite)
+//   spriteFrames:  3    // number of frames laid out horizontally in the sheet (default 1 = static)
+//   spriteFps:     8    // animation speed in frames per second (default 8)
+// Mons without a sprite field will use the procedural block-art renderer.
 
 const MONS = [
   // ── Common (spawn weight 60%) ─────────────────────────────
   { id: 1, name: 'Tomatchi',   color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.72,
+    sprite: 'assets/sprites/Tomatchi/Tomotot.png.png', spriteFrames: 6, spriteFps: 2,
     evolutions: [
       { atLevel: 16, name: 'Tomathorn', color: '#c0392b', accent: '#922b21' },
       { atLevel: 36, name: 'Tomatrex',  color: '#7b241c', accent: '#641e16' },
