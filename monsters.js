@@ -2,16 +2,21 @@
 // All Canvas drawing is in game.js. This file is data only.
 //
 // To add a PNG sprite for a mon, set the optional fields:
-//   sprite:        'assets/sprites/tomatchi.png'       // normal variant — static (32×32) or sheet (96×32 etc.)
-//   shinySprite:   'assets/sprites/tomatchi-shiny.png' // shiny variant (optional; falls back to sprite)
-//   spriteFrames:  3    // number of frames laid out horizontally in the sheet (default 1 = static)
-//   spriteFps:     8    // animation speed in frames per second (default 8)
+//   sprite:          'assets/sprites/foo.png'  // normal variant
+//   shinySprite:     'assets/sprites/foo-s.png' // shiny (falls back to sprite)
+//   spriteFrames:    3       // frame count (default 1 = static)
+//   spriteAxis:      'x'/'y' // 'x' = horizontal sheet (default), 'y' = vertical sheet
+//   spriteFps:       8       // uniform cycling speed (ignored when spriteBlinkMode true)
+//   spriteBlinkMode: true    // hold frame 1 (open), briefly flash frame 0 (blink)
+//   blinkInterval:   3000    // ms eyes stay open between blinks (default 3000)
+//   blinkDuration:   150     // ms blink lasts (default 150)
 // Mons without a sprite field will use the procedural block-art renderer.
 
 const MONS = [
   // ── Common (spawn weight 60%) ─────────────────────────────
-  { id: 1, name: 'Tomatchi',   color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.72,
-    sprite: 'assets/sprites/Tomatchi/Tomotot.png.png', spriteFrames: 6, spriteFps: 2,
+  { id: 1, name: 'Tomatchi',   color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
+    sprite: 'assets/sprites/Tomatchi/tomatchi.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
       { atLevel: 16, name: 'Tomathorn', color: '#c0392b', accent: '#922b21' },
       { atLevel: 36, name: 'Tomatrex',  color: '#7b241c', accent: '#641e16' },

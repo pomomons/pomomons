@@ -28,25 +28,50 @@ const MonSprite = (() => {
   }
 
   // ── PNG path: draw image centred at (cx, cy) ────────────
-  // Supports animated sprite sheets: frames are laid out horizontally,
-  // each frame 32px wide. frame index is derived from Date.now().
-  function drawPng(ctx, src, cx, cy, { scale = 1, xOffset = 0, alpha = 1, frames = 1, fps = 8 } = {}) {
+  // frameAxis 'x': frames laid out horizontally (default).
+  // frameAxis 'y': frames laid out vertically (top=frame 0, bottom=frame 1…).
+  // blinkMode: hold frame 1 (open) for blinkInterval ms, flash frame 0 (blink) for blinkDuration ms.
+  function drawPng(ctx, src, cx, cy, {
+    scale = 1, xOffset = 0, alpha = 1,
+    frames = 1, fps = 8,
+    frameAxis = 'x',
+    blinkMode = false, blinkInterval = 3000, blinkDuration = 150,
+  } = {}) {
     const img = getImage(src);
     if (!img.complete || img.naturalWidth === 0) return false; // not ready yet
-    const frameIndex = frames > 1 ? Math.floor(Date.now() / (1000 / fps)) % frames : 0;
-    // Derive source frame size from actual image dimensions so any export
-    // resolution works — the frame is always scaled to display at 32×32 px.
-    const srcW = img.naturalWidth / frames;
-    const srcH = img.naturalHeight;
+
+    let frameIndex;
+    if (blinkMode && frames === 2) {
+      const t = Date.now() % (blinkInterval + blinkDuration);
+      frameIndex = t < blinkDuration ? 0 : 1; // 0=blink(top), 1=open(bottom)
+    } else {
+      frameIndex = frames > 1 ? Math.floor(Date.now() / (1000 / fps)) % frames : 0;
+    }
+
+    // Derive source rect — image dimensions tell us true frame size so any
+    // export resolution works; destination is always scaled to a square.
+    let srcX, srcY, srcW, srcH;
+    if (frameAxis === 'y') {
+      srcW = img.naturalWidth;
+      srcH = img.naturalHeight / frames;
+      srcX = 0;
+      srcY = frameIndex * srcH;
+    } else {
+      srcW = img.naturalWidth / frames;
+      srcH = img.naturalHeight;
+      srcX = frameIndex * srcW;
+      srcY = 0;
+    }
+
     const size = 192 * scale;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.imageSmoothingEnabled = false; // keep pixel art crisp when scaled
     ctx.drawImage(
       img,
-      frameIndex * srcW, 0, srcW, srcH,                        // source: slice this frame
+      srcX, srcY, srcW, srcH,                                    // source: this frame
       Math.round(cx - size / 2 + xOffset), Math.round(cy - size / 2), // dest position
-      Math.round(size), Math.round(size)                        // dest size
+      Math.round(size), Math.round(size)                          // dest size
     );
     ctx.restore();
     return true;
@@ -85,8 +110,12 @@ const MonSprite = (() => {
 
       const drew = drawPng(ctx, spriteSrc, cx, cy, {
         scale, xOffset, alpha,
-        frames: mon.spriteFrames || 1,
-        fps:    mon.spriteFps    || 8,
+        frames:        mon.spriteFrames    || 1,
+        fps:           mon.spriteFps       || 8,
+        frameAxis:     mon.spriteAxis      || 'x',
+        blinkMode:     mon.spriteBlinkMode || false,
+        blinkInterval: mon.blinkInterval   || 3000,
+        blinkDuration: mon.blinkDuration   || 150,
       });
       if (drew) {
         if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale, 192);
@@ -171,10 +200,14 @@ const CompanionCanvas = (() => {
     eyeColor:   '#2c2c2c',
     blushColor: '#f1948a',
     shadowColor:'rgba(0,0,0,0.15)',
-    spriteSrc:  null,        // set by setMon() when mon has a PNG sprite
-    shiny:      false,
-    frames:     1,           // sprite sheet frame count
-    fps:        8,           // animation speed
+    spriteSrc:     null,   // set by setMon() when mon has a PNG sprite
+    shiny:         false,
+    frames:        1,     // sprite sheet frame count
+    fps:           8,     // animation speed (uniform cycling)
+    frameAxis:     'x',   // 'x' = horizontal sheet, 'y' = vertical sheet
+    blinkMode:     false, // hold frame 1 (open), briefly flash frame 0 (blink)
+    blinkInterval: 3000,  // ms eyes stay open
+    blinkDuration: 150,   // ms blink lasts
   };
 
   // Bob animation state
@@ -213,9 +246,27 @@ const CompanionCanvas = (() => {
       const img = MonSprite.getImage(SPRITE.spriteSrc);
       if (img.complete && img.naturalWidth > 0) {
         const size = 192; // display size for PNG sprites (3× the 32px source)
-        const frameIndex = SPRITE.frames > 1
-          ? Math.floor(Date.now() / (1000 / SPRITE.fps)) % SPRITE.frames
-          : 0;
+        let frameIndex;
+        if (SPRITE.blinkMode && SPRITE.frames === 2) {
+          const t = Date.now() % (SPRITE.blinkInterval + SPRITE.blinkDuration);
+          frameIndex = t < SPRITE.blinkDuration ? 0 : 1;
+        } else {
+          frameIndex = SPRITE.frames > 1
+            ? Math.floor(Date.now() / (1000 / SPRITE.fps)) % SPRITE.frames
+            : 0;
+        }
+        let srcX, srcY, srcW, srcH;
+        if (SPRITE.frameAxis === 'y') {
+          srcW = img.naturalWidth;
+          srcH = img.naturalHeight / SPRITE.frames;
+          srcX = 0;
+          srcY = frameIndex * srcH;
+        } else {
+          srcW = img.naturalWidth / SPRITE.frames;
+          srcH = img.naturalHeight;
+          srcX = frameIndex * srcW;
+          srcY = 0;
+        }
         // Drop shadow
         ctx.save();
         ctx.globalAlpha = 0.25 * (1 - Math.abs(bobY) / 18);
@@ -227,13 +278,11 @@ const CompanionCanvas = (() => {
         );
         ctx.restore();
         // Sprite with bob + squish, slicing the correct frame
-        const srcW = img.naturalWidth / SPRITE.frames;
-        const srcH = img.naturalHeight;
         ctx.save();
         ctx.translate(cx, cy + bobY);
         ctx.scale(sqX, sqY);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(img, frameIndex * srcW, 0, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
         ctx.restore();
         if (SPRITE.shiny) {
           // Sparkle above top-right of sprite
@@ -352,8 +401,12 @@ const CompanionCanvas = (() => {
     SPRITE.shiny      = mon.shiny || false;
     SPRITE.spriteSrc  = mon.shiny ? (mon.shinySprite || mon.sprite || null)
                                   : (mon.sprite || null);
-    SPRITE.frames     = mon.spriteFrames || 1;
-    SPRITE.fps        = mon.spriteFps    || 8;
+    SPRITE.frames        = mon.spriteFrames    || 1;
+    SPRITE.fps           = mon.spriteFps       || 8;
+    SPRITE.frameAxis     = mon.spriteAxis      || 'x';
+    SPRITE.blinkMode     = mon.spriteBlinkMode || false;
+    SPRITE.blinkInterval = mon.blinkInterval   || 3000;
+    SPRITE.blinkDuration = mon.blinkDuration   || 150;
     if (SPRITE.spriteSrc) MonSprite.preload(mon);
   }
 
@@ -537,29 +590,29 @@ const EncounterScreen = (() => {
 
     } else if (st.phase === 'falling') {
       // Tomato drops with gravity ease-in from MON_CY to GROUND_Y
-      const fallT = Math.min(1, f / 22);
+      const fallT = Math.min(1, f / 12);
       const y     = MON_CY + (GROUND_Y - MON_CY) * fallT * fallT;
       drawTomatoBall(cx, y, 0);
 
     } else if (st.phase === 'landing') {
       // Two bounces with squish on each ground contact
       let y = GROUND_Y, sx = 1, sy = 1;
-      if (f <= 6) {                          // initial impact squish
-        const d = Math.exp(-(f / 6) * 5);
+      if (f <= 3) {                          // initial impact squish
+        const d = Math.exp(-(f / 3) * 5);
         sx = 1 + 0.30 * d;  sy = 1 - 0.22 * d;
-      } else if (f <= 28) {                  // bounce 1 arc (45px high, 22f)
-        const bt = (f - 6) / 22;
+      } else if (f <= 14) {                  // bounce 1 arc (45px high, 11f)
+        const bt = (f - 3) / 11;
         y = GROUND_Y - 45 * 4 * bt * (1 - bt);
-      } else if (f <= 34) {                  // bounce 1 landing squish
-        const d = Math.exp(-((f - 28) / 6) * 5);
+      } else if (f <= 17) {                  // bounce 1 landing squish
+        const d = Math.exp(-((f - 14) / 3) * 5);
         sx = 1 + 0.18 * d;  sy = 1 - 0.14 * d;
-      } else if (f <= 48) {                  // bounce 2 arc (22px high, 14f)
-        const bt = (f - 34) / 14;
+      } else if (f <= 25) {                  // bounce 2 arc (22px high, 8f)
+        const bt = (f - 17) / 8;
         y = GROUND_Y - 22 * 4 * bt * (1 - bt);
-      } else if (f <= 54) {                  // bounce 2 landing squish
-        const d = Math.exp(-((f - 48) / 6) * 5);
+      } else if (f <= 28) {                  // bounce 2 landing squish
+        const d = Math.exp(-((f - 25) / 3) * 5);
         sx = 1 + 0.10 * d;  sy = 1 - 0.08 * d;
-      }                                      // f>54: ball rests still
+      }                                      // f>28: ball rests still
       ctx.save();
       ctx.translate(cx, y);
       ctx.scale(sx, sy);
@@ -647,14 +700,14 @@ const EncounterScreen = (() => {
     } else if (st.phase === 'absorbing' && st.frame >= 35) {
       st.phase = 'falling';
       st.frame = 0;
-    } else if (st.phase === 'falling' && st.frame >= 22) {
+    } else if (st.phase === 'falling' && st.frame >= 12) {
       st.phase = 'landing';
       st.frame = 0;
       SFX.play('bounce');                   // initial landing bounce
     } else if (st.phase === 'landing') {
-      if (st.frame === 29) SFX.play('bounce'); // bounce 1 hits ground
-      if (st.frame === 49) SFX.play('bounce'); // bounce 2 hits ground
-      if (st.frame >= 90) {
+      if (st.frame === 15) SFX.play('bounce'); // bounce 1 hits ground
+      if (st.frame === 26) SFX.play('bounce'); // bounce 2 hits ground
+      if (st.frame >= 45) {
         st.phase = 'shaking';
         st.frame = 0;
       }
