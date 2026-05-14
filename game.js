@@ -63,7 +63,8 @@ const MonSprite = (() => {
       srcY = 0;
     }
 
-    const size = 192 * scale;
+    // Pixel density = 3 screen px per source px — size grows with sprite canvas.
+    const size = srcW * 3 * scale;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.imageSmoothingEnabled = false; // keep pixel art crisp when scaled
@@ -98,12 +99,17 @@ const MonSprite = (() => {
     const spriteSrc = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
 
     if (spriteSrc) {
-      // Drop shadow sized to PNG sprite display size
-      const pw = 192 * scale, ph = 192 * scale;
+      // Derive display size from actual frame width × pixel density (3 px per sprite px).
+      const _img    = getImage(spriteSrc);
+      const _frames = mon.spriteFrames || 1;
+      const _srcW   = (_img.complete && _img.naturalWidth > 0)
+        ? (mon.spriteAxis === 'y' ? _img.naturalWidth : _img.naturalWidth / _frames)
+        : 32;
+      const pw = _srcW * 3 * scale;
       ctx.save();
       ctx.globalAlpha = alpha * 0.2;
       block(ctx, 'rgba(0,0,0,0.6)',
-        cx - pw * 0.45 + xOffset, cy + ph / 2 + 3,
+        cx - pw * 0.45 + xOffset, cy + pw / 2 + 3,
         pw * 0.9, 5 * scale
       );
       ctx.restore();
@@ -118,7 +124,7 @@ const MonSprite = (() => {
         blinkDuration: mon.blinkDuration   || 150,
       });
       if (drew) {
-        if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale, 192);
+        if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale, pw);
         return;
       }
       // Image not loaded yet — fall through to block art
@@ -240,12 +246,12 @@ const CompanionCanvas = (() => {
   // Origin (0,0) = top-left of canvas.
   function drawSprite(bobY, sqX, sqY) {
     const cx = CANVAS_SIZE / 2;
-    const cy = CANVAS_SIZE / 2;
+    // All mons bottom-anchor to this Y regardless of their display size.
+    const GROUND_Y = 185;
 
     if (SPRITE.spriteSrc) {
       const img = MonSprite.getImage(SPRITE.spriteSrc);
       if (img.complete && img.naturalWidth > 0) {
-        const size = 192; // display size for PNG sprites (3× the 32px source)
         let frameIndex;
         if (SPRITE.blinkMode && SPRITE.frames === 2) {
           const t = Date.now() % (SPRITE.blinkInterval + SPRITE.blinkDuration);
@@ -267,6 +273,8 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
+        const size = srcW * 3; // pixel density = 3 px per source px
+        const cy = GROUND_Y - size / 2;
         // Drop shadow
         ctx.save();
         ctx.globalAlpha = 0.25 * (1 - Math.abs(bobY) / 18);
@@ -298,6 +306,7 @@ const CompanionCanvas = (() => {
 
     // Body dimensions (before squish)
     const bw = 48, bh = 48;
+    const cy = GROUND_Y - bh / 2; // bottom-anchor block art at same ground level
     // Apply squash/stretch around the centre
     const drawW = bw * sqX;
     const drawH = bh * sqY;
