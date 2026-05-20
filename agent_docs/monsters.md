@@ -27,7 +27,7 @@ the sprite draws with gold (`#f1c40f`) as the primary color and `#d4ac0d` accent
 
 | ID | Name       | Color     | Accent    | Rarity   | catchRate | Inspiration      |
 |----|------------|-----------|-----------|----------|-----------|------------------|
-| 1  | Tomatchi   | #e74c3c   | #c0392b   | common   | 0.72      | tomato           |
+| 1  | Tomotot    | #e74c3c   | #c0392b   | common   | 0.99      | tomato           |
 | 2  | Broccoluff | #27ae60   | #1e8449   | common   | 0.68      | broccoli         |
 | 3  | Chipchip   | #f39c12   | #d68910   | common   | 0.65      | potato chip      |
 | 4  | Mushamoo   | #bdc3c7   | #7f8c8d   | common   | 0.62      | mushroom         |

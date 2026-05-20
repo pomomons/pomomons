@@ -14,11 +14,13 @@
 
 const MONS = [
   // ── Common (spawn weight 60%) ─────────────────────────────
-  { id: 1, name: 'Tomatchi',   color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
-    sprite: 'assets/sprites/Tomatchi/tomatchi.png', spriteFrames: 2, spriteAxis: 'y',
+  { id: 1, name: 'Tomotot',    color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
+    sprite: 'assets/sprites/Tomotot/tomotot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 16, name: 'Tomathorn', color: '#c0392b', accent: '#922b21' },
+      { atLevel: 16, name: 'Marinaro',  color: '#c0392b', accent: '#922b21',
+        sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 9000, blinkDuration: 450 },
       { atLevel: 36, name: 'Tomatrex',  color: '#7b241c', accent: '#641e16' },
     ]
   },
@@ -78,14 +80,14 @@ function getRandomMon() {
 }
 
 // Returns the current evolution stage of a mon based on its pal level.
-// Returns the base mon object merged with the highest unlocked evolution's
-// name/color/accent. No-evolution mons always return themselves unchanged.
+// Returns the base mon merged with all fields from the highest unlocked evolution
+// (name, color, accent, and optionally sprite/spriteFrames/etc.).
 function getMonStage(mon, palLevel) {
   if (!mon.evolutions || mon.evolutions.length === 0) return mon;
   let result = mon;
   for (const evo of mon.evolutions) {
     if (palLevel >= evo.atLevel) {
-      result = { ...mon, name: evo.name, color: evo.color, accent: evo.accent };
+      result = { ...mon, ...evo };
     }
   }
   return result;

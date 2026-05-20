@@ -142,8 +142,8 @@ const SFX = (() => {
       osc.frequency.linearRampToValueAtTime(70,  t + dur);
 
       const env = ac.createGain();
-      env.gain.setValueAtTime(0.45, t);
-      env.gain.linearRampToValueAtTime(0.5, t + dur * 0.6);
+      env.gain.setValueAtTime(0.14, t);
+      env.gain.linearRampToValueAtTime(0.15, t + dur * 0.6);
       env.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
       // ── LFO: simulates engine cylinder firing (put-put-put effect)
@@ -154,7 +154,7 @@ const SFX = (() => {
       lfo.frequency.linearRampToValueAtTime(30, t + dur);         // wind down
 
       const lfoDepth      = ac.createGain();
-      lfoDepth.gain.value = 0.38;
+      lfoDepth.gain.value = 0.11;
 
       lfo.connect(lfoDepth);
       lfoDepth.connect(env.gain);
@@ -165,8 +165,8 @@ const SFX = (() => {
       lfo.start(t); lfo.stop(t + dur + 0.05);
 
       // ── Harmonic overtone: one octave up, lower gain
-      tone({ start: 110, end: 480 }, 'square', t,             dur * 0.6,  0.20);
-      tone({ start: 480, end: 140 }, 'square', t + dur * 0.55, dur * 0.5, 0.14);
+      tone({ start: 110, end: 480 }, 'square', t,             dur * 0.6,  0.06);
+      tone({ start: 480, end: 140 }, 'square', t + dur * 0.55, dur * 0.5, 0.04);
 
       // ── Exhaust grit: low-pass filtered noise underneath
       const bufSize = Math.ceil(ac.sampleRate * dur);
@@ -182,7 +182,7 @@ const SFX = (() => {
       lpf.frequency.linearRampToValueAtTime(800, t + dur * 0.6);
       lpf.frequency.linearRampToValueAtTime(200, t + dur);
       const exhaustEnv  = ac.createGain();
-      exhaustEnv.gain.setValueAtTime(0.18, t);
+      exhaustEnv.gain.setValueAtTime(0.05, t);
       exhaustEnv.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
       exhaust.connect(lpf);
