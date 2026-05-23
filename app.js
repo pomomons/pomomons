@@ -424,7 +424,8 @@ document.getElementById('progress-list').addEventListener('click', e => {
 const btnAudio = document.getElementById('btn-audio');
 btnAudio.addEventListener('click', () => {
   const muted = SFX.toggle();
-  btnAudio.textContent = muted ? '🔇' : '🔊';
+  document.getElementById('audio-waves').style.display = muted ? 'none' : '';
+  document.getElementById('audio-mute').style.display  = muted ? ''     : 'none';
 });
 
 // Time adjust

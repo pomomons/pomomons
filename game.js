@@ -36,6 +36,7 @@ const MonSprite = (() => {
     frames = 1, fps = 8,
     frameAxis = 'x',
     blinkMode = false, blinkInterval = 3000, blinkDuration = 150,
+    shiny = false,
   } = {}) {
     const img = getImage(src);
     if (!img.complete || img.naturalWidth === 0) return false; // not ready yet
@@ -68,6 +69,7 @@ const MonSprite = (() => {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.imageSmoothingEnabled = false; // keep pixel art crisp when scaled
+    if (shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
     ctx.drawImage(
       img,
       srcX, srcY, srcW, srcH,                                    // source: this frame
@@ -78,18 +80,31 @@ const MonSprite = (() => {
     return true;
   }
 
-  // ── Shiny sparkle — drawn on top of either PNG or block art ──
-  // spriteSize: logical px of the sprite (32 for PNG, 48 for block-art)
+  // ── Shiny sparkle — animated twinkling crosses around the mon ──
+  // spriteSize: logical px of the sprite (used to place stars relative to edges)
   function drawSparkle(ctx, cx, cy, scale, spriteSize = 48) {
-    const bw = spriteSize * scale, bh = spriteSize * scale;
-    const ew = 10 * scale, eh = 12 * scale;
-    const x0 = cx - bw / 2;
-    const y0 = cy - bh / 2;
-    ctx.fillStyle = '#fff';
-    const sx = x0 + bw - ew + 2 * scale;
-    const sy = y0 - eh - 6 * scale;
-    ctx.fillRect(Math.round(sx),             Math.round(sy + 2 * scale), Math.round(2 * scale), Math.round(6 * scale));
-    ctx.fillRect(Math.round(sx - 2 * scale), Math.round(sy + 4 * scale), Math.round(6 * scale), Math.round(2 * scale));
+    const hw = spriteSize * scale / 2;
+    const t  = Date.now() / 600;
+    const stars = [
+      { dx:  hw * 0.9,  dy: -hw * 1.15, sz: 2.5 * scale, color: '#fff',    phase: 0   },
+      { dx: -hw * 0.85, dy: -hw * 0.65, sz: 2   * scale, color: '#ffe566', phase: 1.3 },
+      { dx:  hw * 1.15, dy:  hw * 0.1,  sz: 1.5 * scale, color: '#fff',    phase: 0.7 },
+      { dx: -hw * 0.2,  dy: -hw * 1.35, sz: 1.5 * scale, color: '#ffe566', phase: 2.0 },
+    ];
+    ctx.save();
+    for (const s of stars) {
+      const pulse = (Math.sin(t * Math.PI * 2 + s.phase * Math.PI) + 1) / 2;
+      if (pulse < 0.05) continue;
+      ctx.globalAlpha = pulse * 0.95;
+      ctx.fillStyle   = s.color;
+      const sx = Math.round(cx + s.dx);
+      const sy = Math.round(cy + s.dy);
+      const w  = Math.max(1, Math.round(s.sz));
+      const h  = Math.max(2, Math.round(s.sz * 2.5));
+      ctx.fillRect(sx - Math.round(w / 2), sy - Math.round(h / 2), w, h); // vertical bar
+      ctx.fillRect(sx - Math.round(h / 2), sy - Math.round(w / 2), h, w); // horizontal bar
+    }
+    ctx.restore();
   }
 
   // Draw a mon centred on (cx, cy) into an already-obtained ctx.
@@ -106,16 +121,9 @@ const MonSprite = (() => {
         ? (mon.spriteAxis === 'y' ? _img.naturalWidth : _img.naturalWidth / _frames)
         : 32;
       const pw = _srcW * 3 * scale;
-      ctx.save();
-      ctx.globalAlpha = alpha * 0.2;
-      block(ctx, 'rgba(0,0,0,0.6)',
-        cx - pw * 0.45 + xOffset, cy + pw / 2 + 3,
-        pw * 0.9, 5 * scale
-      );
-      ctx.restore();
 
       const drew = drawPng(ctx, spriteSrc, cx, cy, {
-        scale, xOffset, alpha,
+        scale, xOffset, alpha, shiny,
         frames:        mon.spriteFrames    || 1,
         fps:           mon.spriteFps       || 8,
         frameAxis:     mon.spriteAxis      || 'x',
@@ -142,12 +150,6 @@ const MonSprite = (() => {
     const bodyColor   = shiny ? '#f1c40f' : mon.color;
     const accentColor = shiny ? '#d4ac0d' : mon.accent;
 
-    // Drop shadow
-    ctx.globalAlpha = alpha * 0.2;
-    block(ctx, 'rgba(0,0,0,0.6)',
-      cx - bw * 0.45 + xOffset, cy + bh / 2 + 3,
-      bw * 0.9, 5 * scale
-    );
     ctx.globalAlpha = alpha;
 
     // Body
@@ -209,7 +211,7 @@ const MonSprite = (() => {
     drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny });
   }
 
-  return { drawOnCtx, draw, getImage, preload };
+  return { drawOnCtx, draw, getImage, preload, drawSparkle };
 })();
 
 // ── Companion idle animation ───────────────────────────────
@@ -290,31 +292,15 @@ const CompanionCanvas = (() => {
         }
         const size = srcW * 3; // pixel density = 3 px per source px
         const cy = GROUND_Y - size / 2;
-        // Drop shadow
-        ctx.save();
-        ctx.globalAlpha = 0.25 * (1 - Math.abs(bobY) / 18);
-        ctx.fillStyle = SPRITE.shadowColor;
-        ctx.fillRect(
-          Math.round(cx - size * 0.45),
-          Math.round(cy + size / 2 + 4 + bobY * 0.3),
-          Math.round(size * 0.9), Math.round(6 * sqX)
-        );
-        ctx.restore();
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
         ctx.translate(cx, cy + bobY);
         ctx.scale(sqX, sqY);
         ctx.imageSmoothingEnabled = false;
+        if (SPRITE.shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
         ctx.drawImage(img, srcX, srcY, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
         ctx.restore();
-        if (SPRITE.shiny) {
-          // Sparkle above top-right of sprite
-          ctx.fillStyle = '#fff';
-          const sx = cx + size / 2 - 6;
-          const sy = cy + bobY - size / 2 - 14;
-          ctx.fillRect(Math.round(sx),     Math.round(sy + 2), 2, 6);
-          ctx.fillRect(Math.round(sx - 2), Math.round(sy + 4), 6, 2);
-        }
+        if (SPRITE.shiny) MonSprite.drawSparkle(ctx, cx, cy + bobY, 1, size);
         return;
       }
     }
@@ -328,15 +314,6 @@ const CompanionCanvas = (() => {
     const x0 = cx - drawW / 2;
     const y0 = cy - drawH / 2 + bobY;
 
-    // Drop shadow
-    ctx.save();
-    ctx.globalAlpha = 0.25 * (1 - Math.abs(bobY) / 18);
-    block(SPRITE.shadowColor,
-      cx - (drawW * 0.9) / 2,
-      cy + bh / 2 + 4 + bobY * 0.3,
-      drawW * 0.9, 6 * sqX
-    );
-    ctx.restore();
 
     // Body
     block(SPRITE.bodyColor, x0, y0, drawW, drawH);
@@ -471,7 +448,7 @@ const EncounterScreen = (() => {
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
-      elMsg, elSub, elRarity, elLevel, elControls,
+      elMsg, elSub, elRarity, elTags, elLevel, elControls,
       btnThrow, btnFlee, btnCatchNext;
 
   let rafId    = null;
@@ -849,6 +826,7 @@ const EncounterScreen = (() => {
       elMsg       = document.getElementById('encounter-msg');
       elSub       = document.getElementById('encounter-sub');
       elRarity    = document.getElementById('encounter-rarity');
+      elTags      = document.getElementById('encounter-tags');
       elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
       btnThrow    = document.getElementById('btn-throw');
@@ -872,7 +850,7 @@ const EncounterScreen = (() => {
 
     // Pick a random mon
     const mon   = getRandomMon();
-    mon.shiny   = Math.random() < (1 / 64);
+    mon.shiny   = Math.random() < 1; // TEST MODE: 100% shiny — change to (1/100) for production
     st.mon      = mon;
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
@@ -890,8 +868,18 @@ const EncounterScreen = (() => {
     elMsg.textContent = `A WILD ${mon.name} APPEARED!`;
     elSub.textContent = '';
     elSub.style.color = '';
-    elRarity.textContent = mon.rarity.toUpperCase();
-    elRarity.className   = `encounter-rarity ${mon.rarity}`;
+    const isShiny = mon.shiny || false;
+    elRarity.textContent = isShiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
+    elRarity.className   = `encounter-rarity ${isShiny ? 'ultra-rare' : mon.rarity}`;
+    if (elTags) {
+      elTags.innerHTML = '';
+      if (isShiny) {
+        const t = document.createElement('span');
+        t.className   = 'tag tag-shiny';
+        t.textContent = '✨ SHINY';
+        elTags.appendChild(t);
+      }
+    }
     if (elLevel) { elLevel.textContent = `LVL ${st.monLevel}`; elLevel.style.display = ''; }
 
     // Reset button state for repeat encounters
@@ -1277,9 +1265,10 @@ const MonInfoScreen = (() => {
     st.mon   = mon;
     st.frame = 0;
 
+    const shiny = mon.shiny || false;
     elName.textContent   = mon.name.toUpperCase();
-    elRarity.textContent = mon.rarity.toUpperCase();
-    elRarity.className   = `mon-info-rarity ${mon.rarity}`;
+    elRarity.textContent = shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
+    elRarity.className   = `mon-info-rarity ${shiny ? 'ultra-rare' : mon.rarity}`;
 
     buildEvoChain(mon);
 

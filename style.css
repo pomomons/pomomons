@@ -130,28 +130,25 @@ body::after {
 }
 
 .btn-audio {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  background: rgba(0,0,0,.22);
+  background: #222;
   border: none;
   border-radius: 0;
-  font-size: 1.6rem;
-  padding: 6px 10px;
+  padding: 10px;
   cursor: pointer;
-  line-height: 1;
-  transition: filter .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   min-width: 44px;
   clip-path: var(--pixel-clip-sm);
+  color: #fff;
   box-shadow:
     inset 0 10px 0 rgba(255,255,255,.14),
     inset 0 -10px 0 rgba(0,0,0,.38);
-  filter: var(--pxdrop-sm);
 }
 
-.btn-audio:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
-.btn-audio:active { transform: translate(3px,3px); filter: none; }
+.pxb-audio:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
+.pxb-audio:active { transform: var(--btn-press); filter: none; }
 
 .logo {
   display: flex;
@@ -227,9 +224,6 @@ body::after {
 }
 
 .btn-dex {
-  position: absolute;
-  top: 10px;
-  right: 12px;
   background: rgba(255,255,255,.18);
   border: none;
   border-radius: 0;
@@ -243,12 +237,10 @@ body::after {
   box-shadow:
     inset 0 10px 0 rgba(255,255,255,.4),
     inset 0 -10px 0 rgba(0,0,0,.3);
-  filter: var(--pxborder-sm);
   backdrop-filter: blur(4px);
-  transition: filter .12s;
 }
-.btn-dex:hover  { filter: brightness(1.1) var(--pxborder-sm); }
-.btn-dex:active { transform: translate(3px,3px); filter: none; }
+.pxb-dex:hover  { filter: brightness(1.1) var(--pxdrop-sm); }
+.pxb-dex:active { transform: var(--btn-press); filter: none; }
 
 #companion-canvas {
   width: 200px;
@@ -367,13 +359,11 @@ body::after {
   box-shadow:
     inset 0 10px 0 rgba(255,255,255,.12),
     inset 0 -10px 0 rgba(0,0,0,.4);
-  filter: var(--pxdrop-sm);
-  transition: filter .12s;
   font-family: var(--font-pixel);
 }
 
-.btn-adjust:hover  { filter: brightness(1.3) var(--pxdrop-sm); }
-.btn-adjust:active { transform: translate(3px,3px); filter: none; }
+.pxb .btn-adjust:hover  { filter: brightness(1.3); }
+.pxb .btn-adjust:active { transform: none; filter: none; }
 
 /* Hide adjust arrows when timer is running */
 body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
@@ -499,6 +489,25 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Hide wrapper entirely when its button is hidden */
 .pxb:has(button[hidden]) {
   display: none;
+}
+
+/* Small variant — matches buttons that use --pixel-clip-sm */
+.pxb-sm {
+  clip-path: var(--pixel-clip-sm);
+  filter: var(--pxdrop-sm);
+  padding: 3px;
+}
+
+/* Positioned wrappers */
+.pxb-dex {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+.pxb-audio {
+  position: absolute;
+  top: 14px;
+  right: 16px;
 }
 
 /* Mode button wrapper needs to fill the btn-mode-wrap flex container */
@@ -1017,8 +1026,37 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   margin-bottom: -4px;
 }
 
-.encounter-rarity.uncommon { color: var(--blue); }
-.encounter-rarity.rare     { color: var(--purple); }
+.encounter-rarity.uncommon   { color: var(--blue); }
+.encounter-rarity.rare       { color: var(--purple); }
+.encounter-rarity.ultra-rare { color: var(--gold); }
+
+/* ── Encounter tag badges (SHINY, type labels, etc.) ── */
+.encounter-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 0;
+}
+
+.tag {
+  font-family: var(--font-pixel);
+  font-size: .48rem;
+  letter-spacing: .07em;
+  padding: 4px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 0;
+  line-height: 1;
+  clip-path: var(--pixel-clip-sm);
+}
+
+.tag-shiny {
+  background: var(--gold);
+  color: #1a0a00;
+  box-shadow: inset 0 6px 0 rgba(255,255,255,.45), inset 0 -6px 0 rgba(0,0,0,.2);
+}
 
 .encounter-msg {
   font-family: var(--font-pixel);
@@ -1143,8 +1181,9 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   letter-spacing: .15em;
   color: var(--text-muted);
 }
-.mon-info-rarity.uncommon { color: var(--blue); }
-.mon-info-rarity.rare     { color: var(--purple); }
+.mon-info-rarity.uncommon   { color: var(--blue); }
+.mon-info-rarity.rare       { color: var(--purple); }
+.mon-info-rarity.ultra-rare { color: var(--gold); }
 
 #mon-info-canvas {
   image-rendering: pixelated;

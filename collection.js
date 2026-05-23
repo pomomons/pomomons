@@ -282,9 +282,7 @@ const Collection = (() => {
     const drop = document.getElementById('blender-drop');
     if (!zone || !drop) return;
 
-    const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
-    zone.classList.toggle('active', playerLevel >= 5);
-    if (playerLevel < 5) return;
+    zone.classList.add('active');
 
     // Pin the top of the zone to just below the app header; bottom is fixed in CSS
     const appHeader = document.querySelector('.app-header');

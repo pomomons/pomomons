@@ -37,7 +37,35 @@
 
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
-    <button class="btn-audio" id="btn-audio" aria-label="Toggle sound">🔊</button>
+    <div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-audio" aria-label="Toggle sound">
+      <!-- Pixel-art speaker: body (cols 1-4), waves/mute (cols 5-9) -->
+      <svg id="audio-icon" width="20" height="20" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges">
+        <!-- body -->
+        <rect x="1" y="3" width="2" height="4" fill="currentColor"/>
+        <!-- cone (two steps, narrowing right→left) -->
+        <rect x="3" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="4" y="1" width="1" height="8" fill="currentColor"/>
+        <!-- sound waves (unmuted) -->
+        <g id="audio-waves">
+          <rect x="6" y="2" width="1" height="6" fill="currentColor"/>
+          <rect x="8" y="1" width="1" height="8" fill="currentColor"/>
+        </g>
+        <!-- mute X (muted) — 5×5 diagonal cross -->
+        <g id="audio-mute" style="display:none">
+          <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="4" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="5" y="6" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
+        </g>
+      </svg>
+    </button></div>
     <div class="logo">
       <span class="logo-icon">🍅</span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
     </div>
@@ -49,7 +77,7 @@
 
     <!-- Companion (no box) -->
     <div class="companion-area">
-      <button class="btn-dex" id="btn-go-dex">DEX</button>
+      <div class="pxb pxb-sm pxb-dex"><button class="btn-dex" id="btn-go-dex">DEX</button></div>
       <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
       <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
@@ -60,8 +88,8 @@
       <section class="timer-display" aria-live="polite">
         <span class="timer-time"><span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span></span>
         <div class="time-adjust">
-          <button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button>
-          <button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button>
+          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button></div>
+          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button></div>
         </div>
       </section>
     </div>
@@ -91,7 +119,7 @@
   <!-- ── My Mons Screen ────────────────────────────────── -->
   <main id="screen-mymons" class="screen">
     <div class="collection-header">
-      <button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button>
+      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
       <h2 class="screen-title">MONSTER COLLECTION</h2>
       <span class="collection-count" id="mymons-count">0</span>
     </div>
@@ -104,7 +132,7 @@
   <!-- ── Dex Screen ─────────────────────────────────────── -->
   <main id="screen-dex" class="screen">
     <div class="collection-header">
-      <button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button>
+      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
       <h2 class="screen-title">POMODEX</h2>
       <span class="collection-count" id="dex-count">0 / 15</span>
     </div>
@@ -114,7 +142,7 @@
   <!-- ── Progress Screen ──────────────────────────────── -->
   <main id="screen-progress" class="screen">
     <div class="collection-header">
-      <button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button>
+      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button></div>
       <h2 class="screen-title">LEVEL REWARDS</h2>
       <span class="collection-count"></span>
     </div>
@@ -127,6 +155,7 @@
   <!-- ── Encounter Overlay ─────────────────────────────── -->
   <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
     <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
+    <div class="encounter-tags" id="encounter-tags"></div>
     <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
     <p class="encounter-level" id="encounter-level">LVL 1</p>
 
