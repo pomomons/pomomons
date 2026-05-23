@@ -11,6 +11,30 @@
 </head>
 <body>
 
+  <!-- ── Pixel-border SVG filter (feMorphology dilate → clean outer stroke following clip-path) -->
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <filter id="px-border" x="-25%" y="-25%" width="150%" height="150%">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="border"/>
+        <feFlood flood-color="#000" result="black"/>
+        <feComposite in="black" in2="border" operator="in" result="outline"/>
+        <feMerge>
+          <feMergeNode in="outline"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="px-border-sm" x="-25%" y="-25%" width="150%" height="150%">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="border"/>
+        <feFlood flood-color="#000" result="black"/>
+        <feComposite in="black" in2="border" operator="in" result="outline"/>
+        <feMerge>
+          <feMergeNode in="outline"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+  </svg>
+
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
     <button class="btn-audio" id="btn-audio" aria-label="Toggle sound">🔊</button>
@@ -31,34 +55,34 @@
       <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
     </div>
 
-    <!-- Timer row with inline adjust arrows -->
+    <!-- Timer row -->
     <div class="timer-row">
       <section class="timer-display" aria-live="polite">
-        <span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span>
+        <span class="timer-time"><span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span></span>
+        <div class="time-adjust">
+          <button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button>
+          <button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button>
+        </div>
       </section>
-      <div class="time-adjust">
-        <button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button>
-        <button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button>
-      </div>
     </div>
 
     <!-- Timer controls + collection grouped tightly -->
     <div class="controls-group">
       <div class="timer-controls">
-        <button class="btn btn-timer-start" id="btn-start">▶ START</button>
+        <div class="pxb"><button class="btn btn-timer-start" id="btn-start">▶ START</button></div>
         <div class="btn-mode-wrap" id="btn-mode-wrap">
-          <button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button>
+          <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button></div>
           <div class="mode-dropdown" id="mode-dropdown" hidden>
             <button class="mode-option active" data-mode="focus">FOCUS</button>
             <button class="mode-option" data-mode="short">SHORT BREAK</button>
             <button class="mode-option" data-mode="long">LONG BREAK</button>
           </div>
         </div>
-        <button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button>
+        <div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div>
       </div>
       <div class="collection-btns">
-        <button class="btn btn-collection" id="btn-go-mymons">COLLECTION</button>
-        <button class="btn btn-collection btn-collection-items" id="btn-go-items">ITEMS</button>
+        <div class="pxb"><button class="btn btn-collection" id="btn-go-mymons">COLLECTION</button></div>
+        <div class="pxb"><button class="btn btn-collection btn-collection-items" id="btn-go-items">ITEMS</button></div>
       </div>
     </div>
 
@@ -111,9 +135,9 @@
     <p class="encounter-sub" id="encounter-sub"></p>
 
     <div class="encounter-controls" id="encounter-controls">
-      <button class="btn btn-primary" id="btn-throw">THROW! 🍅</button>
-      <button class="btn btn-ghost"  id="btn-flee">FLEE</button>
-      <button class="btn btn-primary" id="btn-catch-next" hidden>NEXT →</button>
+      <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! 🍅</button></div>
+      <div class="pxb"><button class="btn btn-ghost"  id="btn-flee">FLEE</button></div>
+      <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT →</button></div>
     </div>
   </div>
 
@@ -153,7 +177,7 @@
       <p class="mon-info-evo-title">EVOLUTION PATH</p>
       <div class="mon-info-evo-chain" id="mon-info-evo-chain"></div>
     </div>
-    <button class="btn btn-primary" id="btn-mon-info-done">GOT IT!</button>
+    <div class="pxb"><button class="btn btn-primary" id="btn-mon-info-done">GOT IT!</button></div>
   </div>
 
   <!-- ── Catch Overlay ────────────────────────────────── -->
@@ -163,7 +187,7 @@
     <h2 class="catch-name" id="catch-name">???</h2>
     <p class="catch-sub">WAS ADDED TO YOUR COLLECTION!</p>
     <p class="catch-shiny" id="catch-shiny"></p>
-    <button class="btn btn-primary" id="btn-catch-continue">CONTINUE!</button>
+    <div class="pxb"><button class="btn btn-primary" id="btn-catch-continue">CONTINUE!</button></div>
   </div>
 
   <!-- ── Evolution Overlay ────────────────────────────── -->

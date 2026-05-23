@@ -20,7 +20,7 @@ const MONS = [
     evolutions: [
       { atLevel: 16, name: 'Marinaro',  color: '#c0392b', accent: '#922b21',
         sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 9000, blinkDuration: 450 },
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
       { atLevel: 36, name: 'Tomatrex',  color: '#7b241c', accent: '#641e16' },
     ]
   },
@@ -64,13 +64,21 @@ const MONS = [
   { id: 14, name: 'Cocobun',   color: '#795548', accent: '#4e342e', rarity: 'uncommon', catchRate: 0.40 },
   // Rare
   { id: 15, name: 'Mintail',   color: '#1abc9c', accent: '#148f77', rarity: 'rare',     catchRate: 0.20 },
+  { id: 16, name: 'Avocuddle', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
+    sprite: 'assets/sprites/Avocuddle/avocuddle.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 17, name: 'Chilino',   color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
+    sprite: 'assets/sprites/Chilino/chilino.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // Spawn weight per rarity tier
 const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
 
 // Returns a random MONS entry using weighted rarity selection.
+// TEST MODE: always spawn Chilino — remove this line when done testing.
 function getRandomMon() {
+  return MONS.find(m => m.name === 'Chilino');
   const pool = [];
   for (const mon of MONS) {
     const w = RARITY_WEIGHT[mon.rarity] || 0;
