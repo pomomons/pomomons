@@ -321,6 +321,14 @@ const Collection = (() => {
         isDraggingSmoothie = true;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'smoothie' }));
+        // Custom drag image: just the icon, no count, so players don't think
+        // they're giving away all their smoothies at once.
+        const ghost = document.createElement('div');
+        ghost.textContent = '🥤';
+        ghost.style.cssText = 'position:fixed;top:-200px;font-size:2rem;';
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost, 20, 20);
+        setTimeout(() => ghost.remove(), 0);
       });
       smoothieBox.addEventListener('dragend', () => {
         isDraggingSmoothie = false;
@@ -389,7 +397,7 @@ const Collection = (() => {
     const canvas  = document.createElement('canvas');
     canvas.width  = 64;
     canvas.height = 64;
-    MonSprite.draw(canvas, displayMon, { scale: 0.8, shiny: catchData?.hasShiny || false });
+    MonSprite.draw(canvas, displayMon, { fit: 0.85, shiny: catchData?.hasShiny || false });
     card.appendChild(canvas);
 
     // Name
@@ -500,7 +508,7 @@ const Collection = (() => {
     const canvas  = document.createElement('canvas');
     canvas.width  = 64;
     canvas.height = 64;
-    MonSprite.draw(canvas, stageMon, { scale: 0.8, shiny: rec.shiny || false });
+    MonSprite.draw(canvas, stageMon, { fit: 0.85, shiny: rec.shiny || false });
     card.appendChild(canvas);
 
     const nameEl = document.createElement('p');

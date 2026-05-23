@@ -188,10 +188,25 @@ const MonSprite = (() => {
   }
 
   // Convenience: clear a canvas and draw a mon centred in it.
-  function draw(canvas, mon, { scale = 1, shiny = false } = {}) {
+  // fit (0–1): if provided, auto-scales the sprite so it fills that fraction of
+  // the canvas regardless of stage size. Overrides scale for PNG mons.
+  function draw(canvas, mon, { scale = 1, shiny = false, fit = null } = {}) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale, shiny });
+    let drawScale = scale;
+    if (fit !== null) {
+      const spriteSrc = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+      if (spriteSrc) {
+        const img = getImage(spriteSrc);
+        if (img.complete && img.naturalWidth > 0) {
+          const frames = mon.spriteFrames || 1;
+          const srcW   = mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
+          const targetSize = Math.min(canvas.width, canvas.height) * fit;
+          drawScale = targetSize / (srcW * 3);
+        }
+      }
+    }
+    drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny });
   }
 
   return { drawOnCtx, draw, getImage, preload };
