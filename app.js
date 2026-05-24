@@ -352,12 +352,13 @@ function updateCompanionDisplay() {
   const mon = MONS.find(m => m.id === activeId);
   if (!mon) return;
   const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
+  const shiny = localStorage.getItem('pm_active_shiny') === '1';
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
   if (nameEl) nameEl.textContent = stage.name;
   if (lvlEl)  lvlEl.textContent  = level;
-  if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon(stage);
+  if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny });
 }
 
 function saveExp(delta) {

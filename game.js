@@ -16,10 +16,49 @@ const MonSprite = (() => {
     return _imgCache[src];
   }
 
+  // Returns the draw scale capped so the sprite fits within maxPx (width or height).
+  // Falls back to desiredScale if the image isn't loaded yet.
+  function fitScale(mon, maxPx, desiredScale = 1, shiny = false) {
+    const src = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+    if (!src) return desiredScale;
+    const img = getImage(src);
+    if (!img.complete || img.naturalWidth === 0) return desiredScale;
+    const frames = mon.spriteFrames || 1;
+    const srcW   = mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
+    return Math.min(desiredScale, maxPx / (srcW * 3));
+  }
+
   // Pre-warm the cache for a mon so its image is ready before first draw.
   function preload(mon) {
     if (mon.sprite)      getImage(mon.sprite);
     if (mon.shinySprite) getImage(mon.shinySprite);
+  }
+
+  // Preload all sprites for an array of mons (including evolutions).
+  // Calls onAllLoaded once every pending image has finished loading.
+  function preloadAll(mons, onAllLoaded) {
+    const pending = [];
+    function track(src) {
+      if (!src) return;
+      const img = getImage(src);
+      if (!img.complete) pending.push(img);
+    }
+    for (const mon of mons) {
+      track(mon.sprite);
+      track(mon.shinySprite);
+      if (mon.evolutions) {
+        for (const evo of mon.evolutions) { track(evo.sprite); track(evo.shinySprite); }
+      }
+    }
+    if (!pending.length) return;
+    let done = 0;
+    for (const img of pending) {
+      const prev = img.onload;
+      img.onload = (e) => {
+        if (typeof prev === 'function') prev.call(img, e);
+        if (++done === pending.length) onAllLoaded();
+      };
+    }
   }
 
   function block(ctx, color, x, y, w, h) {
@@ -211,7 +250,7 @@ const MonSprite = (() => {
     drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny });
   }
 
-  return { drawOnCtx, draw, getImage, preload, drawSparkle };
+  return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle };
 })();
 
 // ── Companion idle animation ───────────────────────────────
@@ -264,7 +303,7 @@ const CompanionCanvas = (() => {
   function drawSprite(bobY, sqX, sqY) {
     const cx = CANVAS_SIZE / 2;
     // All mons bottom-anchor to this Y regardless of their display size.
-    const GROUND_Y = 185;
+    const GROUND_Y = 192;
 
     if (SPRITE.spriteSrc) {
       const img = MonSprite.getImage(SPRITE.spriteSrc);
@@ -290,8 +329,8 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
-        const size = srcW * 3; // pixel density = 3 px per source px
-        const cy = GROUND_Y - size / 2;
+        const size = Math.min(srcW * 3, CANVAS_SIZE - 14); // cap so 6px bob fits top+bottom
+        const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
         ctx.translate(cx, cy + bobY);
@@ -469,7 +508,8 @@ const EncounterScreen = (() => {
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
   function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
-    MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale, xOffset, alpha, shiny: st.mon.shiny || false });
+    const s = MonSprite.fitScale(st.mon, SIZE * 0.92, scale, st.mon.shiny || false);
+    MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false });
   }
 
   // ── tomato renderer — matches the 🍅 logo icon (draws centred at origin) ──
@@ -850,7 +890,7 @@ const EncounterScreen = (() => {
 
     // Pick a random mon
     const mon   = getRandomMon();
-    mon.shiny   = Math.random() < 1; // TEST MODE: 100% shiny — change to (1/100) for production
+    mon.shiny   = Math.random() < (1 / 100);
     st.mon      = mon;
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
@@ -897,7 +937,7 @@ const EncounterScreen = (() => {
       overlay.classList.add('active');
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(tick);
-      if (typeof SFX !== 'undefined') SFX.music.start();
+      // if (typeof SFX !== 'undefined') SFX.music.start();  // music disabled
     });
   }
 
@@ -1103,9 +1143,10 @@ const CatchScreen = (() => {
   function tick() {
     st.frame++;
     ctx.clearRect(0, 0, SIZE, SIZE);
-    const bobY = Math.sin(st.frame / 22) * 6;
+    const bobY  = Math.sin(st.frame / 22) * 6;
+    const scale = MonSprite.fitScale(st.mon, SIZE * 0.92, 1.5, st.mon.shiny || false);
     MonSprite.drawOnCtx(ctx, st.mon, SIZE / 2, SIZE / 2 + bobY,
-      { scale: 1.5, shiny: st.mon.shiny || false });
+      { scale, shiny: st.mon.shiny || false });
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1170,9 +1211,10 @@ const MonInfoScreen = (() => {
   function tick() {
     st.frame++;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    const bobY = Math.sin(st.frame / 22) * 6;
+    const bobY  = Math.sin(st.frame / 22) * 6;
+    const scale = MonSprite.fitScale(st.mon, CANVAS_SIZE * 0.92, 1.5, st.mon.shiny || false);
     MonSprite.drawOnCtx(ctx, st.mon, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + bobY,
-      { scale: 1.5, shiny: st.mon.shiny || false });
+      { scale, shiny: st.mon.shiny || false });
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1219,16 +1261,23 @@ const MonInfoScreen = (() => {
       return span;
     }
 
-    if (!mon.evolutions || mon.evolutions.length === 0) {
-      elChain.appendChild(makeNode(mon, 'FINAL FORM', true));
+    // If this mon has no evolutions, check if it's an evolved form of another base mon
+    let rootMon = mon;
+    if ((!mon.evolutions || mon.evolutions.length === 0) && typeof MONS !== 'undefined') {
+      const parent = MONS.find(m => m.evolutions && m.evolutions.some(e => e.name === mon.name));
+      if (parent) rootMon = parent;
+    }
+
+    if (!rootMon.evolutions || rootMon.evolutions.length === 0) {
+      elChain.appendChild(makeNode(rootMon, 'FINAL FORM', true));
       return;
     }
 
-    elChain.appendChild(makeNode(mon, 'BASE', true));
+    elChain.appendChild(makeNode(rootMon, 'BASE', true));
 
-    for (const evo of mon.evolutions) {
+    for (const evo of rootMon.evolutions) {
       elChain.appendChild(makeArrow());
-      const evoMon = { ...mon, name: evo.name, color: evo.color, accent: evo.accent };
+      const evoMon = { ...rootMon, ...evo };
       elChain.appendChild(makeNode(evoMon, `LV. ${evo.atLevel}`, false));
     }
   }

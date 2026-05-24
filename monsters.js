@@ -13,72 +13,51 @@
 // Mons without a sprite field will use the procedural block-art renderer.
 
 const MONS = [
-  // ── Common (spawn weight 60%) ─────────────────────────────
-  { id: 1, name: 'Tomotot',    color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
+  { id: 1, name: 'Tomotot',  color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
     sprite: 'assets/sprites/Tomotot/tomotot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 16, name: 'Marinaro',  color: '#c0392b', accent: '#922b21',
+      { atLevel: 16, name: 'Marinaro', color: '#c0392b', accent: '#922b21',
         sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
-      { atLevel: 36, name: 'Tomatrex',  color: '#7b241c', accent: '#641e16' },
     ]
   },
-  { id: 2, name: 'Broccoluff', color: '#27ae60', accent: '#1e8449', rarity: 'common',   catchRate: 0.68,
-    evolutions: [
-      { atLevel: 20, name: 'Broccosaurus', color: '#1a7a45', accent: '#145e34' },
-    ]
-  },
-  { id: 3, name: 'Chipchip',   color: '#f39c12', accent: '#d68910', rarity: 'common',   catchRate: 0.65,
-    evolutions: [
-      { atLevel: 20, name: 'Chiplord', color: '#d68910', accent: '#b7770d' },
-    ]
-  },
-  { id: 4, name: 'Mushamoo',   color: '#bdc3c7', accent: '#7f8c8d', rarity: 'common',   catchRate: 0.62 },
-
-  // ── Uncommon (spawn weight 30%) ───────────────────────────
-  { id: 5,  name: 'Lavandew',  color: '#8e44ad', accent: '#6c3483', rarity: 'uncommon', catchRate: 0.42 },
-  { id: 6,  name: 'Frostee',   color: '#2980b9', accent: '#1a5276', rarity: 'uncommon', catchRate: 0.38 },
-
-  // ── Rare (spawn weight 10%) ───────────────────────────────
-  { id: 7,  name: 'Goldleaf',  color: '#f1c40f', accent: '#d4ac0d', rarity: 'rare',     catchRate: 0.22 },
-  { id: 8,  name: 'Darkoji',   color: '#2c2c2c', accent: '#111',    rarity: 'rare',     catchRate: 0.18 },
-
-  // ── Feature 4 additions ───────────────────────────────────
-  // Common
-  { id: 9,  name: 'Pepperino', color: '#e67e22', accent: '#ca6f1e', rarity: 'common',   catchRate: 0.70,
-    evolutions: [
-      { atLevel: 20, name: 'Blazepeppa', color: '#e74c3c', accent: '#c0392b' },
-    ]
-  },
-  { id: 10, name: 'Lemonchi',  color: '#f7dc6f', accent: '#d4ac0d', rarity: 'common',   catchRate: 0.67 },
-  { id: 11, name: 'Cornie',    color: '#f0b429', accent: '#c8960c', rarity: 'common',   catchRate: 0.64 },
-  { id: 12, name: 'Berryblu',  color: '#5499c7', accent: '#2471a3', rarity: 'common',   catchRate: 0.61 },
-  // Uncommon
-  { id: 13, name: 'Grapechu',  color: '#7d3c98', accent: '#512e5f', rarity: 'uncommon', catchRate: 0.45,
-    evolutions: [
-      { atLevel: 16, name: 'Grapeking', color: '#6c3483', accent: '#4a235a' },
-      { atLevel: 36, name: 'Grapelord', color: '#4a1a6b', accent: '#2e0a4e' },
-    ]
-  },
-  { id: 14, name: 'Cocobun',   color: '#795548', accent: '#4e342e', rarity: 'uncommon', catchRate: 0.40 },
-  // Rare
-  { id: 15, name: 'Mintail',   color: '#1abc9c', accent: '#148f77', rarity: 'rare',     catchRate: 0.20 },
-  { id: 16, name: 'Avocuddle', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
+  // TEST MODE: Marinaro catchable in wild (normally obtained via evolution at pal level 16)
+  { id: 2, name: 'Marinaro', color: '#c0392b', accent: '#922b21', rarity: 'uncommon',  catchRate: 0.45,
+    sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
+  { id: 3, name: 'Avocuddle', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Avocuddle/avocuddle.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 17, name: 'Chilino',   color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      { atLevel: 20, name: 'Pittsworth',  color: '#7a5c2a', accent: '#5a3e14',
+        sprite: 'assets/sprites/Pittsworth/pittsworth.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+      { atLevel: 36, name: 'Guacamonger', color: '#4d6b1a', accent: '#2e4a0a',
+        sprite: 'assets/sprites/Guacamonger/guacamonger.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
+  { id: 4, name: 'Chilino',    color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Chilino/chilino.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // TEST MODE: Pittsworth catchable in wild (normally obtained via evolution at pal level 20)
+  { id: 5, name: 'Pittsworth',  color: '#7a5c2a', accent: '#5a3e14', rarity: 'uncommon', catchRate: 1.00,
+    sprite: 'assets/sprites/Pittsworth/pittsworth.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // TEST MODE: Guacamonger catchable in wild (normally obtained via evolution at pal level 36)
+  { id: 6, name: 'Guacamonger', color: '#4d6b1a', accent: '#2e4a0a', rarity: 'rare',     catchRate: 1.00,
+    sprite: 'assets/sprites/Guacamonger/guacamonger.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
 ];
 
 // Spawn weight per rarity tier
 const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
 
 // Returns a random MONS entry using weighted rarity selection.
-// TEST MODE: always spawn Chilino — remove this line when done testing.
+// TEST MODE: always spawn Guacamonger — restore weighted pool for production.
 function getRandomMon() {
-  return MONS.find(m => m.name === 'Chilino');
+  return MONS.find(m => m.name === 'Guacamonger');
   const pool = [];
   for (const mon of MONS) {
     const w = RARITY_WEIGHT[mon.rarity] || 0;

@@ -353,6 +353,7 @@ const Collection = (() => {
       localStorage.setItem('pm_active_rec_key',   rec._key);
       localStorage.setItem('pm_active_pal_level', rec.palLevel || 1);
       localStorage.setItem('pm_active_pal_exp',   rec.palExp   || 0);
+      localStorage.setItem('pm_active_shiny',     rec.shiny ? '1' : '0');
     }
 
     // updateCompanionDisplay is defined in app.js (loads after collection.js)
@@ -599,6 +600,11 @@ const Collection = (() => {
       fragment.appendChild(buildIndividualCard(mon, rec, activeRecKey));
     }
     grid.appendChild(fragment);
+
+    // Re-render once any still-loading sprites finish — fixes blank thumbnails on first load
+    if (typeof MonSprite !== 'undefined') {
+      MonSprite.preloadAll(MONS, renderMyMons);
+    }
   }
 
   return { init, addCaught, renderDex, renderMyMons, updateActivePalLevel };
