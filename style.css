@@ -217,8 +217,7 @@ body::after {
   width: 100%;
   position: relative;
   background: var(--panel-bg);
-  border: 3px solid var(--panel-border);
-  border-radius: var(--panel-radius);
+  clip-path: var(--pixel-clip);
   padding: 20px 16px 14px;
   box-shadow: var(--panel-shadow);
 }
@@ -318,8 +317,7 @@ body::after {
   text-shadow: 4px 4px 0 rgba(0,0,0,.45);
   background: rgba(0,0,0,.18);
   padding: 12px 16px 12px 20px;
-  border-radius: 0;
-  border: 2px solid rgba(255,255,255,.18);
+  clip-path: var(--pixel-clip);
   letter-spacing: .08em;
   flex: 1;
   display: flex;
@@ -375,8 +373,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   gap: 8px;
   width: 100%;
   background: var(--panel-bg);
-  border: 3px solid var(--panel-border);
-  border-radius: var(--panel-radius);
+  clip-path: var(--pixel-clip);
   padding: 12px;
   box-shadow: var(--panel-shadow);
 }
