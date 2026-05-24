@@ -607,5 +607,26 @@ const Collection = (() => {
     }
   }
 
-  return { init, addCaught, renderDex, renderMyMons, updateActivePalLevel };
+  // ── Public: getCaughtNames ───────────────────────────────────
+  // Returns a Set of mon names the player has obtained, including
+  // evolution stages they have already reached.
+  async function getCaughtNames() {
+    if (!db) return new Set();
+    const records = await getAllCaught();
+    const names = new Set();
+    if (typeof MONS === 'undefined') return names;
+    for (const rec of records) {
+      const base = MONS.find(m => m.id === rec.id);
+      if (!base) continue;
+      names.add(base.name);
+      if (base.evolutions) {
+        for (const evo of base.evolutions) {
+          if ((rec.palLevel || 1) >= evo.atLevel) names.add(evo.name);
+        }
+      }
+    }
+    return names;
+  }
+
+  return { init, addCaught, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames };
 })();

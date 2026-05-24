@@ -22,10 +22,6 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
     ]
   },
-  // TEST MODE: Marinaro catchable in wild (normally obtained via evolution at pal level 16)
-  { id: 2, name: 'Marinaro', color: '#c0392b', accent: '#922b21', rarity: 'uncommon',  catchRate: 0.45,
-    sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
   { id: 3, name: 'Avocuddle', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Avocuddle/avocuddle.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
@@ -41,23 +37,13 @@ const MONS = [
   { id: 4, name: 'Chilino',    color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Chilino/chilino.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  // TEST MODE: Pittsworth catchable in wild (normally obtained via evolution at pal level 20)
-  { id: 5, name: 'Pittsworth',  color: '#7a5c2a', accent: '#5a3e14', rarity: 'uncommon', catchRate: 1.00,
-    sprite: 'assets/sprites/Pittsworth/pittsworth.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  // TEST MODE: Guacamonger catchable in wild (normally obtained via evolution at pal level 36)
-  { id: 6, name: 'Guacamonger', color: '#4d6b1a', accent: '#2e4a0a', rarity: 'rare',     catchRate: 1.00,
-    sprite: 'assets/sprites/Guacamonger/guacamonger.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
 ];
 
 // Spawn weight per rarity tier
 const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
 
 // Returns a random MONS entry using weighted rarity selection.
-// TEST MODE: always spawn Guacamonger — restore weighted pool for production.
 function getRandomMon() {
-  return MONS.find(m => m.name === 'Guacamonger');
   const pool = [];
   for (const mon of MONS) {
     const w = RARITY_WEIGHT[mon.rarity] || 0;

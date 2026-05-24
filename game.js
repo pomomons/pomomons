@@ -485,6 +485,9 @@ const EncounterScreen = (() => {
   const MON_CY    = H * 0.5;      // mon centre-Y resting position (50% — vertical centre)
   const GROUND_Y  = Math.min(H - 50, MON_CY + 110); // where tomato lands after the throw
 
+  const _tomatoImg = new Image();
+  _tomatoImg.src = 'assets/sprites/Tomato/Tomato.png';
+
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
       elMsg, elSub, elRarity, elTags, elLevel, elControls,
@@ -512,28 +515,19 @@ const EncounterScreen = (() => {
     MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false });
   }
 
-  // ── tomato renderer — matches the 🍅 logo icon (draws centred at origin) ──
+  // ── tomato renderer — draws PNG centred at origin, r controls display size ──
   function drawTomatoPixelArt(r) {
-    // Round body — same smooth circle as the emoji
-    ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fill();
-
-    // Square pixel highlight — upper-left, matching the logo style
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillRect(-Math.round(r * .44), -Math.round(r * .50),
-                  Math.round(r * .30),  Math.round(r * .26));
-
-    // Calyx — 5-leaf fanned spread matching the 🍅 emoji
-    ctx.fillStyle = '#27ae60';
-    ctx.fillRect(-2,       -(r + 12),  4, 14); // stem
-    ctx.fillRect(-(r - 4), -(r +  3), 11,  5); // far-left leaf
-    ctx.fillRect(  r >> 2, -(r +  3), 11,  5); // far-right leaf
-    ctx.fillRect(-(r >> 1),-(r +  8),  7,  4); // mid-left leaf
-    ctx.fillRect( 2,       -(r +  8),  7,  4); // mid-right leaf
-    ctx.fillRect(-8,       -(r + 12),  5,  4); // top-left leaf
-    ctx.fillRect( 3,       -(r + 12),  5,  4); // top-right leaf
+    const size = r * 2;
+    if (_tomatoImg.complete && _tomatoImg.naturalWidth > 0) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(_tomatoImg, -size / 2, -size / 2, size, size);
+    } else {
+      // Fallback: plain red circle until image loads
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#e74c3c';
+      ctx.fill();
+    }
   }
 
   // ── draw the tomato projectile ────────────────────────────
@@ -1219,12 +1213,13 @@ const MonInfoScreen = (() => {
   }
 
   // ── Build the evolution chain as DOM nodes ──────────────
-  function buildEvoChain(mon) {
+  function buildEvoChain(mon, ownedNames) {
     elChain.innerHTML = '';
 
     const dpr = st.dpr;
 
     function makeNode(monData, labelText, isBase) {
+      const owned = !ownedNames || ownedNames.has(monData.name);
       const node = document.createElement('div');
       node.className = 'evo-node' + (isBase ? ' base' : '');
 
@@ -1233,16 +1228,19 @@ const MonInfoScreen = (() => {
       c.height = EVO_NODE_SIZE * dpr;
       c.style.width  = EVO_NODE_SIZE + 'px';
       c.style.height = EVO_NODE_SIZE + 'px';
+      if (!owned) c.style.filter = 'brightness(0) opacity(0.55)';
       const miniCtx = c.getContext('2d');
       if (dpr !== 1) miniCtx.scale(dpr, dpr);
+      const s = MonSprite.fitScale(monData, EVO_NODE_SIZE * 0.88, 0.9, false);
       MonSprite.drawOnCtx(miniCtx, monData,
         EVO_NODE_SIZE / 2, EVO_NODE_SIZE / 2,
-        { scale: 0.9, shiny: mon.shiny || false });
+        { scale: s, shiny: mon.shiny || false });
       node.appendChild(c);
 
       const nameEl = document.createElement('p');
       nameEl.className   = 'evo-node-name';
-      nameEl.textContent = monData.name.toUpperCase();
+      nameEl.textContent = owned ? monData.name.toUpperCase() : '???';
+      if (!owned) nameEl.style.opacity = '0.5';
       node.appendChild(nameEl);
 
       const lblEl = document.createElement('p');
@@ -1280,6 +1278,10 @@ const MonInfoScreen = (() => {
       const evoMon = { ...rootMon, ...evo };
       elChain.appendChild(makeNode(evoMon, `LV. ${evo.atLevel}`, false));
     }
+
+    // If any chain sprites weren't loaded yet, redraw once they finish
+    const chainMons = [rootMon, ...(rootMon.evolutions || []).map(e => ({ ...rootMon, ...e }))];
+    MonSprite.preloadAll(chainMons, () => buildEvoChain(mon, ownedNames));
   }
 
   // ── dismiss ─────────────────────────────────────────────
@@ -1290,7 +1292,7 @@ const MonInfoScreen = (() => {
   }
 
   // ── public API ───────────────────────────────────────────
-  function start(mon, doneCb) {
+  async function start(mon, doneCb) {
     if (!overlay) {
       overlay  = document.getElementById('mon-info-overlay');
       canvas   = document.getElementById('mon-info-canvas');
@@ -1319,7 +1321,11 @@ const MonInfoScreen = (() => {
     elRarity.textContent = shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
     elRarity.className   = `mon-info-rarity ${shiny ? 'ultra-rare' : mon.rarity}`;
 
-    buildEvoChain(mon);
+    let ownedNames = null;
+    if (typeof Collection !== 'undefined' && typeof Collection.getCaughtNames === 'function') {
+      ownedNames = await Collection.getCaughtNames();
+    }
+    buildEvoChain(mon, ownedNames);
 
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);

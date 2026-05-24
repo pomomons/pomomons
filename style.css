@@ -166,6 +166,13 @@ body::after {
   animation: logo-float 2.4s ease-in-out infinite;
 }
 
+.logo-tomato-img {
+  height: 2.6rem;
+  width: auto;
+  display: block;
+  image-rendering: pixelated;
+}
+
 @keyframes logo-float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-6px); }
