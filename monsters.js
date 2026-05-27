@@ -17,9 +17,12 @@ const MONS = [
     sprite: 'assets/sprites/Tomotot/tomotot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 16, name: 'Marinaro', color: '#c0392b', accent: '#922b21',
+      { atLevel: 16, name: 'Marinaro',    color: '#c0392b', accent: '#922b21',
         sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
+      { atLevel: 36, name: 'Strangletti', color: '#7b1a1a', accent: '#4a0a0a',
+        sprite: 'assets/sprites/Strangletti/Strangletti.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
   { id: 3, name: 'Avocuddle', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
@@ -37,6 +40,12 @@ const MONS = [
   { id: 4, name: 'Chilino',    color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Chilino/chilino.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 5, name: 'Bluble',     color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
+    sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 6, name: 'Donot',      color: '#6b3a2a', accent: '#4a2010', rarity: 'common',   catchRate: 0.65,
+    sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
 ];
 
 // Spawn weight per rarity tier

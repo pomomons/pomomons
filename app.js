@@ -112,6 +112,7 @@ let currentMode   = 'focus';
 let timeLeft      = MODES.focus;
 let running       = false;
 let intervalId    = null;
+let endTime       = 0;   // wall-clock ms when the current run should finish
 let sessionsToday = 0;
 
 // ── DOM refs ──────────────────────────────────────────────
@@ -135,8 +136,11 @@ function updateBackground() {
 function renderTime() {
   const m = Math.floor(timeLeft / 60);
   const s = timeLeft % 60;
-  elMinutes.textContent = String(m).padStart(2, '0');
-  elSeconds.textContent = String(s).padStart(2, '0');
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  elMinutes.textContent = mm;
+  elSeconds.textContent = ss;
+  document.title = running ? `${mm}:${ss} — PomoMons` : 'PomoMons';
 }
 
 function renderDots() {
@@ -178,22 +182,30 @@ function setMode(mode) {
   updateButtonStates();
 }
 
+function timerTick() {
+  const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+  if (remaining !== timeLeft) {
+    timeLeft = remaining;
+    renderTime();
+  }
+  if (timeLeft <= 0) onSessionEnd();
+}
+
 function startTimer() {
   if (running) return;
   running = true;
+  endTime = Date.now() + timeLeft * 1000;
   SFX.play('start');
   elColon.style.animationPlayState = 'running';
   updateBackground();
   updateButtonStates();
-  intervalId = setInterval(() => {
-    timeLeft--;
-    renderTime();
-    if (timeLeft <= 0) onSessionEnd();
-  }, 1000);
+  renderTime();
+  intervalId = setInterval(timerTick, 1000);
 }
 
 function pauseTimer() {
   if (!running) return;
+  timeLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
   running = false;
   clearInterval(intervalId);
   elColon.style.animationPlayState = 'paused';
@@ -419,6 +431,15 @@ document.getElementById('progress-list').addEventListener('click', e => {
     localStorage.setItem('pm_claimed_rewards', JSON.stringify(claimed));
   }
   renderProgress();
+});
+
+// Sync timer when tab becomes visible again after being hidden
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && running) {
+    timeLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+    renderTime();
+    if (timeLeft <= 0) onSessionEnd();
+  }
 });
 
 // Audio toggle
