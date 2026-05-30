@@ -368,8 +368,13 @@ function updateCompanionDisplay() {
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
+  const typeEl = document.getElementById('companion-type');
   if (nameEl) nameEl.textContent = stage.name;
   if (lvlEl)  lvlEl.textContent  = level;
+  if (typeEl && typeof makeTypeBadges === 'function') {
+    typeEl.innerHTML = '';
+    typeEl.appendChild(makeTypeBadges(stage.type));
+  }
   if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny });
 }
 
@@ -406,11 +411,33 @@ function showLevelUpBanner(level) {
   setTimeout(() => banner.remove(), hasReward ? 3000 : 2200);
 }
 
+// ── Dev helper: call seedCollection() from the browser console ──
+// Adds one record per base mon + one per evolution stage so all sprites are visible.
+// Remove before shipping.
+async function seedCollection() {
+  if (typeof MONS === 'undefined' || typeof Collection === 'undefined') return;
+  const records = [];
+  for (const mon of MONS) {
+    records.push({ id: mon.id, name: mon.name, shiny: false, caughtAt: Date.now(), palLevel: 1, palExp: 0 });
+    if (mon.evolutions) {
+      for (const evo of mon.evolutions) {
+        records.push({ id: mon.id, name: mon.name, shiny: false, caughtAt: Date.now(), palLevel: evo.atLevel, palExp: 0 });
+      }
+    }
+  }
+  for (const rec of records) await Collection.addCaught(rec);
+  console.log(`seedCollection: added ${records.length} records`);
+}
+
 // ── Boot ──────────────────────────────────────────────────
 loadPlayerState();
 renderStats();
 document.body.dataset.mode = currentMode;
-Collection.init();
+Collection.init().then(() => {
+  if (!localStorage.getItem('pm_seeded')) {
+    seedCollection().then(() => localStorage.setItem('pm_seeded', '1'));
+  }
+});
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));

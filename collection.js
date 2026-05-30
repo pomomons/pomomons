@@ -399,6 +399,14 @@ const Collection = (() => {
     MonSprite.draw(canvas, displayMon, { fit: 0.85, shiny: catchData?.hasShiny || false });
     card.appendChild(canvas);
 
+    // Dex number
+    const dexEl = document.createElement('p');
+    dexEl.className   = 'mon-card-dexnum';
+    dexEl.textContent = catchData && displayMon.dexNum
+      ? `#${String(displayMon.dexNum).padStart(3, '0')}`
+      : '#???';
+    card.appendChild(dexEl);
+
     // Name
     const nameEl = document.createElement('p');
     nameEl.className   = 'mon-card-name';
@@ -416,6 +424,10 @@ const Collection = (() => {
       lvlEl.className   = 'mon-card-pallvl';
       lvlEl.textContent = `LVL ${palLevel}`;
       card.appendChild(lvlEl);
+
+      if (typeof makeTypeBadges === 'function' && displayMon.type) {
+        card.appendChild(makeTypeBadges(displayMon.type));
+      }
     }
 
     // Count badge (only when caught more than once)
@@ -434,56 +446,82 @@ const Collection = (() => {
     return card;
   }
 
-  // ── Public: renderDex — one card per species ─────────────────
+  // ── Internal: buildDexCard — dex tile (owned = full sprite, unowned = silhouette) ──
+  function buildDexCard(mon, owned) {
+    const card = document.createElement('div');
+    card.className = 'mon-card';
+    if (!owned) card.classList.add('unseen');
+
+    const canvas  = document.createElement('canvas');
+    canvas.width  = 64;
+    canvas.height = 64;
+    MonSprite.draw(canvas, mon, { fit: 0.85, shiny: false });
+    if (!owned) canvas.style.filter = 'brightness(0) opacity(.18)';
+    card.appendChild(canvas);
+
+    const dexEl = document.createElement('p');
+    dexEl.className   = 'mon-card-dexnum';
+    dexEl.textContent = mon.dexNum ? `#${String(mon.dexNum).padStart(3, '0')}` : '#???';
+    card.appendChild(dexEl);
+
+    const nameEl = document.createElement('p');
+    nameEl.className   = 'mon-card-name';
+    nameEl.textContent = owned ? mon.name : '???';
+    card.appendChild(nameEl);
+
+    if (owned && typeof makeTypeBadges === 'function' && mon.type) {
+      card.appendChild(makeTypeBadges(mon.type));
+    }
+
+    return card;
+  }
+
+  // ── Public: renderDex — one tile per dex entry (base + evolutions), sorted by dexNum ─────
   async function renderDex() {
-    const TOTAL_MONS = typeof MONS !== 'undefined' ? MONS.length : 0;
+    // Build flat list of every dex entry
+    const allDexEntries = [];
+    if (typeof MONS !== 'undefined') {
+      for (const mon of MONS) {
+        allDexEntries.push(mon);
+        if (mon.evolutions) {
+          for (const evo of mon.evolutions) {
+            allDexEntries.push({ ...mon, ...evo, id: mon.id, rarity: mon.rarity });
+          }
+        }
+      }
+    }
+    allDexEntries.sort((a, b) => (a.dexNum || 999) - (b.dexNum || 999));
+
+    const TOTAL_DEX = allDexEntries.length;
     const grid  = document.getElementById('dex-grid');
     const count = document.getElementById('dex-count');
 
     if (!db) {
-      if (count) count.textContent = `0 / ${TOTAL_MONS}`;
+      if (count) count.textContent = `0 / ${TOTAL_DEX}`;
       if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable (storage not supported).</p>';
       return;
     }
 
-    let allCaught;
+    let ownedNames;
     try {
-      allCaught = await getAllCaught();
+      ownedNames = await getCaughtNames();
     } catch (err) {
       if (grid) grid.innerHTML = '<p class="empty-state">Could not load collection.</p>';
       return;
     }
 
-    // Build Map<id, { count, hasShiny, maxPalLevel }>
-    const caughtMap = new Map();
-    for (const rec of allCaught) {
-      const existing = caughtMap.get(rec.id);
-      const recLevel = rec.palLevel || 1;
-      if (existing) {
-        existing.count++;
-        if (rec.shiny) existing.hasShiny = true;
-        if (recLevel > existing.maxPalLevel) existing.maxPalLevel = recLevel;
-      } else {
-        caughtMap.set(rec.id, { count: 1, hasShiny: rec.shiny || false, maxPalLevel: recLevel });
-      }
-    }
-
-    // Update count — always, before any early return
-    if (count) count.textContent = `${caughtMap.size} / ${TOTAL_MONS}`;
-
-    if (caughtMap.size === 0) {
-      grid.innerHTML = '';
-      // Still render all mons as unseen
-    }
-
-    const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+    if (count) count.textContent = `${ownedNames.size} / ${TOTAL_DEX}`;
 
     grid.innerHTML = '';
     const fragment = document.createDocumentFragment();
-    for (const mon of MONS) {
-      fragment.appendChild(buildCard(mon, caughtMap.get(mon.id) || null, activeId));
+    for (const entry of allDexEntries) {
+      fragment.appendChild(buildDexCard(entry, ownedNames.has(entry.name)));
     }
     grid.appendChild(fragment);
+
+    if (typeof MonSprite !== 'undefined') {
+      MonSprite.preloadAll(allDexEntries, renderDex);
+    }
   }
 
   // ── Internal: buildIndividualCard — one record per catch ─────

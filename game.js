@@ -1320,6 +1320,13 @@ const MonInfoScreen = (() => {
     elName.textContent   = mon.name.toUpperCase();
     elRarity.textContent = shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
     elRarity.className   = `mon-info-rarity ${shiny ? 'ultra-rare' : mon.rarity}`;
+    const elDexNum = document.getElementById('mon-info-dexnum');
+    if (elDexNum) elDexNum.textContent = mon.dexNum ? `#${String(mon.dexNum).padStart(3, '0')}` : '';
+    const elType = document.getElementById('mon-info-type');
+    if (elType && typeof makeTypeBadges === 'function') {
+      elType.innerHTML = '';
+      elType.appendChild(makeTypeBadges(mon.type));
+    }
 
     let ownedNames = null;
     if (typeof Collection !== 'undefined' && typeof Collection.getCaughtNames === 'function') {

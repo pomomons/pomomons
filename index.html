@@ -81,7 +81,10 @@
       <div class="pxb pxb-sm pxb-dex"><button class="btn-dex" id="btn-go-dex">DEX</button></div>
       <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
-      <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
+      <div class="companion-meta">
+        <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
+        <div id="companion-type" class="companion-type"></div>
+      </div>
     </div></div>
 
     <!-- Timer row -->
@@ -135,7 +138,7 @@
     <div class="collection-header">
       <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
       <h2 class="screen-title">POMODEX</h2>
-      <span class="collection-count" id="dex-count">0 / 15</span>
+      <span class="collection-count" id="dex-count">0 / 11</span>
     </div>
     <div class="collection-grid" id="dex-grid"></div>
   </main>
@@ -200,7 +203,9 @@
 
   <!-- ── Mon Info Overlay ─────────────────────────────── -->
   <div id="mon-info-overlay" class="mon-info-overlay">
+    <p class="mon-info-dexnum" id="mon-info-dexnum">#???</p>
     <p class="mon-info-rarity" id="mon-info-rarity">COMMON</p>
+    <div id="mon-info-type" class="type-badges" style="justify-content:center;margin-bottom:4px;"></div>
     <h2 class="mon-info-name" id="mon-info-name">???</h2>
     <canvas id="mon-info-canvas" width="200" height="200" aria-label="Caught Pomomon"></canvas>
     <div class="mon-info-evo-section">
