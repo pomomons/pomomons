@@ -46,9 +46,12 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1000 },
       { atLevel: 36, dexNum: 9,  name: 'Ghostpepper',  type: ['Fire', 'Ghost'], color: '#a8c8d8', accent: '#6a9ab0',
         sprite: 'assets/sprites/Ghostpepper/Ghostpepper.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
+  { id: 7, dexNum: 12, name: 'Pumplet',    type: 'Ghost', color: '#e67e22', accent: '#d35400', rarity: 'common',   catchRate: 0.70,
+    sprite: 'assets/sprites/Pumplet/Pumplet.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
