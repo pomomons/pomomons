@@ -49,6 +49,15 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
+  { id: 8, dexNum: 13, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',   catchRate: 0.70,
+    sprite: 'assets/sprites/Marshpuff/Marshpuff.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      { atLevel: 20, dexNum: 14, name: 'Marshmelt', type: 'Sweet', color: '#c8a060', accent: '#8b6530',
+        sprite: 'assets/sprites/Marshmelt/Marshmelt.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    ]
+  },
   { id: 7, dexNum: 12, name: 'Pumplet',    type: 'Ghost', color: '#e67e22', accent: '#d35400', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Pumplet/Pumplet.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
@@ -66,6 +75,8 @@ const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
 // Returns a random MONS entry using weighted rarity selection.
 // TEST MODE: always spawn Ghostpepper — restore weighted pool for production.
 function getRandomMon() {
+  const base = MONS.find(m => m.name === 'Marshpuff');
+  return { ...base, ...base.evolutions.find(e => e.name === 'Marshmelt') };
   const pool = [];
   for (const mon of MONS) {
     const w = RARITY_WEIGHT[mon.rarity] || 0;

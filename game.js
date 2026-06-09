@@ -258,6 +258,7 @@ const CompanionCanvas = (() => {
   const CANVAS_SIZE = 200; // logical px (canvas element attribute)
 
   const SPRITE = {
+    noMon:      true,    // true until setMon() is called; suppresses all drawing
     bodyColor:  '#e74c3c',   // tomato red (block-art fallback)
     eyeColor:   '#2c2c2c',
     blushColor: '#f1948a',
@@ -428,6 +429,7 @@ const CompanionCanvas = (() => {
 
     // --- Draw ---
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    if (SPRITE.noMon) { rafId = requestAnimationFrame(tick); return; }
     drawSprite(state.y, state.squishX, state.squishY);
 
     rafId = requestAnimationFrame(tick);
@@ -436,6 +438,7 @@ const CompanionCanvas = (() => {
   // ── public API ─────────────────────────────────────────
   // Re-skin the companion with a caught mon's colours/sprite (called by collection.js).
   function setMon(mon) {
+    SPRITE.noMon      = false;
     SPRITE.bodyColor  = mon.color;
     SPRITE.blushColor = mon.color + '99';
     SPRITE.shiny      = mon.shiny || false;

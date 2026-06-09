@@ -360,9 +360,16 @@ function savePalExp(speciesId, delta) {
 // Called after any change to the active companion or its pal level.
 function updateCompanionDisplay() {
   const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
-  if (!activeId || typeof MONS === 'undefined') return;
+  if (!activeId || typeof MONS === 'undefined') {
+    const nameEl = document.getElementById('companion-name');
+    const metaEl = document.querySelector('.companion-meta');
+    if (nameEl) nameEl.textContent = '';
+    if (metaEl) metaEl.style.visibility = 'hidden';
+    return;
+  }
   const mon = MONS.find(m => m.id === activeId);
   if (!mon) return;
+  document.querySelector('.companion-meta').style.visibility = '';
   const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
   const shiny = localStorage.getItem('pm_active_shiny') === '1';
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
@@ -433,11 +440,7 @@ async function seedCollection() {
 loadPlayerState();
 renderStats();
 document.body.dataset.mode = currentMode;
-Collection.init().then(() => {
-  if (!localStorage.getItem('pm_seeded')) {
-    seedCollection().then(() => localStorage.setItem('pm_seeded', '1'));
-  }
-});
+Collection.init().then(() => seedCollection());
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));

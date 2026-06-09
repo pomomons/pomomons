@@ -164,6 +164,7 @@ body::after {
   filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5));
   display: inline-block;
   animation: logo-float 2.4s ease-in-out infinite;
+  margin-right: 6px;
 }
 
 .logo-tomato-img {
@@ -183,8 +184,10 @@ body::after {
   font-size: 2.6rem;
   color: #fff;
   letter-spacing: .06em;
+  margin-right: -.06em;
   -webkit-text-stroke: 1.5px #fff;
-  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  /* original: text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; */
+  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
 }
 
 .logo-mons {
@@ -193,14 +196,16 @@ body::after {
   color: var(--gold);
   letter-spacing: .06em;
   -webkit-text-stroke: 1.5px var(--gold);
-  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  /* original: text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; */
+  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
 }
 
 .tagline {
   font-family: var(--font-pixel);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-muted);
   letter-spacing: .12em;
+  margin-top: 6px;
 }
 
 /* ── Screen system ───────────────────────────────────────── */
@@ -338,13 +343,14 @@ body::after {
   color: var(--text);
 }
 
-/* ── Timer row (display + inline adjust arrows) ──────────── */
-.timer-row {
+/* ── Combined timer + controls box ───────────────────────── */
+.combined-timer-wrap {
+  background: var(--panel-bg);
+  clip-path: var(--pixel-clip);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column;
   width: 100%;
+  overflow: hidden;
 }
 
 /* Timer display — CSS text */
@@ -352,14 +358,15 @@ body::after {
   font-family: var(--font-pixel);
   font-size: 4.2rem;
   color: #fff;
-  text-shadow: 4px 4px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-  background: var(--panel-bg);
+  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
+  background: none;
   padding: 12px 16px 12px 20px;
-  clip-path: var(--pixel-clip);
+  clip-path: none;
   letter-spacing: .08em;
   width: 100%;
   display: flex;
   align-items: center;
+  border-bottom: 2px solid rgba(255,255,255,.08);
 }
 
 .timer-time {
@@ -410,8 +417,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  background: var(--panel-bg);
-  clip-path: var(--pixel-clip);
+  background: none;
+  clip-path: none;
   padding: 12px;
 }
 
