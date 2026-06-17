@@ -56,19 +56,9 @@
   --pxdrop:    drop-shadow(5px 5px 0 rgba(0,0,0,.60));
   --pxdrop-sm: drop-shadow(4px 4px 0 rgba(0,0,0,.60));
 
-  /* Pixel border: 8-directional drop-shadows at 4px — chaining effect fills solid outline */
-  --pxborder:
-    drop-shadow(0 4px 0 #000) drop-shadow(0 -4px 0 #000)
-    drop-shadow(4px 0 0 #000) drop-shadow(-4px 0 0 #000)
-    drop-shadow(3px 3px 0 #000) drop-shadow(-3px 3px 0 #000)
-    drop-shadow(3px -3px 0 #000) drop-shadow(-3px -3px 0 #000)
-    drop-shadow(7px 7px 0 rgba(0,0,0,.65));
-  --pxborder-sm:
-    drop-shadow(0 3px 0 #000) drop-shadow(0 -3px 0 #000)
-    drop-shadow(3px 0 0 #000) drop-shadow(-3px 0 0 #000)
-    drop-shadow(2px 2px 0 #000) drop-shadow(-2px 2px 0 #000)
-    drop-shadow(2px -2px 0 #000) drop-shadow(-2px -2px 0 #000)
-    drop-shadow(5px 5px 0 rgba(0,0,0,.65));
+  /* Pixel border: outline stripped for no-border test — just depth shadow remains */
+  --pxborder:    drop-shadow(5px 5px 0 rgba(0,0,0,.55));
+  --pxborder-sm: drop-shadow(4px 4px 0 rgba(0,0,0,.55));
 }
 
 /* ── Mode backgrounds — only two states ─────────────────── */
@@ -185,9 +175,8 @@ body::after {
   color: #fff;
   letter-spacing: .06em;
   margin-right: -.06em;
-  -webkit-text-stroke: 1.5px #fff;
-  /* original: text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; */
-  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 
 .logo-mons {
@@ -195,9 +184,8 @@ body::after {
   font-size: 2.6rem;
   color: var(--gold);
   letter-spacing: .06em;
-  -webkit-text-stroke: 1.5px var(--gold);
-  /* original: text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; */
-  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 
 .tagline {
@@ -358,7 +346,7 @@ body::after {
   font-family: var(--font-pixel);
   font-size: 4.2rem;
   color: #fff;
-  text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000, 0 -4px 0 #000, 0 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
+  text-shadow: none;
   background: none;
   padding: 12px 16px 12px 20px;
   clip-path: none;
@@ -489,8 +477,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
    traces the staircase edge on all sides including the corner steps. */
 .pxb {
   clip-path: var(--pixel-clip);
-  background: #000;
-  padding: 4px;
+  background: transparent;
+  padding: 0;
   display: flex;
   filter: var(--pxdrop);
   transition: filter .15s, transform .12s;
@@ -536,7 +524,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .pxb-sm {
   clip-path: var(--pixel-clip-sm);
   filter: var(--pxdrop-sm);
-  padding: 3px;
+  padding: 0;
 }
 
 /* Positioned wrappers */
