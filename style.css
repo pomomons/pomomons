@@ -1539,9 +1539,102 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 .btn-claim:active { transform: translate(3px,3px); filter: none; }
 
 /* ── Responsive ──────────────────────────────────────────── */
+
+/* Mobile (< 480px) — base adjustments for touch devices */
+@media (max-width: 479px) {
+  .app-header { padding: 22px 12px 8px; gap: 4px; }
+  .logo-pomo, .logo-mons { font-size: 2.1rem; }
+  .logo-tomato-img { height: 2.1rem; }
+  .logo-icon { font-size: 2.1rem; }
+  /* Touch drag-and-drop unsupported; hide blender zone */
+  .blender-zone { display: none !important; }
+  /* Level-up banner: prevent off-screen overflow */
+  .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
+}
+
+/* Very small phones (≤ 359px) */
+@media (max-width: 359px) {
+  .app-header { padding: 16px 10px 6px; gap: 3px; }
+  .logo-pomo, .logo-mons { font-size: 1.75rem; }
+  .logo-tomato-img { height: 1.75rem; }
+  .logo-icon { font-size: 1.75rem; }
+  .logo { gap: 4px; }
+  .tagline { font-size: .46rem; letter-spacing: .06em; }
+  .timer-display { font-size: 3.2rem; padding: 10px 10px 10px 14px; }
+  .screen { padding: 8px 10px calc(var(--stats-h) + 8px); gap: 6px; }
+  .screen-title { font-size: .65rem; }
+  .companion-area { padding: 14px 10px 10px; }
+  .btn { padding: 10px 14px; font-size: .78rem; }
+  .btn-collection { padding: 12px 6px; font-size: .78rem; }
+  #companion-canvas { width: 150px; height: 150px; }
+}
+
+/* Small-medium mobile (360px – 399px) */
+@media (min-width: 360px) and (max-width: 399px) {
+  #companion-canvas { width: 180px; height: 180px; }
+  .timer-display { font-size: 4rem; }
+}
+
+/* Standard and up (≥ 400px) */
 @media (min-width: 400px) {
   #companion-canvas { width: 220px; height: 220px; }
   .timer-display { font-size: 5rem; }
+}
+
+/* Landscape phones (height ≤ 520px, landscape orientation) */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --stats-h: 60px; }
+
+  .app-header { padding: 6px 12px 4px; gap: 2px; }
+  .logo-pomo, .logo-mons { font-size: 1.2rem; }
+  .logo-tomato-img { height: 1.2rem; }
+  .logo-icon { font-size: 1.2rem; margin-right: 3px; }
+  .tagline { display: none; }
+
+  .screen { padding: 6px 8px calc(var(--stats-h) + 6px); gap: 6px; }
+
+  /* Timer screen: companion left, timer+controls right */
+  #screen-timer {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px;
+  }
+  #screen-timer .companion-wrap { flex: 0 0 auto; width: 44%; }
+  #screen-timer .combined-timer-wrap { flex: 1 1 auto; min-width: 0; }
+
+  #companion-canvas { width: 90px; height: 90px; }
+  .companion-area { padding: 10px 8px 8px; gap: 4px; }
+  .companion-name { font-size: .5rem; }
+
+  .timer-display { font-size: 2.6rem; padding: 8px 10px; }
+  .controls-group { padding: 8px; gap: 5px; }
+  .timer-controls { gap: 5px; }
+  .btn { padding: 8px 10px; font-size: .72rem; }
+  .btn-collection { padding: 8px 4px; font-size: .72rem; }
+  .collection-btns { margin-top: 0; }
+
+  /* Compact stats strip */
+  .stats-top { padding: 4px 12px 2px; }
+  .stats-bottom { padding: 3px 12px 4px; gap: 8px; }
+  .stat-label { display: none; }
+  .exp-bar-wrap { height: 16px; }
+
+  /* Encounter: scrollable, canvas scaled to fit short height */
+  .encounter-overlay {
+    padding: 8px 20px calc(var(--stats-h) + 8px);
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  #encounter-canvas { height: 180px; width: 95px; }
+  .encounter-controls {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin-top: 4px;
+  }
 }
 
 /* ── Panel appear animation ──────────────────────────────── */
