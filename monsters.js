@@ -73,10 +73,7 @@ const MONS = [
 const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
 
 // Returns a random MONS entry using weighted rarity selection.
-// TEST MODE: always spawn Ghostpepper — restore weighted pool for production.
 function getRandomMon() {
-  const base = MONS.find(m => m.name === 'Marshpuff');
-  return { ...base, ...base.evolutions.find(e => e.name === 'Marshmelt') };
   const pool = [];
   for (const mon of MONS) {
     const w = RARITY_WEIGHT[mon.rarity] || 0;

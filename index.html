@@ -87,7 +87,7 @@
       </div>
     </div></div>
 
-    <!-- COMBINED: timer + controls in one box. To revert, split back into .timer-row and .pxb-panel.controls-wrap -->
+    <!-- Timer + controls box -->
     <div class="pxb-panel combined-timer-wrap">
       <section class="timer-display" aria-live="polite">
         <span class="timer-time"><span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span></span>
@@ -98,20 +98,14 @@
       </section>
       <div class="controls-group">
         <div class="timer-controls">
-          <div class="pxb"><button class="btn btn-timer-start" id="btn-start">▶ START</button></div>
-          <div class="btn-mode-wrap" id="btn-mode-wrap">
-            <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button></div>
-            <div class="mode-dropdown" id="mode-dropdown" hidden>
-              <button class="mode-option active" data-mode="focus">FOCUS</button>
-              <button class="mode-option" data-mode="short">SHORT BREAK</button>
-              <button class="mode-option" data-mode="long">LONG BREAK</button>
+          <div class="timer-bottom-row">
+            <div class="btn-mode-wrap" id="btn-mode-wrap">
+              <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button></div>
             </div>
+            <div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div>
           </div>
-          <div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div>
-        </div>
-        <div class="collection-btns">
-          <div class="pxb"><button class="btn btn-collection" id="btn-go-mymons">COLLECTION</button></div>
-          <div class="pxb"><button class="btn btn-collection btn-collection-items" id="btn-go-items">ITEMS</button></div>
+          <div class="pxb"><button class="btn btn-timer-start" id="btn-start">▶ START</button></div>
+          <div class="pxb"><button class="btn btn-collection" id="btn-go-mymons">POMODEX</button></div>
         </div>
       </div>
     </div>
@@ -265,6 +259,12 @@
     <canvas id="map-icon-canvas" width="16" height="16"></canvas>
     <span class="reward-dot" id="reward-dot"></span>
   </button>
+
+  <div class="mode-dropdown" id="mode-dropdown" hidden>
+    <button class="mode-option active" data-mode="focus">FOCUS</button>
+    <button class="mode-option" data-mode="short">SHORT BREAK</button>
+    <button class="mode-option" data-mode="long">LONG BREAK</button>
+  </div>
 
   <script src="monsters.js"></script>
   <script src="game.js"></script>

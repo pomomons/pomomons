@@ -271,9 +271,18 @@ function onSessionEnd() {
 }
 
 // ── Mode dropdown ─────────────────────────────────────────
+function positionModeDropdown() {
+  const r = btnMode.getBoundingClientRect();
+  modeDropdown.style.top  = (r.bottom + 6) + 'px';
+  modeDropdown.style.left = r.left + 'px';
+  modeDropdown.style.width = r.width + 'px';
+}
+
 btnMode.addEventListener('click', e => {
   e.stopPropagation();
-  modeDropdown.hidden = !modeDropdown.hidden;
+  const opening = modeDropdown.hidden;
+  if (opening) positionModeDropdown();
+  modeDropdown.hidden = !opening;
 });
 
 document.querySelectorAll('.mode-option').forEach(opt => {
