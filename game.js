@@ -482,14 +482,18 @@ const CompanionCanvas = (() => {
 
 // ── Encounter screen ───────────────────────────────────────
 const EncounterScreen = (() => {
-  const SIZE      = 200;          // logical canvas width
+  const SIZE      = 480;          // logical canvas width (wider to fit ground sprite)
   const H         = 380;          // logical canvas height — tall for long throw arc
   const MON_SCALE = 1.5;          // wild mon drawn at 1.5× base size
   const MON_CY    = H * 0.5;      // mon centre-Y resting position (50% — vertical centre)
-  const GROUND_Y  = Math.min(H - 50, MON_CY + 110); // where tomato lands after the throw
+  const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
+  const GROUND_Y  = Math.min(H - 50, MON_CY + 110 + THROW_Y_SHIFT); // where tomato lands
 
   const _tomatoImg = new Image();
   _tomatoImg.src = 'assets/sprites/Tomato/Tomato.png';
+
+  const _groundImg = new Image();
+  _groundImg.src = 'assets/sprites/Ground/Ground1.png';
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
@@ -514,7 +518,7 @@ const EncounterScreen = (() => {
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
   function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
-    const s = MonSprite.fitScale(st.mon, SIZE * 0.92, scale, st.mon.shiny || false);
+    const s = MonSprite.fitScale(st.mon, 184, scale, st.mon.shiny || false);
     MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false });
   }
 
@@ -540,7 +544,7 @@ const EncounterScreen = (() => {
     const startX = st.throwStartX;
     const startY = st.throwStartY;  // button position in canvas coords
     const endX   = SIZE / 2;
-    const endY   = MON_CY;
+    const endY   = MON_CY + THROW_Y_SHIFT;
     // Arc height: peak sits at y=44 so the calyx (34px above centre) stays inside the canvas.
     const arcH   = (startY + endY) / 2 - 44;
 
@@ -584,9 +588,23 @@ const EncounterScreen = (() => {
     ctx.restore();
   }
 
+  // ── ground sprite platform ───────────────────────────────────
+  function drawPlatform() {
+    if (!_groundImg.complete || !_groundImg.naturalWidth) return;
+    const w  = 460;
+    const h  = 230;
+    const cx = SIZE / 2;
+    const cy = MON_CY + 78;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(_groundImg, cx - w / 2, cy - h / 2, w, h);
+    ctx.restore();
+  }
+
   // ── phase draw dispatcher ─────────────────────────────────
   function draw() {
     ctx.clearRect(0, 0, SIZE, H);
+    drawPlatform();
     const cx = SIZE / 2;
     const f  = st.frame;
 
@@ -773,7 +791,7 @@ const EncounterScreen = (() => {
         // Update encounter overlay to show congratulations
         elMsg.textContent = 'CONGRATULATIONS!';
         elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
-        elSub.style.color = 'var(--green)';
+        elSub.style.color = '#fff';
         if (elLevel) elLevel.style.display = 'none';
 
         // Swap buttons: hide throw/flee, show NEXT
@@ -803,12 +821,12 @@ const EncounterScreen = (() => {
     if (caught) {
       SFX.play('catch');
       elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
-      elSub.style.color = 'var(--green)';
+      elSub.style.color = '';
       saveCaught();
       if (typeof saveExp === 'function') saveExp(25);
     } else {
       elSub.textContent = `${st.mon.name} FLED AWAY!`;
-      elSub.style.color = 'var(--red)';
+      elSub.style.color = '';
       if (typeof saveExp === 'function') saveExp(5);
     }
   }
@@ -948,7 +966,7 @@ const EncounterScreen = (() => {
     const cr = canvas.getBoundingClientRect();
     const br = btnThrow.getBoundingClientRect();
     st.throwStartX = (br.left + br.width  / 2 - cr.left) * (SIZE / cr.width);
-    st.throwStartY = (br.top  + br.height / 2 - cr.top)  * (H    / cr.height);
+    st.throwStartY = (br.top  + br.height / 2 - cr.top)  * (H    / cr.height) + THROW_Y_SHIFT;
 
     st.phase = 'throwing';
     st.frame = 0;

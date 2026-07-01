@@ -125,7 +125,7 @@ const btnMode      = document.getElementById('btn-mode');
 const modeDropdown = document.getElementById('mode-dropdown');
 const dots         = document.querySelectorAll('.session-dots .dot');
 
-const MODE_LABELS = { focus: 'FOCUS', short: 'SHORT BREAK', long: 'LONG BREAK' };
+const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG BREAK' };
 
 // ── Background state ──────────────────────────────────────
 // Only two visual states: red (running focus) or teal (everything else)
@@ -453,11 +453,13 @@ Collection.init().then(() => seedCollection());
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
-document.getElementById('btn-go-dex').addEventListener('click',    () => showScreen('dex'));
+document.getElementById('btn-go-dex')?.addEventListener('click',   () => showScreen('dex'));
 document.getElementById('btn-back-mymons').addEventListener('click',  () => showScreen('timer'));
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
 document.getElementById('btn-back-progress').addEventListener('click', () => showScreen('timer'));
 document.getElementById('btn-map-icon').addEventListener('click', () => showScreen('progress'));
+document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));
+document.getElementById('btn-to-mymons').addEventListener('click', () => showScreen('mymons'));
 
 // Claim reward delegation
 document.getElementById('progress-list').addEventListener('click', e => {
@@ -492,16 +494,49 @@ btnAudio.addEventListener('click', () => {
 // Time adjust
 document.getElementById('btn-time-minus').addEventListener('click', () => {
   if (running) return;
-  focusMins = Math.max(MIN_FOCUS, focusMins - 5);
+  focusMins = Math.max(MIN_FOCUS, focusMins - 1);
   MODES.focus = focusMins * 60;
   if (currentMode === 'focus') setMode('focus');
 });
 
 document.getElementById('btn-time-plus').addEventListener('click', () => {
   if (running) return;
-  focusMins = Math.min(MAX_FOCUS, focusMins + 5);
+  focusMins = Math.min(MAX_FOCUS, focusMins + 1);
   MODES.focus = focusMins * 60;
   if (currentMode === 'focus') setMode('focus');
+});
+
+// Click-to-edit timer minutes
+elMinutes.addEventListener('click', () => {
+  if (running) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = focusMins;
+  input.maxLength = 2;
+  input.className = 'timer-edit-input';
+  elMinutes.textContent = '';
+  elMinutes.appendChild(input);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const val = parseInt(input.value, 10);
+    if (!isNaN(val)) {
+      focusMins = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS, val));
+      MODES.focus = focusMins * 60;
+      if (currentMode === 'focus') setMode('focus');
+    }
+    elMinutes.textContent = String(focusMins).padStart(2, '0');
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Escape') {
+      input.removeEventListener('blur', commit);
+      elMinutes.textContent = String(focusMins).padStart(2, '0');
+    }
+  });
 });
 
 // Restore active companion (name, pal level, evolved sprite colours)

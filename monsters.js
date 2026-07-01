@@ -67,6 +67,9 @@ const MONS = [
   { id: 5, dexNum: 11, name: 'Bluble',     type: 'Basic', color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 9, dexNum: 15, name: 'Wedgling',   type: 'Basic', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
+    sprite: 'assets/sprites/Wedgling/Wedgling.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // Spawn weight per rarity tier

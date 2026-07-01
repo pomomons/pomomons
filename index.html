@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- UI V2 refresh — remove this line to revert to previous UI -->
+  <link rel="stylesheet" href="style-v2.css">
   <link rel="icon" type="image/png" href="assets/sprites/Tomato/Tomato.png">
 </head>
 <body>
@@ -78,7 +80,6 @@
 
     <!-- Companion box -->
     <div class="pxb-panel companion-wrap"><div class="companion-area">
-      <div class="pxb pxb-sm pxb-dex"><button class="btn-dex" id="btn-go-dex">DEX</button></div>
       <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
       <div class="companion-meta">
@@ -100,7 +101,7 @@
         <div class="timer-controls">
           <div class="timer-bottom-row">
             <div class="btn-mode-wrap" id="btn-mode-wrap">
-              <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS ▼</button></div>
+              <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS SESSION ▼</button></div>
             </div>
             <div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div>
           </div>
@@ -116,7 +117,10 @@
   <main id="screen-mymons" class="screen">
     <div class="collection-header">
       <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
-      <h2 class="screen-title">MONSTER COLLECTION</h2>
+      <div class="collection-tabs">
+        <button class="btn collection-tab collection-tab--active" id="btn-tab-mymons">MY MONS</button>
+        <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
+      </div>
       <span class="collection-count" id="mymons-count">0</span>
     </div>
 
@@ -129,7 +133,10 @@
   <main id="screen-dex" class="screen">
     <div class="collection-header">
       <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
-      <h2 class="screen-title">POMODEX</h2>
+      <div class="collection-tabs">
+        <button class="btn collection-tab" id="btn-to-mymons">MY MONS</button>
+        <button class="btn collection-tab collection-tab--active" id="btn-tab-dex">POMODEX</button>
+      </div>
       <span class="collection-count" id="dex-count">0 / 11</span>
     </div>
     <div class="collection-grid" id="dex-grid"></div>
@@ -155,14 +162,14 @@
     <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
     <p class="encounter-level" id="encounter-level">LVL 1</p>
 
-    <canvas id="encounter-canvas" width="200" height="380" aria-label="Wild Pomomon"></canvas>
+    <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
 
     <p class="encounter-sub" id="encounter-sub"></p>
 
     <div class="encounter-controls" id="encounter-controls">
-      <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! 🍅</button></div>
-      <div class="pxb"><button class="btn btn-ghost"  id="btn-flee">FLEE</button></div>
-      <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT →</button></div>
+      <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! <img src="assets/sprites/Tomato/Tomato.png" alt="" class="btn-tomato-img"></button></div>
+      <div class="pxb"><button class="btn btn-timer-dark" id="btn-flee">RUN AWAY</button></div>
+      <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT <span class="btn-arrow">▶</span></button></div>
     </div>
   </div>
 
@@ -261,7 +268,7 @@
   </button>
 
   <div class="mode-dropdown" id="mode-dropdown" hidden>
-    <button class="mode-option active" data-mode="focus">FOCUS</button>
+    <button class="mode-option active" data-mode="focus">FOCUS SESSION</button>
     <button class="mode-option" data-mode="short">SHORT BREAK</button>
     <button class="mode-option" data-mode="long">LONG BREAK</button>
   </div>

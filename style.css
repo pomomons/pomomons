@@ -157,6 +157,15 @@ body::after {
   margin-right: 6px;
 }
 
+.btn-tomato-img {
+  height: 1.6em;
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+  image-rendering: pixelated;
+  margin-left: 4px;
+}
+
 .logo-tomato-img {
   height: 2.6rem;
   width: auto;
@@ -384,6 +393,25 @@ body::after {
   border-bottom: 2px solid rgba(255,255,255,.08);
 }
 
+.timer-edit-input {
+  font-family: var(--font-pixel);
+  font-size: 1em;
+  color: #fff;
+  background: none;
+  border: none;
+  border-bottom: 2px solid rgba(255,255,255,.6);
+  outline: none;
+  width: 2ch;
+  text-align: center;
+  letter-spacing: .08em;
+  padding: 0;
+  caret-color: #fff;
+}
+
+#timer-minutes {
+  cursor: text;
+}
+
 .timer-time {
   flex: 1;
   text-align: center;
@@ -447,7 +475,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .timer-bottom-row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: 4fr 2fr;
   gap: 8px;
 }
 
@@ -787,8 +815,40 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
   gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--mode-bg);
+  padding: 8px 0;
+}
+
+.collection-tabs {
+  display: flex;
+  gap: 14px;
+  flex: 1;
+  justify-content: center;
+}
+
+.collection-tab {
+  background: #222;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: .72rem;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  transition: filter .12s;
+}
+
+.collection-tab:hover {
+  filter: brightness(1.15);
+}
+
+.collection-tab--active {
+  background: var(--gold);
+  color: #1a0a00;
 }
 
 .screen-title {
@@ -1146,8 +1206,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 
 .encounter-sub {
-  font-size: .7rem;
-  color: var(--text-dim);
+  font-size: 1.25rem;
+  color: #fff;
   letter-spacing: .05em;
   min-height: 1.2em;
   text-align: center;
@@ -1204,6 +1264,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* When only NEXT button is shown, centre it */
 .encounter-controls.postcatch { justify-content: center; }
+
+.btn-arrow { font-size: 1.6em; vertical-align: middle; position: relative; top: -0.22em; line-height: 1; }
+
+#btn-flee { min-height: 56px; padding: 14px 20px; }
 
 /* ── Mon Info Overlay ────────────────────────────────────── */
 .mon-info-overlay                { background: #00a888; }

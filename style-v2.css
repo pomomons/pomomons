@@ -1,0 +1,86 @@
+/* ── PomoMons UI V2 ────────────────────────────────────────
+   Layers on top of style.css.
+   TO REVERT: remove the style-v2.css <link> in index.html.
+   ────────────────────────────────────────────────────────── */
+
+/* ── Header: push logo down ────────────────────────────────── */
+.app-header {
+  padding: 52px 16px 6px;
+  gap: 3px;
+}
+
+.tagline {
+  opacity: .6;
+  margin-top: 2px;
+}
+
+/* ── Timer screen: top box higher, bottom box lower ─────────── */
+#screen-timer {
+  justify-content: flex-start;
+  padding-top: 28px;
+  gap: 22px;
+}
+
+
+/* ── Timer: hero number, true-centered ─────────────────────── */
+.timer-display {
+  font-size: 5.4rem;
+  padding: 18px 16px;
+  letter-spacing: .05em;
+  text-shadow: 3px 4px 0 rgba(0,0,0,.4);
+  justify-content: center;
+  border-bottom: none;
+  position: relative;
+}
+
+.time-adjust {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.btn-adjust {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 10px 12px;
+}
+
+/* ── Controls: breathe ──────────────────────────────────────── */
+.controls-group {
+  padding: 14px;
+  gap: 10px;
+}
+
+.timer-controls {
+  gap: 10px;
+}
+
+.timer-bottom-row {
+  gap: 10px;
+}
+
+/* ── START: the hero button ─────────────────────────────────── */
+.btn-timer-start,
+.btn-timer-pause {
+  min-height: 60px;
+  font-size: 1.05rem;
+  letter-spacing: .1em;
+}
+
+/* ── Focus / Reset: tall secondaries ───────────────────────── */
+.btn-timer-mode,
+.btn-timer-dark {
+  min-height: 52px;
+}
+
+/* ── POMODEX: generous padding ──────────────────────────────── */
+.btn-collection {
+  padding: 16px 8px;
+  font-size: .85rem;
+}
+
+/* ── Stats strip: slightly taller, cleaner ──────────────────── */
+.stats-strip {
+  padding: 0 20px;
+}
