@@ -233,8 +233,12 @@ const Collection = (() => {
   // ── Internal: showBlendResult — brief gold flash message after blending
   function showBlendResult(monName) {
     const msg = document.createElement('div');
-    msg.className   = 'blend-result-flash';
-    msg.textContent = `🥤 ${monName} SMOOTHIE OBTAINED!`;
+    msg.className = 'blend-result-flash';
+    const icon = document.createElement('img');
+    icon.src = 'assets/sprites/Smoothie/Smoothie.png';
+    icon.className = 'blend-result-icon';
+    msg.appendChild(icon);
+    msg.appendChild(document.createTextNode(` ${monName} SMOOTHIE OBTAINED!`));
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 2700);
   }
@@ -337,9 +341,9 @@ const Collection = (() => {
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'smoothie' }));
         // Custom drag image: just the icon, no count, so players don't think
         // they're giving away all their smoothies at once.
-        const ghost = document.createElement('div');
-        ghost.textContent = '🥤';
-        ghost.style.cssText = 'position:fixed;top:-200px;font-size:2rem;';
+        const ghost = document.createElement('img');
+        ghost.src = 'assets/sprites/Smoothie/Smoothie.png';
+        ghost.style.cssText = 'position:fixed;top:-200px;width:40px;height:40px;image-rendering:pixelated;';
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, 20, 20);
         setTimeout(() => ghost.remove(), 0);

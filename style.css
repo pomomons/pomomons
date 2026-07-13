@@ -1874,6 +1874,12 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   letter-spacing: .04em;
 }
 
+.smoothie-icon-img {
+  width: 52px;
+  height: 52px;
+  image-rendering: pixelated;
+}
+
 .smoothie-hint {
   font-size: .55rem;
   color: var(--text-muted);
@@ -1970,6 +1976,14 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   z-index: 300;
   white-space: nowrap;
   animation: blend-flash 2.6s ease forwards;
+}
+
+.blend-result-icon {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+  vertical-align: middle;
+  margin-right: 4px;
 }
 
 @keyframes blend-flash {
