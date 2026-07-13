@@ -80,8 +80,11 @@
 
     <!-- Companion box -->
     <div class="pxb-panel companion-wrap"><div class="companion-area">
-      <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
       <p class="companion-name" id="companion-name">???</p>
+      <div class="companion-stage">
+        <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">
+        <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
+      </div>
       <div class="companion-meta">
         <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
         <div id="companion-type" class="companion-type"></div>
@@ -93,8 +96,8 @@
       <section class="timer-display" aria-live="polite">
         <span class="timer-time"><span id="timer-minutes">25</span><span class="timer-colon">:</span><span id="timer-seconds">00</span></span>
         <div class="time-adjust">
-          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 5 minutes">▲</button></div>
-          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 5 minutes">▼</button></div>
+          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 1 minute">▲</button></div>
+          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 1 minute">▼</button></div>
         </div>
       </section>
       <div class="controls-group">
@@ -184,6 +187,7 @@
       <span class="blender-icon">🥤</span>
       <span class="blender-label">SMOOTHIES</span>
       <span class="smoothie-count" id="smoothie-count">0</span>
+      <span class="smoothie-hint">DRAG TO<br>A MON FOR<br>+1 LVL</span>
     </div>
   </div>
 
@@ -263,8 +267,7 @@
 
   <!-- ── Map icon (floats above stats strip) ───────────────── -->
   <button class="btn-map-icon" id="btn-map-icon" aria-label="Level rewards">
-    <canvas id="map-icon-canvas" width="16" height="16"></canvas>
-    <span class="reward-dot" id="reward-dot"></span>
+    <div id="map-icon-canvas"></div>
   </button>
 
   <div class="mode-dropdown" id="mode-dropdown" hidden>

@@ -2,21 +2,10 @@
 
 // ── Level reward milestones ────────────────────────────────
 const LEVEL_REWARDS = [
-  { level:  2, name: 'Focus Tea',      desc: '+10% XP for 1 session',          type: 'item'    },
-  { level:  5, name: 'Blender',         desc: 'Blend mons into smoothie items', type: 'feature' },
+  { level:  5, name: 'Blender',        desc: 'Blend mons into smoothie items', type: 'feature' },
   { level:  8, name: 'Rare Scanner',   desc: 'Rare mons appear more often',    type: 'feature' },
-  { level: 10, name: 'Double Tomato',  desc: 'Throw 2 tomatoes per encounter', type: 'item'    },
-  { level: 15, name: 'Golden Tomato',  desc: 'Guarantees the next catch',      type: 'item'    },
-  { level: 18, name: 'XP Share',       desc: 'Benched mons earn 25% XP too',   type: 'feature' },
-  { level: 20, name: 'Mega Tomato',    desc: '+50% catch rate for 3 sessions', type: 'item'    },
   { level: 25, name: 'Mon Radar',      desc: 'Preview the next encounter',     type: 'feature' },
-  { level: 30, name: 'Lucky Egg',      desc: 'Double player XP for 24 hrs',   type: 'item'    },
   { level: 35, name: 'Shiny Stone',    desc: 'Force shiny on next encounter',  type: 'item'    },
-  { level: 40, name: 'Custom Timer',   desc: 'Set custom break durations',     type: 'feature' },
-  { level: 50, name: 'Master Trainer', desc: 'Title + gold companion border',  type: 'style'   },
-  { level: 60, name: 'Evo Boost',      desc: 'Mons evolve 25% faster',         type: 'feature' },
-  { level: 75, name: 'Legend Radar',   desc: 'Legendary mons can now appear',  type: 'feature' },
-  { level:100, name: 'Pomomon Master', desc: 'Prestige mode unlocked',         type: 'style'   },
 ];
 
 // ── Screen switching ──────────────────────────────────────
@@ -37,8 +26,8 @@ function updateRewardDot() {
   const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
   const claimed     = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
   const hasUnclaimed = LEVEL_REWARDS.some(r => r.level <= playerLevel && !claimed.includes(r.level));
-  const dot = document.getElementById('reward-dot');
-  if (dot) dot.classList.toggle('visible', hasUnclaimed);
+  const btn = document.getElementById('btn-map-icon');
+  if (btn) btn.classList.toggle('has-reward', hasUnclaimed);
 }
 
 function renderProgress() {
@@ -300,7 +289,8 @@ btnReset.addEventListener('click', resetTimer);
 
 // ── Player state (localStorage) ───────────────────────────
 function expThreshold(level) {
-  return Math.floor(100 * Math.pow(1.5, level - 1));
+  // Linear curve: 100, 150, 200, ... — keeps every reward level reachable.
+  return 100 + 50 * (level - 1);
 }
 
 function loadPlayerState() {
@@ -317,8 +307,6 @@ function loadPlayerState() {
 }
 
 // ── Pal (companion) level system ──────────────────────────
-// Uses an exponential curve tuned so the first evolution (~lvl 16)
-// takes roughly 50-60 sessions — achievable within a few weeks of use.
 function palExpThreshold(level) {
   return Math.round(30 * Math.pow(1.3, level - 1));
 }
@@ -372,8 +360,9 @@ function updateCompanionDisplay() {
   if (!activeId || typeof MONS === 'undefined') {
     const nameEl = document.getElementById('companion-name');
     const metaEl = document.querySelector('.companion-meta');
-    if (nameEl) nameEl.textContent = '';
+    if (nameEl) nameEl.textContent = 'focus to catch a mon!';
     if (metaEl) metaEl.style.visibility = 'hidden';
+    if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.clearMon();
     return;
   }
   const mon = MONS.find(m => m.id === activeId);
@@ -381,6 +370,7 @@ function updateCompanionDisplay() {
   document.querySelector('.companion-meta').style.visibility = '';
   const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
   const shiny = localStorage.getItem('pm_active_shiny') === '1';
+  const dark  = localStorage.getItem('pm_active_dark') === '1';
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
@@ -391,7 +381,7 @@ function updateCompanionDisplay() {
     typeEl.innerHTML = '';
     typeEl.appendChild(makeTypeBadges(stage.type));
   }
-  if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny });
+  if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny, dark });
 }
 
 function saveExp(delta) {
@@ -449,7 +439,19 @@ async function seedCollection() {
 loadPlayerState();
 renderStats();
 document.body.dataset.mode = currentMode;
-Collection.init().then(() => seedCollection());
+Collection.init().then(async () => {
+  // One-time cleanup: earlier builds auto-seeded the whole roster into IndexedDB
+  // on every load. Wipe those leftover records once so the collection starts empty.
+  if (!localStorage.getItem('pm_seed_purged')) {
+    await Collection.clearAll();
+    ['pm_active', 'pm_active_rec_key', 'pm_active_pal_level', 'pm_active_pal_exp',
+     'pm_active_shiny', 'pm_active_dark'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('pm_total_catches', '0');
+    localStorage.setItem('pm_seed_purged', '1');
+    if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
+    if (typeof renderStats === 'function') renderStats();
+  }
+});
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
@@ -542,7 +544,6 @@ elMinutes.addEventListener('click', () => {
 // Restore active companion (name, pal level, evolved sprite colours)
 updateCompanionDisplay();
 updateRewardDot();
-MapIcon.draw(document.getElementById('map-icon-canvas'));
 
 renderTime();
 renderDots();

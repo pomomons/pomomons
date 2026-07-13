@@ -1,0 +1,6 @@
+# Claude Code local settings and worktrees — never publish these
+.claude/
+
+# OS junk
+Thumbs.db
+.DS_Store

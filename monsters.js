@@ -17,7 +17,7 @@ const MONS = [
     sprite: 'assets/sprites/Tomotot/tomotot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 16, dexNum: 2,  name: 'Marinaro',    type: 'Water',           color: '#c0392b', accent: '#922b21',
+      { atLevel: 16, dexNum: 2,  name: 'Marinaro',    type: 'Steel',           color: '#c0392b', accent: '#922b21',
         sprite: 'assets/sprites/Marinaro/Marinaro.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 450 },
       { atLevel: 36, dexNum: 3,  name: 'Strangletti', type: 'Dark',            color: '#7b1a1a', accent: '#4a0a0a',
@@ -29,7 +29,7 @@ const MONS = [
     sprite: 'assets/sprites/Avocuddle/avocuddle.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 20, dexNum: 5,  name: 'Pittsworth',  type: 'Basic',           color: '#7a5c2a', accent: '#5a3e14',
+      { atLevel: 20, dexNum: 5,  name: 'Pittsworth',  type: 'Fighting',        color: '#7a5c2a', accent: '#5a3e14',
         sprite: 'assets/sprites/Pittsworth/pittsworth.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
       { atLevel: 36, dexNum: 6,  name: 'Guacamonger', type: 'Fighting',        color: '#4d6b1a', accent: '#2e4a0a',
@@ -49,25 +49,37 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
-  { id: 8, dexNum: 13, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',   catchRate: 0.70,
+  { id: 8, dexNum: 15, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Marshpuff/Marshpuff.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 20, dexNum: 14, name: 'Marshmelt', type: 'Sweet', color: '#c8a060', accent: '#8b6530',
+      { atLevel: 20, dexNum: 16, name: 'Marshmelt', type: 'Sweet', color: '#c8a060', accent: '#8b6530',
         sprite: 'assets/sprites/Marshmelt/Marshmelt.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
     ]
   },
-  { id: 7, dexNum: 12, name: 'Pumplet',    type: 'Ghost', color: '#e67e22', accent: '#d35400', rarity: 'common',   catchRate: 0.70,
+  { id: 7, dexNum: 13, name: 'Pumplet',    type: 'Ghost', color: '#e67e22', accent: '#d35400', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Pumplet/Pumplet.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      { atLevel: 20, dexNum: 14, name: 'Jackwicks', type: 'Ghost', color: '#e67e22', accent: '#8b3a00',
+        sprite: 'assets/sprites/Jackwick/Jackwick.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
   { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
   { id: 5, dexNum: 11, name: 'Bluble',     type: 'Basic', color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 9, dexNum: 15, name: 'Wedgling',   type: 'Basic', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      { atLevel: 20, dexNum: 12, name: 'Mufman', type: 'Sweet', color: '#a67c52', accent: '#6b4423',
+        sprite: 'assets/sprites/Mufman/Mufman.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    ]
+  },
+  { id: 9, dexNum: 17, name: 'Wedgling',   type: 'Basic', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Wedgling/Wedgling.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];

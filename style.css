@@ -224,12 +224,12 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   width: 100%;
   position: relative;
   background: var(--panel-bg);
   clip-path: var(--pixel-clip);
-  padding: 20px 16px 14px;
+  padding: 32px 16px 60px;
 }
 
 .btn-dex {
@@ -251,18 +251,52 @@ body::after {
 .pxb-dex:hover  { filter: brightness(1.1) var(--pxdrop-sm); }
 .pxb-dex:active { transform: var(--btn-press); filter: none; }
 
+.companion-stage {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  /* Ground rim overflows the stage; the panel's clip-path trims it. */
+  overflow: visible;
+  /* Nudge the mon + ground up together (rigid) so the ground's front rim
+     isn't clipped at the panel bottom. Applies equally at every breakpoint. */
+  transform: translateY(-6px);
+}
+
 #companion-canvas {
+  display: block;
+  position: relative;
+  z-index: 1;
   width: 200px;
   height: 200px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
+/* Ground is sized relative to the mon/canvas (not the panel), reproducing the
+   encounter screen's ratio: there the ground (460px) is ~1.5× the mon's canvas
+   box. Aspect 2:1 matches the encounter's flatter draw (460×230). Bottom is
+   tuned so the grass surface meets the mon's feet (canvas GROUND_Y = 96%). */
+.companion-ground {
+  position: absolute;
+  z-index: 0;
+  width: 150%;
+  height: 75%;
+  left: 50%;
+  bottom: -34%;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .companion-name {
-  font-size: var(--text-base);
+  font-size: 1rem;
   color: var(--text);
-  letter-spacing: .12em;
+  letter-spacing: .1em;
   text-transform: uppercase;
+  text-align: center;
+  -webkit-text-stroke: .6px currentColor; /* thicken (Press Start 2P has no bold) */
+  text-shadow: 2px 2px 0 rgba(0,0,0,.45);
 }
 
 .companion-meta {
@@ -275,13 +309,18 @@ body::after {
 }
 
 .companion-lvl {
-  font-size: .55rem;
+  font-size: .5rem;
   font-family: var(--font-pixel);
-  color: #fff;
+  color: #3a2c00;
   letter-spacing: .06em;
-  background: rgba(0,0,0,.45);
-  padding: 3px 5px;
-  text-shadow: 1px 1px 0 #000;
+  background: var(--gold);
+  padding: 5px 9px;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.55),
+    inset 0 -2px 0 rgba(0,0,0,.22),
+    0 1px 2px rgba(0,0,0,.4);
+  text-shadow: none;
 }
 
 /* ── Type badges ─────────────────────────────────────────── */
@@ -296,6 +335,18 @@ body::after {
   letter-spacing: .04em;
   white-space: nowrap;
 }
+/* Main screen: enlarge type badge to roughly match the LVL pill, and give it
+   the same raised-pill border (inset highlight + shadow) as .companion-lvl */
+.companion-type .type-badge {
+  font-size: .5rem;
+  padding: 5px 9px;
+  letter-spacing: .06em;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.55),
+    inset 0 -2px 0 rgba(0,0,0,.22),
+    0 1px 2px rgba(0,0,0,.4);
+}
+
 .type-basic    { background: #7f8c8d; }
 .type-water    { background: #2471a3; }
 .type-fire     { background: #e74c3c; }
@@ -304,6 +355,7 @@ body::after {
 .type-fighting { background: #d35400; }
 .type-sweet    { background: #c0168a; }
 .type-plant    { background: #1e8449; }
+.type-steel    { background: #5d6d7e; }
 
 /* ── Session tabs ────────────────────────────────────────── */
 .session-tabs {
@@ -620,6 +672,20 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 -12px 0 rgba(0,0,0,.28);
 }
 
+/* Back buttons — solid black, fully opaque, no shadows */
+.btn-ghost.btn-sm,
+.pxb .btn-ghost.btn-sm {
+  opacity: 1;
+  background: #000;
+  color: #fff;
+  box-shadow: none;
+  text-shadow: none;
+  backdrop-filter: none;
+}
+.btn-ghost.btn-sm:hover {
+  background: #1a1a1a;
+}
+
 /* Collection buttons row */
 .collection-btns {
   display: grid;
@@ -831,7 +897,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .collection-tab {
-  background: #222;
+  background: #000;
   color: #fff;
   border-radius: 999px;
   padding: 10px 20px;
@@ -942,6 +1008,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   box-shadow: 4px 4px 0 var(--gold-dk);
 }
 
+.mon-card.dark {
+  border-color: #111;
+  box-shadow: 4px 4px 0 #000;
+}
+
 .mon-card-rarity {
   font-size: var(--text-xs);
   letter-spacing: .08em;
@@ -1006,53 +1077,35 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   position: fixed;
   bottom: calc(var(--stats-h) + 10px);
   left: 14px;
-  background: rgba(0,0,0,.45);
+  background: none;
   border: none;
-  border-radius: 0;
-  padding: 6px;
+  padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 49;
-  clip-path: var(--pixel-clip-sm);
-  box-shadow:
-    inset 0 10px 0 rgba(255,255,255,.12),
-    inset 0 -10px 0 rgba(0,0,0,.45);
-  filter: var(--pxdrop-sm);
+  filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5));
   transition: filter .15s;
 }
 
-.btn-map-icon:hover  { filter: brightness(1.25) var(--pxdrop-sm); }
-.btn-map-icon:active { transform: translate(3px,3px); filter: none; }
+.btn-map-icon:hover  { filter: brightness(1.15) drop-shadow(3px 3px 0 rgba(0,0,0,.5)); }
+.btn-map-icon:active { transform: translate(2px,2px); filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5)); }
 
 #map-icon-canvas {
   display: block;
-  width: 42px;
-  height: 42px;
+  width: 96px;
+  height: 96px;
+  background-image: url('assets/sprites/Map/NewMap.png');
+  background-repeat: no-repeat;
+  background-size: 96px 192px;
+  background-position: 0 -96px; /* bottom frame: normal, nothing to claim */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
-/* Notification dot — absolute badge on map icon */
-.reward-dot {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 10px;
-  height: 10px;
-  background: #ff3333;
-  border-radius: 50%;
-  border: 1.5px solid #000;
-  display: none;
-  animation: reward-pulse 1s ease-in-out infinite;
-}
-
-.reward-dot.visible { display: block; }
-
-@keyframes reward-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.4); opacity: .75; }
+.btn-map-icon.has-reward #map-icon-canvas {
+  background-position: 0 0; /* top frame: reward available */
 }
 
 .xp-text {
@@ -1153,6 +1206,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .encounter-rarity.uncommon   { color: var(--blue); }
 .encounter-rarity.rare       { color: var(--purple); }
 .encounter-rarity.ultra-rare { color: var(--gold); }
+.encounter-rarity.pitch-black { color: #c7ccd1; text-shadow: 0 0 6px rgba(0,0,0,.9), 2px 2px 0 rgba(0,0,0,.6); }
 
 /* ── Encounter tag badges (SHINY, type labels, etc.) ── */
 .encounter-tags {
@@ -1180,6 +1234,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   background: var(--gold);
   color: #1a0a00;
   box-shadow: inset 0 6px 0 rgba(255,255,255,.45), inset 0 -6px 0 rgba(0,0,0,.2);
+}
+
+.tag-dark {
+  background: #1a1a1a;
+  color: #d6d6d6;
+  box-shadow: inset 0 6px 0 rgba(255,255,255,.08), inset 0 -6px 0 rgba(0,0,0,.5);
 }
 
 .encounter-msg {
@@ -1319,6 +1379,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 .mon-info-rarity.uncommon   { color: var(--blue); }
 .mon-info-rarity.rare       { color: var(--purple); }
 .mon-info-rarity.ultra-rare { color: var(--gold); }
+.mon-info-rarity.pitch-black { color: #c7ccd1; text-shadow: 0 0 6px rgba(0,0,0,.9), 2px 2px 0 rgba(0,0,0,.6); }
 
 #mon-info-canvas {
   image-rendering: pixelated;
@@ -1649,17 +1710,20 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   .btn { padding: 10px 14px; font-size: .78rem; }
   .btn-collection { padding: 12px 6px; font-size: .78rem; }
   #companion-canvas { width: 150px; height: 150px; }
+  .companion-stage { width: 150px; height: 150px; }
 }
 
 /* Small-medium mobile (360px – 399px) */
 @media (min-width: 360px) and (max-width: 399px) {
   #companion-canvas { width: 180px; height: 180px; }
+  .companion-stage { width: 180px; height: 180px; }
   .timer-display { font-size: 4rem; }
 }
 
 /* Standard and up (≥ 400px) */
 @media (min-width: 400px) {
   #companion-canvas { width: 220px; height: 220px; }
+  .companion-stage { width: 220px; height: 220px; }
   .timer-display { font-size: 5rem; }
 }
 
@@ -1686,6 +1750,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   #screen-timer .combined-timer-wrap { flex: 1 1 auto; min-width: 0; }
 
   #companion-canvas { width: 90px; height: 90px; }
+  .companion-stage { width: 90px; height: 90px; }
   .companion-area { padding: 10px 8px 8px; gap: 4px; }
   .companion-name { font-size: .5rem; }
 
@@ -1793,6 +1858,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   font-size: .75rem;
   color: var(--text);
   letter-spacing: .06em;
+  margin-top: 6px;   /* nudge text clear of the icon above */
 }
 
 .blender-hint {
@@ -1806,6 +1872,13 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   font-size: 1.8rem;
   color: var(--gold);
   letter-spacing: .04em;
+}
+
+.smoothie-hint {
+  font-size: .55rem;
+  color: var(--text-muted);
+  letter-spacing: .04em;
+  line-height: 1.7;
 }
 
 /* Cards become draggable in My Mons */

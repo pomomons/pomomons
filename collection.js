@@ -102,26 +102,40 @@ const Collection = (() => {
 
   // ── Public: addCaught ────────────────────────────────────────
   async function addCaught(record) {
+    // If the player has no active companion yet, this catch becomes it.
+    const isFirstCatch = !localStorage.getItem('pm_active');
+
     if (!db) {
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);
       localStorage.setItem('pm_caught', JSON.stringify(list));
       const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
       localStorage.setItem('pm_total_catches', prev + 1);
+      if (isFirstCatch) {
+        const mon = MONS.find(m => m.id === record.id);
+        if (mon) await setActiveCompanion(mon, { _key: list.length - 1, ...record });
+      }
       if (typeof renderStats === 'function') renderStats();
       return;
     }
 
-    await new Promise((resolve, reject) => {
+    const newKey = await new Promise((resolve, reject) => {
       const tx    = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      store.add(record);
-      tx.oncomplete = resolve;
+      const req   = store.add(record);
+      tx.oncomplete = () => resolve(req.result);
       tx.onerror    = () => reject(tx.error);
     });
 
     const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
     localStorage.setItem('pm_total_catches', prev + 1);
+
+    // First catch → auto-equip it as the companion on the main screen.
+    if (isFirstCatch) {
+      const mon = MONS.find(m => m.id === record.id);
+      if (mon) await setActiveCompanion(mon, { _key: newKey, ...record });
+    }
+
     if (typeof renderStats === 'function') renderStats();
 
     // Refresh grid immediately if a collection screen is visible
@@ -354,6 +368,7 @@ const Collection = (() => {
       localStorage.setItem('pm_active_pal_level', rec.palLevel || 1);
       localStorage.setItem('pm_active_pal_exp',   rec.palExp   || 0);
       localStorage.setItem('pm_active_shiny',     rec.shiny ? '1' : '0');
+      localStorage.setItem('pm_active_dark',      rec.dark  ? '1' : '0');
     }
 
     // updateCompanionDisplay is defined in app.js (loads after collection.js)
@@ -533,6 +548,7 @@ const Collection = (() => {
     const card = document.createElement('div');
     card.className = 'mon-card';
     if (rec.shiny) card.classList.add('shiny');
+    if (rec.dark)  card.classList.add('dark');
     if (isActive)  card.classList.add('active-companion');
 
     if (isActive) {
@@ -545,7 +561,7 @@ const Collection = (() => {
     const canvas  = document.createElement('canvas');
     canvas.width  = 64;
     canvas.height = 64;
-    MonSprite.draw(canvas, stageMon, { fit: 0.85, shiny: rec.shiny || false });
+    MonSprite.draw(canvas, stageMon, { fit: 0.85, shiny: rec.shiny || false, dark: rec.dark || false });
     card.appendChild(canvas);
 
     const nameEl = document.createElement('p');
@@ -562,6 +578,11 @@ const Collection = (() => {
     lvlEl.className   = 'mon-card-pallvl';
     lvlEl.textContent = `LVL ${palLevel}`;
     card.appendChild(lvlEl);
+
+    // Type badges — listed just like on the pomodex page
+    if (typeof makeTypeBadges === 'function' && stageMon.type) {
+      card.appendChild(makeTypeBadges(stageMon.type));
+    }
 
     // Drag source — for blending
     card.setAttribute('draggable', 'true');
@@ -645,6 +666,18 @@ const Collection = (() => {
     }
   }
 
+  // ── Public: clearAll — wipe every caught record from the store ─
+  function clearAll() {
+    return new Promise((resolve, reject) => {
+      if (!db) { resolve(); return; }
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.clear();
+      tx.oncomplete = resolve;
+      tx.onerror    = () => reject(tx.error);
+    });
+  }
+
   // ── Public: getCaughtNames ───────────────────────────────────
   // Returns a Set of mon names the player has obtained, including
   // evolution stages they have already reached.
@@ -666,5 +699,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames };
+  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames };
 })();

@@ -1,5 +1,9 @@
 // game.js — all Canvas drawing lives here (per CLAUDE.md)
 
+// Canvas filter for the "dark" variant — a very rare, darkened black/black-grey
+// version of any mon (analogous to shiny, but shadowy instead of golden).
+const DARK_FILTER = 'brightness(0.28) grayscale(0.9) contrast(1.15)';
+
 // ── Shared sprite renderer ────────────────────────────────
 // Used by EncounterScreen (encounter canvas) and Collection (card thumbnails).
 const MonSprite = (() => {
@@ -75,7 +79,7 @@ const MonSprite = (() => {
     frames = 1, fps = 8,
     frameAxis = 'x',
     blinkMode = false, blinkInterval = 3000, blinkDuration = 150,
-    shiny = false,
+    shiny = false, dark = false,
   } = {}) {
     const img = getImage(src);
     if (!img.complete || img.naturalWidth === 0) return false; // not ready yet
@@ -108,7 +112,8 @@ const MonSprite = (() => {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.imageSmoothingEnabled = false; // keep pixel art crisp when scaled
-    if (shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
+    if (dark)       ctx.filter = DARK_FILTER;
+    else if (shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
     ctx.drawImage(
       img,
       srcX, srcY, srcW, srcH,                                    // source: this frame
@@ -149,8 +154,9 @@ const MonSprite = (() => {
   // Draw a mon centred on (cx, cy) into an already-obtained ctx.
   // Uses PNG sprite if mon.sprite (or mon.shinySprite when shiny) is set
   // and the image has loaded; falls back to block art otherwise.
-  function drawOnCtx(ctx, mon, cx, cy, { scale = 1, xOffset = 0, alpha = 1, shiny = false } = {}) {
-    const spriteSrc = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+  function drawOnCtx(ctx, mon, cx, cy, { scale = 1, xOffset = 0, alpha = 1, shiny = false, dark = false } = {}) {
+    // Dark variant reuses the normal PNG and darkens it via canvas filter (no separate sprite).
+    const spriteSrc = (shiny && !dark) ? (mon.shinySprite || mon.sprite) : mon.sprite;
 
     if (spriteSrc) {
       // Derive display size from actual frame width × pixel density (3 px per sprite px).
@@ -162,7 +168,7 @@ const MonSprite = (() => {
       const pw = _srcW * 3 * scale;
 
       const drew = drawPng(ctx, spriteSrc, cx, cy, {
-        scale, xOffset, alpha, shiny,
+        scale, xOffset, alpha, shiny, dark,
         frames:        mon.spriteFrames    || 1,
         fps:           mon.spriteFps       || 8,
         frameAxis:     mon.spriteAxis      || 'x',
@@ -174,7 +180,11 @@ const MonSprite = (() => {
         if (shiny) drawSparkle(ctx, cx + xOffset, cy, scale, pw);
         return;
       }
-      // Image not loaded yet — fall through to block art
+      // PNG not ready. While it's still loading, skip the block-art fallback
+      // so we don't flash the placeholder creature — callers re-render once
+      // the image finishes (see preloadAll). Only fall through to block art
+      // when the image genuinely failed to load (complete but zero width).
+      if (!_img.complete) return;
     }
 
     // ── Block-art fallback ───────────────────────────────────
@@ -185,9 +195,9 @@ const MonSprite = (() => {
     const x0 = cx - bw / 2 + xOffset;
     const y0 = cy - bh / 2;
 
-    // Shiny colour overrides
-    const bodyColor   = shiny ? '#f1c40f' : mon.color;
-    const accentColor = shiny ? '#d4ac0d' : mon.accent;
+    // Shiny / dark colour overrides
+    const bodyColor   = dark ? '#2b2b2b' : (shiny ? '#f1c40f' : mon.color);
+    const accentColor = dark ? '#141414' : (shiny ? '#d4ac0d' : mon.accent);
 
     ctx.globalAlpha = alpha;
 
@@ -231,12 +241,12 @@ const MonSprite = (() => {
   // Convenience: clear a canvas and draw a mon centred in it.
   // fit (0–1): if provided, auto-scales the sprite so it fills that fraction of
   // the canvas regardless of stage size. Overrides scale for PNG mons.
-  function draw(canvas, mon, { scale = 1, shiny = false, fit = null } = {}) {
+  function draw(canvas, mon, { scale = 1, shiny = false, dark = false, fit = null } = {}) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let drawScale = scale;
     if (fit !== null) {
-      const spriteSrc = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+      const spriteSrc = (shiny && !dark) ? (mon.shinySprite || mon.sprite) : mon.sprite;
       if (spriteSrc) {
         const img = getImage(spriteSrc);
         if (img.complete && img.naturalWidth > 0) {
@@ -247,7 +257,7 @@ const MonSprite = (() => {
         }
       }
     }
-    drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny });
+    drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny, dark });
   }
 
   return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle };
@@ -265,6 +275,7 @@ const CompanionCanvas = (() => {
     shadowColor:'rgba(0,0,0,0.15)',
     spriteSrc:     null,   // set by setMon() when mon has a PNG sprite
     shiny:         false,
+    dark:          false, // very rare darkened variant
     frames:        1,     // sprite sheet frame count
     fps:           8,     // animation speed (uniform cycling)
     frameAxis:     'x',   // 'x' = horizontal sheet, 'y' = vertical sheet
@@ -337,10 +348,11 @@ const CompanionCanvas = (() => {
         ctx.translate(cx, cy + bobY);
         ctx.scale(sqX, sqY);
         ctx.imageSmoothingEnabled = false;
-        if (SPRITE.shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
+        if (SPRITE.dark)       ctx.filter = DARK_FILTER;
+        else if (SPRITE.shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
         ctx.drawImage(img, srcX, srcY, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
         ctx.restore();
-        if (SPRITE.shiny) MonSprite.drawSparkle(ctx, cx, cy + bobY, 1, size);
+        if (SPRITE.shiny && !SPRITE.dark) MonSprite.drawSparkle(ctx, cx, cy + bobY, 1, size);
         return;
       }
     }
@@ -429,10 +441,45 @@ const CompanionCanvas = (() => {
 
     // --- Draw ---
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    if (SPRITE.noMon) { rafId = requestAnimationFrame(tick); return; }
+    if (SPRITE.noMon) { drawPlaceholder(); rafId = requestAnimationFrame(tick); return; }
     drawSprite(state.y, state.squishX, state.squishY);
 
     rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Empty-state placeholder — a gently bobbing pixel "?" where the mon goes ──
+  function drawPlaceholder() {
+    const GROUND_Y = 192; // same bottom anchor as real sprites
+    const bobY = Math.sin(Date.now() / 500) * 5;
+    const cell = 13;
+    // 6×8 bitmap of a question mark
+    const bmp = [
+      [0,1,1,1,1,0],
+      [1,1,0,0,1,1],
+      [0,0,0,0,1,1],
+      [0,0,0,1,1,0],
+      [0,0,1,1,0,0],
+      [0,0,1,1,0,0],
+      [0,0,0,0,0,0],
+      [0,0,1,1,0,0],
+    ];
+    const cols = 6, rows = 8;
+    const w = cols * cell, h = rows * cell;
+    const x0 = CANVAS_SIZE / 2 - w / 2;
+    const y0 = GROUND_Y - h + bobY;
+    // Drop shadow first, then the mark on top.
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!bmp[r][c]) continue;
+        block('rgba(0,0,0,0.28)', x0 + c * cell + 3, y0 + r * cell + 3, cell, cell);
+      }
+    }
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (!bmp[r][c]) continue;
+        block('rgba(255,255,255,0.82)', x0 + c * cell, y0 + r * cell, cell, cell);
+      }
+    }
   }
 
   // ── public API ─────────────────────────────────────────
@@ -442,8 +489,9 @@ const CompanionCanvas = (() => {
     SPRITE.bodyColor  = mon.color;
     SPRITE.blushColor = mon.color + '99';
     SPRITE.shiny      = mon.shiny || false;
-    SPRITE.spriteSrc  = mon.shiny ? (mon.shinySprite || mon.sprite || null)
-                                  : (mon.sprite || null);
+    SPRITE.dark       = mon.dark  || false;
+    SPRITE.spriteSrc  = (mon.shiny && !mon.dark) ? (mon.shinySprite || mon.sprite || null)
+                                                 : (mon.sprite || null);
     SPRITE.frames        = mon.spriteFrames    || 1;
     SPRITE.fps           = mon.spriteFps       || 8;
     SPRITE.frameAxis     = mon.spriteAxis      || 'x';
@@ -477,7 +525,14 @@ const CompanionCanvas = (() => {
     if (rafId) cancelAnimationFrame(rafId);
   }
 
-  return { init, stop, setMon };
+  // Reset to the empty state (draws the "?" placeholder). Called when there is
+  // no active companion so a previously-shown mon isn't left on the canvas.
+  function clearMon() {
+    SPRITE.noMon     = true;
+    SPRITE.spriteSrc = null;
+  }
+
+  return { init, stop, setMon, clearMon };
 })();
 
 // ── Encounter screen ───────────────────────────────────────
@@ -518,8 +573,8 @@ const EncounterScreen = (() => {
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
   function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
-    const s = MonSprite.fitScale(st.mon, 184, scale, st.mon.shiny || false);
-    MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false });
+    const s = MonSprite.fitScale(st.mon, 184, scale, (st.mon.shiny && !st.mon.dark) || false);
+    MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
   }
 
   // ── tomato renderer — draws PNG centred at origin, r controls display size ──
@@ -820,7 +875,7 @@ const EncounterScreen = (() => {
   function showResult(caught) {
     if (caught) {
       SFX.play('catch');
-      elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
+      elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.dark ? ' 🖤 DARK!' : ''}${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
       elSub.style.color = '';
       saveCaught();
       if (typeof saveExp === 'function') saveExp(25);
@@ -836,7 +891,8 @@ const EncounterScreen = (() => {
     const initLevel = st.monLevel || 1;
 
     const record = { id: st.mon.id, name: st.mon.name,
-                     shiny: st.mon.shiny || false, caughtAt: Date.now(),
+                     shiny: st.mon.shiny || false, dark: st.mon.dark || false,
+                     caughtAt: Date.now(),
                      palLevel: initLevel };
 
     if (typeof Collection !== 'undefined') {
@@ -903,9 +959,12 @@ const EncounterScreen = (() => {
 
     onDone = doneCb;
 
-    // Pick a random mon
-    const mon   = getRandomMon();
-    mon.shiny   = Math.random() < (1 / 100);
+    // Pick a random mon — clone it so shiny/dark rolls never mutate the shared MONS roster
+    const mon   = { ...getRandomMon() };
+    mon.shiny   = Math.random() < 0.01;               // shiny rate = 1%
+    // Dark variant — rare darkened version of any mon. Shiny takes priority:
+    // dark only applies when the mon did NOT roll shiny.
+    mon.dark    = !mon.shiny && Math.random() < 0.05; // dark rate = 5%
     st.mon      = mon;
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
@@ -924,10 +983,15 @@ const EncounterScreen = (() => {
     elSub.textContent = '';
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
-    elRarity.textContent = isShiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
-    elRarity.className   = `encounter-rarity ${isShiny ? 'ultra-rare' : mon.rarity}`;
+    const isDark  = mon.dark  || false;
+    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
+    elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : mon.rarity}`;
     if (elTags) {
       elTags.innerHTML = '';
+      // List the mon's normal type badge(s), same as everywhere else.
+      if (typeof makeTypeBadges === 'function' && mon.type) {
+        elTags.appendChild(makeTypeBadges(mon.type));
+      }
       if (isShiny) {
         const t = document.createElement('span');
         t.className   = 'tag tag-shiny';
@@ -1159,9 +1223,9 @@ const CatchScreen = (() => {
     st.frame++;
     ctx.clearRect(0, 0, SIZE, SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
-    const scale = MonSprite.fitScale(st.mon, SIZE * 0.92, 1.5, st.mon.shiny || false);
+    const scale = MonSprite.fitScale(st.mon, SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
     MonSprite.drawOnCtx(ctx, st.mon, SIZE / 2, SIZE / 2 + bobY,
-      { scale, shiny: st.mon.shiny || false });
+      { scale, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1196,7 +1260,7 @@ const CatchScreen = (() => {
     st.frame  = 0;
 
     elName.textContent  = mon.name.toUpperCase();
-    elShiny.textContent = mon.shiny ? '✨ SHINY!' : '';
+    elShiny.textContent = mon.dark ? '🖤 DARK!' : mon.shiny ? '✨ SHINY!' : '';
 
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);
@@ -1227,9 +1291,9 @@ const MonInfoScreen = (() => {
     st.frame++;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
-    const scale = MonSprite.fitScale(st.mon, CANVAS_SIZE * 0.92, 1.5, st.mon.shiny || false);
+    const scale = MonSprite.fitScale(st.mon, CANVAS_SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
     MonSprite.drawOnCtx(ctx, st.mon, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + bobY,
-      { scale, shiny: st.mon.shiny || false });
+      { scale, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1255,7 +1319,7 @@ const MonInfoScreen = (() => {
       const s = MonSprite.fitScale(monData, EVO_NODE_SIZE * 0.88, 0.9, false);
       MonSprite.drawOnCtx(miniCtx, monData,
         EVO_NODE_SIZE / 2, EVO_NODE_SIZE / 2,
-        { scale: s, shiny: mon.shiny || false });
+        { scale: s, shiny: mon.shiny || false, dark: mon.dark || false });
       node.appendChild(c);
 
       const nameEl = document.createElement('p');
@@ -1338,9 +1402,10 @@ const MonInfoScreen = (() => {
     st.frame = 0;
 
     const shiny = mon.shiny || false;
+    const dark  = mon.dark  || false;
     elName.textContent   = mon.name.toUpperCase();
-    elRarity.textContent = shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
-    elRarity.className   = `mon-info-rarity ${shiny ? 'ultra-rare' : mon.rarity}`;
+    elRarity.textContent = dark ? 'DARK' : shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
+    elRarity.className   = `mon-info-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : mon.rarity}`;
     const elDexNum = document.getElementById('mon-info-dexnum');
     if (elDexNum) elDexNum.textContent = mon.dexNum ? `#${String(mon.dexNum).padStart(3, '0')}` : '';
     const elType = document.getElementById('mon-info-type');
@@ -1363,53 +1428,3 @@ const MonInfoScreen = (() => {
   return { start };
 })();
 
-// ── Map icon pixel art ────────────────────────────────────
-const MapIcon = (() => {
-  // 16×16 pixel grid — colour key:
-  //   B = dark border, p = parchment, t = trail, s = start (red), g = goal (gold)
-  const COLORS = {
-    B: '#4a2e10',
-    p: '#c8965a',
-    t: '#7a5020',
-    s: '#e63030',
-    g: '#ffd600',
-  };
-
-  const MAP = [
-    'BBBBBBBBBBBBBBBB',
-    'BppppppppppppppB',
-    'BpsspppppppppppB',
-    'BpssptpppppppppB',
-    'BppppptppppppppB',
-    'BpppppptpppppppB',
-    'BppppppptppppppB',
-    'BppppppppttppppB',
-    'BppppppppptppppB',
-    'BpppppppppptpppB',
-    'BppppppppppttppB',
-    'BppppppppppptppB',
-    'BpppppppppppggpB',
-    'BpppppppppppggpB',
-    'BppppppppppppppB',
-    'BBBBBBBBBBBBBBBB',
-  ];
-
-  function draw(canvas) {
-    const ctx  = canvas.getContext('2d');
-    const rows = MAP.length;
-    const cols = MAP[0].length;
-    const pw   = canvas.width  / cols;
-    const ph   = canvas.height / rows;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    MAP.forEach((row, y) => {
-      for (let x = 0; x < row.length; x++) {
-        const col = COLORS[row[x]];
-        if (!col) continue;
-        ctx.fillStyle = col;
-        ctx.fillRect(Math.round(x * pw), Math.round(y * ph), Math.ceil(pw), Math.ceil(ph));
-      }
-    });
-  }
-
-  return { draw };
-})();
