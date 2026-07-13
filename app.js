@@ -94,8 +94,20 @@ const MODES = {
   long:  15 * 60,
 };
 
-let focusMins   = 25;
 const MIN_FOCUS = 1, MAX_FOCUS = 90; // ⚠ TESTING: MIN_FOCUS 1 (restore to 5)
+
+// Focus duration persists across sessions
+let focusMins = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS,
+  parseInt(localStorage.getItem('pm_focus_mins') || '25', 10) || 25));
+MODES.focus = focusMins * 60;
+
+// Clamp + persist + apply a new focus duration
+function setFocusMins(val) {
+  focusMins   = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS, val));
+  MODES.focus = focusMins * 60;
+  localStorage.setItem('pm_focus_mins', focusMins);
+  if (currentMode === 'focus') setMode('focus');
+}
 
 let currentMode   = 'focus';
 let timeLeft      = MODES.focus;
@@ -486,26 +498,23 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Audio toggle
-const btnAudio = document.getElementById('btn-audio');
-btnAudio.addEventListener('click', () => {
-  const muted = SFX.toggle();
+function renderAudioIcon(muted) {
   document.getElementById('audio-waves').style.display = muted ? 'none' : '';
   document.getElementById('audio-mute').style.display  = muted ? ''     : 'none';
-});
+}
+const btnAudio = document.getElementById('btn-audio');
+btnAudio.addEventListener('click', () => renderAudioIcon(SFX.toggle()));
+renderAudioIcon(SFX.isMuted()); // restore persisted mute state on load
 
 // Time adjust
 document.getElementById('btn-time-minus').addEventListener('click', () => {
   if (running) return;
-  focusMins = Math.max(MIN_FOCUS, focusMins - 1);
-  MODES.focus = focusMins * 60;
-  if (currentMode === 'focus') setMode('focus');
+  setFocusMins(focusMins - 1);
 });
 
 document.getElementById('btn-time-plus').addEventListener('click', () => {
   if (running) return;
-  focusMins = Math.min(MAX_FOCUS, focusMins + 1);
-  MODES.focus = focusMins * 60;
-  if (currentMode === 'focus') setMode('focus');
+  setFocusMins(focusMins + 1);
 });
 
 // Click-to-edit timer minutes
@@ -523,11 +532,7 @@ elMinutes.addEventListener('click', () => {
 
   function commit() {
     const val = parseInt(input.value, 10);
-    if (!isNaN(val)) {
-      focusMins = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS, val));
-      MODES.focus = focusMins * 60;
-      if (currentMode === 'focus') setMode('focus');
-    }
+    if (!isNaN(val)) setFocusMins(val);
     elMinutes.textContent = String(focusMins).padStart(2, '0');
   }
 

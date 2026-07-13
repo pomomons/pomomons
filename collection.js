@@ -85,6 +85,8 @@ const Collection = (() => {
           localStorage.removeItem('pm_active_rec_key');
           localStorage.removeItem('pm_active_pal_level');
           localStorage.removeItem('pm_active_pal_exp');
+          localStorage.removeItem('pm_active_shiny');
+          localStorage.removeItem('pm_active_dark');
           if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
         }
 

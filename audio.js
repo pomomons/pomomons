@@ -304,7 +304,7 @@ const SFX = (() => {
   })();
 
   // ── Public API ───────────────────────────────────────────────
-  let muted = false;
+  let muted = localStorage.getItem('pm_muted') === '1';
 
   function play(name) {
     if (muted) return;
@@ -315,9 +315,12 @@ const SFX = (() => {
 
   function toggle() {
     muted = !muted;
+    localStorage.setItem('pm_muted', muted ? '1' : '0');
     if (muted) music.stop();
     return muted;
   }
 
-  return { play, toggle, music };
+  function isMuted() { return muted; }
+
+  return { play, toggle, isMuted, music };
 })();

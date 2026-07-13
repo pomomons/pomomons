@@ -56,12 +56,12 @@ const MonSprite = (() => {
     }
     if (!pending.length) return;
     let done = 0;
+    const bump = () => { if (++done === pending.length) onAllLoaded(); };
     for (const img of pending) {
-      const prev = img.onload;
-      img.onload = (e) => {
-        if (typeof prev === 'function') prev.call(img, e);
-        if (++done === pending.length) onAllLoaded();
-      };
+      // once:true listeners never stack across repeated preloadAll calls;
+      // count errors too so a broken sprite can't stall the callback forever
+      img.addEventListener('load',  bump, { once: true });
+      img.addEventListener('error', bump, { once: true });
     }
   }
 
