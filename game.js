@@ -984,19 +984,13 @@ const EncounterScreen = (() => {
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
     const isDark  = mon.dark  || false;
-    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
+    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'SHINY' : mon.rarity.toUpperCase();
     elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : mon.rarity}`;
     if (elTags) {
       elTags.innerHTML = '';
-      // List the mon's normal type badge(s), same as everywhere else.
+      // Show only the mon's normal type badge(s) — shiny/dark status is shown in the rarity slot.
       if (typeof makeTypeBadges === 'function' && mon.type) {
         elTags.appendChild(makeTypeBadges(mon.type));
-      }
-      if (isShiny) {
-        const t = document.createElement('span');
-        t.className   = 'tag tag-shiny';
-        t.textContent = '✨ SHINY';
-        elTags.appendChild(t);
       }
     }
     if (elLevel) { elLevel.textContent = `LVL ${st.monLevel}`; elLevel.style.display = ''; }

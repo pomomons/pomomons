@@ -89,12 +89,12 @@ function renderProgress() {
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 3,        // ⚠ TESTING: 3 s (restore to 25 * 60)
+  focus: 25 * 60,
   short: 5  * 60,
   long:  15 * 60,
 };
 
-const MIN_FOCUS = 1, MAX_FOCUS = 90; // ⚠ TESTING: MIN_FOCUS 1 (restore to 5)
+const MIN_FOCUS = 5, MAX_FOCUS = 90;
 
 // Focus duration persists across sessions
 let focusMins = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS,
@@ -496,6 +496,12 @@ document.addEventListener('visibilitychange', () => {
     if (timeLeft <= 0) onSessionEnd();
   }
 });
+
+// Spawn-rate info modal
+const spawnInfo = document.getElementById('spawn-info');
+document.getElementById('btn-spawn-help')?.addEventListener('click', () => spawnInfo?.classList.add('active'));
+document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
+spawnInfo?.addEventListener('click', e => { if (e.target === spawnInfo) spawnInfo.classList.remove('active'); });
 
 // Audio toggle
 function renderAudioIcon(muted) {

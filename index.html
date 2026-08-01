@@ -80,6 +80,7 @@
 
     <!-- Companion box -->
     <div class="pxb-panel companion-wrap"><div class="companion-area">
+      <div class="pxb pxb-sm pxb-help"><button class="btn-help" id="btn-spawn-help" aria-label="Show catch rarity odds">?</button></div>
       <p class="companion-name" id="companion-name">???</p>
       <div class="companion-stage">
         <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">
@@ -119,12 +120,33 @@
   <!-- ── My Mons Screen ────────────────────────────────── -->
   <main id="screen-mymons" class="screen">
     <div class="collection-header">
-      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
+      <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
       <div class="collection-tabs">
         <button class="btn collection-tab collection-tab--active" id="btn-tab-mymons">MY MONS</button>
         <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
       </div>
       <span class="collection-count" id="mymons-count">0</span>
+    </div>
+
+    <!-- Blender toolbar — docked at the top of My Mons (V1: horizontal cards) -->
+    <div class="blender-zone" id="blender-zone">
+      <div class="blender-drop" id="blender-drop" aria-label="Drag a mon here to blend into a smoothie">
+        <img src="assets/sprites/Blender/Blender.png" alt="" class="zone-icon-img" draggable="false">
+        <div class="zone-text">
+          <span class="blender-label">BLEND</span>
+          <span class="blender-hint">DRAG A MON HERE FOR A SMOOTHIE</span>
+        </div>
+      </div>
+      <div class="smoothie-box" id="smoothie-box">
+        <div class="zone-icon-wrap">
+          <img src="assets/sprites/Smoothie/Smoothie.png" alt="" class="zone-icon-img" draggable="false">
+          <span class="smoothie-badge">x<span class="smoothie-count" id="smoothie-count">0</span></span>
+        </div>
+        <div class="zone-text">
+          <span class="blender-label">SMOOTHIES</span>
+          <span class="smoothie-hint">DRAG TO A MON FOR +1 LVL</span>
+        </div>
+      </div>
     </div>
 
     <div class="collection-grid" id="mymons-grid">
@@ -135,7 +157,7 @@
   <!-- ── Dex Screen ─────────────────────────────────────── -->
   <main id="screen-dex" class="screen">
     <div class="collection-header">
-      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
+      <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
       <div class="collection-tabs">
         <button class="btn collection-tab" id="btn-to-mymons">MY MONS</button>
         <button class="btn collection-tab collection-tab--active" id="btn-tab-dex">POMODEX</button>
@@ -148,7 +170,7 @@
   <!-- ── Progress Screen ──────────────────────────────── -->
   <main id="screen-progress" class="screen">
     <div class="collection-header">
-      <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button></div>
+      <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button></div>
       <h2 class="screen-title">LEVEL REWARDS</h2>
       <span class="collection-count"></span>
     </div>
@@ -160,36 +182,35 @@
 
   <!-- ── Encounter Overlay ─────────────────────────────── -->
   <div id="encounter-overlay" class="encounter-overlay" aria-live="assertive" aria-atomic="true">
-    <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
-    <div class="encounter-tags" id="encounter-tags"></div>
-    <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
-    <p class="encounter-level" id="encounter-level">LVL 1</p>
+    <div class="logo">
+      <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
+    </div>
+    <p class="tagline">FOCUS · CATCH · COLLECT</p>
 
-    <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
+    <div class="encounter-body">
+      <div class="encounter-arena">
+        <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
 
-    <p class="encounter-sub" id="encounter-sub"></p>
+        <div class="encounter-stage">
+          <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
+          <div class="encounter-topbar">
+            <p class="encounter-level" id="encounter-level">LVL 1</p>
+            <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
+            <div class="encounter-tags" id="encounter-tags"></div>
+          </div>
+        </div>
 
-    <div class="encounter-controls" id="encounter-controls">
-      <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! <img src="assets/sprites/Tomato/Tomato.png" alt="" class="btn-tomato-img"></button></div>
-      <div class="pxb"><button class="btn btn-timer-dark" id="btn-flee">RUN AWAY</button></div>
-      <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT <span class="btn-arrow">▶</span></button></div>
+        <p class="encounter-sub" id="encounter-sub"></p>
+      </div>
+
+      <div class="encounter-controls" id="encounter-controls">
+        <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! <img src="assets/sprites/Tomato/Tomato.png" alt="" class="btn-tomato-img"></button></div>
+        <div class="pxb"><button class="btn btn-timer-dark" id="btn-flee">RUN AWAY</button></div>
+        <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT <span class="btn-arrow">▶</span></button></div>
+      </div>
     </div>
   </div>
 
-  <!-- ── Blender Zone (fixed left, visible on My Mons screen) ── -->
-  <div class="blender-zone" id="blender-zone">
-    <div class="blender-drop" id="blender-drop" aria-label="Drag a mon here to blend into a smoothie">
-      <img src="assets/sprites/Blender/Blender.png" alt="" class="zone-icon-img" draggable="false">
-      <span class="blender-label">BLEND</span>
-      <span class="blender-hint">DRAG<br>MON<br>HERE</span>
-    </div>
-    <div class="smoothie-box" id="smoothie-box">
-      <img src="assets/sprites/Smoothie/Smoothie.png" alt="" class="zone-icon-img" draggable="false">
-      <span class="blender-label">SMOOTHIES</span>
-      <span class="smoothie-count" id="smoothie-count">0</span>
-      <span class="smoothie-hint">DRAG TO<br>A MON FOR<br>+1 LVL</span>
-    </div>
-  </div>
 
   <!-- ── Blender Confirm Modal ────────────────────────── -->
   <div id="blender-confirm" class="blender-confirm">
@@ -201,6 +222,19 @@
         <button class="btn btn-primary" id="btn-blend-yes">BLEND IT!</button>
         <button class="btn btn-ghost" id="btn-blend-no">CANCEL</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Spawn Rates Info Modal ───────────────────────── -->
+  <div id="spawn-info" class="spawn-info">
+    <div class="spawn-info-box">
+      <p class="spawn-info-title">CATCH RARITY</p>
+      <div class="spawn-info-list">
+        <div class="spawn-info-row"><span class="swatch normal"></span><span class="spawn-info-label">NORMAL</span><span class="spawn-info-odds">94%</span></div>
+        <div class="spawn-info-row"><span class="swatch dark"></span><span class="spawn-info-label">DARK</span><span class="spawn-info-odds">5%</span></div>
+        <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">1%</span></div>
+      </div>
+      <button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button>
     </div>
   </div>
 

@@ -82,6 +82,15 @@ const MONS = [
   { id: 9, dexNum: 17, name: 'Wedgling',   type: 'Basic', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
     sprite: 'assets/sprites/Wedgling/Wedgling.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 10, dexNum: 18, name: 'Purrplant', type: 'Plant', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon', catchRate: 0.45,
+    sprite: 'assets/sprites/Purrplant/Purrplant.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 11, dexNum: 19, name: 'Chillcone', type: 'Basic', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',   catchRate: 0.68,
+    sprite: 'assets/sprites/Chillcone/Chillcone.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 12, dexNum: 20, name: 'Cocokid',   type: 'Basic', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
+    sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // Spawn weight per rarity tier

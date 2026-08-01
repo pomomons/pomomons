@@ -1,6 +1,9 @@
 # Claude Code local settings and worktrees — never publish these
 .claude/
 
+# Dev-only UI screenshot harness — never ships to GitHub Pages
+tools/
+
 # OS junk
 Thumbs.db
 .DS_Store

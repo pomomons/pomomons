@@ -84,3 +84,15 @@
 .stats-strip {
   padding: 0 20px;
 }
+
+/* ── Mobile: the 5.4rem hero size is desktop-only; shrink so the
+   timer stays on ONE line (paired with white-space:nowrap on .timer-time). ── */
+@media (max-width: 479px) {
+  .timer-display { font-size: 3rem; padding: 12px 14px; }
+  /* Slightly smaller companion stage frees bottom slack so the corner map icon
+     clears the START/POMODEX row (timer screen is top-anchored). */
+  .companion-stage, #companion-canvas { width: 135px; height: 135px; }
+}
+@media (max-width: 359px) {
+  .timer-display { font-size: 2.6rem; }
+}
