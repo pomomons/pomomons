@@ -1,6 +1,7 @@
 # PomoMons — Game Mechanics Reference
 
-> Read this before working on encounter logic, EXP/leveling, or catch balance.
+> Read this before working on encounter logic, XP/leveling, or catch flow.
+> Updated Aug 2026 for launch. Reflects the shipped mechanics.
 
 ---
 
@@ -9,108 +10,102 @@
 - An encounter fires after every **focus session** completes (not breaks).
 - Handled in `app.js → onSessionEnd()` when `currentMode === 'focus'`.
 - Calls `EncounterScreen.start(onDone)` in `game.js`.
+- Every 4th completed focus session queues a long break; otherwise short break.
 
 ---
 
-## Pomomon Spawning
+## Spawning
 
-Spawn weights by rarity tier:
+**Uniform.** `getRandomMon()` in `monsters.js` picks any base mon with equal
+probability. Rarity tiers (common/uncommon/rare weighting) were removed for
+launch — the `rarity` / `catchRate` fields still on the mon data are inert
+legacy and are not read anywhere.
 
-| Rarity   | Weight | % chance |
-|----------|--------|----------|
-| common   | 60     | 60 %     |
-| uncommon | 30     | 30 %     |
-| rare     | 10     | 10 %     |
-
-`getRandomMon()` in `monsters.js` builds a weighted pool and picks uniformly.
+Wild mon level = player level ± 2 (clamped 1–100), rolled at encounter start.
 
 ---
 
-## Catch Formula
+## Variants (the only "rarities")
+
+Rolled independently at encounter start, in this priority order:
 
 ```
-success = Math.random() < mon.catchRate
+shiny = Math.random() < 0.01          // 1%
+dark  = !shiny && Math.random() < 0.05 // 5% (never both)
 ```
 
-`catchRate` is a decimal 0–1 defined per mon in `monsters.js`.
-
-| Rarity   | catchRate range |
-|----------|-----------------|
-| common   | 0.60 – 0.75     |
-| uncommon | 0.35 – 0.50     |
-| rare     | 0.15 – 0.25     |
-
-No other modifiers in Feature 2. Future features may factor in player level or
-active companion bonuses.
+- **Shiny** — gold-tinted sprite (hue-rotate filter, or `shinySprite` if set),
+  animated sparkles, `SHINY` shown in the encounter's centre rarity slot.
+- **Dark** — near-black sprite (`DARK_FILTER` canvas filter, no separate PNG),
+  `DARK` shown in the centre rarity slot.
+- Normal mons show **nothing** in the rarity slot.
+- Variant flags are stored on the caught record (`{ shiny, dark }`) and shown
+  as card labels in My Mons.
 
 ---
 
-## Shiny Odds
+## Catching
 
-Checked independently of catch success, at the moment of encounter generation:
+**Catches always succeed — by design** (user decision for launch). There is no
+catch roll and no escape path; RUN AWAY is the only way an encounter ends
+without a catch. If a miss chance is ever reintroduced, see git history for
+the removed `showResult(false)` flee path.
 
-```
-isShiny = Math.random() < (1 / 64)   // ≈ 1.5625 %
-```
-
-Shiny mons have their `color` and `accent` replaced with a gold palette when drawn.
-Shiny status is stored in the caught record.
-
----
-
-## EXP Rewards
-
-| Outcome | EXP gained |
-|---------|------------|
-| Caught  | +25        |
-| Fled    | +5         |
-
-Awarded at the end of the encounter via `saveExp(delta)` in `app.js`.
+Post-catch the player can hit **NEXT** (mon info card) or **POMODEX** (jump
+straight to the collection).
 
 ---
 
-## Leveling
+## XP & Leveling
 
-Level-up threshold formula (EXP required to reach the next level):
+**Player** (`pm_level` / `pm_exp` in localStorage):
+- +25 XP per catch (`saveExp(25)` in game.js when the ball locks).
+- Threshold is LINEAR: `expThreshold(level) = 100 + 50 * (level - 1)`.
+- Overflow carries. Level-up shows a banner + SFX.
+- **Leveling currently grants nothing else.** The level-rewards / missions-map
+  system was removed for launch (see git history: `LEVEL_REWARDS`,
+  `renderProgress`, `updateRewardDot`, `#screen-progress`, `btn-map-icon`).
 
-```
-threshold(level) = Math.floor(100 * Math.pow(1.5, level - 1))
-```
-
-| Level | EXP needed to level up |
-|-------|------------------------|
-| 1     | 100                    |
-| 2     | 150                    |
-| 3     | 225                    |
-| 4     | 338                    |
-| 5     | 506                    |
-
-EXP overflow carries over to the next level.
-`pm_level` and `pm_exp` are stored in `localStorage`.
-The header EXP bar width is `(pm_exp / threshold(pm_level)) * 100 %`.
+**Companion / pal** (per caught record in IndexedDB):
+- The active companion gains +25 pal XP per completed focus session
+  (`savePalExp` in app.js, called from the encounter-done callback).
+- `palExpThreshold(level) = Math.round(30 * 1.3^(level-1))`.
+- Smoothies grant +1 pal level instantly (drag onto a mon card in My Mons).
+- Evolutions fire at per-mon `atLevel` thresholds (see monsters.md) via the
+  `EvolutionScreen` overlay.
 
 ---
 
-## Persistence (Feature 2 — localStorage)
+## Blender & Smoothies
 
-| Key         | Type        | Contents                                  |
-|-------------|-------------|-------------------------------------------|
-| `pm_level`  | integer     | Current player level (starts at 1)        |
-| `pm_exp`    | integer     | EXP within the current level              |
-| `pm_caught` | JSON array  | `[{ id, name, shiny, caughtAt }, ...]`    |
+- On My Mons (desktop only — hidden under 480px, drag-and-drop needs a pointer):
+  drag a mon card onto BLEND → confirm modal → record is deleted, +1 smoothie
+  item (`pm_items` in localStorage).
+- Drag the SMOOTHIES box onto a mon card → consume 1 smoothie, +1 pal level.
+- Available from the start (no level gate).
 
-Migrates to IndexedDB in Feature 3 (collection screen).
-`pm_caught` is append-only in Feature 2; duplicates allowed (multi-catch same species).
+---
+
+## Persistence
+
+- `navigator.storage.persist()` requested at boot (best-effort eviction guard).
+- Collection: IndexedDB `pomomons_db` / store `caught` (one record per catch,
+  carries palLevel/palExp/shiny/dark). localStorage fallback if IDB missing.
+- Scalar state: localStorage — see MEMORY/key list; notable keys:
+  `pm_level`, `pm_exp`, `pm_active*`, `pm_total_*`, `pm_items`, `pm_muted`,
+  `pm_focus_mins`, `pm_seed_purged`.
 
 ---
 
 ## Encounter Animation Phases (game.js EncounterScreen)
 
-| Phase       | Duration   | Description                                   |
-|-------------|------------|-----------------------------------------------|
-| `appearing` | 30 frames  | Mon slides down from top of canvas            |
-| `idle`      | unlimited  | Mon bobs; Throw / Flee buttons enabled        |
-| `throwing`  | 40 frames  | Tomato arcs toward mon; buttons disabled      |
-| `shaking`   | 30 frames  | Mon shakes ±8 px (3 cycles) after tomato hit |
-| `result`    | 50 frames  | Caught: flash + shrink. Fled: jump + fly off  |
-| `done`      | —          | Overlay hides; `onDone` callback fires        |
+| Phase       | Description                                          |
+|-------------|------------------------------------------------------|
+| `appearing` | Mon slides down; floating name hidden until sized    |
+| `idle`      | Mon + name bob `sin(frame/22)*6`; buttons enabled    |
+| `throwing`  | Tomato arcs at the mon                               |
+| `landing`   | Ball bounces (2 bounces, squish + SFX)               |
+| `shaking`   | 3 shake windows; record + XP saved at the end        |
+| `locked`    | Click SFX, shimmer                                   |
+| `postcatch` | CONGRATULATIONS + NEXT / POMODEX buttons             |
+| `done`      | Overlay hides; `onDone` fires (pal XP, next mode)    |

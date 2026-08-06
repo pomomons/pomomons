@@ -1,88 +1,91 @@
 # PomoMons — Monster Roster Reference
 
-> Read this before adding new mons, changing rarity tiers, or updating sprite logic.
+> Read this before adding new mons, evolutions, or changing sprite logic.
+> Updated Aug 2026 for launch.
 
 ---
 
-## Mon Object Schema
+## Mon Object Schema (`MONS` in monsters.js)
 
 ```js
 {
-  id:        Number,   // Unique integer, 1-indexed, never reused
-  name:      String,   // Display name (title-case, max ~10 chars)
-  color:     String,   // CSS hex — primary body color
-  accent:    String,   // CSS hex — darker shade for ears, shadows, mouth
-  rarity:    String,   // 'common' | 'uncommon' | 'rare' | 'legendary'
-  catchRate: Number,   // 0–1 decimal; see game-mechanics.md for ranges
+  id:        Number,   // unique, never reused (records reference it)
+  dexNum:    Number,   // pomodex ordering — see numbering convention below
+  name:      String,   // display name
+  type:      String | [String, String],  // 'Basic', 'Sweet', ['Fire','Ghost']…
+  color:     String,   // hex — used by procedural block-art fallback
+  accent:    String,   // hex — darker accent for fallback art
+  rarity:    String,   // LEGACY — inert, not read anywhere
+  catchRate: Number,   // LEGACY — inert, catches are always 100%
+
+  // Sprite fields (all mons currently use PNG sprites):
+  sprite:          'assets/sprites/<Name>/<Name>.png',
+  shinySprite:     optional separate shiny PNG (falls back to hue-rotate filter),
+  spriteFrames:    2,        // frame count
+  spriteAxis:      'y',      // vertical sheet (frames stacked)
+  spriteBlinkMode: true,     // frame 1 = eyes open (held), frame 0 = blink flash
+  blinkInterval:   3000,     // ms between blinks
+  blinkDuration:   150,      // ms blink lasts (evolved mons often longer)
+
+  evolutions: [   // optional, ordered by atLevel
+    { atLevel, dexNum, name, type, color, accent, sprite, spriteFrames, ... }
+  ]
 }
 ```
 
-Shiny palette is NOT stored on the mon object — it is generated at encounter time
-and stored on the caught record (`{ ..., shiny: true }`). When `shiny === true`,
-the sprite draws with gold (`#f1c40f`) as the primary color and `#d4ac0d` accent.
+`getMonStage(mon, palLevel)` returns the base mon merged with the highest
+unlocked evolution's fields.
 
 ---
 
-## Starter Roster (Feature 2, IDs 1–8)
+## Current Roster (12 lines, 20 dex entries)
 
-| ID | Name       | Color     | Accent    | Rarity   | catchRate | Inspiration      |
-|----|------------|-----------|-----------|----------|-----------|------------------|
-| 1  | Tomotot    | #e74c3c   | #c0392b   | common   | 0.99      | tomato           |
-| 2  | Broccoluff | #27ae60   | #1e8449   | common   | 0.68      | broccoli         |
-| 3  | Chipchip   | #f39c12   | #d68910   | common   | 0.65      | potato chip      |
-| 4  | Mushamoo   | #bdc3c7   | #7f8c8d   | common   | 0.62      | mushroom         |
-| 5  | Lavandew   | #8e44ad   | #6c3483   | uncommon | 0.42      | lavender / dew   |
-| 6  | Frostee    | #2980b9   | #1a5276   | uncommon | 0.38      | ice cream        |
-| 7  | Goldleaf   | #f1c40f   | #d4ac0d   | rare     | 0.22      | gold / matcha    |
-| 8  | Darkoji    | #2c2c2c   | #111111   | rare     | 0.18      | dark chocolate   |
+| id | Dex | Name       | Type   | Evolutions (atLevel → dex)                       |
+|----|-----|------------|--------|--------------------------------------------------|
+| 1  | 1   | Tomotot    | Basic  | 16 → Marinaro #2 (Steel), 36 → Strangletti #3 (Dark) |
+| 3  | 4   | Avocuddle  | Basic  | 20 → Pittsworth #5 (Fighting), 36 → Guacamonger #6 (Fighting) |
+| 4  | 7   | Chilino    | Basic  | 20 → Scorchpepper #8 (Fire), 36 → Ghostpepper #9 (Fire/Ghost) |
+| 6  | 10  | Donot      | Sweet  | —                                                |
+| 5  | 11  | Bluble     | Basic  | 20 → Mufman #12 (Sweet)                          |
+| 7  | 13  | Pumplet    | Ghost  | 20 → Jackwicks #14 (Ghost)                       |
+| 8  | 15  | Marshpuff  | Sweet  | 20 → Marshmelt #16 (Sweet)                       |
+| 9  | 17  | Wedgling   | Basic  | —                                                |
+| 10 | 18  | Purrplant  | Plant  | —                                                |
+| 11 | 19  | Chillcone  | Basic  | —                                                |
+| 12 | 20  | Cocokid    | Basic  | —                                                |
+
+Spawning is **uniform** across base mons (no rarity weighting). Shiny (1%) and
+dark (5%) variant rolls are independent of species — see game-mechanics.md.
 
 ---
 
-## Rarity Tiers
+## Sprite Conventions
 
-| Tier      | Spawn % | catchRate range | Future count |
-|-----------|---------|-----------------|--------------|
-| common    | 60 %    | 0.60 – 0.75     | ~25 mons     |
-| uncommon  | 30 %    | 0.35 – 0.50     | ~15 mons     |
-| rare      | 10 %    | 0.15 – 0.25     | ~8 mons      |
-| legendary | 2 %*    | 0.05 – 0.10     | ~2 mons      |
-
-*legendary spawns require a separate weight table update in `monsters.js`.
+- Location: `assets/sprites/<Name>/<Name>.png` (one folder per mon).
+- **2-frame vertical blink sheet**: frame 0 (top) = blink, frame 1 (bottom) = open.
+  File height = 2× frame height.
+- **Frame size scales with evolution stage — intentional** (bigger = more evolved):
+  - Basic mons: 32×32 (some 48; Wedgling is a 36×36 outlier)
+  - Middle evolutions: 48×48 (mostly)
+  - Final evolutions: 64×64
+  Do NOT "fix" a 32px basic to match larger mons.
+- Renderer (`MonSprite` in game.js) draws at 3× logical scale, fit-capped per
+  screen; the procedural block-art renderer is the fallback if `sprite` is unset.
+- Dark variant reuses the normal PNG through a canvas darken filter — no
+  separate art needed. Shiny uses `shinySprite` if present, else a gold
+  hue-rotate filter + sparkles.
 
 ---
 
 ## Adding a New Mon
 
-1. Append a new object to the `MONS` array in `monsters.js`.
-2. Assign the next available `id` (never recycle IDs — players may already have records).
-3. Choose `color` / `accent` so the sprite reads clearly at 48×48 logical pixels.
-4. Set `catchRate` within the rarity tier's defined range.
-5. Document it in this file's roster table.
-6. If adding a new rarity tier, update `RARITY_WEIGHT` in `monsters.js` and this doc.
+1. Drop the sprite at `assets/sprites/<Name>/<Name>.png` (2-frame vertical sheet).
+2. Append to `MONS`: next unused `id`, `dexNum` per the numbering convention
+   below, type, colors, standard blink fields.
+3. Dex counts and grids update automatically (`TOTAL_DEX` is computed).
+4. Update the roster table in this file.
 
----
-
-## Sprite Style Guide
-
-All mons are drawn as pixel-art creatures using `fillRect` blocks in `game.js`.
-The placeholder style (used until real sprite sheets land in `assets/sprites/`) follows:
-
-- **Body**: 48×48 logical px square, `mon.color`
-- **Ears**: two small bumps on top, `mon.color`
-- **Eyes**: two 6×6 blocks, dark (`#2c2c2c`), with 2×2 white shine
-- **Blush**: two 10×4 blocks below eyes, lighter tint of `mon.color`
-- **Mouth**: 3-block pixel smile, `accent`
-- **Shadow**: semi-transparent ellipse under body, fades at bob apex
-
-Shiny sprites swap body + accent colors for gold (`#f1c40f` / `#d4ac0d`) and add
-a small sparkle star above the right ear.
-
----
-
-## Sprite Sheet Integration (Future)
-
-When real PNG sprites are ready:
-- Place at `assets/sprites/mon_{id}.png` (normal) and `mon_{id}_s.png` (shiny)
-- Each sheet: 4 frames × 48px wide = 192×48 px, 8 fps idle loop
-- `game.js drawMon()` will detect the sheet and use `drawImage()` instead of blocks
-- Placeholder block drawing stays as fallback if the image hasn't loaded
+**Dex numbering convention:** a new evolution takes the number immediately
+after its base/prior stage, and every existing entry with a dexNum ≥ that
+value shifts up by one. Evolution lines read contiguously in the pomodex.
+Array order in `MONS` doesn't matter — dex screens sort by `dexNum`.

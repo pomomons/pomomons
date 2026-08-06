@@ -81,14 +81,14 @@
     <!-- Companion box -->
     <div class="pxb-panel companion-wrap"><div class="companion-area">
       <div class="pxb pxb-sm pxb-help"><button class="btn-help" id="btn-spawn-help" aria-label="Show catch rarity odds">?</button></div>
-      <p class="companion-name" id="companion-name">???</p>
       <div class="companion-stage">
         <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">
         <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
-      </div>
-      <div class="companion-meta">
-        <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
-        <div id="companion-type" class="companion-type"></div>
+        <div class="companion-meta">
+          <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
+          <div id="companion-type" class="companion-type"></div>
+        </div>
+        <p class="companion-name" id="companion-name">???</p>
       </div>
     </div></div>
 
@@ -119,6 +119,8 @@
 
   <!-- ── My Mons Screen ────────────────────────────────── -->
   <main id="screen-mymons" class="screen">
+    <!-- Header + blender toolbar pinned together while the grid scrolls -->
+    <div class="mymons-top">
     <div class="collection-header">
       <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
       <div class="collection-tabs">
@@ -148,6 +150,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
@@ -167,16 +170,6 @@
     <div class="collection-grid" id="dex-grid"></div>
   </main>
 
-  <!-- ── Progress Screen ──────────────────────────────── -->
-  <main id="screen-progress" class="screen">
-    <div class="collection-header">
-      <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-progress">← BACK</button></div>
-      <h2 class="screen-title">LEVEL REWARDS</h2>
-      <span class="collection-count"></span>
-    </div>
-    <div class="progress-list" id="progress-list"></div>
-  </main>
-
   <!-- ── Encounter Flash (full-screen transition) ─────── -->
   <div id="encounter-flash" class="encounter-flash"></div>
 
@@ -193,6 +186,7 @@
 
         <div class="encounter-stage">
           <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
+          <p class="encounter-mon-name" id="encounter-mon-name"></p>
           <div class="encounter-topbar">
             <p class="encounter-level" id="encounter-level">LVL 1</p>
             <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
@@ -207,6 +201,7 @@
         <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! <img src="assets/sprites/Tomato/Tomato.png" alt="" class="btn-tomato-img"></button></div>
         <div class="pxb"><button class="btn btn-timer-dark" id="btn-flee">RUN AWAY</button></div>
         <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT <span class="btn-arrow">▶</span></button></div>
+        <div class="pxb"><button class="btn btn-timer-dark" id="btn-catch-dex" hidden>POMODEX</button></div>
       </div>
     </div>
   </div>
@@ -299,10 +294,6 @@
     </div>
   </footer>
 
-  <!-- ── Map icon (floats above stats strip) ───────────────── -->
-  <button class="btn-map-icon" id="btn-map-icon" aria-label="Level rewards">
-    <div id="map-icon-canvas"></div>
-  </button>
 
   <div class="mode-dropdown" id="mode-dropdown" hidden>
     <button class="mode-option active" data-mode="focus">FOCUS SESSION</button>

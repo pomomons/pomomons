@@ -93,17 +93,9 @@ const MONS = [
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
-// Spawn weight per rarity tier
-const RARITY_WEIGHT = { common: 60, uncommon: 30, rare: 10 };
-
-// Returns a random MONS entry using weighted rarity selection.
 function getRandomMon() {
-  const pool = [];
-  for (const mon of MONS) {
-    const w = RARITY_WEIGHT[mon.rarity] || 0;
-    for (let i = 0; i < w; i++) pool.push(mon);
-  }
-  return pool[Math.floor(Math.random() * pool.length)];
+  // Rarity tiers removed — every first-stage mon spawns at an equal rate.
+  return MONS[Math.floor(Math.random() * MONS.length)];
 }
 
 // Builds one or two type badge <span> elements wrapped in a container.

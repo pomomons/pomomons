@@ -63,6 +63,13 @@
     6px 100%, 6px calc(100% - 2px), 4px calc(100% - 2px),
     4px calc(100% - 4px), 2px calc(100% - 4px), 2px calc(100% - 6px), 0 calc(100% - 6px)
   );
+  /* Blocky: one 4px step per corner (single notch) — simplest, same 4px edge size */
+  --pixel-clip-1: polygon(
+    0 4px, 4px 4px, 4px 0,
+    calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
   /* Outer pixel shadow — use filter: drop-shadow so it follows clip-path shape */
   --pxdrop:    drop-shadow(5px 5px 0 rgba(0,0,0,.60));
   --pxdrop-sm: drop-shadow(4px 4px 0 rgba(0,0,0,.60));
@@ -230,6 +237,10 @@ body::after {
 
 .screen.active { display: flex; }
 
+/* Scrolling list screens flow from the top (so the sticky header/toolbar pins
+   flush and doesn't shift). space-evenly is only for the centred timer screen. */
+#screen-mymons, #screen-dex, #screen-progress { justify-content: flex-start; }
+
 /* ── Companion box ───────────────────────────────────────── */
 .companion-area {
   display: flex;
@@ -301,36 +312,44 @@ body::after {
 }
 
 .companion-name {
+  position: absolute;
+  top: 24%;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  pointer-events: none;
   font-size: 1rem;
   color: var(--text);
   letter-spacing: .1em;
   text-transform: uppercase;
   text-align: center;
-  -webkit-text-stroke: .6px currentColor; /* thicken (Press Start 2P has no bold) */
   text-shadow: 2px 2px 0 rgba(0,0,0,.45);
 }
 
 .companion-meta {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 0;
+  /* Extend beyond the narrow sprite stage (overflow: visible) so the pills can sit
+     out toward the panel's left side, grouped side by side. */
+  left: -190px;
+  right: -110px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 12px;
+  z-index: 2;
 }
 
 .companion-lvl {
-  font-size: .5rem;
+  font-size: .6rem;
   font-family: var(--font-pixel);
   color: #3a2c00;
   letter-spacing: .06em;
   background: var(--gold);
-  padding: 5px 9px;
-  border-radius: 999px;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.55),
-    inset 0 -2px 0 rgba(0,0,0,.22),
-    0 1px 2px rgba(0,0,0,.4);
+  padding: 9px 13px;
+  clip-path: var(--pixel-clip-sm);
+  filter: var(--pxdrop-sm);
+  white-space: nowrap;
   text-shadow: none;
 }
 
@@ -349,13 +368,12 @@ body::after {
 /* Main screen: enlarge type badge to roughly match the LVL pill, and give it
    the same raised-pill border (inset highlight + shadow) as .companion-lvl */
 .companion-type .type-badge {
-  font-size: .5rem;
-  padding: 5px 9px;
+  font-size: .6rem;
+  padding: 9px 13px;
   letter-spacing: .06em;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.55),
-    inset 0 -2px 0 rgba(0,0,0,.22),
-    0 1px 2px rgba(0,0,0,.4);
+  border-radius: 0;
+  clip-path: var(--pixel-clip-sm);
+  filter: var(--pxdrop-sm);
 }
 
 .type-basic    { background: #7f8c8d; }
@@ -568,12 +586,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .btn-primary {
-  background: #fff;
-  color: var(--mode-bg);
+  background: var(--gold);
+  color: #1a0a00;
   box-shadow:
     inset 0 0 0 6px #000,
-    inset 0 14px 0 rgba(255,255,255,.75),
-    inset 0 -14px 0 rgba(0,0,0,.22);
+    inset 0 14px 0 rgba(255,255,255,.5),
+    inset 0 -14px 0 rgba(0,0,0,.3);
   transition: background .4s, color .4s, filter .12s;
 }
 
@@ -582,19 +600,18 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .btn-ghost {
-  background: rgba(255,255,255,.18);
-  color: var(--text);
+  background: #222;
+  color: #fff;
   border: none;
   box-shadow:
-    inset 0 0 0 6px rgba(0,0,0,.75),
-    inset 0 12px 0 rgba(255,255,255,.35),
-    inset 0 -12px 0 rgba(0,0,0,.28);
-  backdrop-filter: blur(4px);
+    inset 0 0 0 6px #000,
+    inset 0 12px 0 rgba(255,255,255,.15),
+    inset 0 -12px 0 rgba(0,0,0,.5);
 }
 
 .btn-ghost:hover {
-  background: rgba(255,255,255,.28);
-  filter: brightness(1.08) var(--pxborder);
+  background: #333;
+  filter: brightness(1.15) var(--pxborder);
 }
 
 /* ── Pixel-border wrapper — black staircase outline ──────── */
@@ -653,11 +670,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   padding: 0;
 }
 
-/* Back button — softer, more rounded pixel corners (finer staircase) */
-.pxb-back,
+/* Back button — match the collection-tab height so its pixel corners read the same
+   proportion (on a shorter button the fixed 12px steps look overly pointed). */
 .pxb-back .btn {
-  clip-path: var(--pixel-clip-round);
+  padding: 12px 20px;
 }
+
 
 /* Positioned wrappers */
 .pxb-dex {
@@ -710,8 +728,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Strip inner 6px inset from btn-primary/btn-ghost when wrapper provides the border */
 .pxb .btn-primary {
   box-shadow:
-    inset 0 14px 0 rgba(255,255,255,.75),
-    inset 0 -14px 0 rgba(0,0,0,.22);
+    inset 0 14px 0 rgba(255,255,255,.55),
+    inset 0 -14px 0 rgba(0,0,0,.35);
 }
 
 .pxb .btn-ghost {
@@ -724,9 +742,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .btn-ghost.btn-sm,
 .pxb .btn-ghost.btn-sm {
   opacity: 1;
-  background: #000;
+  background: #222;
   color: #fff;
-  box-shadow: none;
+  box-shadow:
+    inset 0 12px 0 rgba(255,255,255,.15),
+    inset 0 -12px 0 rgba(0,0,0,.5);
   text-shadow: none;
   backdrop-filter: none;
 }
@@ -945,10 +965,15 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .collection-tab {
-  background: #000;
+  background: #222;
   color: #fff;
-  border-radius: 999px;
-  padding: 10px 20px;
+  border-radius: 0;
+  clip-path: var(--pixel-clip);
+  filter: var(--pxborder);
+  box-shadow:
+    inset 0 12px 0 rgba(255,255,255,.15),
+    inset 0 -12px 0 rgba(0,0,0,.5);
+  padding: 12px 20px;
   font-size: .72rem;
   border: none;
   cursor: pointer;
@@ -963,6 +988,9 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .collection-tab--active {
   background: var(--gold);
   color: #1a0a00;
+  box-shadow:
+    inset 0 12px 0 rgba(255,255,255,.55),
+    inset 0 -12px 0 rgba(0,0,0,.35);
 }
 
 .screen-title {
@@ -1067,8 +1095,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   text-transform: uppercase;
   color: var(--text-muted);
 }
-.mon-card-rarity.uncommon { color: var(--blue); }
-.mon-card-rarity.rare     { color: var(--purple); }
+.mon-card-rarity.uncommon    { color: var(--blue); }
+.mon-card-rarity.rare        { color: var(--purple); }
+.mon-card-rarity.ultra-rare  { color: var(--gold); }
+.mon-card-rarity.pitch-black { color: #c7ccd1; }
 
 .mon-card.active-companion {
   border-color: var(--green);
@@ -1278,6 +1308,23 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   max-width: 480px;
 }
 
+/* Floating mon name above the wild mon's head (bobs in sync via JS, un-bold) */
+.encounter-mon-name {
+  position: absolute;
+  top: 26%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--font-pixel);
+  font-size: 1.1rem;
+  color: var(--text);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.45);
+}
+
 .encounter-topbar {
   position: absolute;
   top: 2%;
@@ -1292,22 +1339,21 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* Pin each to its own column so the type stays on the right even when the
    rarity is hidden (a hidden rarity would otherwise let the type slide left). */
-.encounter-topbar .encounter-level  { grid-column: 1; justify-self: start; }
+.encounter-topbar .encounter-level  { grid-column: 1; justify-self: start; transform: translateX(14px); }
 .encounter-topbar .encounter-rarity { grid-column: 2; justify-self: center; }
-.encounter-topbar .encounter-tags   { grid-column: 3; justify-self: end; }
+.encounter-topbar .encounter-tags   { grid-column: 3; justify-self: end; transform: translateX(-14px); }
 
 /* Rarity only shows when it's noteworthy (uncommon / rare / dark / shiny) — hidden for common */
 .encounter-rarity.common { display: none; }
 
-/* Enlarged type badge with the same raised pill as the main-screen companion type */
+/* Type badge — pixel-staircase style matching the buttons */
 .encounter-topbar .type-badge {
-  font-size: .5rem;
-  padding: 5px 9px;
+  font-size: .6rem;
+  padding: 9px 13px;
   letter-spacing: .06em;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.55),
-    inset 0 -2px 0 rgba(0,0,0,.22),
-    0 1px 2px rgba(0,0,0,.4);
+  border-radius: 0;
+  clip-path: var(--pixel-clip-sm);
+  filter: var(--pxdrop-sm);
 }
 
 
@@ -1368,17 +1414,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .encounter-level {
   font-family: var(--font-pixel);
-  font-size: .5rem;
+  font-size: .6rem;
   color: #3a2c00;
   letter-spacing: .06em;
   background: var(--gold);
-  padding: 5px 9px;
-  border-radius: 999px;
+  padding: 9px 13px;
+  clip-path: var(--pixel-clip-sm);
+  filter: var(--pxdrop-sm);
   white-space: nowrap;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.55),
-    inset 0 -2px 0 rgba(0,0,0,.22),
-    0 1px 2px rgba(0,0,0,.4);
 }
 
 #encounter-canvas {
@@ -1409,6 +1452,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   padding: 16px 20px;
   background: var(--panel-bg);
   clip-path: var(--pixel-clip);
+}
+
+/* Action buttons share equal width (flex-basis 0 + grow), a bit wider than content */
+.encounter-controls .pxb {
+  flex: 1 1 0;
+  max-width: 240px;
 }
 
 /* ── Animations ──────────────────────────────────────────── */
@@ -1830,8 +1879,11 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   /* Level-up banner: prevent off-screen overflow */
   .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 
-  /* Companion name: shrink + clear the top-right ? help button so they don't overlap */
-  .companion-name { font-size: .7rem; line-height: 1.5; padding: 0 50px; }
+  /* Companion name: shrink on mobile (now overlaid above the mon, not in the top row) */
+  .companion-name { font-size: .7rem; line-height: 1.5; }
+
+  /* Narrower panel on mobile — keep the left-grouped pills on-panel */
+  .companion-meta { left: -85px; right: -55px; }
 
   /* Collection tabs: keep BACK + tabs + count on one row without clipping the count */
   .collection-header { gap: 4px; }
@@ -1966,6 +2018,20 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 }
 
 .blender-zone.active { display: flex; }
+
+/* Sticky wrapper: header + blender toolbar pin together while the grid scrolls */
+.mymons-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--mode-bg);
+  padding-bottom: 8px;
+}
+.mymons-top .collection-header { position: static; }
 
 /* Shared card style — two even cards forming a horizontal toolbar */
 .blender-drop,

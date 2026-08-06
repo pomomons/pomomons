@@ -49,11 +49,11 @@ const SFX = (() => {
       tone(660, 'square', t + 0.06, 0.07, 0.18);
     },
 
-    // Ascending 4-note jingle → focus session complete
+    // Ascending 4-note jingle → focus session complete (~5x longer, drawn-out chime)
     sessionEnd() {
       const t = getCtx().currentTime;
       [523, 659, 784, 1047].forEach((f, i) =>   // C5 E5 G5 C6
-        tone(f, 'square', t + i * 0.11, 0.09, 0.22));
+        tone(f, 'square', t + i * 0.55, 0.45, 0.22));
     },
 
     // Two-hit announcement → wild mon appears

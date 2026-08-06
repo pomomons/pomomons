@@ -298,7 +298,7 @@ const CompanionCanvas = (() => {
     eyeDir:    1,
   };
 
-  let canvas, ctx, rafId;
+  let canvas, ctx, rafId, nameEl;
 
   // ── pixel helpers ──────────────────────────────────────
   function px(n) { return Math.round(n); }
@@ -341,8 +341,9 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
-        const size = Math.min(srcW * 3, CANVAS_SIZE - 14); // cap so 6px bob fits top+bottom
+        const size = Math.min(srcW * 3, CANVAS_SIZE - 40); // cap leaves room above for the floating name
         const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
+        state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
         ctx.translate(cx, cy + bobY);
@@ -411,15 +412,17 @@ const CompanionCanvas = (() => {
   function tick() {
     state.frame++;
 
-    // --- Sinusoidal bob ---
-    // Period ~90 frames (~1.5 s at 60 fps). Amplitude 10 px.
-    state.y = Math.sin(state.frame / 28) * 10;
+    // --- Sinusoidal bob (matches the encounter/catch screen: sin(frame/22)*6, no squish) ---
+    state.y = Math.sin(state.frame / 22) * 6;
+    state.squishY = 1;
+    state.squishX = 1;
 
-    // Squash at bottom of arc, stretch at top
-    const t = Math.sin(state.frame / 28); // -1 to 1
-    // Compress vertically at peak of downward travel (t near -1)
-    state.squishY = 1 - t * 0.08;         // 0.92 – 1.08
-    state.squishX = 1 + t * 0.04;         // 0.96 – 1.04
+    // Name floats just above the mon's head (tracks sprite size) and bobs in sync
+    if (nameEl) {
+      const headPct = (state.headY || 96) / CANVAS_SIZE * 100;
+      nameEl.style.top = `${Math.max(2, headPct - 10)}%`;
+      nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
+    }
 
     // --- Blink ---
     if (!state.blinking) {
@@ -504,6 +507,7 @@ const CompanionCanvas = (() => {
   function init(canvasEl) {
     canvas = canvasEl;
     ctx    = canvas.getContext('2d');
+    nameEl = document.getElementById('companion-name');
 
     // HiDPI / retina support: scale the drawing buffer by devicePixelRatio
     // so sprites stay crisp on high-density screens. CSS size stays at 160px
@@ -552,8 +556,8 @@ const EncounterScreen = (() => {
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
-      elMsg, elSub, elRarity, elTags, elLevel, elControls,
-      btnThrow, btnFlee, btnCatchNext;
+      elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName,
+      btnThrow, btnFlee, btnCatchNext, btnCatchDex;
 
   let rafId    = null;
   let onDone   = null;
@@ -573,8 +577,26 @@ const EncounterScreen = (() => {
 
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
   function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
-    const s = MonSprite.fitScale(st.mon, 184, scale, (st.mon.shiny && !st.mon.dark) || false);
+    const shiny = (st.mon.shiny && !st.mon.dark) || false;
+    const s = MonSprite.fitScale(st.mon, 184, scale, shiny);
     MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
+    // Track the drawn sprite size so the floating name can sit above the mon's head
+    const img = MonSprite.getImage(shiny ? (st.mon.shinySprite || st.mon.sprite) : st.mon.sprite);
+    if (img && img.complete && img.naturalWidth) {
+      const srcW = st.mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / (st.mon.spriteFrames || 1);
+      st.monSize = srcW * 3 * s;
+    }
+  }
+
+  // Place the floating name just above the mon's head, tracking its drawn size + bob.
+  // Stays hidden until the sprite size is known so it doesn't flash at a stale spot.
+  function positionMonName() {
+    if (!elMonName) return;
+    if (!st.monSize) { elMonName.style.opacity = '0'; return; }
+    const boxTop = (MON_CY - st.monSize / 2) / H * 100; // sprite-box top, % of canvas
+    elMonName.style.top = (boxTop - 7) + '%';
+    elMonName.style.transform = `translateY(${st.monY.toFixed(1)}px)`;
+    elMonName.style.opacity = '1';
   }
 
   // ── tomato renderer — draws PNG centred at origin, r controls display size ──
@@ -673,6 +695,7 @@ const EncounterScreen = (() => {
       st.monBob++;
       st.monY = Math.sin(st.monBob / 22) * 6;
       drawMon(cx, MON_CY + st.monY);
+      positionMonName();
 
     } else if (st.phase === 'throwing') {
       // Mon stays fully visible throughout the throw arc
@@ -790,6 +813,7 @@ const EncounterScreen = (() => {
       st.monBob++;
       st.monY = Math.sin(st.monBob / 22) * 6;
       drawMon(cx, MON_CY + st.monY);
+      positionMonName();
     }
     // 'done' phase: canvas is blank
   }
@@ -847,12 +871,12 @@ const EncounterScreen = (() => {
         elMsg.textContent = 'CONGRATULATIONS!';
         elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
         elSub.style.color = '#fff';
-        if (elLevel) elLevel.style.display = 'none';
 
         // Swap buttons: hide throw/flee, show NEXT
         btnThrow.hidden     = true;
         btnFlee.hidden      = true;
         btnCatchNext.hidden = false;
+        btnCatchDex.hidden  = false;
         elControls.classList.add('postcatch');
         elControls.style.opacity = '1';
       }
@@ -870,20 +894,6 @@ const EncounterScreen = (() => {
     btnThrow.disabled = !on;
     btnFlee.disabled  = !on;
     elControls.style.opacity = on ? '1' : '0.4';
-  }
-
-  function showResult(caught) {
-    if (caught) {
-      SFX.play('catch');
-      elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.dark ? ' 🖤 DARK!' : ''}${st.mon.shiny ? ' ✨ SHINY!' : ''}`;
-      elSub.style.color = '';
-      saveCaught();
-      if (typeof saveExp === 'function') saveExp(25);
-    } else {
-      elSub.textContent = `${st.mon.name} FLED AWAY!`;
-      elSub.style.color = '';
-      if (typeof saveExp === 'function') saveExp(5);
-    }
   }
 
   function saveCaught() {
@@ -940,9 +950,11 @@ const EncounterScreen = (() => {
       elTags      = document.getElementById('encounter-tags');
       elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
+      elMonName   = document.getElementById('encounter-mon-name');
       btnThrow    = document.getElementById('btn-throw');
       btnFlee     = document.getElementById('btn-flee');
       btnCatchNext = document.getElementById('btn-catch-next');
+      btnCatchDex = document.getElementById('btn-catch-dex');
 
       // HiDPI
       st.dpr = window.devicePixelRatio || 1;
@@ -955,6 +967,7 @@ const EncounterScreen = (() => {
       btnThrow.addEventListener('click', throw_);
       btnFlee.addEventListener('click',  flee);
       btnCatchNext.addEventListener('click', openMonInfo);
+      btnCatchDex.addEventListener('click', openDex);
     }
 
     onDone = doneCb;
@@ -971,6 +984,7 @@ const EncounterScreen = (() => {
     st.frame    = 0;
     st.monBob   = 0;
     st.monY     = 0;
+    st.monSize  = 0;   // recomputed once the sprite image is ready
     st.caught   = false;
 
     // Compute wild mon level (player level ±2) once at encounter start
@@ -979,13 +993,14 @@ const EncounterScreen = (() => {
     st.monLevel       = Math.max(1, Math.min(100, playerLevel + offset));
 
     // Populate UI
-    elMsg.textContent = `A WILD ${mon.name} APPEARED!`;
+    elMsg.textContent = 'A WILD MON APPEARED!';
+    if (elMonName) { elMonName.textContent = mon.name; elMonName.style.opacity = '0'; }
     elSub.textContent = '';
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
     const isDark  = mon.dark  || false;
-    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'SHINY' : mon.rarity.toUpperCase();
-    elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : mon.rarity}`;
+    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'SHINY' : '';
+    elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : ''}`;
     if (elTags) {
       elTags.innerHTML = '';
       // Show only the mon's normal type badge(s) — shiny/dark status is shown in the rarity slot.
@@ -999,6 +1014,7 @@ const EncounterScreen = (() => {
     btnThrow.hidden      = false;
     btnFlee.hidden       = false;
     btnCatchNext.hidden  = true;
+    btnCatchDex.hidden   = true;
     elControls.classList.remove('postcatch');
 
     enableButtons(false); // disabled until 'idle' phase
@@ -1041,6 +1057,14 @@ const EncounterScreen = (() => {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     overlay.classList.remove('active');
     MonInfoScreen.start(st.mon, onDone);
+  }
+
+  // Skip the mon-info card and jump straight to the collection.
+  function openDex() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    overlay.classList.remove('active');
+    if (typeof onDone === 'function') onDone();
+    if (typeof showScreen === 'function') showScreen('mymons');
   }
 
   function close() {
@@ -1398,8 +1422,8 @@ const MonInfoScreen = (() => {
     const shiny = mon.shiny || false;
     const dark  = mon.dark  || false;
     elName.textContent   = mon.name.toUpperCase();
-    elRarity.textContent = dark ? 'DARK' : shiny ? 'ULTRA RARE' : mon.rarity.toUpperCase();
-    elRarity.className   = `mon-info-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : mon.rarity}`;
+    elRarity.textContent = dark ? 'DARK' : shiny ? 'SHINY' : '';
+    elRarity.className   = `mon-info-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : ''}`;
     const elDexNum = document.getElementById('mon-info-dexnum');
     if (elDexNum) elDexNum.textContent = mon.dexNum ? `#${String(mon.dexNum).padStart(3, '0')}` : '';
     const elType = document.getElementById('mon-info-type');

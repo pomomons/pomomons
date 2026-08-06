@@ -434,13 +434,8 @@ const Collection = (() => {
     nameEl.textContent = catchData ? displayMon.name : '???';
     card.appendChild(nameEl);
 
-    // Rarity + pal level (caught mons only)
+    // Pal level (caught mons only) — rarity tiers removed
     if (catchData) {
-      const rarityEl = document.createElement('p');
-      rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
-      rarityEl.textContent = mon.rarity.toUpperCase();
-      card.appendChild(rarityEl);
-
       const lvlEl = document.createElement('p');
       lvlEl.className   = 'mon-card-pallvl';
       lvlEl.textContent = `LVL ${palLevel}`;
@@ -575,10 +570,13 @@ const Collection = (() => {
     nameEl.textContent = stageMon.name;
     card.appendChild(nameEl);
 
-    const rarityEl = document.createElement('p');
-    rarityEl.className   = `mon-card-rarity ${mon.rarity}`;
-    rarityEl.textContent = mon.rarity.toUpperCase();
-    card.appendChild(rarityEl);
+    // Only shiny/dark variants get a rarity label now (tiers removed)
+    if (rec.dark || rec.shiny) {
+      const rarityEl = document.createElement('p');
+      rarityEl.className   = `mon-card-rarity ${rec.dark ? 'pitch-black' : 'ultra-rare'}`;
+      rarityEl.textContent = rec.dark ? 'DARK' : 'SHINY';
+      card.appendChild(rarityEl);
+    }
 
     const lvlEl = document.createElement('p');
     lvlEl.className   = 'mon-card-pallvl';

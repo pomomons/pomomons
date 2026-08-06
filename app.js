@@ -1,12 +1,8 @@
 // app.js — timer logic and session/screen flow
 
-// ── Level reward milestones ────────────────────────────────
-const LEVEL_REWARDS = [
-  { level:  5, name: 'Blender',        desc: 'Blend mons into smoothie items', type: 'feature' },
-  { level:  8, name: 'Rare Scanner',   desc: 'Rare mons appear more often',    type: 'feature' },
-  { level: 25, name: 'Mon Radar',      desc: 'Preview the next encounter',     type: 'feature' },
-  { level: 35, name: 'Shiny Stone',    desc: 'Force shiny on next encounter',  type: 'item'    },
-];
+// NOTE: The level-rewards / missions-map system was removed for launch
+// (see git history for LEVEL_REWARDS, renderProgress, updateRewardDot).
+// Leveling currently grants nothing beyond the level number itself.
 
 // ── Screen switching ──────────────────────────────────────
 const screens = document.querySelectorAll('.screen');
@@ -15,76 +11,9 @@ function showScreen(name) {
   screens.forEach(s => s.classList.toggle('active', s.id === `screen-${name}`));
   if (name === 'mymons')   Collection.renderMyMons();
   if (name === 'dex')      Collection.renderDex();
-  if (name === 'progress') renderProgress();
   // Blender is only visible on My Mons
   const blenderZone = document.getElementById('blender-zone');
   if (blenderZone && name !== 'mymons') blenderZone.classList.remove('active');
-}
-
-// ── Progress / reward dot ─────────────────────────────────
-function updateRewardDot() {
-  const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
-  const claimed     = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
-  const hasUnclaimed = LEVEL_REWARDS.some(r => r.level <= playerLevel && !claimed.includes(r.level));
-  const btn = document.getElementById('btn-map-icon');
-  if (btn) btn.classList.toggle('has-reward', hasUnclaimed);
-}
-
-function renderProgress() {
-  const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
-  const claimed     = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
-  const list = document.getElementById('progress-list');
-  list.innerHTML = '';
-  let nextGoalAssigned = false;
-
-  LEVEL_REWARDS.forEach(reward => {
-    const unlocked  = playerLevel >= reward.level;
-    const isClaimed = claimed.includes(reward.level);
-    const isNext    = !unlocked && !nextGoalAssigned;
-    if (isNext) nextGoalAssigned = true;
-
-    const row = document.createElement('div');
-    const tagClass = 'progress-tag progress-tag-' + reward.type;
-
-    if (unlocked && !isClaimed) {
-      // Unclaimed reward — highlight and show claim button
-      row.className = 'progress-row unlocked claimable';
-      row.innerHTML =
-        `<span class="progress-status next">★</span>` +
-        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
-        `<div class="progress-info">` +
-          `<span class="progress-name">${reward.name}</span>` +
-          `<span class="progress-desc">${reward.desc}</span>` +
-        `</div>` +
-        `<button class="btn-claim" data-level="${reward.level}">CLAIM</button>`;
-    } else if (unlocked && isClaimed) {
-      row.className = 'progress-row unlocked';
-      row.innerHTML =
-        `<span class="progress-status unlocked">✓</span>` +
-        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
-        `<div class="progress-info">` +
-          `<span class="progress-name">${reward.name}</span>` +
-          `<span class="progress-desc">${reward.desc}</span>` +
-        `</div>` +
-        `<span class="${tagClass}">${reward.type.toUpperCase()}</span>`;
-    } else {
-      row.className = 'progress-row' + (isNext ? ' next-goal' : ' locked');
-      const statusIcon  = isNext ? '▶' : '—';
-      const statusClass = 'progress-status ' + (isNext ? 'next' : 'locked');
-      row.innerHTML =
-        `<span class="${statusClass}">${statusIcon}</span>` +
-        `<span class="progress-lvl">LV.${String(reward.level).padStart(2, '0')}</span>` +
-        `<div class="progress-info">` +
-          `<span class="progress-name">${reward.name}</span>` +
-          `<span class="progress-desc">${reward.desc}</span>` +
-        `</div>` +
-        `<span class="${tagClass}">${reward.type.toUpperCase()}</span>`;
-    }
-
-    list.appendChild(row);
-  });
-
-  updateRewardDot();
 }
 
 // ── Timer state ───────────────────────────────────────────
@@ -94,19 +23,41 @@ const MODES = {
   long:  15 * 60,
 };
 
-const MIN_FOCUS = 5, MAX_FOCUS = 90;
+const MIN_FOCUS = 20, MAX_FOCUS = 90;  // focus sessions: 20–90 min
+const MIN_BREAK = 1,  MAX_BREAK = 90;  // breaks: freely adjustable
 
-// Focus duration persists across sessions
-let focusMins = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS,
-  parseInt(localStorage.getItem('pm_focus_mins') || '25', 10) || 25));
+// Per-mode durations persist across sessions
+const clampMins = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+let focusMins = clampMins(parseInt(localStorage.getItem('pm_focus_mins') || '25', 10) || 25, MIN_FOCUS, MAX_FOCUS);
+let shortMins = clampMins(parseInt(localStorage.getItem('pm_short_mins') || '5',  10) || 5,  MIN_BREAK, MAX_BREAK);
+let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15', 10) || 15, MIN_BREAK, MAX_BREAK);
 MODES.focus = focusMins * 60;
+MODES.short = shortMins * 60;
+MODES.long  = longMins  * 60;
 
-// Clamp + persist + apply a new focus duration
-function setFocusMins(val) {
-  focusMins   = Math.min(MAX_FOCUS, Math.max(MIN_FOCUS, val));
-  MODES.focus = focusMins * 60;
-  localStorage.setItem('pm_focus_mins', focusMins);
-  if (currentMode === 'focus') setMode('focus');
+function currentModeMins() {
+  return currentMode === 'focus' ? focusMins
+       : currentMode === 'short' ? shortMins : longMins;
+}
+
+// Clamp + persist + apply a new duration for the currently selected mode.
+// The ▲▼ steppers and click-to-edit adjust whichever mode is showing.
+function setCurrentModeMins(val) {
+  if (isNaN(val)) return;
+  if (currentMode === 'focus') {
+    focusMins   = clampMins(val, MIN_FOCUS, MAX_FOCUS);
+    MODES.focus = focusMins * 60;
+    localStorage.setItem('pm_focus_mins', focusMins);
+  } else if (currentMode === 'short') {
+    shortMins   = clampMins(val, MIN_BREAK, MAX_BREAK);
+    MODES.short = shortMins * 60;
+    localStorage.setItem('pm_short_mins', shortMins);
+  } else {
+    longMins    = clampMins(val, MIN_BREAK, MAX_BREAK);
+    MODES.long  = longMins * 60;
+    localStorage.setItem('pm_long_mins', longMins);
+  }
+  setMode(currentMode);
 }
 
 let currentMode   = 'focus';
@@ -124,7 +75,6 @@ const btnStart     = document.getElementById('btn-start');
 const btnReset     = document.getElementById('btn-reset');
 const btnMode      = document.getElementById('btn-mode');
 const modeDropdown = document.getElementById('mode-dropdown');
-const dots         = document.querySelectorAll('.session-dots .dot');
 
 const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG BREAK' };
 
@@ -142,10 +92,6 @@ function renderTime() {
   elMinutes.textContent = mm;
   elSeconds.textContent = ss;
   document.title = running ? `${mm}:${ss} — PomoMons` : 'PomoMons';
-}
-
-function renderDots() {
-  dots.forEach((d, i) => d.classList.toggle('filled', i < (sessionsToday % 4)));
 }
 
 function renderStats() {
@@ -238,7 +184,6 @@ function onSessionEnd() {
 
   if (currentMode === 'focus') {
     sessionsToday++;
-    renderDots();
     // Every 4th session → long break; otherwise → short break
     const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
     // Update persistent stats
@@ -412,42 +357,25 @@ function saveExp(delta) {
   localStorage.setItem('pm_exp',   exp);
   loadPlayerState();
 
-  if (levelled) {
-    showLevelUpBanner(level);
-    updateRewardDot();
-  }
+  if (levelled) showLevelUpBanner(level);
 }
 
 function showLevelUpBanner(level) {
   SFX.play('levelUp');
-  const hasReward = LEVEL_REWARDS.some(r => r.level === level);
   const banner = document.createElement('div');
   banner.className = 'level-up-banner';
-  banner.innerHTML  = `LEVEL UP! LVL ${level}` +
-    (hasReward ? `<span class="banner-sub">★ NEW REWARD — CHECK PROGRESS MAP</span>` : '');
+  banner.textContent = `LEVEL UP! LVL ${level}`;
   document.body.appendChild(banner);
-  setTimeout(() => banner.remove(), hasReward ? 3000 : 2200);
-}
-
-// ── Dev helper: call seedCollection() from the browser console ──
-// Adds one record per base mon + one per evolution stage so all sprites are visible.
-// Remove before shipping.
-async function seedCollection() {
-  if (typeof MONS === 'undefined' || typeof Collection === 'undefined') return;
-  const records = [];
-  for (const mon of MONS) {
-    records.push({ id: mon.id, name: mon.name, shiny: false, caughtAt: Date.now(), palLevel: 1, palExp: 0 });
-    if (mon.evolutions) {
-      for (const evo of mon.evolutions) {
-        records.push({ id: mon.id, name: mon.name, shiny: false, caughtAt: Date.now(), palLevel: evo.atLevel, palExp: 0 });
-      }
-    }
-  }
-  for (const rec of records) await Collection.addCaught(rec);
-  console.log(`seedCollection: added ${records.length} records`);
+  setTimeout(() => banner.remove(), 2200);
 }
 
 // ── Boot ──────────────────────────────────────────────────
+// Ask the browser to protect our storage (IndexedDB collection + localStorage)
+// from automatic eviction under disk pressure. Best-effort; safe to ignore failure.
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
+
 loadPlayerState();
 renderStats();
 document.body.dataset.mode = currentMode;
@@ -467,26 +395,10 @@ Collection.init().then(async () => {
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
-document.getElementById('btn-go-dex')?.addEventListener('click',   () => showScreen('dex'));
 document.getElementById('btn-back-mymons').addEventListener('click',  () => showScreen('timer'));
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
-document.getElementById('btn-back-progress').addEventListener('click', () => showScreen('timer'));
-document.getElementById('btn-map-icon').addEventListener('click', () => showScreen('progress'));
 document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));
 document.getElementById('btn-to-mymons').addEventListener('click', () => showScreen('mymons'));
-
-// Claim reward delegation
-document.getElementById('progress-list').addEventListener('click', e => {
-  const btn = e.target.closest('.btn-claim');
-  if (!btn) return;
-  const level   = parseInt(btn.dataset.level, 10);
-  const claimed = JSON.parse(localStorage.getItem('pm_claimed_rewards') || '[]');
-  if (!claimed.includes(level)) {
-    claimed.push(level);
-    localStorage.setItem('pm_claimed_rewards', JSON.stringify(claimed));
-  }
-  renderProgress();
-});
 
 // Sync timer when tab becomes visible again after being hidden
 document.addEventListener('visibilitychange', () => {
@@ -512,23 +424,23 @@ const btnAudio = document.getElementById('btn-audio');
 btnAudio.addEventListener('click', () => renderAudioIcon(SFX.toggle()));
 renderAudioIcon(SFX.isMuted()); // restore persisted mute state on load
 
-// Time adjust
+// Time adjust — applies to whichever mode is currently selected
 document.getElementById('btn-time-minus').addEventListener('click', () => {
   if (running) return;
-  setFocusMins(focusMins - 1);
+  setCurrentModeMins(currentModeMins() - 1);
 });
 
 document.getElementById('btn-time-plus').addEventListener('click', () => {
   if (running) return;
-  setFocusMins(focusMins + 1);
+  setCurrentModeMins(currentModeMins() + 1);
 });
 
-// Click-to-edit timer minutes
+// Click-to-edit timer minutes (edits the currently selected mode)
 elMinutes.addEventListener('click', () => {
   if (running) return;
   const input = document.createElement('input');
   input.type = 'text';
-  input.value = focusMins;
+  input.value = currentModeMins();
   input.maxLength = 2;
   input.className = 'timer-edit-input';
   elMinutes.textContent = '';
@@ -538,8 +450,8 @@ elMinutes.addEventListener('click', () => {
 
   function commit() {
     const val = parseInt(input.value, 10);
-    if (!isNaN(val)) setFocusMins(val);
-    elMinutes.textContent = String(focusMins).padStart(2, '0');
+    if (!isNaN(val)) setCurrentModeMins(val);
+    elMinutes.textContent = String(currentModeMins()).padStart(2, '0');
   }
 
   input.addEventListener('blur', commit);
@@ -547,17 +459,15 @@ elMinutes.addEventListener('click', () => {
     if (e.key === 'Enter') { input.blur(); }
     if (e.key === 'Escape') {
       input.removeEventListener('blur', commit);
-      elMinutes.textContent = String(focusMins).padStart(2, '0');
+      elMinutes.textContent = String(currentModeMins()).padStart(2, '0');
     }
   });
 });
 
 // Restore active companion (name, pal level, evolved sprite colours)
 updateCompanionDisplay();
-updateRewardDot();
 
 renderTime();
-renderDots();
 updateBackground();
 updateButtonStates();
 elColon.style.animationPlayState = 'paused';
