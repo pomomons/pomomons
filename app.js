@@ -18,7 +18,7 @@ function showScreen(name) {
 
 // ── Timer state ───────────────────────────────────────────
 const MODES = {
-  focus: 25 * 60,
+  focus: 30 * 60,
   short: 5  * 60,
   long:  15 * 60,
 };
@@ -28,10 +28,16 @@ const MIN_BREAK = 1,  MAX_BREAK = 90;  // breaks: freely adjustable
 
 // Per-mode durations persist across sessions
 const clampMins = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-let focusMins = clampMins(parseInt(localStorage.getItem('pm_focus_mins') || '25', 10) || 25, MIN_FOCUS, MAX_FOCUS);
+let focusMins = clampMins(parseInt(localStorage.getItem('pm_focus_mins') || '30', 10) || 30, MIN_FOCUS, MAX_FOCUS);
 let shortMins = clampMins(parseInt(localStorage.getItem('pm_short_mins') || '5',  10) || 5,  MIN_BREAK, MAX_BREAK);
 let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15', 10) || 15, MIN_BREAK, MAX_BREAK);
-MODES.focus = focusMins * 60;
+// ── TESTING ONLY — short-circuit focus sessions ───────────
+// Set to a number of seconds (e.g. 3) to make focus sessions fire almost
+// immediately; null uses the normal minute-based durations.
+const TEST_FOCUS_SECS = null;
+const focusSecs = () => TEST_FOCUS_SECS ?? focusMins * 60;
+
+MODES.focus = focusSecs();
 MODES.short = shortMins * 60;
 MODES.long  = longMins  * 60;
 
@@ -46,7 +52,7 @@ function setCurrentModeMins(val) {
   if (isNaN(val)) return;
   if (currentMode === 'focus') {
     focusMins   = clampMins(val, MIN_FOCUS, MAX_FOCUS);
-    MODES.focus = focusMins * 60;
+    MODES.focus = focusSecs();
     localStorage.setItem('pm_focus_mins', focusMins);
   } else if (currentMode === 'short') {
     shortMins   = clampMins(val, MIN_BREAK, MAX_BREAK);

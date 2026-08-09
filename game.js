@@ -905,12 +905,20 @@ const EncounterScreen = (() => {
                      caughtAt: Date.now(),
                      palLevel: initLevel };
 
+    // Kept so the INFO button can open this exact record's detail card.
+    // addCaught also stamps gender/nature onto the same object.
+    st.caughtRec = record;
+
     if (typeof Collection !== 'undefined') {
-      Collection.addCaught(record);
+      st.caughtKey = Collection.addCaught(record)
+        .then(key => { record._key = key; return key; })
+        .catch(() => null);
     } else {                         // fallback (IndexedDB unavailable)
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);
       localStorage.setItem('pm_caught', JSON.stringify(list));
+      record._key  = list.length - 1;
+      st.caughtKey = Promise.resolve(record._key);
     }
   }
 
@@ -967,7 +975,7 @@ const EncounterScreen = (() => {
       btnThrow.addEventListener('click', throw_);
       btnFlee.addEventListener('click',  flee);
       btnCatchNext.addEventListener('click', openMonInfo);
-      btnCatchDex.addEventListener('click', openDex);
+      btnCatchDex.addEventListener('click', openCaughtInfo);
     }
 
     onDone = doneCb;
@@ -986,6 +994,8 @@ const EncounterScreen = (() => {
     st.monY     = 0;
     st.monSize  = 0;   // recomputed once the sprite image is ready
     st.caught   = false;
+    st.caughtRec = null;
+    st.caughtKey = null;
 
     // Compute wild mon level (player level ±2) once at encounter start
     const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
@@ -1059,12 +1069,23 @@ const EncounterScreen = (() => {
     MonInfoScreen.start(st.mon, onDone);
   }
 
-  // Skip the mon-info card and jump straight to the collection.
-  function openDex() {
+  // Skip the mon-info card and open the caught mon's own detail card —
+  // the same card My Mons opens. Falls back to the collection screen if the
+  // record couldn't be resolved.
+  async function openCaughtInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     overlay.classList.remove('active');
     if (typeof onDone === 'function') onDone();
-    if (typeof showScreen === 'function') showScreen('mymons');
+
+    await st.caughtKey;   // the record needs its real key before equip/rename work
+    const rec  = st.caughtRec;
+    const base = rec && typeof MONS !== 'undefined' ? MONS.find(m => m.id === rec.id) : null;
+
+    if (base && typeof Collection !== 'undefined' && Collection.openMonDetail) {
+      Collection.openMonDetail(base, rec);
+    } else if (typeof showScreen === 'function') {
+      showScreen('mymons');
+    }
   }
 
   function close() {
@@ -1444,5 +1465,45 @@ const MonInfoScreen = (() => {
   }
 
   return { start };
+})();
+
+
+// ── MonDetailCanvas ─────────────────────────────────────────
+// Small, reusable animated sprite for the individual-mon detail card.
+// Bobs the passed mon on the given canvas (same idle motion as everywhere
+// else). Collection.js owns the card's DOM/data; canvas drawing stays here.
+const MonDetailCanvas = (() => {
+  const SIZE = 200; // logical px (matches #mon-detail-canvas width/height)
+
+  let canvas = null, ctx = null, rafId = null, mon = null, frame = 0, scaled = false;
+
+  function tick() {
+    frame++;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    const bobY  = Math.sin(frame / 22) * 6;
+    const scale = MonSprite.fitScale(mon, SIZE * 0.92, 1.5, (mon.shiny && !mon.dark) || false);
+    MonSprite.drawOnCtx(ctx, mon, SIZE / 2, SIZE / 2 + bobY,
+      { scale, shiny: mon.shiny || false, dark: mon.dark || false });
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start(canvasEl, monData) {
+    canvas = canvasEl;
+    ctx    = canvas.getContext('2d');
+    if (!scaled) {
+      const dpr = window.devicePixelRatio || 1;
+      if (dpr !== 1) { canvas.width = SIZE * dpr; canvas.height = SIZE * dpr; ctx.scale(dpr, dpr); }
+      scaled = true;
+    }
+    mon   = monData;
+    frame = 0;
+    if (typeof MonSprite !== 'undefined') MonSprite.preloadAll([mon], () => {});
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+
+  return { start, stop };
 })();
 

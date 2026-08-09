@@ -10,6 +10,11 @@ const Collection = (() => {
   let pendingBlend       = null;    // { key, monId, displayName, rarity }
   let isDraggingSmoothie = false;   // flag readable by card dragover handlers
 
+  // Mon-detail card state (individual caught mon)
+  let detailReady = false;          // detail overlay listeners attached once
+  let detailMon   = null;           // base mon of the record being viewed
+  let detailRec   = null;           // the IDB record ({ _key, ... }) being viewed
+
   // ── IndexedDB setup ─────────────────────────────────────────
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -104,6 +109,12 @@ const Collection = (() => {
 
   // ── Public: addCaught ────────────────────────────────────────
   async function addCaught(record) {
+    // Stamp per-individual traits once, at catch time (stable forever after).
+    if (record.gender == null   && typeof randomGender === 'function') record.gender = randomGender();
+    if (record.nature == null   && typeof randomNature === 'function') record.nature = randomNature();
+    if (record.heldItem === undefined) record.heldItem = null;   // no items yet
+    if (record.nickname === undefined) record.nickname = null;
+
     // If the player has no active companion yet, this catch becomes it.
     const isFirstCatch = !localStorage.getItem('pm_active');
 
@@ -118,7 +129,7 @@ const Collection = (() => {
         if (mon) await setActiveCompanion(mon, { _key: list.length - 1, ...record });
       }
       if (typeof renderStats === 'function') renderStats();
-      return;
+      return list.length - 1;
     }
 
     const newKey = await new Promise((resolve, reject) => {
@@ -143,6 +154,10 @@ const Collection = (() => {
     // Refresh grid immediately if a collection screen is visible
     if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
     if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
+
+    // Returned so callers (e.g. the catch screen's INFO button) can open the
+    // detail card for this exact record.
+    return newKey;
   }
 
   // ── Internal: getAllCaught ───────────────────────────────────
@@ -567,7 +582,7 @@ const Collection = (() => {
 
     const nameEl = document.createElement('p');
     nameEl.className   = 'mon-card-name';
-    nameEl.textContent = stageMon.name;
+    nameEl.textContent = rec.nickname || stageMon.name;
     card.appendChild(nameEl);
 
     // Only shiny/dark variants get a rarity label now (tiers removed)
@@ -620,8 +635,169 @@ const Collection = (() => {
       } catch { /* ignore */ }
     });
 
-    card.addEventListener('click', () => setActiveCompanion(mon, rec));
+    card.addEventListener('click', () => openMonDetail(mon, rec));
     return card;
+  }
+
+  // ── Internal: openMonDetail — the individual mon's detail card ─
+  async function openMonDetail(mon, rec) {
+    const overlay = document.getElementById('mon-detail-overlay');
+    if (!overlay) return;
+
+    // Backfill traits for records caught before these fields existed, then
+    // persist so a mon's gender/nature never changes between views.
+    const patch = {};
+    if (rec.gender == null && typeof randomGender === 'function') { rec.gender = randomGender(); patch.gender = rec.gender; }
+    if (rec.nature == null && typeof randomNature === 'function') { rec.nature = randomNature(); patch.nature = rec.nature; }
+    if (rec.heldItem === undefined) rec.heldItem = null;
+    if (rec.nickname === undefined) rec.nickname = null;
+    if (Object.keys(patch).length && db && rec._key !== undefined) {
+      updateRecord(rec._key, patch).catch(() => {});
+    }
+
+    detailMon = mon;
+    detailRec = rec;
+
+    // Wire the overlay's buttons exactly once; they read detailMon/detailRec.
+    if (!detailReady) {
+      detailReady = true;
+      const renameRow = document.getElementById('mon-detail-rename-row');
+      const input     = document.getElementById('mon-detail-nickname-input');
+
+      const closeRename = () => { renameRow.hidden = true; };
+      const saveRename  = async () => {
+        const val = input.value.trim();
+        detailRec.nickname = val || null;
+        if (db && detailRec._key !== undefined) {
+          await updateRecord(detailRec._key, { nickname: detailRec.nickname }).catch(() => {});
+        }
+        closeRename();
+        renderDetail();
+        renderMyMons();
+      };
+
+      document.getElementById('btn-mon-detail-back').addEventListener('click', () => {
+        MonDetailCanvas.stop();
+        overlay.classList.remove('active');
+      });
+      document.getElementById('btn-mon-detail-rename').addEventListener('click', () => {
+        input.value = detailRec.nickname || '';
+        renameRow.hidden = false;
+        input.focus();
+        input.select();
+      });
+      document.getElementById('btn-mon-detail-save').addEventListener('click', saveRename);
+      document.getElementById('btn-mon-detail-cancel').addEventListener('click', closeRename);
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  { e.preventDefault(); saveRename(); }
+        if (e.key === 'Escape') { e.preventDefault(); closeRename(); }
+      });
+      document.getElementById('btn-mon-detail-equip').addEventListener('click', async () => {
+        await setActiveCompanion(detailMon, detailRec);
+        updateEquipButton();
+      });
+    }
+
+    document.getElementById('mon-detail-rename-row').hidden = true;
+    renderDetail();
+    overlay.classList.add('active');
+  }
+
+  // ── Internal: renderDetail — fill the detail card from detailRec ─
+  function renderDetail() {
+    const rec      = detailRec;
+    const mon      = detailMon;
+    const palLevel = rec.palLevel || 1;
+    const stageMon = typeof getMonStage === 'function' ? getMonStage(mon, palLevel) : mon;
+
+    const dark  = !!rec.dark;
+    const shiny = !!rec.shiny;
+
+    // Header: dex # + variant label
+    const dexEl = document.getElementById('mon-detail-dexnum');
+    dexEl.textContent = stageMon.dexNum ? `#${String(stageMon.dexNum).padStart(3, '0')}` : '';
+    const rarEl = document.getElementById('mon-detail-rarity');
+    rarEl.textContent = dark ? 'DARK' : shiny ? 'SHINY' : '';
+    rarEl.className   = `mon-detail-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : ''}`;
+
+    // Name: nickname takes the headline, species shown beneath when nicknamed
+    const nameEl    = document.getElementById('mon-detail-name');
+    const speciesEl = document.getElementById('mon-detail-species');
+    if (rec.nickname) {
+      nameEl.textContent    = rec.nickname;
+      speciesEl.textContent = stageMon.name.toUpperCase();
+      speciesEl.hidden      = false;
+    } else {
+      nameEl.textContent    = stageMon.name.toUpperCase();
+      speciesEl.textContent = '';
+      speciesEl.hidden      = true;
+    }
+
+    // Level pill (top-left of the canvas box)
+    document.getElementById('mon-detail-lvl').textContent = palLevel;
+
+    // Type badges
+    const typeEl = document.getElementById('mon-detail-type');
+    if (typeEl && typeof makeTypeBadges === 'function') {
+      typeEl.innerHTML = '';
+      if (stageMon.type) typeEl.appendChild(makeTypeBadges(stageMon.type));
+    }
+
+    // Stat rows
+    document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
+
+    const g = rec.gender === 'F'
+      ? { sym: '♀', label: 'FEMALE', cls: 'female' }
+      : { sym: '♂', label: 'MALE',   cls: 'male'   };
+    const genEl = document.getElementById('mds-gender');
+    genEl.className = `mds-v ${g.cls}`;
+    genEl.innerHTML = '';
+    const sym = document.createElement('span');
+    sym.className   = 'gsym';
+    sym.textContent = g.sym;
+    genEl.appendChild(sym);
+    genEl.appendChild(document.createTextNode(' ' + g.label));
+
+    const natEl = document.getElementById('mds-nature');
+    natEl.innerHTML = '';
+    const natName = document.createElement('span');
+    natName.textContent = (rec.nature || 'UNKNOWN').toUpperCase();
+    natEl.appendChild(natName);
+    const flavor = (typeof NATURE_FLAVOR !== 'undefined' && rec.nature) ? NATURE_FLAVOR[rec.nature] : '';
+    if (flavor) {
+      const sub = document.createElement('span');
+      sub.className   = 'mds-sub';
+      sub.textContent = flavor;
+      natEl.appendChild(sub);
+    }
+
+    const itemEl = document.getElementById('mds-item');
+    itemEl.textContent = rec.heldItem ? String(rec.heldItem).toUpperCase() : 'NONE';
+    itemEl.classList.toggle('muted', !rec.heldItem);
+
+    const caughtEl = document.getElementById('mds-caught');
+    caughtEl.textContent = rec.caughtAt
+      ? new Date(rec.caughtAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()
+      : 'UNKNOWN';
+
+    updateEquipButton();
+
+    // Animated sprite (canvas drawing lives in game.js)
+    if (typeof MonDetailCanvas !== 'undefined') {
+      MonDetailCanvas.start(document.getElementById('mon-detail-canvas'),
+        { ...stageMon, shiny, dark });
+    }
+  }
+
+  // ── Internal: updateEquipButton — reflect active-companion state ─
+  function updateEquipButton() {
+    const btn = document.getElementById('btn-mon-detail-equip');
+    if (!btn || !detailRec) return;
+    const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
+    const isActive  = detailRec._key === activeKey;
+    btn.textContent = isActive ? '★ EQUIPPED' : 'SET AS COMPANION';
+    btn.disabled    = isActive;
+    btn.classList.toggle('is-equipped', isActive);
   }
 
   // ── Public: renderMyMons — every individual caught record ─────
@@ -703,5 +879,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames };
+  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail };
 })();

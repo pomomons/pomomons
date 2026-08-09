@@ -98,6 +98,37 @@ function getRandomMon() {
   return MONS[Math.floor(Math.random() * MONS.length)];
 }
 
+// ── Natures ─────────────────────────────────────────────────
+// Flavour-only personality traits (like Pokémon natures). They don't affect
+// stats — this game has none — but give every caught mon a bit of character.
+const NATURES = [
+  'Hardy',  'Lonely', 'Brave',   'Adamant', 'Naughty',
+  'Bold',   'Docile', 'Relaxed', 'Impish',  'Lax',
+  'Timid',  'Hasty',  'Serious', 'Jolly',   'Naive',
+  'Modest', 'Mild',   'Quiet',   'Bashful', 'Rash',
+  'Calm',   'Gentle', 'Sassy',   'Careful', 'Quirky',
+];
+
+const NATURE_FLAVOR = {
+  Hardy:   'Loves a challenge',   Lonely:  'Enjoys quiet focus',
+  Brave:   'Fears nothing',       Adamant: 'Never gives up',
+  Naughty: 'A little rascal',     Bold:    'Takes the lead',
+  Docile:  'Easygoing and calm',  Relaxed: 'Likes to take it slow',
+  Impish:  'Loves a good prank',  Lax:     'Goes with the flow',
+  Timid:   'Shy around others',   Hasty:   'Always in a hurry',
+  Serious: 'All business',        Jolly:   'Cheerful and upbeat',
+  Naive:   'Curious about all',   Modest:  'Humble and kind',
+  Mild:    'Gentle-hearted',      Quiet:   'Prefers to listen',
+  Bashful: 'Blushes easily',      Rash:    'Acts on impulse',
+  Calm:    'Cool under pressure', Gentle:  'Soft and caring',
+  Sassy:   'Full of attitude',    Careful: 'Plans every move',
+  Quirky:  'Delightfully odd',
+};
+
+// 50/50 gender roll and a random nature — assigned once, when a mon is caught.
+function randomGender() { return Math.random() < 0.5 ? 'M' : 'F'; }
+function randomNature() { return NATURES[Math.floor(Math.random() * NATURES.length)]; }
+
 // Builds one or two type badge <span> elements wrapped in a container.
 // type can be a string ('Fire') or array (['Fire','Ghost']).
 function makeTypeBadges(type) {
