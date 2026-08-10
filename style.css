@@ -1774,6 +1774,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   color: var(--text-muted);
 }
 
+/* The `hidden` attribute only sets display:none in the UA stylesheet, which any
+   author display rule outranks — without this the row is permanently visible. */
+.mon-detail-rename-row[hidden] { display: none; }
+
 .mon-detail-rename-row {
   display: flex;
   flex-wrap: wrap;
@@ -1893,7 +1897,18 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   justify-content: center;
 }
 .mon-detail-actions .btn:disabled { cursor: default; }
-.mon-detail-actions .btn.is-equipped { opacity: .9; }
+/* Equipped state: an opaque darker gold, NOT the generic wrapper fade.
+   .pxb:has(button:disabled) drops the whole wrapper to 55% opacity, which on
+   this button blended gold with the teal backdrop and rendered olive-green.
+   Opting out and recolouring keeps it legibly "gold, but inactive". */
+.mon-detail-actions .pxb:has(.is-equipped) {
+  opacity: 1;
+  filter: var(--pxdrop);
+}
+.mon-detail-actions .btn.is-equipped {
+  background: var(--gold-dk);
+  color: rgba(26,10,0,.82);
+}
 
 /* ── Catch Overlay ───────────────────────────────────────── */
 .catch-overlay {

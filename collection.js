@@ -794,7 +794,7 @@ const Collection = (() => {
     if (!btn || !detailRec) return;
     const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
     const isActive  = detailRec._key === activeKey;
-    btn.textContent = isActive ? '★ EQUIPPED' : 'SET AS COMPANION';
+    btn.textContent = isActive ? 'EQUIPPED' : 'SET AS COMPANION';
     btn.disabled    = isActive;
     btn.classList.toggle('is-equipped', isActive);
   }
