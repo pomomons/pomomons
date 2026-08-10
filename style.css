@@ -1141,11 +1141,17 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   color: #1a0a00;
   font-family: var(--font-pixel);
   font-size: .72rem;
-  padding: 3px 10px;
-  border-radius: 20px;
+  /* Vertical padding matches .companion-lvl's ~28px height so the fixed 8px
+     notch leaves the same amount of straight edge — at 21px tall the steps
+     met near the middle and read as points. */
+  padding: 8px 14px;
+  border-radius: 0;
+  clip-path: var(--pixel-clip-sm);
   letter-spacing: .06em;
   white-space: nowrap;
-  box-shadow: 0 3px 0 var(--gold-dk);
+  /* drop-shadow, not box-shadow — clip-path would clip a box-shadow away
+     entirely, since it sits outside the stepped shape */
+  filter: drop-shadow(0 3px 0 var(--gold-dk));
   flex-shrink: 0;
 }
 
@@ -1207,16 +1213,18 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex: 1;
   height: 22px;
   background: rgba(255,255,255,.12);
-  border-radius: 999px;
+  border-radius: 0;
+  clip-path: var(--pixel-clip-sm);
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.12);
+  /* No 1px border — the staircase clip slices a rectangular border at each
+     corner, leaving the steps unoutlined. The fill reads against the track. */
 }
 
-/* Yellow fill */
+/* Yellow fill — square; the wrap's clip-path shapes both ends */
 .exp-bar {
   height: 100%;
   background: var(--gold);
-  border-radius: 999px;
+  border-radius: 0;
   transition: width .4s ease;
 }
 
@@ -1722,61 +1730,11 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mon-detail-rarity.ultra-rare  { color: var(--gold); }
 .mon-detail-rarity.pitch-black { color: #c7ccd1; text-shadow: 0 0 6px rgba(0,0,0,.9), 2px 2px 0 rgba(0,0,0,.6); }
 
-/* Canvas + its overlaid type badge. Wrapper shrinks to the canvas so the
-   badge can anchor to the box's real top-left corner. */
-.mon-detail-canvas-wrap {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
 #mon-detail-canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   border: 3px solid rgba(255,255,255,.18);
   border-radius: 8px;
-  display: block;
-}
-
-/* Level + type pills pinned inside the canvas box, echoing the main-screen
-   companion meta row (.companion-lvl / .companion-type) at a smaller scale —
-   the 200px box can't take the full 9px/13px pills side by side. */
-.mon-detail-lvl-corner,
-.mon-detail-type-corner {
-  position: absolute;
-  top: 8px;
-  z-index: 2;
-  pointer-events: none;
-}
-.mon-detail-lvl-corner  { left: 8px; }
-.mon-detail-type-corner { right: 8px; }
-
-.mon-detail-lvl-corner {
-  font-family: var(--font-pixel);
-  font-size: .5rem;
-  color: #3a2c00;
-  letter-spacing: .06em;
-  background: var(--gold);
-  padding: 6px 9px;
-  clip-path: var(--pixel-clip-sm);
-  filter: var(--pxdrop-sm);
-  white-space: nowrap;
-  text-shadow: none;
-}
-
-/* Dual-type mons stack rather than crowd the sprite */
-.mon-detail-type-corner .type-badges {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-.mon-detail-type-corner .type-badge {
-  font-size: .5rem;
-  padding: 6px 9px;
-  letter-spacing: .06em;
-  border-radius: 0;
-  clip-path: var(--pixel-clip-sm);
-  filter: var(--pxdrop-sm);
 }
 
 .mon-detail-namerow {
@@ -1881,6 +1839,11 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   background: rgba(0,0,0,.22);
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
+
+/* Badges are inline-flex boxes and don't sit on the text baseline, so this
+   row centres instead of baseline-aligning like the text-only rows. */
+.mds-row-type { align-items: center; }
+.mds-row-type .mds-v { display: flex; justify-content: flex-end; }
 
 .mds-k {
   font-size: .45rem;
@@ -2261,7 +2224,9 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .stats-top { padding: 4px 12px 2px; }
   .stats-bottom { padding: 3px 12px 4px; gap: 8px; }
   .stat-label { display: none; }
-  .exp-bar-wrap { height: 16px; }
+  /* 16px tall: the 8px sm-notch would consume the full height and the top and
+     bottom steps would meet, so drop to the single 4px step. */
+  .exp-bar-wrap { height: 16px; clip-path: var(--pixel-clip-1); }
 
   /* Encounter: scrollable, canvas scaled to fit short height */
   .encounter-overlay {

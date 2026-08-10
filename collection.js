@@ -733,18 +733,17 @@ const Collection = (() => {
       speciesEl.hidden      = true;
     }
 
-    // Level pill (top-left of the canvas box)
-    document.getElementById('mon-detail-lvl').textContent = palLevel;
+    // Stat rows
+    document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
+    document.getElementById('mds-level').textContent   = `LVL ${palLevel}`;
 
-    // Type badges
-    const typeEl = document.getElementById('mon-detail-type');
+    // Type badges live in their own stat row
+    const typeEl = document.getElementById('mds-type');
     if (typeEl && typeof makeTypeBadges === 'function') {
       typeEl.innerHTML = '';
       if (stageMon.type) typeEl.appendChild(makeTypeBadges(stageMon.type));
+      else typeEl.textContent = '—';
     }
-
-    // Stat rows
-    document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
 
     const g = rec.gender === 'F'
       ? { sym: '♀', label: 'FEMALE', cls: 'female' }
