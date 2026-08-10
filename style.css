@@ -15,8 +15,28 @@
   --text-dim:    rgba(255,255,255,.72);
   --text-muted:  rgba(255,255,255,.42);
   --surface:     rgba(0,0,0,.32);
-  --border:      rgba(255,255,255,.35);
   --stats-h:     82px;
+
+  /* Layout grid: one type area, subdivided in 40px fields (10x the 4px module) */
+  --col:         680px;
+  --field:       40px;
+
+  /* Leading, tied to the type scale: small text needs more room between lines,
+     display text needs less. Single-line chrome (icon buttons, badges) keeps
+     line-height:1 for vertical centring — that is not typography. */
+  --lh-loose:    1.6;   /* 6-8px  */
+  --lh-normal:   1.5;   /* 10-12px */
+  --lh-snug:     1.4;   /* 14-16px */
+  --lh-tight:    1.2;   /* 20px+  */
+
+  /* Borders by role. Nine different white alphas (.06-.6) across four widths
+     had accumulated; these four cover every structural edge. Form focus rings
+     and the dashed drop target stay bespoke — those carry meaning. */
+  --border-hair:   1px solid rgba(255,255,255,.08);   /* internal dividers   */
+  --border-soft:   2px solid rgba(255,255,255,.18);   /* panel / card edge   */
+  --border-card:   2px solid rgba(255,255,255,.35);   /* raised card edge    */
+  --border-frame:  3px solid rgba(255,255,255,.18);   /* canvas / major frame*/
+  --border-accent: 3px solid var(--gold);             /* highlighted box     */
 
   /* Pomomon type colours. Run `node tools/palette-check.js` to audit.
      Six chromatic types are spread around the wheel (min 21° apart) avoiding
@@ -44,8 +64,6 @@
   --text-md:     14px;
 
   /* Panel & button tokens */
-  --shadow-btn:   4px 4px 0 rgba(0,0,0,.55);
-  --shadow-btn-h: 4px 4px 0 rgba(0,0,0,.55);
   --panel-bg:     #175e50;   /* dulled to match --mode-bg's register */
   --panel-border: rgba(255,255,255,.38);
   --panel-radius: 16px;
@@ -92,13 +110,14 @@
     100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
     4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
   );
-  /* Outer pixel shadow — use filter: drop-shadow so it follows clip-path shape */
-  --pxdrop:    drop-shadow(5px 5px 0 rgba(0,0,0,.60));
+  /* Elevation. Two levels, both drop-shadow rather than box-shadow so they
+     follow the clip-path staircase instead of being sliced by it.
+     --pxdrop-sm = small chrome (badges, icon buttons, pills)
+     --pxdrop    = raised surfaces (buttons, panels, cards)
+     A second identical pair (--pxborder/--pxborder-sm, 0.05 alpha apart) and
+     two unused --shadow-btn tokens were merged away; don't reintroduce them. */
   --pxdrop-sm: drop-shadow(4px 4px 0 rgba(0,0,0,.60));
-
-  /* Pixel border: outline stripped for no-border test — just depth shadow remains */
-  --pxborder:    drop-shadow(5px 5px 0 rgba(0,0,0,.55));
-  --pxborder-sm: drop-shadow(4px 4px 0 rgba(0,0,0,.55));
+  --pxdrop:    drop-shadow(5px 5px 0 rgba(0,0,0,.60));
 }
 
 /* ── Mode backgrounds — only two states ─────────────────── */
@@ -136,10 +155,14 @@ body::after {
   z-index: 0;
 }
 
-/* Main content column — centred, comfortable reading width */
+/* Main content column — centred, comfortable reading width.
+   This is the type area: every screen and the header share it, so the frame
+   stays put as you navigate. Layout containers inside it size in 40px fields
+   (10x the 4px module): 560=14, 480=12, 360=9, 320=8, 240=6. Keep new
+   containers on that field; smaller component measures use the 4px module. */
 .app-header,
 .screen {
-  max-width: 680px;
+  max-width: var(--col);
   width: 100%;
   margin-left: auto;
   margin-right: auto;
@@ -171,7 +194,7 @@ body::after {
   min-height: 44px;
   min-width: 44px;
   clip-path: var(--pixel-clip-sm);
-  color: #fff;
+  color: var(--text);
   box-shadow:
     inset 0 10px 0 rgba(255,255,255,.14),
     inset 0 -10px 0 rgba(0,0,0,.38);
@@ -186,7 +209,7 @@ body::after {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  line-height: 1.4;
+  line-height: var(--lh-snug);
 }
 
 .logo-icon {
@@ -221,7 +244,7 @@ body::after {
 .logo-pomo {
   font-family: var(--font-pixel);
   font-size: 48px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .06em;
   margin-right: -.06em;
   -webkit-text-stroke: 1.5px rgba(255,255,255,.6);
@@ -348,6 +371,16 @@ body::after {
   text-shadow: 2px 2px 0 rgba(0,0,0,.45);
 }
 
+/* Empty state. A mon's name is one line at 24%; this prompt wraps to two and
+   ran straight into the "?" placeholder, which is bottom-anchored and occupies
+   the canvas from 44% down. Sit it higher and smaller — the LVL/type pills are
+   hidden in this state, so the top of the stage is free. */
+.companion-name.is-prompt {
+  top: 6%;
+  font-size: 12px;
+  line-height: var(--lh-normal);
+}
+
 .companion-meta {
   position: absolute;
   top: 0;
@@ -382,7 +415,7 @@ body::after {
   font-family: var(--font-pixel);
   padding: 2px 4px;
   border-radius: 999px;
-  color: #fff;
+  color: var(--text);
   text-shadow: 1px 1px 0 rgba(0,0,0,.4);
   letter-spacing: .04em;
   white-space: nowrap;
@@ -418,7 +451,7 @@ body::after {
   display: flex;
   gap: 4px;
   background: rgba(0,0,0,.18);
-  border: 3px solid rgba(255,255,255,.22);
+  border: var(--border-frame);
   padding: 4px;
   width: 100%;
   border-radius: 0;
@@ -489,7 +522,7 @@ body::after {
 .timer-display {
   font-family: var(--font-pixel);
   font-size: 64px;
-  color: #fff;
+  color: var(--text);
   text-shadow: none;
   background: none;
   padding: 12px 16px 12px 20px;
@@ -504,7 +537,7 @@ body::after {
 .timer-edit-input {
   font-family: var(--font-pixel);
   font-size: 1em;
-  color: #fff;
+  color: var(--text);
   background: none;
   border: none;
   border-bottom: 2px solid rgba(255,255,255,.6);
@@ -529,7 +562,7 @@ body::after {
 .timer-colon {
   display: inline-block;
   padding: 0 4px;
-  color: #fff;
+  color: var(--text);
 }
 
 /* Small arrow buttons for time adjustment */
@@ -543,7 +576,7 @@ body::after {
   background: #222;
   border: none;
   border-radius: 0;
-  color: #fff;
+  color: var(--text);
   font-size: 12px;
   cursor: pointer;
   padding: 8px 8px;
@@ -598,7 +631,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   cursor: pointer;
   padding: 12px 28px;
   clip-path: var(--pixel-clip);
-  filter: var(--pxborder);
+  filter: var(--pxdrop);
   transition: filter .12s ease;
 }
 
@@ -623,12 +656,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .btn-primary:hover {
-  filter: brightness(.94) var(--pxborder);
+  filter: brightness(.94) var(--pxdrop);
 }
 
 .btn-ghost {
   background: #222;
-  color: #fff;
+  color: var(--text);
   border: none;
   box-shadow:
     inset 0 0 0 6px #000,
@@ -638,7 +671,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .btn-ghost:hover {
   background: #333;
-  filter: brightness(1.15) var(--pxborder);
+  filter: brightness(1.15) var(--pxdrop);
 }
 
 /* ── Pixel-border wrapper — black staircase outline ──────── */
@@ -735,7 +768,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   min-height: 38px;
   min-width: 38px;
   clip-path: var(--pixel-clip-sm);
-  color: #fff;
+  color: var(--text);
   font-family: var(--font-pixel);
   font-size: 14px;
   line-height: 1;
@@ -770,7 +803,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .pxb .btn-ghost.btn-sm {
   opacity: 1;
   background: #222;
-  color: #fff;
+  color: var(--text);
   box-shadow:
     inset 0 12px 0 rgba(255,255,255,.15),
     inset 0 -12px 0 rgba(0,0,0,.5);
@@ -801,7 +834,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   font-family: var(--font-pixel);
   cursor: pointer;
   clip-path: var(--pixel-clip);
-  filter: var(--pxborder);
+  filter: var(--pxdrop);
   box-shadow:
     inset 0 14px 0 rgba(255,255,255,.55),
     inset 0 -14px 0 rgba(0,0,0,.35);
@@ -817,7 +850,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .btn-collection:hover {
-  filter: brightness(1.06) var(--pxborder);
+  filter: brightness(1.06) var(--pxdrop);
 }
 
 .btn-collection:active {
@@ -835,7 +868,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .btn-timer-mode {
   width: 100%;
   background: #222;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   letter-spacing: .04em;
   border: none;
@@ -863,7 +896,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .mode-dropdown {
   position: fixed;
   background: #111827;
-  border: 2px solid rgba(255,255,255,.25);
+  border: var(--border-soft);
   border-radius: 0;
   z-index: 200;
   overflow: hidden;
@@ -876,7 +909,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   padding: 12px 8px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: var(--border-hair);
   color: rgba(255,255,255,.7);
   font-family: var(--font-pixel);
   font-size: var(--text-sm);
@@ -887,7 +920,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .mode-option:last-child { border-bottom: none; }
-.mode-option:hover      { background: rgba(255,255,255,.1); color: #fff; }
+.mode-option:hover      { background: rgba(255,255,255,.1); color: var(--text); }
 .mode-option.active     { color: var(--gold); }
 
 /* ── Timer action buttons — unified rule ─────────────────── */
@@ -913,7 +946,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Hover */
 .btn-timer-start:hover:not(:disabled),
 .btn-timer-pause:hover:not(:disabled) {
-  filter: brightness(.93) var(--pxborder);
+  filter: brightness(.93) var(--pxdrop);
 }
 
 /* Press */
@@ -937,7 +970,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .btn-timer-dark {
   width: 100%;
   background: #222;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   letter-spacing: .04em;
   border: none;
@@ -993,10 +1026,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .collection-tab {
   background: #222;
-  color: #fff;
+  color: var(--text);
   border-radius: 0;
   clip-path: var(--pixel-clip);
-  filter: var(--pxborder);
+  filter: var(--pxdrop);
   box-shadow:
     inset 0 12px 0 rgba(255,255,255,.15),
     inset 0 -12px 0 rgba(0,0,0,.5);
@@ -1048,14 +1081,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   text-align: center;
   color: var(--text-muted);
   font-size: 10px;
-  line-height: 1.8;
+  line-height: var(--lh-normal);
   padding: 32px 16px;
 }
 
 .mon-card {
   aspect-ratio: 1;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: var(--border-card);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1102,7 +1135,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   color: var(--text-dim);
   background: rgba(0,0,0,.5);
   padding: 0 4px;
-  line-height: 1.4;
+  line-height: var(--lh-snug);
   letter-spacing: .04em;
 }
 
@@ -1149,7 +1182,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   height: var(--stats-h);
   background: #000;
-  border-top: 3px solid rgba(255,255,255,.18);
+  border-top: var(--border-frame);
   display: flex;
   flex-direction: column;
   z-index: 50;
@@ -1272,7 +1305,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .stat-val {
   font-size: var(--text-md);
-  color: #fff;
+  color: var(--text);
   letter-spacing: .04em;
 }
 
@@ -1444,7 +1477,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   letter-spacing: .04em;
   color: var(--text);
   text-align: center;
-  line-height: 1.5;
+  line-height: var(--lh-tight);
 }
 
 .encounter-level {
@@ -1470,7 +1503,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .encounter-sub {
   font-size: 20px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .05em;
   min-height: 1.2em;
   text-align: center;
@@ -1538,7 +1571,9 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* When only NEXT button is shown, centre it */
 .encounter-controls.postcatch { justify-content: center; }
 
-.btn-arrow { font-size: 1.6em; vertical-align: middle; position: relative; top: -0.22em; line-height: 1; }
+/* 1.5em of the 14px button = 21px, a whole pixel; 1.6em gave 22.4px and blurred
+   the glyph. Kept relative so it tracks the button's size. */
+.btn-arrow { font-size: 1.5em; vertical-align: middle; position: relative; top: -0.22em; line-height: 1; }
 
 /* Bigger action buttons — similar footprint to the main-screen START / POMODEX */
 .encounter-controls .btn {
@@ -1580,7 +1615,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 .mon-info-name {
   font-family: var(--font-pixel);
   font-size: 16px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .06em;
 }
 
@@ -1604,7 +1639,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 #mon-info-canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 3px solid rgba(255,255,255,.18);
+  border: var(--border-frame);
   border-radius: 8px;
 }
 
@@ -1612,7 +1647,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   width: 100%;
   max-width: 480px;
   background: rgba(0,0,0,.30);
-  border: 2px solid rgba(255,255,255,.18);
+  border: var(--border-soft);
   border-radius: 12px;
   padding: 12px 12px;
   margin-top: 4px;
@@ -1643,7 +1678,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 .evo-node canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 2px solid rgba(255,255,255,.22);
+  border: var(--border-soft);
   border-radius: 6px;
 }
 
@@ -1656,9 +1691,9 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   font-size: 6px;
   color: var(--text-dim);
   letter-spacing: .06em;
-  max-width: 70px;
+  max-width: 72px;    /* component measure, so 4px module rather than a field */
   text-align: center;
-  line-height: 1.4;
+  line-height: var(--lh-loose);
 }
 
 .evo-node-label {
@@ -1706,10 +1741,13 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  /* Tight default: this is the space WITHIN a group (dexnum+rarity, name+species).
+     Group breaks come from margin-top on the elements that start a new group, so
+     the between-group space always exceeds the space inside one. */
+  gap: 4px;
   padding: 20px 16px;
   background: rgba(0,0,0,.28);
-  border: 2px solid rgba(255,255,255,.18);
+  border: var(--border-soft);
   clip-path: var(--pixel-clip);
   text-align: center;
 }
@@ -1760,8 +1798,9 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 #mon-detail-canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 3px solid rgba(255,255,255,.18);
+  border: var(--border-frame);
   border-radius: 8px;
+  margin-top: 12px;    /* group break: header -> sprite */
 }
 
 .mon-detail-namerow {
@@ -1769,13 +1808,13 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 2px;
+  margin-top: 12px;    /* group break: sprite -> identity */
 }
 
 .mon-detail-name {
   font-family: var(--font-pixel);
   font-size: 14px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .05em;
   word-break: break-word;
 }
@@ -1783,7 +1822,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mon-detail-rename-btn {
   font-family: var(--font-pixel);
   font-size: 10px;
-  color: #fff;
+  color: var(--text);
   background: #333;
   border: none;
   box-shadow: inset -2px -2px 0 #1c1c1c, inset 2px 2px 0 #4a4a4a;
@@ -1817,7 +1856,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mon-detail-input {
   font-family: var(--font-pixel);
   font-size: 10px;
-  color: #fff;
+  color: var(--text);
   background: #1c1c1c;
   border: 2px solid #4a4a4a;
   padding: 8px 8px;
@@ -1858,7 +1897,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin: 4px 0 2px;
+  margin: 16px 0 0;    /* group break: identity -> stats */
 }
 
 .mds-row {
@@ -1868,7 +1907,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   gap: 8px;
   padding: 8px 8px;
   background: rgba(0,0,0,.22);
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: var(--border-hair);
 }
 
 /* Badges are inline-flex boxes and don't sit on the text baseline, so this
@@ -1886,7 +1925,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mds-v {
   font-size: 8px;
   letter-spacing: .04em;
-  color: #fff;
+  color: var(--text);
   text-align: right;
   display: flex;
   flex-direction: column;
@@ -1911,7 +1950,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 16px;    /* group break: stats -> action */
 }
 /* Flex-centred with a shared min-height so the gold and dark buttons match
    exactly — their base padding rules differ (11px/28px vs 13px/8px). */
@@ -1977,7 +2016,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .catch-name {
   font-family: var(--font-pixel);
   font-size: 14px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .05em;
 }
 
@@ -2023,10 +2062,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .evolution-msg {
   font-family: var(--font-pixel);
   font-size: 12px;
-  color: #fff;
+  color: var(--text);
   letter-spacing: .05em;
-  max-width: 300px;
-  line-height: 2;
+  max-width: 320px;   /* 8 fields */
+  line-height: var(--lh-normal);
   text-align: center;
   min-height: 3em;
   transition: opacity .25s;
@@ -2045,7 +2084,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 #evolution-canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 4px solid rgba(255,255,255,.2);
+  border: var(--border-frame);
   box-shadow: 0 0 40px rgba(255,255,255,.08);
 }
 
@@ -2069,7 +2108,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   align-items: center;
   gap: 8px;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: var(--border-card);
   border-radius: 8px;
   padding: 8px 12px;
 }
@@ -2118,7 +2157,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   font-size: 8px;
   color: var(--text-muted);
   letter-spacing: .04em;
-  line-height: 1.5;
+  line-height: var(--lh-loose);
 }
 
 .progress-tag {
@@ -2153,12 +2192,12 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   box-shadow:
     inset 0 8px 0 rgba(255,255,255,.5),
     inset 0 -8px 0 rgba(0,0,0,.32);
-  filter: var(--pxborder-sm);
+  filter: var(--pxdrop-sm);
   flex-shrink: 0;
   transition: filter .12s;
 }
 
-.btn-claim:hover  { filter: brightness(1.1) var(--pxborder-sm); }
+.btn-claim:hover  { filter: brightness(1.1) var(--pxdrop-sm); }
 .btn-claim:active { transform: translate(3px,3px); filter: none; }
 
 /* ── Responsive ──────────────────────────────────────────── */
@@ -2175,7 +2214,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 
   /* Companion name: shrink on mobile (now overlaid above the mon, not in the top row) */
-  .companion-name { font-size: 12px; line-height: 1.5; }
+  .companion-name { font-size: 12px; line-height: var(--lh-normal); }
 
   /* Narrower panel on mobile — keep the left-grouped pills on-panel */
   .companion-meta { left: -85px; right: -55px; }
@@ -2379,7 +2418,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   font-size: 8px;
   color: var(--text-muted);
   letter-spacing: .04em;
-  line-height: 1.5;
+  line-height: var(--lh-loose);
 }
 
 .zone-icon-img {
@@ -2445,7 +2484,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .blender-confirm-box {
   background: #1a0a00;
-  border: 3px solid var(--gold);
+  border: var(--border-accent);
   border-radius: 12px;
   padding: 28px 20px;
   max-width: 320px;
@@ -2465,7 +2504,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .blender-confirm-body {
   font-size: 8px;
-  line-height: 2;
+  line-height: var(--lh-loose);
   color: var(--text);
   letter-spacing: .05em;
 }
@@ -2502,7 +2541,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .spawn-info-box {
   background: #1a0a00;
-  border: 3px solid var(--gold);
+  border: var(--border-accent);
   border-radius: 12px;
   padding: 28px 20px;
   max-width: 320px;
@@ -2556,7 +2595,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   left: 50%;
   transform: translateX(-50%) translateY(6px);
   background: rgba(0,0,0,.88);
-  border: 2px solid var(--gold);
+  border: var(--border-accent);
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 8px;

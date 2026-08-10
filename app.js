@@ -323,11 +323,18 @@ function updateCompanionDisplay() {
   if (!activeId || typeof MONS === 'undefined') {
     const nameEl = document.getElementById('companion-name');
     const metaEl = document.querySelector('.companion-meta');
-    if (nameEl) nameEl.textContent = 'focus to catch a mon!';
+    if (nameEl) {
+      nameEl.textContent = 'focus to catch a mon!';
+      // The prompt wraps to two lines where a mon's name is one, so it needs
+      // its own placement clear of the "?" placeholder underneath.
+      nameEl.classList.add('is-prompt');
+    }
     if (metaEl) metaEl.style.visibility = 'hidden';
     if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.clearMon();
     return;
   }
+  const nameElActive = document.getElementById('companion-name');
+  if (nameElActive) nameElActive.classList.remove('is-prompt');
   const mon = MONS.find(m => m.id === activeId);
   if (!mon) return;
   document.querySelector('.companion-meta').style.visibility = '';

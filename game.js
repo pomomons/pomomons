@@ -419,9 +419,17 @@ const CompanionCanvas = (() => {
 
     // Name floats just above the mon's head (tracks sprite size) and bobs in sync
     if (nameEl) {
-      const headPct = (state.headY || 96) / CANVAS_SIZE * 100;
-      nameEl.style.top = `${Math.max(2, headPct - 10)}%`;
-      nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
+      if (SPRITE.noMon) {
+        // Empty state: there is no head to track, and state.headY holds a stale
+        // fallback that lands the text on top of the "?" placeholder. Clear the
+        // inline styles so the stylesheet (.companion-name.is-prompt) places it.
+        nameEl.style.top = '';
+        nameEl.style.transform = '';
+      } else {
+        const headPct = (state.headY || 96) / CANVAS_SIZE * 100;
+        nameEl.style.top = `${Math.max(2, headPct - 10)}%`;
+        nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
+      }
     }
 
     // --- Blink ---

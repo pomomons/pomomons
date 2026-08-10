@@ -1,12 +1,16 @@
 /* ── PomoMons UI V2 ────────────────────────────────────────
    Layers on top of style.css.
    TO REVERT: remove the style-v2.css <link> in index.html.
+
+   Follows the same systems as style.css: whole-pixel font sizes (Press Start 2P
+   blurs at fractional sizes) and 4px-module spacing. Don't reintroduce rem
+   font sizes here — they silently override the scale in the main sheet.
    ────────────────────────────────────────────────────────── */
 
 /* ── Header: push logo down ────────────────────────────────── */
 .app-header {
-  padding: 52px 16px 6px;
-  gap: 3px;
+  padding: 52px 16px 4px;
+  gap: 4px;
 }
 
 .tagline {
@@ -18,14 +22,14 @@
 #screen-timer {
   justify-content: flex-start;
   padding-top: 28px;
-  gap: 22px;
+  gap: 20px;
 }
 
 
 /* ── Timer: hero number, true-centered ─────────────────────── */
 .timer-display {
-  font-size: 5.4rem;
-  padding: 18px 16px;
+  font-size: 88px;
+  padding: 16px;
   letter-spacing: .05em;
   text-shadow: 3px 4px 0 rgba(0,0,0,.4);
   justify-content: center;
@@ -35,7 +39,7 @@
 
 .time-adjust {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -43,28 +47,29 @@
 .btn-adjust {
   min-width: 40px;
   min-height: 40px;
-  padding: 10px 12px;
+  padding: 8px 12px;
 }
 
 /* ── Controls: breathe ──────────────────────────────────────── */
 .controls-group {
-  padding: 14px;
-  gap: 10px;
+  padding: 12px;
+  gap: 8px;
 }
 
 .timer-controls {
-  gap: 10px;
+  gap: 8px;
 }
 
 .timer-bottom-row {
-  gap: 10px;
+  gap: 8px;
 }
 
-/* ── START: the hero button ─────────────────────────────────── */
+/* ── START: the hero button — deliberately one step up the type
+   scale from its 14px peers (FOCUS SESSION / RESET / POMODEX). ── */
 .btn-timer-start,
 .btn-timer-pause {
   min-height: 60px;
-  font-size: 1.05rem;
+  font-size: 16px;
   letter-spacing: .1em;
 }
 
@@ -74,10 +79,11 @@
   min-height: 60px;
 }
 
-/* ── POMODEX: generous padding ──────────────────────────────── */
+/* ── POMODEX: generous padding. Same 14px as FOCUS SESSION and
+   RESET — it sits in the same row group, so it reads as a peer. ── */
 .btn-collection {
   padding: 16px 8px;
-  font-size: .85rem;
+  font-size: 14px;
 }
 
 /* ── Stats strip: slightly taller, cleaner ──────────────────── */
@@ -85,14 +91,14 @@
   padding: 0 20px;
 }
 
-/* ── Mobile: the 5.4rem hero size is desktop-only; shrink so the
+/* ── Mobile: the 88px hero size is desktop-only; shrink so the
    timer stays on ONE line (paired with white-space:nowrap on .timer-time). ── */
 @media (max-width: 479px) {
-  .timer-display { font-size: 3rem; padding: 12px 14px; }
+  .timer-display { font-size: 48px; padding: 12px; }
   /* Slightly smaller companion stage frees bottom slack so the corner map icon
      clears the START/POMODEX row (timer screen is top-anchored). */
-  .companion-stage, #companion-canvas { width: 135px; height: 135px; }
+  .companion-stage, #companion-canvas { width: 136px; height: 136px; }
 }
 @media (max-width: 359px) {
-  .timer-display { font-size: 2.6rem; }
+  .timer-display { font-size: 40px; }
 }
