@@ -1,7 +1,10 @@
 /* ── Design Tokens ───────────────────────────────────────── */
 :root {
   --font-pixel:  'Press Start 2P', 'Courier New', monospace;
-  --mode-bg:     #00a888;   /* default = teal; overridden in run-focus */
+  /* Teal dulled from 100% to 60% saturation (hue and lightness unchanged) so the
+     pure accents — gold, type badges, the sprite — read as figure against it.
+     Also puts idle in the same saturation register as focus red's 39%. */
+  --mode-bg:     #228674;   /* default = teal; overridden in run-focus */
   --gold:        #ffd600;
   --gold-dk:     #b89500;
   --green:       #2ecc71;
@@ -15,16 +18,35 @@
   --border:      rgba(255,255,255,.35);
   --stats-h:     82px;
 
-  /* Typography scale */
-  --text-xs:     .45rem;
-  --text-sm:     .55rem;
-  --text-base:   .72rem;
-  --text-md:     .85rem;
+  /* Pomomon type colours. Run `node tools/palette-check.js` to audit.
+     Six chromatic types are spread around the wheel (min 21° apart) avoiding
+     30-70° (UI gold) and 150-190° (teal mode background); the three
+     near-achromatic types are separated by lightness instead of hue, since
+     water/dark/steel previously sat within 7° of each other and were
+     indistinguishable at .45rem. All nine clear 4.5:1 against white labels. */
+  --type-fire:     #cf3527;   /*   5° */
+  --type-fighting: #834210;   /*  26° — darker than fire; value carries the split */
+  --type-plant:    #1e811e;   /* 120° */
+  --type-water:    #1c6faa;   /* 205° */
+  --type-ghost:    #863fb4;   /* 276° */
+  --type-sweet:    #bd277e;   /* 325° */
+  --type-basic:    #6e7177;   /* neutral, lightest  */
+  --type-steel:    #515e6c;   /* neutral, mid       */
+  --type-dark:     #2d3a4d;   /* neutral, darkest   */
+
+  /* Typography scale — whole pixels only. Press Start 2P is drawn on a pixel
+     grid, so fractional sizes (.45rem = 7.2px) land its glyph edges between
+     device pixels and antialias the hard edges away. Every size in the sheet
+     is an integer px for that reason; keep it that way. */
+  --text-xs:     8px;
+  --text-sm:     10px;
+  --text-base:   12px;
+  --text-md:     14px;
 
   /* Panel & button tokens */
   --shadow-btn:   4px 4px 0 rgba(0,0,0,.55);
   --shadow-btn-h: 4px 4px 0 rgba(0,0,0,.55);
-  --panel-bg:     #00765f;
+  --panel-bg:     #175e50;   /* dulled to match --mode-bg's register */
   --panel-border: rgba(255,255,255,.38);
   --panel-radius: 16px;
   --panel-shadow: 0 8px 0 rgba(0,0,0,.28);
@@ -81,13 +103,13 @@
 
 /* ── Mode backgrounds — only two states ─────────────────── */
 /* Default (idle / paused / break): teal */
-body           { background: #00a888; }
+body           { background: #228674; }
 
 /* Running a focus session: red */
 body.run-focus { --mode-bg: #af4d4d; background: #af4d4d; --panel-bg: #7a3636; }
 
 /* Encounter overlay matches body */
-.encounter-overlay                { background: #00a888; }
+.encounter-overlay                { background: #228674; }
 body.run-focus .encounter-overlay { background: #af4d4d; }
 
 /* ── Reset ───────────────────────────────────────────────── */
@@ -131,9 +153,9 @@ body::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 36px 16px 10px;
+  padding: 36px 16px 8px;
   flex-shrink: 0;
-  gap: 6px;
+  gap: 4px;
   position: relative;
 }
 
@@ -141,7 +163,7 @@ body::after {
   background: #222;
   border: none;
   border-radius: 0;
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -168,11 +190,11 @@ body::after {
 }
 
 .logo-icon {
-  font-size: 2.6rem;
+  font-size: 40px;
   filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5));
   display: inline-block;
   animation: logo-float 2.4s ease-in-out infinite;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .btn-tomato-img {
@@ -198,7 +220,7 @@ body::after {
 
 .logo-pomo {
   font-family: var(--font-pixel);
-  font-size: 3.1rem;
+  font-size: 48px;
   color: #fff;
   letter-spacing: .06em;
   margin-right: -.06em;
@@ -208,7 +230,7 @@ body::after {
 
 .logo-mons {
   font-family: var(--font-pixel);
-  font-size: 3.1rem;
+  font-size: 48px;
   color: var(--gold);
   letter-spacing: .06em;
   -webkit-text-stroke: 1.5px var(--gold-dk);
@@ -220,7 +242,7 @@ body::after {
   font-size: var(--text-base);
   color: var(--text-muted);
   letter-spacing: .12em;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 /* ── Screen system ───────────────────────────────────────── */
@@ -232,7 +254,7 @@ body::after {
   padding: 12px 16px calc(var(--stats-h) + 12px);
   overflow-y: auto;
   justify-content: space-evenly;
-  gap: 10px;
+  gap: 8px;
 }
 
 .screen.active { display: flex; }
@@ -260,8 +282,8 @@ body::after {
   border-radius: 0;
   color: var(--text);
   font-family: var(--font-pixel);
-  font-size: .72rem;
-  padding: 7px 14px;
+  font-size: 12px;
+  padding: 8px 12px;
   cursor: pointer;
   letter-spacing: .05em;
   clip-path: var(--pixel-clip-sm);
@@ -318,7 +340,7 @@ body::after {
   right: 0;
   z-index: 3;
   pointer-events: none;
-  font-size: 1rem;
+  font-size: 16px;
   color: var(--text);
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -341,12 +363,12 @@ body::after {
 }
 
 .companion-lvl {
-  font-size: .6rem;
+  font-size: 10px;
   font-family: var(--font-pixel);
   color: #3a2c00;
   letter-spacing: .06em;
   background: var(--gold);
-  padding: 9px 13px;
+  padding: 8px 12px;
   clip-path: var(--pixel-clip-sm);
   filter: var(--pxdrop-sm);
   white-space: nowrap;
@@ -354,56 +376,61 @@ body::after {
 }
 
 /* ── Type badges ─────────────────────────────────────────── */
-.type-badges { display: inline-flex; gap: 3px; align-items: center; }
+.type-badges { display: inline-flex; gap: 4px; align-items: center; }
 .type-badge {
-  font-size: .45rem;
+  font-size: 8px;
   font-family: var(--font-pixel);
-  padding: 2px 5px;
+  padding: 2px 4px;
   border-radius: 999px;
   color: #fff;
   text-shadow: 1px 1px 0 rgba(0,0,0,.4);
   letter-spacing: .04em;
   white-space: nowrap;
+  /* Defines the chip edge on any backdrop. The encounter topbar puts badges
+     straight onto the mode background, where fire and sweet sit within ~1.05:1
+     of the focus red — without this ring their outline would vanish there.
+     Clipped away on .companion-type badges, which use clip-path + drop-shadow. */
+  box-shadow: 0 0 0 2px rgba(0,0,0,.38);
 }
 /* Main screen: enlarge type badge to roughly match the LVL pill, and give it
    the same raised-pill border (inset highlight + shadow) as .companion-lvl */
 .companion-type .type-badge {
-  font-size: .6rem;
-  padding: 9px 13px;
+  font-size: 10px;
+  padding: 8px 12px;
   letter-spacing: .06em;
   border-radius: 0;
   clip-path: var(--pixel-clip-sm);
   filter: var(--pxdrop-sm);
 }
 
-.type-basic    { background: #7f8c8d; }
-.type-water    { background: #2471a3; }
-.type-fire     { background: #e74c3c; }
-.type-ghost    { background: #7d3c98; }
-.type-dark     { background: #2c3e50; }
-.type-fighting { background: #d35400; }
-.type-sweet    { background: #c0168a; }
-.type-plant    { background: #1e8449; }
-.type-steel    { background: #5d6d7e; }
+.type-basic    { background: var(--type-basic); }
+.type-water    { background: var(--type-water); }
+.type-fire     { background: var(--type-fire); }
+.type-ghost    { background: var(--type-ghost); }
+.type-dark     { background: var(--type-dark); }
+.type-fighting { background: var(--type-fighting); }
+.type-sweet    { background: var(--type-sweet); }
+.type-plant    { background: var(--type-plant); }
+.type-steel    { background: var(--type-steel); }
 
 /* ── Session tabs ────────────────────────────────────────── */
 .session-tabs {
   display: flex;
-  gap: 3px;
+  gap: 4px;
   background: rgba(0,0,0,.18);
   border: 3px solid rgba(255,255,255,.22);
-  padding: 3px;
+  padding: 4px;
   width: 100%;
   border-radius: 0;
 }
 
 .tab {
   flex: 1;
-  padding: 6px 4px;
+  padding: 4px 4px;
   border: none;
   background: transparent;
   font-family: var(--font-pixel);
-  font-size: .55rem;
+  font-size: 10px;
   color: var(--text-dim);
   cursor: pointer;
   letter-spacing: .05em;
@@ -461,7 +488,7 @@ body::after {
 
 .timer-display {
   font-family: var(--font-pixel);
-  font-size: 4.2rem;
+  font-size: 64px;
   color: #fff;
   text-shadow: none;
   background: none;
@@ -517,9 +544,9 @@ body::after {
   border: none;
   border-radius: 0;
   color: #fff;
-  font-size: .78rem;
+  font-size: 12px;
   cursor: pointer;
-  padding: 8px 10px;
+  padding: 8px 8px;
   line-height: 1;
   min-width: 36px;
   min-height: 36px;
@@ -564,12 +591,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* ── Buttons ─────────────────────────────────────────────── */
 .btn {
   font-family: var(--font-pixel);
-  font-size: .9rem;
+  font-size: 14px;
   letter-spacing: .05em;
   border: none;
   border-radius: 0;
   cursor: pointer;
-  padding: 11px 28px;
+  padding: 12px 28px;
   clip-path: var(--pixel-clip);
   filter: var(--pxborder);
   transition: filter .12s ease;
@@ -581,8 +608,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .btn-sm {
-  padding: 7px 14px;
-  font-size: .72rem;
+  padding: 8px 12px;
+  font-size: 12px;
 }
 
 .btn-primary {
@@ -710,7 +737,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   clip-path: var(--pixel-clip-sm);
   color: #fff;
   font-family: var(--font-pixel);
-  font-size: .85rem;
+  font-size: 14px;
   line-height: 1;
   box-shadow:
     inset 0 10px 0 rgba(255,255,255,.14),
@@ -768,7 +795,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   border: none;
   border-radius: 0;
   width: 100%;
-  font-size: .9rem;
+  font-size: 14px;
   color: #1a0a00;
   padding: 16px 8px;
   font-family: var(--font-pixel);
@@ -809,11 +836,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   background: #222;
   color: #fff;
-  font-size: .9rem;
+  font-size: 14px;
   letter-spacing: .04em;
   border: none;
   border-radius: 0;
-  padding: 13px 8px;
+  padding: 12px 8px;
   min-height: 48px;
   cursor: pointer;
   font-family: var(--font-pixel);
@@ -846,7 +873,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .mode-option {
   display: block;
   width: 100%;
-  padding: 11px 8px;
+  padding: 12px 8px;
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -869,14 +896,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   background: var(--gold);
   color: #1a0a00;
-  font-size: .9rem;
+  font-size: 14px;
   letter-spacing: .04em;
   border: none;
   border-radius: 0;
   box-shadow:
     inset 0 14px 0 rgba(255,255,255,.55),
     inset 0 -14px 0 rgba(0,0,0,.35);
-  padding: 13px 8px;
+  padding: 12px 8px;
   min-height: 48px;
   cursor: pointer;
   font-family: var(--font-pixel);
@@ -911,7 +938,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   width: 100%;
   background: #222;
   color: #fff;
-  font-size: .9rem;
+  font-size: 14px;
   letter-spacing: .04em;
   border: none;
   border-radius: 0;
@@ -919,7 +946,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   box-shadow:
     inset 0 14px 0 rgba(255,255,255,.15),
     inset 0 -14px 0 rgba(0,0,0,.5);
-  padding: 13px 8px;
+  padding: 12px 8px;
   min-height: 48px;
   cursor: pointer;
   font-family: var(--font-pixel);
@@ -959,7 +986,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .collection-tabs {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
   justify-content: center;
 }
@@ -974,7 +1001,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 12px 0 rgba(255,255,255,.15),
     inset 0 -12px 0 rgba(0,0,0,.5);
   padding: 12px 20px;
-  font-size: .72rem;
+  font-size: 12px;
   border: none;
   cursor: pointer;
   font-family: var(--font-pixel);
@@ -994,7 +1021,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .screen-title {
-  font-size: .8rem;
+  font-size: 14px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--text);
@@ -1004,7 +1031,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .collection-count {
-  font-size: .6rem;
+  font-size: 10px;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -1020,7 +1047,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   grid-column: 1 / -1;
   text-align: center;
   color: var(--text-muted);
-  font-size: .65rem;
+  font-size: 10px;
   line-height: 1.8;
   padding: 32px 16px;
 }
@@ -1034,7 +1061,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   cursor: pointer;
   transition: transform .1s, box-shadow .1s;
   box-shadow: 4px 4px 0 rgba(90,90,90,.35);
@@ -1056,13 +1083,13 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 .mon-card-dexnum {
-  font-size: .4rem;
+  font-size: 6px;
   color: var(--text-muted);
   letter-spacing: .05em;
 }
 
 .mon-card-name {
-  font-size: .45rem;
+  font-size: 8px;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--text-dim);
@@ -1071,10 +1098,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .mon-card-count {
   position: absolute;
   bottom: 4px; right: 5px;
-  font-size: .45rem;
+  font-size: 8px;
   color: var(--text-dim);
   background: rgba(0,0,0,.5);
-  padding: 0 3px;
+  padding: 0 4px;
   line-height: 1.4;
   letter-spacing: .04em;
 }
@@ -1108,7 +1135,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .mon-card-active-indicator {
   position: absolute;
   top: 4px; left: 5px;
-  font-size: .5rem;
+  font-size: 8px;
   color: var(--green);
   line-height: 1;
 }
@@ -1132,19 +1159,19 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .stats-top {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 14px 4px;
+  gap: 8px;
+  padding: 8px 12px 4px;
 }
 
 .level-badge {
   background: var(--gold);
   color: #1a0a00;
   font-family: var(--font-pixel);
-  font-size: .72rem;
+  font-size: 12px;
   /* Vertical padding matches .companion-lvl's ~28px height so the fixed 8px
      notch leaves the same amount of straight edge — at 21px tall the steps
      met near the middle and read as points. */
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 0;
   clip-path: var(--pixel-clip-sm);
   letter-spacing: .06em;
@@ -1204,7 +1231,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex: 1;
   display: flex;
   align-items: flex-start;
-  padding: 6px 14px 6px;
+  padding: 4px 12px 4px;
   gap: 12px;
 }
 
@@ -1232,7 +1259,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .stats-inline {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -1273,7 +1300,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 4px;
   z-index: 100;
   padding: 40px 20px 24px;
   transition: background .4s ease;
@@ -1290,7 +1317,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 /* Arena panel — frames the wild mon in a pixel-panel card (matches timer/companion
@@ -1300,7 +1327,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   clip-path: var(--pixel-clip);
   width: 100%;
   max-width: 560px;
-  padding: 26px 22px 28px;
+  padding: 24px 20px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1326,7 +1353,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   z-index: 3;
   pointer-events: none;
   font-family: var(--font-pixel);
-  font-size: 1.1rem;
+  font-size: 16px;
   color: var(--text);
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1341,7 +1368,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 4px;
 }
 
@@ -1356,8 +1383,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* Type badge — pixel-staircase style matching the buttons */
 .encounter-topbar .type-badge {
-  font-size: .6rem;
-  padding: 9px 13px;
+  font-size: 10px;
+  padding: 8px 12px;
   letter-spacing: .06em;
   border-radius: 0;
   clip-path: var(--pixel-clip-sm);
@@ -1366,7 +1393,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 
 .encounter-rarity {
-  font-size: .55rem;
+  font-size: 10px;
   letter-spacing: .15em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1380,7 +1407,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* ── Encounter tag badges (SHINY, type labels, etc.) ── */
 .encounter-tags {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
   min-height: 0;
@@ -1388,12 +1415,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .tag {
   font-family: var(--font-pixel);
-  font-size: .48rem;
+  font-size: 8px;
   letter-spacing: .07em;
-  padding: 4px 9px;
+  padding: 4px 8px;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   border-radius: 0;
   line-height: 1;
   clip-path: var(--pixel-clip-sm);
@@ -1413,7 +1440,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .encounter-msg {
   font-family: var(--font-pixel);
-  font-size: 1.2rem;
+  font-size: 20px;
   letter-spacing: .04em;
   color: var(--text);
   text-align: center;
@@ -1422,11 +1449,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .encounter-level {
   font-family: var(--font-pixel);
-  font-size: .6rem;
+  font-size: 10px;
   color: #3a2c00;
   letter-spacing: .06em;
   background: var(--gold);
-  padding: 9px 13px;
+  padding: 8px 12px;
   clip-path: var(--pixel-clip-sm);
   filter: var(--pxdrop-sm);
   white-space: nowrap;
@@ -1442,7 +1469,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 
 .encounter-sub {
-  font-size: 1.25rem;
+  font-size: 20px;
   color: #fff;
   letter-spacing: .05em;
   min-height: 1.2em;
@@ -1489,9 +1516,9 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   background: var(--gold);
   color: #1a0a00;
   font-family: var(--font-pixel);
-  font-size: .7rem;
+  font-size: 12px;
   letter-spacing: .1em;
-  padding: 7px 20px;
+  padding: 8px 20px;
   border-radius: 6px;
   box-shadow: 0 6px 20px rgba(0,0,0,.35);
   z-index: 200;
@@ -1502,7 +1529,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .banner-sub {
   display: block;
-  font-size: .42rem;
+  font-size: 8px;
   margin-top: 4px;
   letter-spacing: .08em;
   color: rgba(26,10,0,.75);
@@ -1516,14 +1543,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Bigger action buttons — similar footprint to the main-screen START / POMODEX */
 .encounter-controls .btn {
   min-height: 60px;
-  font-size: 1rem;
-  padding: 18px 28px;
+  font-size: 16px;
+  padding: 16px 28px;
 }
 
-#btn-flee { min-height: 60px; padding: 18px 24px; }
+#btn-flee { min-height: 60px; padding: 16px 24px; }
 
 /* ── Mon Info Overlay ────────────────────────────────────── */
-.mon-info-overlay                { background: #00a888; }
+.mon-info-overlay                { background: #228674; }
 body.run-focus .mon-info-overlay { background: #af4d4d; }
 
 .mon-info-overlay {
@@ -1533,7 +1560,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   z-index: 170;
   padding: 28px 24px calc(var(--stats-h) + 16px);
   text-align: center;
@@ -1552,20 +1579,20 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 
 .mon-info-name {
   font-family: var(--font-pixel);
-  font-size: 1rem;
+  font-size: 16px;
   color: #fff;
   letter-spacing: .06em;
 }
 
 .mon-info-dexnum {
-  font-size: .5rem;
+  font-size: 8px;
   letter-spacing: .1em;
   color: var(--text-muted);
   margin-bottom: 2px;
 }
 
 .mon-info-rarity {
-  font-size: .55rem;
+  font-size: 10px;
   letter-spacing: .15em;
   color: var(--text-muted);
 }
@@ -1587,12 +1614,12 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   background: rgba(0,0,0,.30);
   border: 2px solid rgba(255,255,255,.18);
   border-radius: 12px;
-  padding: 14px 12px;
-  margin-top: 6px;
+  padding: 12px 12px;
+  margin-top: 4px;
 }
 
 .mon-info-evo-title {
-  font-size: .5rem;
+  font-size: 8px;
   letter-spacing: .14em;
   color: var(--text-muted);
   margin-bottom: 12px;
@@ -1602,7 +1629,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
@@ -1626,7 +1653,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 }
 
 .evo-node-name {
-  font-size: .38rem;
+  font-size: 6px;
   color: var(--text-dim);
   letter-spacing: .06em;
   max-width: 70px;
@@ -1635,7 +1662,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 }
 
 .evo-node-label {
-  font-size: .32rem;
+  font-size: 6px;
   color: var(--text-muted);
   letter-spacing: .05em;
 }
@@ -1643,7 +1670,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 .evo-node-label.base-label { color: var(--gold); }
 
 .evo-arrow {
-  font-size: .65rem;
+  font-size: 10px;
   color: var(--text-muted);
   flex-shrink: 0;
   user-select: none;
@@ -1651,7 +1678,7 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
 }
 
 /* ── Mon Detail Card (individual caught mon) ─────────────── */
-.mon-detail-overlay                { background: #00a888; }
+.mon-detail-overlay                { background: #228674; }
 body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .mon-detail-overlay {
@@ -1680,7 +1707,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 20px 18px;
+  padding: 20px 16px;
   background: rgba(0,0,0,.28);
   border: 2px solid rgba(255,255,255,.18);
   clip-path: var(--pixel-clip);
@@ -1702,8 +1729,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
    affordance, not a header control. Overrides .pxb-back's 12px/20px padding
    and rescales the gloss insets, which would otherwise swallow the button. */
 .mon-detail-back .btn {
-  padding: 10px 12px;
-  font-size: .5rem;
+  padding: 8px 12px;
+  font-size: 8px;
   min-height: 0;
   clip-path: var(--pixel-clip-sm);
 }
@@ -1716,13 +1743,13 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .mon-detail-dexnum {
-  font-size: .5rem;
+  font-size: 8px;
   letter-spacing: .1em;
   color: var(--text-muted);
 }
 
 .mon-detail-rarity {
-  font-size: .55rem;
+  font-size: 10px;
   letter-spacing: .15em;
   color: var(--text-muted);
   min-height: .55rem;
@@ -1747,7 +1774,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .mon-detail-name {
   font-family: var(--font-pixel);
-  font-size: .9rem;
+  font-size: 14px;
   color: #fff;
   letter-spacing: .05em;
   word-break: break-word;
@@ -1755,7 +1782,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .mon-detail-rename-btn {
   font-family: var(--font-pixel);
-  font-size: .6rem;
+  font-size: 10px;
   color: #fff;
   background: #333;
   border: none;
@@ -1769,7 +1796,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mon-detail-rename-btn:hover { background: #3d3d3d; }
 
 .mon-detail-species {
-  font-size: .5rem;
+  font-size: 8px;
   letter-spacing: .1em;
   color: var(--text-muted);
 }
@@ -1789,11 +1816,11 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .mon-detail-input {
   font-family: var(--font-pixel);
-  font-size: .55rem;
+  font-size: 10px;
   color: #fff;
   background: #1c1c1c;
   border: 2px solid #4a4a4a;
-  padding: 8px 10px;
+  padding: 8px 8px;
   letter-spacing: .05em;
   text-align: center;
   width: 140px;
@@ -1811,8 +1838,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   filter: var(--pxdrop-sm);
 }
 .mon-detail-rename-row .btn {
-  font-size: .5rem;
-  padding: 10px 4px;
+  font-size: 8px;
+  padding: 8px 4px;
   min-height: 0;
   clip-path: var(--pixel-clip-sm);
 }
@@ -1838,8 +1865,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  padding: 7px 10px;
+  gap: 8px;
+  padding: 8px 8px;
   background: rgba(0,0,0,.22);
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
@@ -1850,21 +1877,21 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mds-row-type .mds-v { display: flex; justify-content: flex-end; }
 
 .mds-k {
-  font-size: .45rem;
+  font-size: 8px;
   letter-spacing: .1em;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .mds-v {
-  font-size: .5rem;
+  font-size: 8px;
   letter-spacing: .04em;
   color: #fff;
   text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 3px;
+  gap: 4px;
 }
 .mds-v.muted  { color: var(--text-muted); }
 .mds-v.male   { color: #5aa9e6; }
@@ -1873,7 +1900,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mds-v .gsym { font-family: system-ui, "Segoe UI Symbol", sans-serif; }
 
 .mds-sub {
-  font-size: .4rem;
+  font-size: 6px;
   letter-spacing: .04em;
   color: var(--text-muted);
   text-transform: none;
@@ -1882,16 +1909,16 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .mon-detail-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 /* Flex-centred with a shared min-height so the gold and dark buttons match
    exactly — their base padding rules differ (11px/28px vs 13px/8px). */
 .mon-detail-actions .btn {
   width: 100%;
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1937,7 +1964,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .catch-gotcha {
   font-family: var(--font-pixel);
-  font-size: 1.5rem;
+  font-size: 24px;
   color: #ffd700;
   animation: catch-glow 0.7s ease-in-out infinite alternate;
 }
@@ -1949,21 +1976,21 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .catch-name {
   font-family: var(--font-pixel);
-  font-size: .9rem;
+  font-size: 14px;
   color: #fff;
   letter-spacing: .05em;
 }
 
 .catch-sub {
   font-family: var(--font-pixel);
-  font-size: .48rem;
+  font-size: 8px;
   color: rgba(255,255,255,.7);
   letter-spacing: .08em;
 }
 
 .catch-shiny {
   font-family: var(--font-pixel);
-  font-size: .6rem;
+  font-size: 10px;
   color: #ffd700;
   min-height: 1em;
 }
@@ -1995,7 +2022,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .evolution-msg {
   font-family: var(--font-pixel);
-  font-size: .72rem;
+  font-size: 12px;
   color: #fff;
   letter-spacing: .05em;
   max-width: 300px;
@@ -2007,7 +2034,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .evolution-sub {
   font-family: var(--font-pixel);
-  font-size: .72rem;
+  font-size: 12px;
   color: var(--gold);
   letter-spacing: .06em;
   text-align: center;
@@ -2033,18 +2060,18 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .progress-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
 }
 
 .progress-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
 }
 
 .progress-row.locked { opacity: 0.38; }
@@ -2055,7 +2082,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .progress-status {
-  font-size: .65rem;
+  font-size: 10px;
   min-width: 14px;
   text-align: center;
   flex-shrink: 0;
@@ -2077,18 +2104,18 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 
 .progress-name {
-  font-size: .6rem;
+  font-size: 10px;
   color: var(--text);
   letter-spacing: .05em;
 }
 
 .progress-desc {
-  font-size: .42rem;
+  font-size: 8px;
   color: var(--text-muted);
   letter-spacing: .04em;
   line-height: 1.5;
@@ -2096,7 +2123,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .progress-tag {
   font-size: var(--text-xs);
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 4px;
   letter-spacing: .06em;
   flex-shrink: 0;
@@ -2114,12 +2141,12 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .btn-claim {
   font-family: var(--font-pixel);
-  font-size: .52rem;
+  font-size: 8px;
   background: var(--gold);
   color: #1a0a00;
   border: none;
   border-radius: 0;
-  padding: 5px 8px;
+  padding: 4px 8px;
   cursor: pointer;
   letter-spacing: .04em;
   clip-path: var(--pixel-clip-sm);
@@ -2138,26 +2165,26 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 /* Mobile (< 480px) — base adjustments for touch devices */
 @media (max-width: 479px) {
-  .app-header { padding: 22px 12px 8px; gap: 4px; }
-  .logo-pomo, .logo-mons { font-size: 2.1rem; }
+  .app-header { padding: 20px 12px 8px; gap: 4px; }
+  .logo-pomo, .logo-mons { font-size: 32px; }
   .logo-tomato-img { height: 2.1rem; }
-  .logo-icon { font-size: 2.1rem; }
+  .logo-icon { font-size: 32px; }
   /* Touch drag-and-drop unsupported; hide blender zone */
   .blender-zone { display: none !important; }
   /* Level-up banner: prevent off-screen overflow */
   .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 
   /* Companion name: shrink on mobile (now overlaid above the mon, not in the top row) */
-  .companion-name { font-size: .7rem; line-height: 1.5; }
+  .companion-name { font-size: 12px; line-height: 1.5; }
 
   /* Narrower panel on mobile — keep the left-grouped pills on-panel */
   .companion-meta { left: -85px; right: -55px; }
 
   /* Collection tabs: keep BACK + tabs + count on one row without clipping the count */
   .collection-header { gap: 4px; }
-  .collection-tabs { gap: 6px; }
-  .collection-tab { padding: 8px 12px; font-size: .6rem; white-space: nowrap; }
-  .collection-count { font-size: .55rem; }
+  .collection-tabs { gap: 4px; }
+  .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
+  .collection-count { font-size: 10px; }
 
   /* Map icon: smaller, and its frame position must scale with the size.
      The timer screen is top-anchored (flex-start) with natural bottom slack,
@@ -2166,23 +2193,23 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .btn-map-icon.has-reward #map-icon-canvas { background-position: 0 0; }
 
   /* Keep the enlarged encounter headline in bounds on small screens */
-  .encounter-msg { font-size: 1rem; }
+  .encounter-msg { font-size: 16px; }
 }
 
 /* Very small phones (≤ 359px) */
 @media (max-width: 359px) {
-  .app-header { padding: 16px 10px 6px; gap: 3px; }
-  .logo-pomo, .logo-mons { font-size: 1.75rem; }
+  .app-header { padding: 16px 8px 4px; gap: 4px; }
+  .logo-pomo, .logo-mons { font-size: 28px; }
   .logo-tomato-img { height: 1.75rem; }
-  .logo-icon { font-size: 1.75rem; }
+  .logo-icon { font-size: 28px; }
   .logo { gap: 4px; }
-  .tagline { font-size: .46rem; letter-spacing: .06em; }
-  .timer-display { font-size: 3.2rem; padding: 10px 10px 10px 14px; }
-  .screen { padding: 8px 10px calc(var(--stats-h) + 8px); gap: 6px; }
-  .screen-title { font-size: .65rem; }
-  .companion-area { padding: 14px 10px 10px; }
-  .btn { padding: 10px 14px; font-size: .78rem; }
-  .btn-collection { padding: 12px 6px; font-size: .78rem; }
+  .tagline { font-size: 8px; letter-spacing: .06em; }
+  .timer-display { font-size: 48px; padding: 8px 8px 8px 12px; }
+  .screen { padding: 8px 8px calc(var(--stats-h) + 8px); gap: 4px; }
+  .screen-title { font-size: 10px; }
+  .companion-area { padding: 12px 8px 8px; }
+  .btn { padding: 8px 12px; font-size: 12px; }
+  .btn-collection { padding: 12px 4px; font-size: 12px; }
   #companion-canvas { width: 150px; height: 150px; }
   .companion-stage { width: 150px; height: 150px; }
 }
@@ -2191,27 +2218,27 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 @media (min-width: 360px) and (max-width: 399px) {
   #companion-canvas { width: 180px; height: 180px; }
   .companion-stage { width: 180px; height: 180px; }
-  .timer-display { font-size: 4rem; }
+  .timer-display { font-size: 64px; }
 }
 
 /* Standard and up (≥ 400px) */
 @media (min-width: 400px) {
   #companion-canvas { width: 220px; height: 220px; }
   .companion-stage { width: 220px; height: 220px; }
-  .timer-display { font-size: 5rem; }
+  .timer-display { font-size: 80px; }
 }
 
 /* Landscape phones (height ≤ 520px, landscape orientation) */
 @media (max-height: 520px) and (orientation: landscape) {
   :root { --stats-h: 60px; }
 
-  .app-header { padding: 6px 12px 4px; gap: 2px; }
-  .logo-pomo, .logo-mons { font-size: 1.2rem; }
+  .app-header { padding: 4px 12px 4px; gap: 2px; }
+  .logo-pomo, .logo-mons { font-size: 20px; }
   .logo-tomato-img { height: 1.2rem; }
-  .logo-icon { font-size: 1.2rem; margin-right: 3px; }
+  .logo-icon { font-size: 20px; margin-right: 4px; }
   .tagline { display: none; }
 
-  .screen { padding: 6px 8px calc(var(--stats-h) + 6px); gap: 6px; }
+  .screen { padding: 4px 8px calc(var(--stats-h) + 4px); gap: 4px; }
 
   /* Timer screen: companion left, timer+controls right */
   #screen-timer {
@@ -2225,19 +2252,19 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
   #companion-canvas { width: 90px; height: 90px; }
   .companion-stage { width: 90px; height: 90px; }
-  .companion-area { padding: 10px 8px 8px; gap: 4px; }
-  .companion-name { font-size: .5rem; }
+  .companion-area { padding: 8px 8px 8px; gap: 4px; }
+  .companion-name { font-size: 8px; }
 
-  .timer-display { font-size: 2.6rem; padding: 8px 10px; }
-  .controls-group { padding: 8px; gap: 5px; }
-  .timer-controls { gap: 5px; }
-  .btn { padding: 8px 10px; font-size: .72rem; }
-  .btn-collection { padding: 8px 4px; font-size: .72rem; }
+  .timer-display { font-size: 40px; padding: 8px 8px; }
+  .controls-group { padding: 8px; gap: 4px; }
+  .timer-controls { gap: 4px; }
+  .btn { padding: 8px 8px; font-size: 12px; }
+  .btn-collection { padding: 8px 4px; font-size: 12px; }
   .collection-btns { margin-top: 0; }
 
   /* Compact stats strip */
   .stats-top { padding: 4px 12px 2px; }
-  .stats-bottom { padding: 3px 12px 4px; gap: 8px; }
+  .stats-bottom { padding: 4px 12px 4px; gap: 8px; }
   .stat-label { display: none; }
   /* 16px tall: the 8px sm-notch would consume the full height and the top and
      bottom steps would meet, so drop to the single 4px step. */
@@ -2247,7 +2274,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .encounter-overlay {
     padding: 8px 20px calc(var(--stats-h) + 8px);
     justify-content: flex-start;
-    gap: 6px;
+    gap: 4px;
     overflow-y: auto;
   }
   #encounter-canvas { height: 180px; width: 95px; }
@@ -2283,7 +2310,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .blender-zone {
   display: none;        /* hidden until .active is added */
   flex-direction: row;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -2297,7 +2324,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: var(--mode-bg);
   padding-bottom: 8px;
 }
@@ -2342,14 +2369,14 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .blender-label {
   font-family: var(--font-pixel);
-  font-size: .68rem;
+  font-size: 12px;
   color: var(--text);
   letter-spacing: .06em;
 }
 
 .blender-hint,
 .smoothie-hint {
-  font-size: .5rem;
+  font-size: 8px;
   color: var(--text-muted);
   letter-spacing: .04em;
   line-height: 1.5;
@@ -2374,11 +2401,11 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   top: -1px;
   right: -8px;
   font-family: var(--font-pixel);
-  font-size: .6rem;
+  font-size: 10px;
   text-transform: lowercase;
   color: var(--gold);
   background: rgba(0,0,0,.82);
-  padding: 3px 5px;
+  padding: 4px 4px;
   border-radius: 8px;
   line-height: 1;
   letter-spacing: .02em;
@@ -2420,24 +2447,24 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   background: #1a0a00;
   border: 3px solid var(--gold);
   border-radius: 12px;
-  padding: 28px 22px;
+  padding: 28px 20px;
   max-width: 320px;
   width: 100%;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   box-shadow: 0 0 30px rgba(255,200,0,.2);
 }
 
 .blender-confirm-title {
-  font-size: .65rem;
+  font-size: 10px;
   color: var(--gold);
   letter-spacing: .1em;
 }
 
 .blender-confirm-body {
-  font-size: .5rem;
+  font-size: 8px;
   line-height: 2;
   color: var(--text);
   letter-spacing: .05em;
@@ -2448,14 +2475,14 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .blender-confirm-warn {
-  font-size: .38rem;
+  font-size: 6px;
   color: #ff6b6b;
   letter-spacing: .08em;
 }
 
 .blender-confirm-btns {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
 }
 
@@ -2477,18 +2504,18 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   background: #1a0a00;
   border: 3px solid var(--gold);
   border-radius: 12px;
-  padding: 28px 22px;
+  padding: 28px 20px;
   max-width: 320px;
   width: 100%;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   box-shadow: 0 0 30px rgba(255,200,0,.2);
 }
 
 .spawn-info-title {
-  font-size: .65rem;
+  font-size: 10px;
   color: var(--gold);
   letter-spacing: .1em;
 }
@@ -2496,14 +2523,14 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 .spawn-info-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .spawn-info-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: .5rem;
+  gap: 8px;
+  font-size: 8px;
   letter-spacing: .05em;
   color: var(--text);
 }
@@ -2531,8 +2558,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   background: rgba(0,0,0,.88);
   border: 2px solid var(--gold);
   border-radius: 8px;
-  padding: 10px 18px;
-  font-size: .42rem;
+  padding: 8px 16px;
+  font-size: 8px;
   color: var(--gold);
   letter-spacing: .1em;
   z-index: 300;
