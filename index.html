@@ -26,6 +26,8 @@
   <link rel="stylesheet" href="style.css">
   <!-- UI V2 refresh — remove this line to revert to previous UI -->
   <link rel="stylesheet" href="style-v2.css">
+  <!-- UI V3 skin (colours, plate frames, CRT texture) — remove this line to revert to V2 -->
+  <link rel="stylesheet" href="style-v3.css">
   <link rel="icon" type="image/png" href="assets/sprites/Tomato/Tomato.png">
 </head>
 <body>
@@ -56,7 +58,14 @@
 
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
-    <div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-audio" aria-label="Toggle sound">
+    <!-- .logo-row keeps the wordmark and the mute button on one line, as in
+         the reference. The button used to be absolutely positioned to the
+         header's top-right corner. -->
+    <div class="logo-row">
+    <div class="logo">
+      <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
+    </div>
+    <div class="btn-shadow btn-shadow--sm audio-shadow"><div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-audio" aria-label="Toggle sound">
       <!-- Pixel-art speaker: body (cols 1-4), waves/mute (cols 5-9) -->
       <svg id="audio-icon" width="20" height="20" viewBox="0 0 10 10"
            xmlns="http://www.w3.org/2000/svg"
@@ -84,9 +93,7 @@
           <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
         </g>
       </svg>
-    </button></div>
-    <div class="logo">
-      <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
+    </button></div></div>
     </div>
     <p class="tagline">FOCUS · CATCH · COLLECT</p>
   </header>
@@ -94,42 +101,58 @@
   <!-- ── Timer Screen ───────────────────────────────────── -->
   <main id="screen-timer" class="screen active">
 
-    <!-- Companion box -->
-    <div class="pxb-panel companion-wrap"><div class="companion-area">
-      <div class="pxb pxb-sm pxb-help"><button class="btn-help" id="btn-spawn-help" aria-label="Show catch rarity odds">?</button></div>
+    <!-- Companion box. Three layers: wrapper = black outline, .panel-rail =
+         light frame, .companion-area = fill. -->
+    <div class="pxb-panel companion-wrap"><div class="panel-rail"><div class="companion-area">
+      <div class="btn-shadow btn-shadow--sm help-shadow"><div class="pxb pxb-sm pxb-help"><button class="btn-help" id="btn-spawn-help" aria-label="Show catch rarity odds">?</button></div></div>
       <div class="companion-stage">
         <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">
         <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
         <div class="companion-meta">
-          <p class="companion-lvl">LVL <span id="companion-level">1</span></p>
-          <div id="companion-type" class="companion-type"></div>
+          <div class="companion-meta-row">
+            <!-- .lv-frame draws the badge's dark outline (its background
+                 showing through its padding), as the panels and tiles do. -->
+            <p class="lv-frame"><span class="companion-lvl">LV <span id="companion-level">1</span></span></p>
+            <span class="companion-xp-text"><span id="companion-xp-cur">0</span> / <span id="companion-xp-max">30</span> XP</span>
+          </div>
+          <!-- .xp-frame draws the bar's black outline, as .lv-frame does for
+               the badge above it. -->
+          <div class="xp-frame"><div class="companion-xp-wrap">
+            <div class="companion-xp-bar" id="companion-xp-bar" style="width:0%"></div>
+          </div></div>
         </div>
         <p class="companion-name" id="companion-name">???</p>
       </div>
-    </div></div>
+    </div></div></div>
 
-    <!-- Timer + controls box -->
-    <div class="pxb-panel combined-timer-wrap">
+    <!-- Timer + controls box.
+         .panel-plate is the fill; the wrapper around it draws the frame rail
+         (same two-layer split the companion box already uses). -->
+    <div class="pxb-panel combined-timer-wrap"><div class="panel-rail"><div class="panel-plate">
       <section class="timer-display" aria-live="polite">
         <span class="timer-time"><span id="timer-minutes">30</span><span class="timer-colon">:</span><span id="timer-seconds">00</span></span>
         <div class="time-adjust">
-          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 1 minute">▲</button></div>
-          <div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 1 minute">▼</button></div>
+          <div class="btn-shadow btn-shadow--sm"><div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-plus" aria-label="Increase focus time by 1 minute">▲</button></div></div>
+          <div class="btn-shadow btn-shadow--sm"><div class="pxb pxb-sm"><button class="btn-adjust" id="btn-time-minus" aria-label="Decrease focus time by 1 minute">▼</button></div></div>
         </div>
       </section>
       <div class="controls-group">
         <div class="timer-controls">
           <div class="timer-bottom-row">
             <div class="btn-mode-wrap" id="btn-mode-wrap">
-              <div class="pxb"><button class="btn btn-timer-mode" id="btn-mode">FOCUS SESSION ▼</button></div>
+              <!-- Two spans so the caret can be pinned right; setMode() in
+                   app.js re-renders it in the same shape.
+                   .btn-shadow adds the black outline + cast shadow, outside
+                   the .pxb wrapper that draws the light edge. -->
+              <div class="btn-shadow"><div class="pxb"><button class="btn btn-timer-mode" id="btn-mode"><span class="mode-label">FOCUS SESSION</span><span class="mode-caret">▼</span></button></div></div>
             </div>
-            <div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div>
+            <div class="btn-shadow"><div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div></div>
           </div>
           <div class="pxb"><button class="btn btn-timer-start" id="btn-start">▶ START</button></div>
           <div class="pxb"><button class="btn btn-collection" id="btn-go-mymons">POMODEX</button></div>
         </div>
       </div>
-    </div>
+    </div></div></div>
 
   </main>
 
@@ -162,7 +185,7 @@
         </div>
         <div class="zone-text">
           <span class="blender-label">SMOOTHIES</span>
-          <span class="smoothie-hint">DRAG TO A MON FOR +1 LVL</span>
+          <span class="smoothie-hint">DRAG TO A MON FOR +1 LEVEL</span>
         </div>
       </div>
     </div>
@@ -204,7 +227,7 @@
           <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
           <p class="encounter-mon-name" id="encounter-mon-name"></p>
           <div class="encounter-topbar">
-            <p class="encounter-level" id="encounter-level">LVL 1</p>
+            <p class="encounter-level" id="encounter-level">LV 1</p>
             <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
             <div class="encounter-tags" id="encounter-tags"></div>
           </div>
@@ -319,33 +342,37 @@
   </div>
 
   <!-- ── Stats Strip ────────────────────────────────────── -->
-  <footer class="stats-strip">
-    <!-- Row 1: level badge + XP numbers -->
-    <div class="stats-top">
-      <span class="level-badge">LV. <span id="player-level">1</span></span>
-      <span class="xp-text"><span id="xp-current">0</span> / <span id="xp-max">100</span> XP</span>
-    </div>
-    <!-- Row 2: full-width bar; stats appear in the unfilled right portion -->
-    <div class="stats-bottom">
-      <div class="exp-bar-wrap">
-        <div class="exp-bar" id="exp-bar" style="width:0%"></div>
+  <footer class="stats-strip"><div class="panel-rail"><div class="panel-plate">
+    <!-- One row: the LV badge is its own column on the left, with the XP
+         numbers and bar stacked beside it, and the tiles pushed right. The
+         badge used to sit on a row above with the bar running full width
+         beneath it; the reference has the badge alongside instead. -->
+    <div class="stats-row">
+      <span class="lv-frame"><span class="level-badge">LV <span id="player-level">1</span></span></span>
+      <div class="stats-xp">
+        <span class="xp-text"><span id="xp-current">0</span> / <span id="xp-max">100</span> XP</span>
+        <div class="xp-frame xp-frame--wide"><div class="exp-bar-wrap">
+          <div class="exp-bar" id="exp-bar" style="width:0%"></div>
+        </div></div>
       </div>
+      <!-- .stat-frame draws each tile's outline via its own background showing
+           through its padding — same two-layer trick as the panels. -->
       <div class="stats-inline">
-        <div class="stat-item">
+        <div class="stat-frame"><div class="stat-item">
           <span class="stat-val" id="stat-sessions">0</span>
           <span class="stat-label">SESSIONS</span>
-        </div>
-        <div class="stat-item">
+        </div></div>
+        <div class="stat-frame"><div class="stat-item">
           <span class="stat-val" id="stat-minutes">0</span>
           <span class="stat-label">MINUTES</span>
-        </div>
-        <div class="stat-item">
+        </div></div>
+        <div class="stat-frame"><div class="stat-item">
           <span class="stat-val" id="stat-catches">0</span>
           <span class="stat-label">CATCHES</span>
-        </div>
+        </div></div>
       </div>
     </div>
-  </footer>
+  </div></div></footer>
 
 
   <div class="mode-dropdown" id="mode-dropdown" hidden>

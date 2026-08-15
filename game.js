@@ -341,7 +341,13 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
-        const size = Math.min(srcW * 3, CANVAS_SIZE - 40); // cap leaves room above for the floating name
+        // Cap leaves room above the sprite for BOTH the floating name and the
+        // LVL/type pill row. The sprite bottom-anchors at GROUND_Y, so
+        // headY = GROUND_Y - size and the name sits 20px above that; the pills
+        // occupy the top 26px. size <= 142 keeps the name clear of them —
+        // at the old 160 cap, big mons (Guacamonger's frames are 64x64, twice
+        // a typical mon) pushed the name straight into the type pill.
+        const size = Math.min(srcW * 3, CANVAS_SIZE - 60);
         const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
         state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
@@ -427,7 +433,9 @@ const CompanionCanvas = (() => {
         nameEl.style.transform = '';
       } else {
         const headPct = (state.headY || 96) / CANVAS_SIZE * 100;
-        nameEl.style.top = `${Math.max(2, headPct - 10)}%`;
+        // Floor of 15% (30px) keeps the name below the LVL/type pill row, which
+        // occupies the top 26px of the stage, whatever a future sprite's size.
+        nameEl.style.top = `${Math.max(15, headPct - 10)}%`;
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
       }
     }
@@ -1026,7 +1034,7 @@ const EncounterScreen = (() => {
         elTags.appendChild(makeTypeBadges(mon.type));
       }
     }
-    if (elLevel) { elLevel.textContent = `LVL ${st.monLevel}`; elLevel.style.display = ''; }
+    if (elLevel) { elLevel.textContent = `LV ${st.monLevel}`; elLevel.style.display = ''; }
 
     // Reset button state for repeat encounters
     btnThrow.hidden      = false;
@@ -1408,7 +1416,7 @@ const MonInfoScreen = (() => {
     for (const evo of rootMon.evolutions) {
       elChain.appendChild(makeArrow());
       const evoMon = { ...rootMon, ...evo };
-      elChain.appendChild(makeNode(evoMon, `LV. ${evo.atLevel}`, false));
+      elChain.appendChild(makeNode(evoMon, `LV ${evo.atLevel}`, false));
     }
 
     // If any chain sprites weren't loaded yet, redraw once they finish

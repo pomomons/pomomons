@@ -34,7 +34,7 @@ let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15'
 // ── TESTING ONLY — short-circuit focus sessions ───────────
 // Set to a number of seconds (e.g. 3) to make focus sessions fire almost
 // immediately; null uses the normal minute-based durations.
-const TEST_FOCUS_SECS = null;
+const TEST_FOCUS_SECS = 3;
 const focusSecs = () => TEST_FOCUS_SECS ?? focusMins * 60;
 
 MODES.focus = focusSecs();
@@ -126,7 +126,11 @@ function setMode(mode) {
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   document.body.dataset.mode = mode;
-  btnMode.textContent = `${MODE_LABELS[mode]} ▼`;
+  // Label and caret are separate spans so the caret can be pinned to the
+  // button's right edge while the label stays centred. MODE_LABELS is a fixed
+  // constant, so there is nothing user-supplied going through innerHTML here.
+  btnMode.innerHTML =
+    `<span class="mode-label">${MODE_LABELS[mode]}</span><span class="mode-caret">▼</span>`;
   document.querySelectorAll('.mode-option').forEach(o => {
     o.classList.toggle('active', o.dataset.mode === mode);
   });
@@ -270,8 +274,23 @@ function loadPlayerState() {
 }
 
 // ── Pal (companion) level system ──────────────────────────
+// Round an XP cost to a readable step that grows with its magnitude, so the
+// player sees 1,600 rather than 1,637.
+function roundNiceXp(n) {
+  if (n < 100)    return Math.round(n / 5) * 5;
+  if (n < 500)    return Math.round(n / 10) * 10;
+  if (n < 2000)   return Math.round(n / 50) * 50;
+  if (n < 10000)  return Math.round(n / 100) * 100;
+  if (n < 100000) return Math.round(n / 1000) * 1000;
+  return Math.round(n / 10000) * 10000;
+}
+
+// Growth is 1.12x per level. The original 1.3x compounded so hard that the
+// level-36 evolution cost 291,836 XP — about 50,000 focus sessions, or three
+// years of solid focusing, so nobody would ever have seen a final form.
+// At 1.12x and 25 XP/session: evolution at lv20 ~87 sessions, lv36 ~580.
 function palExpThreshold(level) {
-  return Math.round(30 * Math.pow(1.3, level - 1));
+  return roundNiceXp(30 * Math.pow(1.12, level - 1));
 }
 
 function getPalState() {
@@ -344,13 +363,20 @@ function updateCompanionDisplay() {
   const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
-  const typeEl = document.getElementById('companion-type');
   if (nameEl) nameEl.textContent = stage.name;
   if (lvlEl)  lvlEl.textContent  = level;
-  if (typeEl && typeof makeTypeBadges === 'function') {
-    typeEl.innerHTML = '';
-    typeEl.appendChild(makeTypeBadges(stage.type));
-  }
+
+  // XP toward the next pal level — mirrors the player's readout in the stats
+  // strip. savePalExp() calls back here, so the bar updates on every gain.
+  const exp    = parseInt(localStorage.getItem('pm_active_pal_exp') || '0', 10);
+  const needed = palExpThreshold(level);
+  const curEl  = document.getElementById('companion-xp-cur');
+  const maxEl  = document.getElementById('companion-xp-max');
+  const barEl  = document.getElementById('companion-xp-bar');
+  if (curEl) curEl.textContent = exp;
+  if (maxEl) maxEl.textContent = needed;
+  if (barEl) barEl.style.width = Math.max(0, Math.min(100, (exp / needed) * 100)) + '%';
+
   if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny, dark });
 }
 
@@ -377,7 +403,7 @@ function showLevelUpBanner(level) {
   SFX.play('levelUp');
   const banner = document.createElement('div');
   banner.className = 'level-up-banner';
-  banner.textContent = `LEVEL UP! LVL ${level}`;
+  banner.textContent = `LEVEL UP! LV ${level}`;
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 2200);
 }

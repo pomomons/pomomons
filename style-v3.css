@@ -1,0 +1,1211 @@
+/* ── PomoMons UI V3 — "field console" skin ─────────────────
+   Layers on top of style.css + style-v2.css.
+   TO REVERT: remove the style-v3.css <link> in index.html.
+
+   Appearance only. This sheet re-tints tokens and re-dresses panels,
+   buttons and the stats strip; it changes no sizes, no positions and no
+   layout. V2 still owns the timer-screen geometry.
+
+   Scope: the timer screen (+ the global palette, which necessarily flows
+   through to every screen). Collection / encounter panels keep their V2
+   dressing for now — they pick up the new colours but not the frames.
+
+   Same systems as the sheets below it: whole-pixel font sizes, 4px-module
+   spacing, drop-shadow (never box-shadow) for anything that must follow a
+   clip-path staircase.
+   ────────────────────────────────────────────────────────── */
+
+/* ── Palette ───────────────────────────────────────────────
+   Teal → deep forest green, lemon → amber. Backgrounds drop ~20% in
+   lightness so the gold and the sprite read as figure against them. */
+:root {
+  --mode-bg:      #2b5343;
+  --panel-bg:     #3d6b57;   /* lighter than the ground, so dark digits read */
+
+  --gold:         #e5ac35;   /* warmer, less acid than #ffd600 */
+  --gold-dk:      #a3761a;
+
+  /* Frame set — the "stamped metal plate" edges. The rail is one flat colour
+     on all four sides; it is drawn as a wrapper background behind 4px of
+     padding, not as a shadow (see the note above .pxb-panel). */
+  --frame:        #b8d8c2;   /* panel rail             */
+  --outline:      #0d1c13;   /* near-black containing line, panels + bezel */
+  --frame-edge:   #16301f;   /* dark line, bezel only  */
+  /* Screw head, shared by all 12 rivets — 4 on the bezel, 4 on the mon box,
+     4 on the timer box. Pixel art: dark ring, light body, dark centre.
+     Drawn on a 10x10 grid rather than 5x5: at 5x5 the outline could only cut
+     one pixel off each corner, which reads as a chamfered square. Ten steps
+     per side is enough to describe an actual circle. Rendered 1:1 at
+     --screw-size so every SVG pixel is one CSS pixel and the steps stay hard.
+
+     Two drawings, not one scaled: the frame's screws are larger than the
+     panels', and 10px art shown at 12px would scale by 1.2 and give uneven
+     pixel widths. Each is authored at the size it is used.
+
+     Head colour is baked into the data URI (a CSS variable cannot reach inside
+     one), so it appears in both drawings — change them together. */
+  --screw-size:    14px;
+  --screw-size-lg: 20px;
+  /* The centre hole was a 2x2 block sitting at (2,2), which on a 7-wide grid
+     leaves 2 light cells above/left of it and 3 below/right — visibly offset
+     toward the top-left. A single centre cell at (3,3), the grid's actual
+     middle index, is the only hole that can sit symmetric on an odd grid. */
+  --screw: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%2316301f' d='M2 0h3v1h-3z M1 1h1v1h-1z M5 1h1v1h-1z M0 2h1v1h-1z M6 2h1v1h-1z M0 3h1v1h-1z M6 3h1v1h-1z M0 4h1v1h-1z M6 4h1v1h-1z M1 5h1v1h-1z M5 5h1v1h-1z M2 6h3v1h-3z'/%3E%3Cpath fill='%239cb8a6' d='M2 1h3v1h-3z M1 2h5v1h-5z M1 3h2v1h-2z M4 3h2v1h-2z M1 4h5v1h-5z M2 5h3v1h-3z'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%2316301f'/%3E%3C/svg%3E");
+  /* Coarser 5x5 grid, same 20px footprint as before — each pixel now renders
+     at 4px instead of 2px, so the outer corner screws read as visibly blocky
+     rather than an almost-smooth circle. Panel screws (--screw, above) keep
+     their finer 7x7 grid; this is scoped to the outer bezel only. */
+  --screw-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5' shape-rendering='crispEdges'%3E%3Cpath fill='%2316301f' d='M1 0h3v1h-3z M0 1h1v1h-1z M4 1h1v1h-1z M0 2h1v1h-1z M4 2h1v1h-1z M0 3h1v1h-1z M4 3h1v1h-1z M1 4h3v1h-3z'/%3E%3Cpath fill='%239cb8a6' d='M1 1h3v1h-3z M1 2h1v1h-1z M3 2h1v1h-1z M1 3h3v1h-3z'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%2316301f'/%3E%3C/svg%3E");
+
+  /* Space the screens reserve above the stats strip. The strip is ~94px tall
+     (82px of content + 12px of frame) and floats 6px inside the bezel, so its
+     top sits at bezel + 6 + 94 off the bottom; .screen adds 12px to this
+     value. Widening --bezel-w raises the strip, so this has to move with it. */
+  --stats-h:      150px;
+
+  --btn-dark:     #1d4335;   /* secondary button fill  */
+  --cream:        #f4ecd8;   /* button / label text    */
+
+  /* Stats strip only — sampled off the reference, which paints that one bar
+     noticeably darker than the panels and edges it in a muted line, not the
+     pale --frame the panels use. */
+  --strip-bg:   #152f29;
+  --strip-rail: #2c4a3a;
+}
+
+/* ── One pixel size for the whole skin ─────────────────────
+   Every staircase step and every screw cell is 2px.
+
+   These override the base sheet's 4px --pixel-clip / --pixel-clip-sm, used by
+   the panels, buttons, badges and tiles. The corner notches keep their old
+   DEPTH (12px and 8px) — only the step size changes, so corners stay the same
+   size but are cut from more, finer blocks.
+
+   Point order is TL forwards, TR reversed, BR forwards, BL reversed, each
+   mirrored on the right axes. Get that wrong and two of the four corners come
+   out slashed instead of stepped. */
+:root {
+  /* 2px blocks, 6 steps per corner (12px notch) */
+  --pixel-clip: polygon(
+    0 12px,
+    2px 12px,
+    2px 10px,
+    4px 10px,
+    4px 8px,
+    6px 8px,
+    6px 6px,
+    8px 6px,
+    8px 4px,
+    10px 4px,
+    10px 2px,
+    12px 2px,
+    12px 0,
+    calc(100% - 12px) 0,
+    calc(100% - 12px) 2px,
+    calc(100% - 10px) 2px,
+    calc(100% - 10px) 4px,
+    calc(100% - 8px) 4px,
+    calc(100% - 8px) 6px,
+    calc(100% - 6px) 6px,
+    calc(100% - 6px) 8px,
+    calc(100% - 4px) 8px,
+    calc(100% - 4px) 10px,
+    calc(100% - 2px) 10px,
+    calc(100% - 2px) 12px,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 2px) calc(100% - 12px),
+    calc(100% - 2px) calc(100% - 10px),
+    calc(100% - 4px) calc(100% - 10px),
+    calc(100% - 4px) calc(100% - 8px),
+    calc(100% - 6px) calc(100% - 8px),
+    calc(100% - 6px) calc(100% - 6px),
+    calc(100% - 8px) calc(100% - 6px),
+    calc(100% - 8px) calc(100% - 4px),
+    calc(100% - 10px) calc(100% - 4px),
+    calc(100% - 10px) calc(100% - 2px),
+    calc(100% - 12px) calc(100% - 2px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    12px calc(100% - 2px),
+    10px calc(100% - 2px),
+    10px calc(100% - 4px),
+    8px calc(100% - 4px),
+    8px calc(100% - 6px),
+    6px calc(100% - 6px),
+    6px calc(100% - 8px),
+    4px calc(100% - 8px),
+    4px calc(100% - 10px),
+    2px calc(100% - 10px),
+    2px calc(100% - 12px),
+    0 calc(100% - 12px)
+  );
+  /* 2px blocks, 2 steps per corner (4px notch) — for small chips. On a 22px
+     bar an 8px notch removes a third of the height and reads as a lozenge;
+     4px keeps them square with the corners just knocked off. */
+  --pixel-clip-xs: polygon(
+    0 4px,
+    2px 4px,
+    2px 2px,
+    4px 2px,
+    4px 0,
+    calc(100% - 4px) 0,
+    calc(100% - 4px) 2px,
+    calc(100% - 2px) 2px,
+    calc(100% - 2px) 4px,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(100% - 4px) calc(100% - 2px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    4px calc(100% - 2px),
+    2px calc(100% - 2px),
+    2px calc(100% - 4px),
+    0 calc(100% - 4px)
+  );
+  /* 2px blocks, 1 step per corner (2px notch) — for the bottom strip and its
+     tiles, which the reference cuts almost square: just the pixel corner
+     knocked off, not a staircase. */
+  --pixel-clip-2xs: polygon(
+    0 2px,
+    2px 2px,
+    2px 0,
+    calc(100% - 2px) 0,
+    calc(100% - 2px) 2px,
+    100% 2px,
+    100% calc(100% - 2px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(100% - 2px) 100%,
+    2px 100%,
+    2px calc(100% - 2px),
+    0 calc(100% - 2px)
+  );
+  /* 2px blocks, 4 steps per corner (8px notch) */
+  --pixel-clip-sm: polygon(
+    0 8px,
+    2px 8px,
+    2px 6px,
+    4px 6px,
+    4px 4px,
+    6px 4px,
+    6px 2px,
+    8px 2px,
+    8px 0,
+    calc(100% - 8px) 0,
+    calc(100% - 8px) 2px,
+    calc(100% - 6px) 2px,
+    calc(100% - 6px) 4px,
+    calc(100% - 4px) 4px,
+    calc(100% - 4px) 6px,
+    calc(100% - 2px) 6px,
+    calc(100% - 2px) 8px,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 2px) calc(100% - 8px),
+    calc(100% - 2px) calc(100% - 6px),
+    calc(100% - 4px) calc(100% - 6px),
+    calc(100% - 4px) calc(100% - 4px),
+    calc(100% - 6px) calc(100% - 4px),
+    calc(100% - 6px) calc(100% - 2px),
+    calc(100% - 8px) calc(100% - 2px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    8px calc(100% - 2px),
+    6px calc(100% - 2px),
+    6px calc(100% - 4px),
+    4px calc(100% - 4px),
+    4px calc(100% - 6px),
+    2px calc(100% - 6px),
+    2px calc(100% - 8px),
+    0 calc(100% - 8px)
+  );
+}
+
+body           { background: var(--mode-bg); }
+.encounter-overlay { background: var(--mode-bg); }
+
+/* Running a focus session stays red, re-tuned to the new deeper register
+   so it doesn't jump a whole saturation step when the timer starts. This
+   used to only redefine --mode-bg/--panel-bg, leaving every border, rivet,
+   bezel and secondary-button surface green while the session ran. Every
+   other colour token gets the same treatment: each red is the matching
+   green rotated to the same red hue (~5°) at that token's own saturation
+   and lightness, so the whole skin — not just the two background fills —
+   reads as "red mode" together. Rivets are the one thing tokens can't
+   reach: their colour is baked into the --screw/--screw-lg SVG data URIs,
+   so those get redefined wholesale with the same two hex swaps. */
+body.run-focus,
+body.run-focus .encounter-overlay { background: #8f3b34; }
+body.run-focus {
+  --mode-bg:    #8f3b34;
+  --panel-bg:   #6d2d28;
+  --frame:      #d8bab8;
+  --outline:    #1c0e0d;
+  --frame-edge: #301816;
+  --bezel:      #7f514d;
+  --btn-dark:   #43201d;
+  --btn-edge:   #a68886;
+  --strip-bg:   #2f1715;
+  --strip-rail: #4a2e2c;
+  --screw:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%23301816' d='M2 0h3v1h-3z M1 1h1v1h-1z M5 1h1v1h-1z M0 2h1v1h-1z M6 2h1v1h-1z M0 3h1v1h-1z M6 3h1v1h-1z M0 4h1v1h-1z M6 4h1v1h-1z M1 5h1v1h-1z M5 5h1v1h-1z M2 6h3v1h-3z'/%3E%3Cpath fill='%23b89e9c' d='M2 1h3v1h-3z M1 2h5v1h-5z M1 3h2v1h-2z M4 3h2v1h-2z M1 4h5v1h-5z M2 5h3v1h-3z'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23301816'/%3E%3C/svg%3E");
+  --screw-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5' shape-rendering='crispEdges'%3E%3Cpath fill='%23301816' d='M1 0h3v1h-3z M0 1h1v1h-1z M4 1h1v1h-1z M0 2h1v1h-1z M4 2h1v1h-1z M0 3h1v1h-1z M4 3h1v1h-1z M1 4h3v1h-3z'/%3E%3Cpath fill='%23b89e9c' d='M1 1h3v1h-3z M1 2h1v1h-1z M3 2h1v1h-1z M1 3h3v1h-3z'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23301816'/%3E%3C/svg%3E");
+}
+
+/* The outer console frame (html::before/::after) is drawn on <html>, not
+   <body> — a sibling of body, not its descendant — so the --outline/--bezel/
+   --screw-lg redefinitions above never reach it no matter how red the rest
+   of the page gets. :has() lets <html> pick up the same three red values
+   whenever a run-focus body exists inside it. */
+html:has(body.run-focus) {
+  --outline:  #1c0e0d;
+  --bezel:    #7f514d;
+  --screw-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5' shape-rendering='crispEdges'%3E%3Cpath fill='%23301816' d='M1 0h3v1h-3z M0 1h1v1h-1z M4 1h1v1h-1z M0 2h1v1h-1z M4 2h1v1h-1z M0 3h1v1h-1z M4 3h1v1h-1z M1 4h3v1h-3z'/%3E%3Cpath fill='%23b89e9c' d='M1 1h3v1h-3z M1 2h1v1h-1z M3 2h1v1h-1z M1 3h3v1h-3z'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23301816'/%3E%3C/svg%3E");
+}
+
+/* ── CRT texture ───────────────────────────────────────────
+   Scanlines + a stronger vignette. Both are pointer-events:none overlays
+   pinned to the viewport; the stats strip (z-index 50) rides above them. */
+/* One scanline definition, reused by the page overlay, the plates, the
+   buttons, the bezel and the LV pill so the phase and pitch match everywhere. */
+:root {
+  /* 2px line on a 5px pitch — thicker bars than the original 1px/3px, with the
+     gap widened too so the surface doesn't just go uniformly darker. */
+  /* Soft-edged rather than the hard 2px-on/3px-off bands this used to be:
+     each line now fades in and out over the whole 5px pitch instead of
+     cutting off sharply, reading as a blurred scanline instead of a crisp
+     stripe. filter:blur isn't an option here — this gradient sits alongside
+     real content (text, sprites) in the same background layer on most of the
+     elements that use it, and a filter would blur that too. */
+  --scanlines: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,.13) 0,
+    transparent     2.5px,
+    rgba(0,0,0,.13) 5px
+  );
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--scanlines);
+}
+
+body::after {
+  background: radial-gradient(ellipse at 50% 34%, transparent 30%, rgba(0,0,0,.52) 100%);
+}
+
+/* ── Outer bezel ───────────────────────────────────────────
+   The screwed frame around the whole console. Drawn on html::before rather
+   than as a wrapper element so it needs no HTML and caps nothing: it is a
+   fixed overlay riding the viewport edges, so the layout underneath keeps its
+   full width (per the desktop-first rule in CLAUDE.md).
+
+   z-index 400 puts it above every overlay in the base sheet (max 300) — the
+   frame is the device, so the encounter and collection screens sit inside it
+   too. pointer-events:none keeps the edges clickable.
+
+   The frame is ONE flat colour — no bevel. Its shape is a single clip-path
+   carrying two rings: the outer viewport edge and the inner opening, both with
+   4px pixel staircases at the corners. `evenodd` makes the second ring punch
+   the hole, so the middle of the screen stays see-through.
+
+   A border/outline cannot be used here: both are rectangles and would be
+   sliced flat at every corner step.
+
+   Both corners are ROUNDED, not chamfered — a stepped curve, not a flat 45°
+   cut across. And the two curve in OPPOSITE directions, which is the part
+   that took several attempts to get right:
+
+     outer — bows IN toward the corner, rounding it off;
+     inner — bows OUT toward the screen, so the corner swells.
+
+   Same shape, curvature reversed. Get the sign wrong and the corner is
+   scooped hollow instead of swelling, which looks superficially similar in
+   a thumbnail and completely wrong up close. The test is x+y along the
+   inner path: it must PEAK at the diagonal, never dip. That is asserted in
+   the generator, not left to the eye.
+
+   The inner curve spans 24px and reaches 16px into the screen at the
+   diagonal; a flat chamfer over the same span would only reach 12px. That
+   extra swell is the room the screws sit in — no corner-plate geometry.
+
+   Each profile is symmetric about its own diagonal: horizontal run-lengths
+   forwards equal vertical run-lengths backwards. Break that and the corner
+   lists to one side. All four corners are mirrored from one profile. */
+:root {
+  /* Band width along the straight runs. The corners bulge past this on their
+     own, from the outer/inner cut mismatch described above — there is no
+     separate corner-plate geometry to keep in sync. */
+  --bezel-w:    14px;
+  /* Dark band OUTSIDE the frame, between it and the screen edge. The reference
+     has one; we only had the inner line. Made by insetting the green frame by
+     this much while the black one still reaches the viewport edge, so the same
+     gap appears on all four sides and round the corner curves. */
+  --bezel-gap:  3px;
+  --bezel:      #4d7f67;
+}
+
+/* Both frames share one outline, written out twice.
+   It cannot be hoisted into a shared token: a custom property resolves its own
+   nested var()s against the element that DECLARES it, so a polygon defined at
+   :root would read :root's --bw, not the pseudo-element's. Each rule therefore
+   sets its own --bw and repeats the path.
+
+   html::before is the BLACK frame, cut 2px deeper on every edge.
+   html::after is the GREEN frame, the same shape 2px shallower, painted on
+   top — so the black survives only as a 2px line hugging the inner edge, and
+   it follows the corner cuts automatically instead of needing its own
+   bespoke path. */
+html::before,
+html::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+
+  clip-path: polygon(evenodd,
+    /* ── outer ring: viewport edge, corner rounded off over 14px in 2px steps ── */
+    0 14px,
+    2px 14px,
+    2px 10px,
+    4px 10px,
+    4px 6px,
+    6px 6px,
+    6px 4px,
+    10px 4px,
+    10px 2px,
+    14px 2px,
+    14px 0,
+    calc(100% - 14px) 0,
+    calc(100% - 14px) 2px,
+    calc(100% - 10px) 2px,
+    calc(100% - 10px) 4px,
+    calc(100% - 6px) 4px,
+    calc(100% - 6px) 6px,
+    calc(100% - 4px) 6px,
+    calc(100% - 4px) 10px,
+    calc(100% - 2px) 10px,
+    calc(100% - 2px) 14px,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 2px) calc(100% - 14px),
+    calc(100% - 2px) calc(100% - 10px),
+    calc(100% - 4px) calc(100% - 10px),
+    calc(100% - 4px) calc(100% - 6px),
+    calc(100% - 6px) calc(100% - 6px),
+    calc(100% - 6px) calc(100% - 4px),
+    calc(100% - 10px) calc(100% - 4px),
+    calc(100% - 10px) calc(100% - 2px),
+    calc(100% - 14px) calc(100% - 2px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    14px calc(100% - 2px),
+    10px calc(100% - 2px),
+    10px calc(100% - 4px),
+    6px calc(100% - 4px),
+    6px calc(100% - 6px),
+    4px calc(100% - 6px),
+    4px calc(100% - 10px),
+    2px calc(100% - 10px),
+    2px calc(100% - 14px),
+    0 calc(100% - 14px),
+    /* close the outer ring before crossing to the inner */
+    0 14px,
+
+    /* ── inner ring: straight edges inset --bw; the corner curves OUTWARD,
+       swelling 16px into the screen over a 24px span in nine 2px steps.
+       Sized so the 20px screw head clears it — asserted in the generator. ── */
+    var(--bw) calc(var(--bw) + 24px),
+    calc(var(--bw) + 4px) calc(var(--bw) + 24px),
+    calc(var(--bw) + 4px) calc(var(--bw) + 22px),
+    calc(var(--bw) + 8px) calc(var(--bw) + 22px),
+    calc(var(--bw) + 8px) calc(var(--bw) + 20px),
+    calc(var(--bw) + 12px) calc(var(--bw) + 20px),
+    calc(var(--bw) + 12px) calc(var(--bw) + 18px),
+    calc(var(--bw) + 14px) calc(var(--bw) + 18px),
+    calc(var(--bw) + 14px) calc(var(--bw) + 16px),
+    calc(var(--bw) + 16px) calc(var(--bw) + 16px),
+    calc(var(--bw) + 16px) calc(var(--bw) + 14px),
+    calc(var(--bw) + 18px) calc(var(--bw) + 14px),
+    calc(var(--bw) + 18px) calc(var(--bw) + 12px),
+    calc(var(--bw) + 20px) calc(var(--bw) + 12px),
+    calc(var(--bw) + 20px) calc(var(--bw) + 8px),
+    calc(var(--bw) + 22px) calc(var(--bw) + 8px),
+    calc(var(--bw) + 22px) calc(var(--bw) + 4px),
+    calc(var(--bw) + 24px) calc(var(--bw) + 4px),
+    calc(var(--bw) + 24px) var(--bw),
+    calc(100% - var(--bw) - 24px) var(--bw),
+    calc(100% - var(--bw) - 24px) calc(var(--bw) + 4px),
+    calc(100% - var(--bw) - 22px) calc(var(--bw) + 4px),
+    calc(100% - var(--bw) - 22px) calc(var(--bw) + 8px),
+    calc(100% - var(--bw) - 20px) calc(var(--bw) + 8px),
+    calc(100% - var(--bw) - 20px) calc(var(--bw) + 12px),
+    calc(100% - var(--bw) - 18px) calc(var(--bw) + 12px),
+    calc(100% - var(--bw) - 18px) calc(var(--bw) + 14px),
+    calc(100% - var(--bw) - 16px) calc(var(--bw) + 14px),
+    calc(100% - var(--bw) - 16px) calc(var(--bw) + 16px),
+    calc(100% - var(--bw) - 14px) calc(var(--bw) + 16px),
+    calc(100% - var(--bw) - 14px) calc(var(--bw) + 18px),
+    calc(100% - var(--bw) - 12px) calc(var(--bw) + 18px),
+    calc(100% - var(--bw) - 12px) calc(var(--bw) + 20px),
+    calc(100% - var(--bw) - 8px) calc(var(--bw) + 20px),
+    calc(100% - var(--bw) - 8px) calc(var(--bw) + 22px),
+    calc(100% - var(--bw) - 4px) calc(var(--bw) + 22px),
+    calc(100% - var(--bw) - 4px) calc(var(--bw) + 24px),
+    calc(100% - var(--bw)) calc(var(--bw) + 24px),
+    calc(100% - var(--bw)) calc(100% - var(--bw) - 24px),
+    calc(100% - var(--bw) - 4px) calc(100% - var(--bw) - 24px),
+    calc(100% - var(--bw) - 4px) calc(100% - var(--bw) - 22px),
+    calc(100% - var(--bw) - 8px) calc(100% - var(--bw) - 22px),
+    calc(100% - var(--bw) - 8px) calc(100% - var(--bw) - 20px),
+    calc(100% - var(--bw) - 12px) calc(100% - var(--bw) - 20px),
+    calc(100% - var(--bw) - 12px) calc(100% - var(--bw) - 18px),
+    calc(100% - var(--bw) - 14px) calc(100% - var(--bw) - 18px),
+    calc(100% - var(--bw) - 14px) calc(100% - var(--bw) - 16px),
+    calc(100% - var(--bw) - 16px) calc(100% - var(--bw) - 16px),
+    calc(100% - var(--bw) - 16px) calc(100% - var(--bw) - 14px),
+    calc(100% - var(--bw) - 18px) calc(100% - var(--bw) - 14px),
+    calc(100% - var(--bw) - 18px) calc(100% - var(--bw) - 12px),
+    calc(100% - var(--bw) - 20px) calc(100% - var(--bw) - 12px),
+    calc(100% - var(--bw) - 20px) calc(100% - var(--bw) - 8px),
+    calc(100% - var(--bw) - 22px) calc(100% - var(--bw) - 8px),
+    calc(100% - var(--bw) - 22px) calc(100% - var(--bw) - 4px),
+    calc(100% - var(--bw) - 24px) calc(100% - var(--bw) - 4px),
+    calc(100% - var(--bw) - 24px) calc(100% - var(--bw)),
+    calc(var(--bw) + 24px) calc(100% - var(--bw)),
+    calc(var(--bw) + 24px) calc(100% - var(--bw) - 4px),
+    calc(var(--bw) + 22px) calc(100% - var(--bw) - 4px),
+    calc(var(--bw) + 22px) calc(100% - var(--bw) - 8px),
+    calc(var(--bw) + 20px) calc(100% - var(--bw) - 8px),
+    calc(var(--bw) + 20px) calc(100% - var(--bw) - 12px),
+    calc(var(--bw) + 18px) calc(100% - var(--bw) - 12px),
+    calc(var(--bw) + 18px) calc(100% - var(--bw) - 14px),
+    calc(var(--bw) + 16px) calc(100% - var(--bw) - 14px),
+    calc(var(--bw) + 16px) calc(100% - var(--bw) - 16px),
+    calc(var(--bw) + 14px) calc(100% - var(--bw) - 16px),
+    calc(var(--bw) + 14px) calc(100% - var(--bw) - 18px),
+    calc(var(--bw) + 12px) calc(100% - var(--bw) - 18px),
+    calc(var(--bw) + 12px) calc(100% - var(--bw) - 20px),
+    calc(var(--bw) + 8px) calc(100% - var(--bw) - 20px),
+    calc(var(--bw) + 8px) calc(100% - var(--bw) - 22px),
+    calc(var(--bw) + 4px) calc(100% - var(--bw) - 22px),
+    calc(var(--bw) + 4px) calc(100% - var(--bw) - 24px),
+    var(--bw) calc(100% - var(--bw) - 24px),
+    /* Back to where the inner ring started, so the crossing segment is
+       walked out and back along the same line and encloses no area. */
+    var(--bw) calc(var(--bw) + 24px)
+  );
+}
+
+/* Black frame — 2px deeper on every edge, so it shows only as an inner line */
+html::before {
+  z-index: 400;
+  background-color: var(--outline);
+  /* Reaches the viewport edge (inset 0 from the shared rule) and is cut deeper
+     than the green frame at BOTH edges: --bezel-gap wider on the outside,
+     because the green sits in from the edge, and 2px on the inside for the
+     containing line. */
+  --bw: calc(var(--bezel-gap) + var(--bezel-w) + 2px);
+}
+
+/* Green frame, on top, carrying the screws and the scanlines */
+html::after {
+  z-index: 401;
+  inset: var(--bezel-gap);
+  background-color: var(--bezel);
+  --bw: var(--bezel-w);
+
+  /* Screws sit in the corners, centred in the widest part of the band — the
+     stretch between the outer and inner 45° cuts. At a 14px offset the 14px
+     head clears both cuts, which it could not do out on a straight run. */
+  background-image: var(--screw-lg), var(--screw-lg), var(--screw-lg), var(--screw-lg);
+  background-repeat: no-repeat;
+  background-size: var(--screw-size-lg) var(--screw-size-lg);
+  background-position:
+    left  10px top    10px,
+    right 10px top    10px,
+    left  10px bottom 10px,
+    right 10px bottom 10px;
+}
+
+
+/* ── Panels: stamped metal plates ──────────────────────────
+   Three layers, outside in: black outline (2px), light rail (4px), fill.
+   Each layer is a wrapper whose own background shows through its padding, and
+   each carries the staircase clip so every edge steps together.
+
+   Each layer must be a real element. Neither a border nor a drop-shadow can
+   do this job: a border is a rectangle and gets sliced flat at every corner
+   step, and clip-path discards this element's filter output, so a shadow ring
+   here renders nothing at all. (.panel-rail and .panel-plate were added in
+   index.html to give both boxes the same three-layer split.) */
+.pxb-panel {
+  background: var(--outline);
+  padding: 2px;
+}
+
+.combined-timer-wrap { background: var(--outline); }
+
+/* Keep the panels from being squashed shorter than their own contents.
+   Both wraps are flex items with overflow:hidden, which makes min-height:auto
+   resolve to 0 — so on a short viewport flex-shrink cut the timer panel off
+   partway down the START/POMODEX row and took its bottom outline and rail with
+   it. (The border was drawn; it was simply clipped away below the wrap.)
+
+   Both panels are already sized to exactly fit their contents — the mon panel
+   has no slack either; shrinking it clips the grass platform. So neither one
+   flexes: they hold their natural height and #screen-timer (overflow:auto)
+   scrolls if the window is too short to show both. */
+#screen-timer .combined-timer-wrap,
+#screen-timer .companion-wrap { flex: 0 0 auto; }
+
+/* The rigid panels above mean a short window now needs to scroll instead of
+   squashing a border away — scrolling is fine, but the bar itself doesn't fit
+   the console skin. Hides the bar while leaving the scroll functional. */
+#screen-timer {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* legacy Edge */
+}
+#screen-timer::-webkit-scrollbar { display: none; }
+
+.panel-rail {
+  background: var(--frame);
+  padding: 4px;
+  width: 100%;
+  clip-path: var(--pixel-clip);
+}
+
+.panel-plate {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  clip-path: var(--pixel-clip);
+}
+
+/* Carrier for the four corner screws. Sits above the panel fill and below its
+   contents; pointer-events:none keeps buttons clickable.
+
+   This used to also draw an engraved inset line (a 2px dark border). Once the
+   box was pulled outward to bring the rivets nearer their corners, that line
+   ended up running alongside the frame and read as a second, stray border —
+   so it is gone. The element now exists only to position the screws; its
+   inset is what places them.
+
+   No border here. Anything drawn on this box's edge lands a few pixels inside
+   the frame and doubles it. */
+.companion-area,
+.panel-plate { position: relative; }
+
+.companion-area::after,
+.panel-plate::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  z-index: 2;
+  image-rendering: pixelated;
+  /* Same screw head as the bezel's — in the reference all twelve rivets are
+     the same part. Held tight to this box's corners: moved further inboard
+     they run into the ▲▼ steppers and the POMODEX button, which reach closer
+     to the panel's right edge than the corner detail does. */
+  background:
+    var(--screw) left  1px top    1px / var(--screw-size) var(--screw-size) no-repeat,
+    var(--screw) right 1px top    1px / var(--screw-size) var(--screw-size) no-repeat,
+    var(--screw) left  1px bottom 1px / var(--screw-size) var(--screw-size) no-repeat,
+    var(--screw) right 1px bottom 1px / var(--screw-size) var(--screw-size) no-repeat;
+}
+
+/* Panel fills get a top highlight / bottom shade so the plate reads as
+   raised rather than as a flat rectangle of colour. */
+.companion-area,
+.panel-plate {
+  background:
+    /* Scanlines, as a background layer rather than from the page-wide overlay.
+       The overlay is a fixed pseudo at z-index 0, and these plates are
+       positioned and later in the DOM, so they paint OVER it and came out
+       clean. Baking the lines into the plate is what actually gets them onto
+       the glass, and it keeps them under the panel's contents. */
+    var(--scanlines),
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,.06) 0 3px,
+      transparent 3px calc(100% - 4px),
+      rgba(0,0,0,.16) calc(100% - 4px) 100%
+    ),
+    var(--panel-bg);
+}
+
+/* ── Timer numerals ────────────────────────────────────────
+   White, deliberately NOT overridden here: style.css sets the white face and
+   style-v2.css the 3px/4px drop shadow, which still reads correctly on the
+   new panel green. The V3 "engraved dark digit" treatment was removed.       */
+
+/* ── Buttons ───────────────────────────────────────────────
+   Same two-colour system as before (gold primary, dark secondary). Two things
+   make them read like the reference:
+
+   1. Gold is reserved for PRIMARY actions. The secondary controls (mode,
+      RESET, mute, ?, the steppers) are ringed in the same light frame colour
+      as the panels and the bezel, so they read as part of the chassis. Ringing
+      them in tan as well made every control look equally important and fought
+      the gold of START / POMODEX.
+   2. The fill is FLAT. The base sheet splits each button into a light top half
+      and a dark bottom half (inset 0 ±14px), which reads as a gradient pill.
+      The reference is a flat slab with a thin lit edge on top and a thin
+      shaded edge underneath, so the insets drop to 4px.
+
+   The ring colour is chosen per button via :has() on the .pxb wrapper, since
+   the wrapper is what draws the rail. */
+/* The secondary buttons' light edge. Deliberately NOT --frame: the panel rail
+   is near-white, and at button scale that reads as a thick pale rim rather
+   than the thin, muted edge the reference has. Muted mid-sage, 2px not 3px. */
+:root { --btn-edge: #86a691; }
+
+.pxb { --btn-ring: var(--btn-edge); }
+.pxb:has(.btn-primary),
+.pxb:has(.btn-timer-start),
+.pxb:has(.btn-timer-pause),
+.pxb:has(.btn-collection) { --btn-ring: var(--outline); }
+
+/* .pxb's own drop-shadow filter (--pxdrop, base sheet) already renders
+   nothing — clip-path discards an element's own filter output, per the note
+   below. But the browser doesn't know that in advance: filter + a transition
+   on filter still promotes .pxb to its own composited layer, and that layer
+   was measurably darkening everything painted inside it (verified: a plain
+   flat-color fill on #btn-start rendered ~16% dark, gradients or not). LV
+   badges use a plain span with no filter and don't have this problem.
+   Dropping the filter here costs nothing visible and fixes the darkening. */
+#screen-timer .pxb { filter: none; transition: transform .12s; }
+
+/* The rail is the WRAPPER'S OWN BACKGROUND showing through its padding — the
+   mechanism .pxb was built for ("same clip-path + background + padding traces
+   the staircase edge on all sides including the corner steps", style.css).
+
+   Do NOT try to do this with drop-shadow. clip-path clips the element's
+   filter output, so a drop-shadow ring on .pxb is painted and then thrown
+   away — it renders nothing at all. (Verified: a 10px magenta ring was
+   completely invisible.) The panels get away with it only because their
+   staircase is on an inner child, not on the filtered element itself.
+
+   .pxb-audio is listed separately: the mute button lives in the header, not
+   inside #screen-timer, so the descendant selector alone would skip it. */
+#screen-timer .pxb,
+.pxb-audio {
+  background: var(--btn-ring);
+  padding: 2px;
+}
+
+/* Primary buttons: black outline all round, thicker along the bottom and
+   right so the same layer reads as a cast shadow. This is the pixel-art way of
+   doing it and, more practically, the only way available — a real box-shadow
+   or drop-shadow here is discarded by the wrapper's clip-path, the same reason
+   the earlier shadow-based rings never appeared. */
+#screen-timer .pxb:has(.btn-primary),
+#screen-timer .pxb:has(.btn-timer-start),
+#screen-timer .pxb:has(.btn-timer-pause),
+#screen-timer .pxb:has(.btn-collection) {
+  padding: 2px 5px 5px 2px;
+}
+
+/* FOCUS SESSION, RESET, START and POMODEX get the LV badge's shallower
+   corner cut (--pixel-clip-xs) instead of the panels' deep 12px staircase —
+   the smaller notch is what reads as "rounded" rather than diagonally cut.
+   Every layer that carries the clip on these four has to be listed: the
+   .pxb ring and the .btn element itself (both clip independently — the base
+   sheet gives every .btn its own --pixel-clip, so changing only the wrapper
+   left the button's own fill still showing the old deep corner underneath
+   the new shallow ring), plus the outer .btn-shadow on the two that have
+   one, or the black cast-shadow layer would still show the old corner. */
+#screen-timer .pxb:has(.btn-timer-mode),
+#screen-timer .pxb:has(.btn-timer-dark),
+#screen-timer .pxb:has(.btn-timer-start),
+#screen-timer .pxb:has(.btn-collection),
+#screen-timer .btn-shadow:has(.btn-timer-mode),
+#screen-timer .btn-shadow:has(.btn-timer-dark),
+#screen-timer .btn-timer-mode,
+#screen-timer .btn-timer-dark,
+#screen-timer .btn-timer-start,
+#screen-timer .btn-collection {
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* FOCUS SESSION / RESET carry the same construction as the reference: a light
+   edge (the .pxb ring) AND a black outline with a cast shadow. The gold
+   buttons get both from one layer because their ring IS black; these need two,
+   so .btn-shadow sits outside the .pxb and supplies the black. */
+.btn-shadow {
+  display: flex;
+  width: 100%;
+  background: var(--outline);
+  padding: 2px 5px 5px 2px;
+  clip-path: var(--pixel-clip);
+}
+
+.btn-shadow > .pxb { flex: 1; width: 100%; }
+
+/* Small square controls: ▲▼, ?, mute. Same construction, scaled down — a 5px
+   shadow on a 40px button is a slab. They also size to content, not to a
+   grid cell, so the wrapper must not stretch. */
+.btn-shadow--sm {
+  width: auto;
+  padding: 2px 3px 3px 2px;
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* Same shallow corner as FOCUS SESSION / RESET / START / POMODEX, on every
+   layer: .pxb-sm (the ring, which otherwise falls back to .pxb's own deep
+   12px clip) and the button element itself (style.css gives .btn-adjust /
+   .btn-help / .btn-audio their own --pixel-clip-sm independent of the
+   wrapper — the same "wrapper changed but button didn't" gap fixed above). */
+.pxb-sm,
+.btn-adjust,
+.btn-help,
+.btn-audio {
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* The ? keeps its absolute placement in the mon panel; it moves to the
+   wrapper, since that is now the outermost element. */
+.help-shadow {
+  position: absolute;
+  top: 12px;
+  right: 24px;
+  z-index: 3;
+}
+.pxb-help { position: static; }
+
+.audio-shadow { flex: 0 0 auto; }
+
+/* The press travels on the outer layer now, so the inner one must not also
+   shift or the button slides twice as far. */
+.btn-shadow:active { transform: var(--btn-press); }
+.btn-shadow > .pxb:active { transform: none; }
+
+/* Fade the whole stack, outline included, when RESET is disabled */
+.btn-shadow:has(button:disabled) { opacity: .55; }
+.btn-shadow:has(button:disabled) > .pxb { opacity: 1; }
+
+/* Secondary buttons: black → dark green, white → cream, flat fill with a thin
+   lit top edge and shaded bottom edge (see the note above the ring colours). */
+.btn-timer-mode,
+.btn-timer-dark,
+.btn-ghost,
+.pxb .btn-ghost,
+.btn-adjust,
+.btn-help,
+.btn-audio {
+  background: var(--scanlines), var(--btn-dark);
+  color: var(--cream);
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.10),
+    inset 0 -4px 0 rgba(0,0,0,.22);
+}
+
+/* Small square controls get a 3px edge — 4px on a 36px button is a stripe. */
+.btn-adjust,
+.btn-help,
+.btn-audio {
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.10),
+    inset 0 -3px 0 rgba(0,0,0,.22);
+}
+
+.btn-timer-mode:hover,
+.btn-timer-dark:hover:not(:disabled),
+.btn-ghost:hover { background: #26543f; }
+
+.btn-timer-mode:active,
+.btn-timer-dark:active:not(:disabled) { background: #163529; }
+
+/* Disabled (RESET before a session starts). The base sheet fills these with
+   rgba(0,0,0,.24), which was black-on-black before but goes olive over the new
+   panel green. Give it a real muted fill instead; the .pxb wrapper still fades
+   the whole control to 55%. */
+.btn-timer-dark:disabled,
+.btn-timer-start:disabled {
+  background: #1a3a2e;
+  color: rgba(244,236,216,.45);
+  box-shadow:
+    inset 0 4px 0 rgba(255,255,255,.05),
+    inset 0 -4px 0 rgba(0,0,0,.18);
+}
+
+/* Primary buttons: flat amber slab, thin lit edge on top, thin shaded edge
+   underneath — same treatment as the secondaries, just higher contrast since
+   gold carries it. */
+.pxb .btn-primary,
+.btn-timer-start,
+.btn-timer-pause,
+.btn-collection {
+  color: #2a1a02;
+  /* Same gold as the LV badges/XP bars — this used to be its own deeper,
+     more orange shade; now everything gold is one brighter colour. The
+     highlight is copied from the LV badge too (.companion-lvl, below): the
+     fill colour alone already matched, but --scanlines-soft plus a thin,
+     faint top edge read visibly duller next to the badge's stronger gloss. */
+  background: var(--scanlines), var(--gold);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
+
+/* C2 — caret pinned to the button's right edge, label stays centred.
+   Paired with the two-span markup set in app.js setMode(). */
+.btn-timer-mode { position: relative; }
+.btn-timer-mode .mode-caret {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ── Stats strip: green plate with boxed readouts ──────────
+   Black bar → panel green, and SESSIONS / MINUTES / CATCHES each get their
+   own framed tile as in the reference. */
+/* Its own framed box floating inside the bezel, rather than a bar welded to
+   the bottom edge. Same three layers as the panels, so it inherits the plate's
+   fill and scanlines from .panel-plate — the colour is unchanged, it is the
+   same --panel-bg the strip already used.
+
+   Height is content-driven now. --stats-h is what the screens reserve above
+   the strip, so it has to cover the box plus its gap, not just the content. */
+.stats-strip {
+  background: var(--outline);
+  padding: 2px;
+  clip-path: var(--pixel-clip-xs);
+  border-top: none;
+  box-shadow: none;
+  height: auto;
+  /* The corner rivet sits 10px into the bezel band, which itself starts
+     --bezel-gap out — so its square footprint spans roughly 13px to 33px in
+     from the screen edge. The reference sits snug against the bezel with only
+     a small inset, not floating well clear of it — --pixel-clip-xs's 4px
+     notch buys back enough corner clearance to bring the inset down from the
+     36px a fully square corner needed to a much closer 18px. */
+  left:   calc(var(--bezel-gap) + var(--bezel-w) + 18px);
+  right:  calc(var(--bezel-gap) + var(--bezel-w) + 18px);
+  bottom: calc(var(--bezel-gap) + var(--bezel-w) + 18px);
+  width:  auto;
+}
+
+/* The reference's strip border reads as a hairline next to the panels' thick
+   rail above it — a muted, barely-lighter-than-the-fill green, not the pale
+   --frame the panels use — and its corner is only lightly clipped rather
+   than staircased, so the strip gets its own thinner, darker rail. */
+.stats-strip .panel-rail {
+  background: var(--strip-rail);
+  padding: 2px;
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* The strip reads as a cutout into the console body, not another panel — so
+   its fill is --strip-bg, sampled off the reference: noticeably darker than
+   even --mode-bg, which is what the two main panels sit on. Repaints the
+   shared .panel-plate background wholesale since a background shorthand
+   can't be patched one layer at a time. */
+.stats-strip .panel-plate {
+  clip-path: var(--pixel-clip-xs);
+  background:
+    var(--scanlines),
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,.06) 0 3px,
+      transparent 3px calc(100% - 4px),
+      rgba(0,0,0,.16) calc(100% - 4px) 100%
+    ),
+    var(--strip-bg);
+}
+
+/* The base sheet gives this flex:1 to fill a fixed-height strip. With the
+   strip now sized by its content that basis of 0 would collapse the row. */
+/* The engraved line + corner screws are a panel detail sized for a deep box.
+   The strip's contents start 12px in, so a line inset 10px lands right on top
+   of the LV pill and the outer stat tiles. Suppressed here; the strip keeps
+   the frame, the fill and the scanlines. */
+.stats-strip .panel-plate::after { display: none; }
+
+/* ── Bottom strip layout ───────────────────────────────────
+   One row: LV badge | (XP numbers over XP bar) | tiles pushed right.
+   The base sheet's two-row .stats-top / .stats-bottom are unused now — the
+   markup was rebuilt around .stats-row to match the reference, where the
+   badge stands alongside the bar rather than above it. */
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+}
+
+.stats-xp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 1 auto;
+  width: 34%;
+}
+
+.stats-xp .xp-frame--wide { width: 100%; }
+
+/* The badge is a tall slab in the reference, standing as tall as the numbers
+   and bar stacked together rather than sitting on one line.
+   Both selectors are scoped to .stats-row so they outrank the plain .lv-frame
+   rule further down — otherwise the frame stretches but the gold badge inside
+   keeps its content height, leaving a black gap under it. */
+.stats-row .lv-frame {
+  align-self: stretch;
+  display: flex;
+}
+
+.stats-row .level-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* "LV" and the number are separate nodes; a flex container drops the
+     whitespace between them, so the space has to come back as a gap. */
+  gap: 6px;
+  font-size: 14px;
+  padding: 0 18px;
+}
+
+.xp-text { font-size: 12px; }
+.exp-bar-wrap { height: 20px; }
+
+/* ── D2/D3 — framed, larger stat tiles ─────────────────────
+   .stat-frame is the outline layer (its background showing through 2px of
+   padding); .stat-item is the fill. A drop-shadow ring cannot do this — the
+   tile's own clip-path discards it, which is why the previous attempt showed
+   nothing. */
+.stat-frame {
+  background: var(--strip-rail);
+  padding: 2px;
+  clip-path: var(--pixel-clip-2xs);
+}
+
+/* Tiles are OUTLINED BOXES, not darker panels cut into the strip: in the
+   reference their interior is the same green as the strip behind them, and
+   only the pale outline separates them. The darker fill made them read as
+   recessed wells instead.
+
+   It has to repaint the plate's colour rather than going transparent: the
+   outline is drawn by .stat-frame's background showing through its padding,
+   so a transparent tile just exposes that pale colour across the whole box.
+
+   Sized up to match as well: the reference's tiles are roughly 150x75, about
+   double what these were, with the number carrying the tile. */
+.stat-item {
+  background: var(--scanlines), var(--strip-bg);
+  clip-path: var(--pixel-clip-2xs);
+  padding: 8px 10px;
+  min-width: 126px;
+  gap: 2px;
+}
+
+.stat-val   { font-size: 16px; }
+.stat-label { font-size: 10px; letter-spacing: .08em; }
+
+.stats-inline { gap: 10px; }
+
+
+/* ── XP bars ───────────────────────────────────────────────
+   Built like the LV badges: .xp-frame is the black outline (its background
+   showing through its padding), .*-wrap is the dark track, and the fill sits
+   inside that. In the reference the bar is a solid object with a real outline,
+   not a translucent groove — the track goes near-black so the gold reads at
+   any fill level, and the fill carries the same lit top edge as the buttons. */
+.xp-frame {
+  background: var(--outline);
+  padding: 2px;
+  clip-path: var(--pixel-clip-xs);
+  flex: 0 1 auto;
+}
+
+/* The bottom bar takes about a third of the row, leaving the tiles room; the
+   tiles are pushed to the far right rather than sitting right after it. */
+.xp-frame--wide { width: 34%; }
+.exp-bar-wrap   { width: 100%; flex: 0 0 auto; }
+
+.stats-inline { margin-left: auto; }
+
+.exp-bar-wrap,
+.companion-xp-wrap {
+  background: #0a1710;
+  clip-path: var(--pixel-clip-xs);
+}
+
+.exp-bar,
+.companion-xp-bar {
+  background: var(--gold);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.42),
+    inset 0 -3px 0 rgba(0,0,0,.22);
+}
+
+/* Wordmark: POMO to cream so it sits with the new palette instead of
+   punching pure white out of it. MONS keeps the gold. */
+.logo-pomo { color: var(--cream); }
+
+/* ── F1/F2 — header ────────────────────────────────────────
+   Wordmark and mute button share a row, as in the reference, instead of the
+   button being pinned to the header's top-right corner. */
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.pxb-audio {
+  position: static;
+  flex: 0 0 auto;
+}
+
+/* Logo sits lower in the header, and larger than the base sheet's 48px */
+.app-header { padding-top: 42px; }
+
+.logo-pomo, .logo-mons { font-size: 56px; }
+.logo-tomato-img { height: 3rem; }
+
+/* Steppers pulled in from the timer panel's right edge (style-v2 puts them
+   at 12px), to sit level with the ? button above them. */
+.time-adjust { right: 24px; }
+
+/* FOCUS SESSION / RESET / START / POMODEX narrowed to match: the base sheet
+   insets this row 12px from the panel edge on both sides, half of the
+   steppers' 24px, so the row ran wider than the steppers above it. Matching
+   the inset on both sides keeps the row centred, just narrower — its right
+   edge now lines up with the steppers' right edge. */
+.controls-group { padding: 12px 24px; }
+
+/* ── A2 — the two boxes sit closer together ──────────────── */
+#screen-timer { gap: 12px; }
+
+/* ── Companion readout ─────────────────────────────────────
+   Reference shows a LV pill with the bar directly beneath it, sharing its left
+   edge. No numeric "x / y XP" line. The bar is far chunkier than a progress
+   groove — ~240x22px, roughly the pill's own height — which is what makes the
+   pair read as one unit rather than a label with a hairline under it. */
+.companion-xp-text { display: none; }
+
+.companion-meta { gap: 6px; }
+
+.companion-xp-wrap { width: 164px; height: 16px; }
+
+.stat-val   { color: var(--cream); }
+.stat-label { color: rgba(255,255,255,.62); }
+
+.xp-text    { color: rgba(255,255,255,.72); }
+
+/* ── LV badges ─────────────────────────────────────────────
+   Shaped like the reference's: a gold slab with a black outline, thicker
+   underneath so it sits on a shadow, and a lit top edge. .lv-frame is that
+   outline (its background through its padding); the badge itself is the fill.
+
+   The old drop-shadow(0 3px 0) on .level-badge never rendered — the badge
+   carries its own clip-path, which discards the filter. */
+.lv-frame {
+  display: inline-block;
+  background: var(--outline);
+  padding: 2px 2px 4px;
+  clip-path: var(--pixel-clip-xs);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.level-badge,
+.companion-lvl {
+  display: block;
+  filter: none;
+  clip-path: var(--pixel-clip-xs);
+  background: var(--scanlines), var(--gold);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
+
+/* The reference's pill is a chunky slab, not a tight label — it stands about
+   as tall as the XP bar under it and the text has room around it. The
+   companion's was the smaller of the two, so it comes up to match. */
+.companion-lvl {
+  font-size: 12px;
+  padding: 9px 14px;
+  color: #2a1a02;
+}
+
+.level-badge {
+  padding: 9px 14px;
+  color: #2a1a02;
+}
+
+/* ── Mobile ────────────────────────────────────────────────
+   At <480px three padded tiles plus the XP bar overflow the strip. */
+@media (max-width: 479px) {
+  /* Thinner band again for a phone. It cannot go below the 20px outer corner
+     curve or the two rings cross and the corners tear. */
+  :root { --bezel-w: 10px; }
+  /* Screws come off — too little band to hold a 14px head here — but the
+     scanline layer stays, so the frame keeps its texture. (A bare
+     `background-image: none` would have dropped both.) */
+  html::after { background-image: none; }
+
+  /* Not enough width at 375px for the wordmark and the mute button side by
+     side — POMOMONS wrapped onto two lines. The button goes back to the
+     header's top-right corner here, which is where it has always sat. */
+  .logo-row  { display: block; }
+  .pxb-audio { position: absolute; top: 10px; right: 12px; }
+  /* ...and the wordmark comes down a step so it clears the button rather than
+     running underneath it. (It overlapped at 28px even before this work.) */
+  .logo-pomo, .logo-mons { font-size: 24px; }
+  .logo-tomato-img { height: 1.5rem; }
+
+  /* The enlarged desktop tiles push the strip ~10px taller than the phone
+     layout has room for, so they are scaled back here. The fill stays — the
+     frame around each tile needs something to frame. */
+  .stat-frame { padding: 1px; }
+  .stat-item  { padding: 2px 6px; min-width: 0; }
+  .stat-val   { font-size: 13px; }
+  .stats-strip .stats-row { padding: 6px 8px; gap: 8px; }
+  .stats-strip .level-badge { font-size: 11px; padding: 0 10px; }
+  .stats-strip .exp-bar-wrap { height: 18px; }
+
+  .companion-area::after,
+  .panel-plate::after { inset: 4px; }
+}
+
+/* Landscape phones (≤520px tall). The framed strip is ~18px taller than the
+   flat bar it replaced, and on a screen this short that eats into content that
+   was already tight. Everything here exists to claw that height back: thinner
+   frame layers, tighter rows, smaller tiles. */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --stats-h: 96px; }
+
+  .stats-strip {
+    padding: 1px;
+    left:   calc(var(--bezel-gap) + var(--bezel-w) + 2px);
+    right:  calc(var(--bezel-gap) + var(--bezel-w) + 2px);
+    bottom: calc(var(--bezel-gap) + var(--bezel-w) + 2px);
+  }
+  /* At a 2px inset the near-square corner (--pixel-clip-2xs, used everywhere
+     else the strip appears) would run straight into the corner rivet — the
+     desktop layout clears it by pushing the inset out to 36px instead, but
+     there isn't 36px of width to spare on a screen this short. The deeper
+     notch buys the same clearance out of the corner cut instead of the inset,
+     which is what this breakpoint already trades away elsewhere for space. */
+  .stats-strip,
+  .stats-strip .panel-rail,
+  .stats-strip .panel-plate { clip-path: var(--pixel-clip); }
+  /* Panel frames thin out too — they add 12px of height per panel, which is
+     most of what the short screen lost. */
+  .pxb-panel  { padding: 1px; }
+  .panel-rail { padding: 2px; }
+
+  .stats-strip .stats-row  { padding: 4px 10px; gap: 10px; }
+  .stats-strip .stat-item  { padding: 1px 6px; }
+}

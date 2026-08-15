@@ -453,7 +453,7 @@ const Collection = (() => {
     if (catchData) {
       const lvlEl = document.createElement('p');
       lvlEl.className   = 'mon-card-pallvl';
-      lvlEl.textContent = `LVL ${palLevel}`;
+      lvlEl.textContent = `LV ${palLevel}`;
       card.appendChild(lvlEl);
 
       if (typeof makeTypeBadges === 'function' && displayMon.type) {
@@ -502,6 +502,15 @@ const Collection = (() => {
 
     if (owned && typeof makeTypeBadges === 'function' && mon.type) {
       card.appendChild(makeTypeBadges(mon.type));
+    }
+
+    // Caught entries open the species page (picture, type, rarity, evolution
+    // path) — the same screen shown right after a catch. Not the individual
+    // detail card: a dex entry is a species, so it has no nickname/gender/
+    // caught date, and there may be several caught records behind one entry.
+    // Uncaught tiles stay inert; .mon-card.unseen already shows no pointer.
+    if (owned && typeof MonInfoScreen !== 'undefined') {
+      card.addEventListener('click', () => MonInfoScreen.start(mon, () => {}));
     }
 
     return card;
@@ -595,7 +604,7 @@ const Collection = (() => {
 
     const lvlEl = document.createElement('p');
     lvlEl.className   = 'mon-card-pallvl';
-    lvlEl.textContent = `LVL ${palLevel}`;
+    lvlEl.textContent = `LV ${palLevel}`;
     card.appendChild(lvlEl);
 
     // Type badges — listed just like on the pomodex page
@@ -735,7 +744,7 @@ const Collection = (() => {
 
     // Stat rows
     document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
-    document.getElementById('mds-level').textContent   = `LVL ${palLevel}`;
+    document.getElementById('mds-level').textContent   = `LV ${palLevel}`;
 
     // Type badges live in their own stat row
     const typeEl = document.getElementById('mds-type');
