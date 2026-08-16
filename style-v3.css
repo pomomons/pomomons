@@ -63,7 +63,11 @@
      value. Widening --bezel-w raises the strip, so this has to move with it. */
   --stats-h:      150px;
 
-  --btn-dark:     #1d4335;   /* secondary button fill  */
+  /* Translucent, unlike the rest of this block: --btn-dark/--btn-edge have
+     exactly one use each (the secondary buttons' fill and ring, below) and
+     nowhere that needs to stay opaque, so they carry their own translucency
+     directly instead of needing a separate -t token like the others do. */
+  --btn-dark:     rgba(20,60,40,.32);    /* secondary button fill  */
   --cream:        #f4ecd8;   /* button / label text    */
 
   /* Stats strip only — sampled off the reference, which paints that one bar
@@ -71,6 +75,35 @@
      pale --frame the panels use. */
   --strip-bg:   #152f29;
   --strip-rail: #2c4a3a;
+
+  /* Translucent counterparts of the box colours above, for the panels, the
+     strip, the tiles and the secondary buttons — the surfaces that read as
+     "the green boxes" — so the forest background shows through them instead
+     of sitting only in the margins around them. Kept as separate tokens
+     rather than adding alpha to the originals: the plain colours still back
+     small chrome (LV badges, XP bars, the outer bezel) where a solid fill
+     reads better against a busy photo than a translucent one would.
+     Redefined again in body.run-focus, same as the opaque set, so red mode
+     stays consistent instead of leaving the boxes green-tinted-glass while
+     everything else goes red.
+
+     Recoloured to a richer, more saturated forest green than the panels'
+     own --panel-bg/--frame etc. — those read fine as flat opaque fills, but
+     over the photo their paler/more desaturated tones (--frame's mint,
+     --btn-edge's sage) came out washed-out rather than tinted. */
+  --outline-t:    rgba(10,31,20,.55);
+  --frame-t:      rgba(45,122,82,.3);
+  --panel-bg-t:   rgba(22,75,48,.32);
+  --strip-bg-t:   rgba(14,46,30,.35);
+  --strip-rail-t: rgba(35,95,65,.3);
+  /* Same hue as --panel-bg-t, roughly double the alpha. A big single panel
+     reads as a strong green at .32; a grid of a dozen-plus small tiles at
+     that same alpha reads as barely-there/"clear", because each tile is
+     mostly photo with a thin green wash and the raw photo shows through the
+     gaps between tiles too. This is what the mon-card / blend / smoothie
+     boxes use to look like "the same green" by eye, even though the literal
+     alpha number is higher. */
+  --panel-bg-strong-t: rgba(22,75,48,.82);
 }
 
 /* ── One pixel size for the whole skin ─────────────────────
@@ -223,8 +256,37 @@
   );
 }
 
-body           { background: var(--mode-bg); }
-.encounter-overlay { background: var(--mode-bg); }
+/* --mode-bg is kept as the base layer so it still shows while the image
+   loads (and so body.run-focus's plain-colour override, below, still fully
+   replaces this shorthand and hides the image during a focus session — the
+   red palette swap stays a full-bleed colour change, not a tinted photo).
+   cover/center scales to fill any viewport without distorting the image,
+   at the cost of cropping its edges on aspect ratios far from square — this
+   image's busy detail sits in the vertical middle band (the sunset horizon),
+   with plain sky and repetitive treeline as safe margins top and bottom, so
+   the crop only ever eats into forgiving areas. */
+body { background: var(--mode-bg) url("assets/backgrounds/forest.jpg") center/cover no-repeat; }
+
+/* Full-screen overlays get the same photo as the body — they were still on
+   the base sheet's hardcoded teal/red (#228674/#af4d4d), disconnected from
+   the palette entirely, let alone the photo. The two flash transitions
+   (catch's green flash, evolution's black fade) keep their own solid
+   colour on purpose — those are deliberately opaque dramatic beats, not
+   another screen's background.
+
+   Scanlines are baked in as their own layer here too, same reasoning as
+   .panel-plate below: the page-wide scanline overlay is body::before at
+   z-index 0, and these overlays are position:fixed at z-index 100+, so they
+   paint clean over it — the open background behind the boxes came out
+   smooth instead of textured, unlike the timer screen where nothing sits
+   above that pseudo-element. */
+.encounter-overlay,
+.mon-info-overlay,
+.mon-detail-overlay {
+  background:
+    var(--scanlines),
+    var(--mode-bg) url("assets/backgrounds/forest.jpg") center/cover no-repeat;
+}
 
 /* Running a focus session stays red, re-tuned to the new deeper register
    so it doesn't jump a whole saturation step when the timer starts. This
@@ -236,8 +298,19 @@ body           { background: var(--mode-bg); }
    reads as "red mode" together. Rivets are the one thing tokens can't
    reach: their colour is baked into the --screw/--screw-lg SVG data URIs,
    so those get redefined wholesale with the same two hex swaps. */
-body.run-focus,
-body.run-focus .encounter-overlay { background: #8f3b34; }
+/* Dedicated red-toned background for a running session — same composition
+   and horizon as the default photo, painted red rather than approximated
+   with a multiply-blend tint over the green one. */
+body.run-focus {
+  background: var(--mode-bg) url("assets/backgrounds/forest-red.jpg") center/cover no-repeat;
+}
+body.run-focus .encounter-overlay,
+body.run-focus .mon-info-overlay,
+body.run-focus .mon-detail-overlay {
+  background:
+    var(--scanlines),
+    var(--mode-bg) url("assets/backgrounds/forest-red.jpg") center/cover no-repeat;
+}
 body.run-focus {
   --mode-bg:    #8f3b34;
   --panel-bg:   #6d2d28;
@@ -245,10 +318,19 @@ body.run-focus {
   --outline:    #1c0e0d;
   --frame-edge: #301816;
   --bezel:      #7f514d;
-  --btn-dark:   #43201d;
-  --btn-edge:   #a68886;
+  --btn-dark:   rgba(100,20,18,.46);
+  --btn-edge:   rgba(175,55,48,.38);
   --strip-bg:   #2f1715;
   --strip-rail: #4a2e2c;
+  /* Eased back one notch from the punchy crimson pass — same colour family,
+     lighter and less opaque so it stays a rich red without going quite as
+     dark/saturated. */
+  --outline-t:    rgba(50,12,12,.55);
+  --frame-t:      rgba(175,55,48,.38);
+  --panel-bg-t:   rgba(135,30,28,.46);
+  --strip-bg-t:   rgba(100,20,18,.5);
+  --strip-rail-t: rgba(165,48,42,.38);
+  --panel-bg-strong-t: rgba(135,30,28,.88);
   --screw:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7' shape-rendering='crispEdges'%3E%3Cpath fill='%23301816' d='M2 0h3v1h-3z M1 1h1v1h-1z M5 1h1v1h-1z M0 2h1v1h-1z M6 2h1v1h-1z M0 3h1v1h-1z M6 3h1v1h-1z M0 4h1v1h-1z M6 4h1v1h-1z M1 5h1v1h-1z M5 5h1v1h-1z M2 6h3v1h-3z'/%3E%3Cpath fill='%23b89e9c' d='M2 1h3v1h-3z M1 2h5v1h-5z M1 3h2v1h-2z M4 3h2v1h-2z M1 4h5v1h-5z M2 5h3v1h-3z'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23301816'/%3E%3C/svg%3E");
   --screw-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5' shape-rendering='crispEdges'%3E%3Cpath fill='%23301816' d='M1 0h3v1h-3z M0 1h1v1h-1z M4 1h1v1h-1z M0 2h1v1h-1z M4 2h1v1h-1z M0 3h1v1h-1z M4 3h1v1h-1z M1 4h3v1h-3z'/%3E%3Cpath fill='%23b89e9c' d='M1 1h3v1h-3z M1 2h1v1h-1z M3 2h1v1h-1z M1 3h3v1h-3z'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23301816'/%3E%3C/svg%3E");
 }
@@ -546,11 +628,11 @@ html::after {
    here renders nothing at all. (.panel-rail and .panel-plate were added in
    index.html to give both boxes the same three-layer split.) */
 .pxb-panel {
-  background: var(--outline);
+  background: var(--outline-t);
   padding: 2px;
 }
 
-.combined-timer-wrap { background: var(--outline); }
+.combined-timer-wrap { background: var(--outline-t); }
 
 /* Keep the panels from being squashed shorter than their own contents.
    Both wraps are flex items with overflow:hidden, which makes min-height:auto
@@ -575,7 +657,7 @@ html::after {
 #screen-timer::-webkit-scrollbar { display: none; }
 
 .panel-rail {
-  background: var(--frame);
+  background: var(--frame-t);
   padding: 4px;
   width: 100%;
   clip-path: var(--pixel-clip);
@@ -639,7 +721,7 @@ html::after {
       transparent 3px calc(100% - 4px),
       rgba(0,0,0,.16) calc(100% - 4px) 100%
     ),
-    var(--panel-bg);
+    var(--panel-bg-t);
 }
 
 /* ── Timer numerals ────────────────────────────────────────
@@ -666,7 +748,7 @@ html::after {
 /* The secondary buttons' light edge. Deliberately NOT --frame: the panel rail
    is near-white, and at button scale that reads as a thick pale rim rather
    than the thin, muted edge the reference has. Muted mid-sage, 2px not 3px. */
-:root { --btn-edge: #86a691; }
+:root { --btn-edge: rgba(45,122,82,.3); }
 
 .pxb { --btn-ring: var(--btn-edge); }
 .pxb:has(.btn-primary),
@@ -681,8 +763,10 @@ html::after {
    was measurably darkening everything painted inside it (verified: a plain
    flat-color fill on #btn-start rendered ~16% dark, gradients or not). LV
    badges use a plain span with no filter and don't have this problem.
-   Dropping the filter here costs nothing visible and fixes the darkening. */
-#screen-timer .pxb { filter: none; transition: transform .12s; }
+   Dropping the filter here costs nothing visible and fixes the darkening.
+   Global, not #screen-timer-scoped — every .pxb-wrapped button anywhere
+   has the same base-sheet filter and would hit the same darkening. */
+.pxb { filter: none; transition: transform .12s; }
 
 /* The rail is the WRAPPER'S OWN BACKGROUND showing through its padding — the
    mechanism .pxb was built for ("same clip-path + background + padding traces
@@ -694,9 +778,9 @@ html::after {
    completely invisible.) The panels get away with it only because their
    staircase is on an inner child, not on the filtered element itself.
 
-   .pxb-audio is listed separately: the mute button lives in the header, not
-   inside #screen-timer, so the descendant selector alone would skip it. */
-#screen-timer .pxb,
+   Global now, not #screen-timer-scoped — every screen's .pxb wrappers get
+   the same ring treatment as the rollout reaches them. */
+.pxb,
 .pxb-audio {
   background: var(--btn-ring);
   padding: 2px;
@@ -707,10 +791,10 @@ html::after {
    doing it and, more practically, the only way available — a real box-shadow
    or drop-shadow here is discarded by the wrapper's clip-path, the same reason
    the earlier shadow-based rings never appeared. */
-#screen-timer .pxb:has(.btn-primary),
-#screen-timer .pxb:has(.btn-timer-start),
-#screen-timer .pxb:has(.btn-timer-pause),
-#screen-timer .pxb:has(.btn-collection) {
+.pxb:has(.btn-primary),
+.pxb:has(.btn-timer-start),
+.pxb:has(.btn-timer-pause),
+.pxb:has(.btn-collection) {
   padding: 2px 5px 5px 2px;
 }
 
@@ -722,17 +806,26 @@ html::after {
    sheet gives every .btn its own --pixel-clip, so changing only the wrapper
    left the button's own fill still showing the old deep corner underneath
    the new shallow ring), plus the outer .btn-shadow on the two that have
-   one, or the black cast-shadow layer would still show the old corner. */
-#screen-timer .pxb:has(.btn-timer-mode),
-#screen-timer .pxb:has(.btn-timer-dark),
-#screen-timer .pxb:has(.btn-timer-start),
-#screen-timer .pxb:has(.btn-collection),
-#screen-timer .btn-shadow:has(.btn-timer-mode),
-#screen-timer .btn-shadow:has(.btn-timer-dark),
-#screen-timer .btn-timer-mode,
-#screen-timer .btn-timer-dark,
-#screen-timer .btn-timer-start,
-#screen-timer .btn-collection {
+   one, or the black cast-shadow layer would still show the old corner.
+
+   Global, not #screen-timer-scoped, and .btn-primary is in the list now
+   too — THROW/NEXT on the encounter overlay and the other .pxb .btn-primary
+   buttons (blend confirm, spawn-info) hit the exact same "wrapper fixed,
+   button didn't" gap as the timer screen's buttons did. */
+.pxb:has(.btn-timer-mode),
+.pxb:has(.btn-timer-dark),
+.pxb:has(.btn-timer-start),
+.pxb:has(.btn-timer-pause),
+.pxb:has(.btn-collection),
+.pxb:has(.btn-primary),
+.btn-shadow:has(.btn-timer-mode),
+.btn-shadow:has(.btn-timer-dark),
+.btn-timer-mode,
+.btn-timer-dark,
+.btn-timer-start,
+.btn-timer-pause,
+.btn-collection,
+.btn-primary {
   clip-path: var(--pixel-clip-xs);
 }
 
@@ -743,7 +836,7 @@ html::after {
 .btn-shadow {
   display: flex;
   width: 100%;
-  background: var(--outline);
+  background: var(--outline-t);
   padding: 2px 5px 5px 2px;
   clip-path: var(--pixel-clip);
 }
@@ -877,7 +970,7 @@ html::after {
    Height is content-driven now. --stats-h is what the screens reserve above
    the strip, so it has to cover the box plus its gap, not just the content. */
 .stats-strip {
-  background: var(--outline);
+  background: var(--outline-t);
   padding: 2px;
   clip-path: var(--pixel-clip-xs);
   border-top: none;
@@ -900,7 +993,7 @@ html::after {
    --frame the panels use — and its corner is only lightly clipped rather
    than staircased, so the strip gets its own thinner, darker rail. */
 .stats-strip .panel-rail {
-  background: var(--strip-rail);
+  background: var(--strip-rail-t);
   padding: 2px;
   clip-path: var(--pixel-clip-xs);
 }
@@ -920,7 +1013,7 @@ html::after {
       transparent 3px calc(100% - 4px),
       rgba(0,0,0,.16) calc(100% - 4px) 100%
     ),
-    var(--strip-bg);
+    var(--strip-bg-t);
 }
 
 /* The base sheet gives this flex:1 to fill a fixed-height strip. With the
@@ -984,7 +1077,7 @@ html::after {
    tile's own clip-path discards it, which is why the previous attempt showed
    nothing. */
 .stat-frame {
-  background: var(--strip-rail);
+  background: var(--strip-rail-t);
   padding: 2px;
   clip-path: var(--pixel-clip-2xs);
 }
@@ -1001,7 +1094,7 @@ html::after {
    Sized up to match as well: the reference's tiles are roughly 150x75, about
    double what these were, with the number carrying the tile. */
 .stat-item {
-  background: var(--scanlines), var(--strip-bg);
+  background: var(--scanlines), var(--strip-bg-t);
   clip-path: var(--pixel-clip-2xs);
   padding: 8px 10px;
   min-width: 126px;
@@ -1208,4 +1301,169 @@ html::after {
 
   .stats-strip .stats-row  { padding: 4px 10px; gap: 10px; }
   .stats-strip .stat-item  { padding: 1px 6px; }
+}
+
+/* ── V3 rollout: My Mons screen ─────────────────────────────
+   Same vocabulary as the timer screen: translucent surfaces over the photo,
+   shallow --pixel-clip-xs corners, gold for the active/primary state and
+   the muted scanlined dark fill for everything else. No HTML changes —
+   these are the base sheet's existing elements recoloured and reclipped. */
+
+/* The top bar used to be forced opaque (--strip-bg, no -t) because it was
+   position:sticky over a scrolling grid — the translucent tokens let cards
+   scrolling underneath show through it. Rather than sacrifice translucency,
+   the grid now scrolls in its own clipped box (.mymons-scroll below) that
+   physically ends at this bar's bottom edge, so cards can never render
+   behind it in the first place. That means this backdrop no longer needs to
+   hide anything — it can go fully transparent and let the photo show
+   straight through, same as the unboxed buttons on the main screen. */
+.mymons-top,
+.collection-header { background: transparent; }
+
+/* True scroll clip, top and bottom. #screen-mymons stops being the
+   scrolling element itself (overflow: hidden) and instead lays out as
+   .mymons-top (fixed height, non-scrolling) + .mymons-scroll (flex:1). The
+   margin-bottom on .mymons-scroll — not padding — is what makes the bottom
+   boundary real: it shrinks the flex item's own box so its overflow clip
+   edge sits exactly at the top of the fixed .stats-strip footer, instead of
+   at the viewport edge behind it. Padding alone still lets scrolling
+   content slide underneath the (translucent) footer on its way to the
+   padded rest position; a smaller box can't. */
+#screen-mymons.screen {
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+/* No longer needs position:sticky — #screen-mymons doesn't scroll itself
+   any more, so the base sheet's sticky-to-top behaviour has nothing to
+   react to. Pinning it to static explicitly rather than leaving that as an
+   incidental no-op. */
+.mymons-top { position: static; flex-shrink: 0; }
+.mymons-scroll {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-bottom: var(--stats-h);
+}
+
+.collection-tab {
+  background: var(--scanlines), var(--btn-dark);
+  color: var(--cream);
+  clip-path: var(--pixel-clip-xs);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.1),
+    inset 0 -3px 0 rgba(0,0,0,.22);
+}
+
+.collection-tab--active {
+  background: var(--scanlines), var(--gold);
+  color: #2a1a02;
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
+
+/* BACK already inherits the shared secondary-button fill (.btn-ghost is in
+   that selector list) — it only needed the shallow corner, on both the
+   button itself (style.css gives every .btn its own deep --pixel-clip,
+   independent of the wrapper — the same gap fixed for START/PAUSE earlier)
+   and its .pxb ring, plus, via the .pxb un-scoping above, its ring colour. */
+.btn-ghost,
+.pxb:has(.btn-ghost) { clip-path: var(--pixel-clip-xs); }
+
+/* Blend / Smoothies: dashed-border V2 drop zones become the same green box
+   as the main screen — the same two rings around the fill (a dark
+   --outline-t line, then a paler --frame-t band just inside it) that the
+   main panel uses. The fill itself is --panel-bg-strong-t, not
+   --panel-bg-t: at --panel-bg-t's alpha these smaller boxes read as barely
+   tinted/"clear" next to the one big saturated main panel, so they use the
+   higher-alpha variant to read as the same strength of green by eye. These
+   boxes are small enough that a real border still follows the clipped
+   corners cleanly (unlike the big main panel, which needed the 3-layer div
+   trick — see .pxb-panel above), so both rings are done with border + an
+   inset box-shadow rather than extra elements. */
+.blender-drop,
+.smoothie-box {
+  background: var(--scanlines), var(--panel-bg-strong-t);
+  border: 2px solid var(--outline-t);
+  box-shadow: inset 0 0 0 4px var(--frame-t);
+  border-radius: 0;
+  clip-path: var(--pixel-clip-2xs);
+}
+
+.blender-drop.drag-over {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 4px rgba(229,172,53,.4);
+  background: var(--scanlines), rgba(229,172,53,.28);
+}
+
+/* Mon cards: square the rounded corners into the same shallow pixel notch
+   as everything else. Fill is --panel-bg-strong-t (see the comment on
+   .blender-drop above) — a dozen-plus small cards at the main panel's alpha
+   read as clear/washed-out, so cards use the stronger variant to read as
+   the same green by eye. Border swaps from the base sheet's plain white
+   card edge to --frame-t, the main panel's own rail tone, so the edge
+   matches too, not just the fill. The coloured border for
+   shiny/dark/active-companion states is untouched — those still override
+   just border-color, which wins over this default by specificity. */
+.mon-card {
+  background: var(--scanlines), var(--panel-bg-strong-t);
+  border-color: var(--frame-t);
+  border-radius: 0;
+  clip-path: var(--pixel-clip-2xs);
+}
+
+.type-badge {
+  border-radius: 0;
+  clip-path: var(--pixel-clip-2xs);
+}
+
+/* ── V3 rollout: encounter overlay + confirm modals ─────────
+   Same translucent-over-photo treatment as the panels; the overlays
+   themselves already show the photo (background block near the top of this
+   file) via the shared body rule. */
+
+/* Arena panel — now the innermost fill of the same three-layer frame the
+   main screen's mon box uses (.pxb-panel > .panel-rail > fill), added in
+   index.html. It was a single clipped div before: translucent fill directly
+   against the photo, with no black+pale border anchoring the edge, which is
+   what read as flickering at the corners. .pxb-panel and .panel-rail supply
+   the outline and rail for free — they're the exact same classes the main
+   panels use — this only has to size the new outer wrapper and keep the
+   fill's own translucent colour. */
+.encounter-arena-wrap { width: 100%; max-width: 560px; }
+.encounter-arena {
+  background: var(--scanlines), var(--panel-bg-t);
+}
+
+/* THROW! / RUN AWAY row — same fix, same reasoning: was a single opaque
+   var(--panel-bg) slab with no rail. Now the fill layer of the same
+   pxb-panel > panel-rail frame, added in index.html. */
+.encounter-controls-wrap { width: 100%; max-width: 560px; }
+.encounter-controls {
+  background: var(--scanlines), var(--panel-bg-t);
+}
+
+/* Blend-confirm / spawn-info: small modal cards over a dark scrim. Square
+   corners + the same translucent fill as everything else, instead of the
+   rounded opaque brown box these used before. */
+.blender-confirm-box,
+.spawn-info-box {
+  background: var(--scanlines), var(--panel-bg-t);
+  border: none;
+  border-radius: 0;
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* ── TEMP: rivets + outer border off ────────────────────────
+   Hides the console frame (html::before/::after, the bezel + its 4 corner
+   screws) and the panel corner screws (.companion-area::after /
+   .panel-plate::after). Nothing above is touched or removed — this just
+   stops it from painting, so deleting this block puts it all back exactly
+   as it was. TO REVERT: delete this rule. */
+html::before,
+html::after,
+.companion-area::after,
+.panel-plate::after {
+  display: none;
 }

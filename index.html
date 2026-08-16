@@ -191,8 +191,14 @@
     </div>
     </div>
 
+    <!-- True scroll clip: this is the only part of the screen that scrolls,
+         bounded above by .mymons-top and below (via margin-bottom, see
+         style-v3.css) by the fixed stats-strip footer, so cards can never
+         render behind either — no reliance on sticky/opaque stacking. -->
+    <div class="mymons-scroll">
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
+    </div>
     </div>
   </main>
 
@@ -220,7 +226,12 @@
     <p class="tagline">FOCUS · CATCH · COLLECT</p>
 
     <div class="encounter-body">
-      <div class="encounter-arena">
+      <!-- Same three-layer frame as the main screen's mon box: pxb-panel
+           (black outline) > panel-rail (pale rail) > encounter-arena (fill).
+           A single clipped layer here read as a flat cutout against the
+           busy photo behind it, with the corner boundary flickering where
+           the translucent fill met the picture with no border anchoring it. -->
+      <div class="pxb-panel encounter-arena-wrap"><div class="panel-rail"><div class="encounter-arena">
         <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
 
         <div class="encounter-stage">
@@ -234,14 +245,18 @@
         </div>
 
         <p class="encounter-sub" id="encounter-sub"></p>
-      </div>
+      </div></div></div>
 
+      <!-- Same three-layer frame as the arena above and the main screen's
+           boxes: pxb-panel (outline) > panel-rail (rail) > fill. -->
+      <div class="pxb-panel encounter-controls-wrap"><div class="panel-rail">
       <div class="encounter-controls" id="encounter-controls">
         <div class="pxb"><button class="btn btn-primary" id="btn-throw">THROW! <img src="assets/sprites/Tomato/Tomato.png" alt="" class="btn-tomato-img"></button></div>
         <div class="pxb"><button class="btn btn-timer-dark" id="btn-flee">RUN AWAY</button></div>
         <div class="pxb"><button class="btn btn-primary" id="btn-catch-next" hidden>NEXT <span class="btn-arrow">▶</span></button></div>
         <div class="pxb"><button class="btn btn-timer-dark" id="btn-catch-dex" hidden>INFO</button></div>
       </div>
+      </div></div>
     </div>
   </div>
 
