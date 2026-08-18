@@ -12,7 +12,7 @@
   id:        Number,   // unique, never reused (records reference it)
   dexNum:    Number,   // pomodex ordering — see numbering convention below
   name:      String,   // display name
-  type:      String | [String, String],  // 'Basic', 'Sweet', ['Fire','Ghost']…
+  type:      String | [String, String],  // flavour type — 'Sweet', 'Spicy', 'Savory', 'Sour', 'Bitter' (array supported for dual-type but unused currently)
   color:     String,   // hex — used by procedural block-art fallback
   accent:    String,   // hex — darker accent for fallback art
   rarity:    String,   // LEGACY — inert, not read anywhere
@@ -40,19 +40,26 @@ unlocked evolution's fields.
 
 ## Current Roster (12 lines, 20 dex entries)
 
-| id | Dex | Name       | Type   | Evolutions (atLevel → dex)                       |
-|----|-----|------------|--------|--------------------------------------------------|
-| 1  | 1   | Tomotot    | Basic  | 16 → Marinaro #2 (Steel), 36 → Strangletti #3 (Dark) |
-| 3  | 4   | Avocuddle  | Basic  | 20 → Pittsworth #5 (Fighting), 36 → Guacamonger #6 (Fighting) |
-| 4  | 7   | Chilino    | Basic  | 20 → Scorchpepper #8 (Fire), 36 → Ghostpepper #9 (Fire/Ghost) |
-| 6  | 10  | Donot      | Sweet  | —                                                |
-| 5  | 11  | Bluble     | Basic  | 20 → Mufman #12 (Sweet)                          |
-| 7  | 13  | Pumplet    | Ghost  | 20 → Jackwicks #14 (Ghost)                       |
-| 8  | 15  | Marshpuff  | Sweet  | 20 → Marshmelt #16 (Sweet)                       |
-| 9  | 17  | Wedgling   | Basic  | —                                                |
-| 10 | 18  | Purrplant  | Plant  | —                                                |
-| 11 | 19  | Chillcone  | Basic  | —                                                |
-| 12 | 20  | Cocokid    | Basic  | —                                                |
+Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
+is a food, so a taste axis fits better than borrowed elemental types. A
+line's type only shifts across evolution when the prep genuinely changes the
+flavour (blueberry → muffin: Sour → Sweet; avocado pit is bitter/inedible
+before the guac: Savory → Bitter → Savory). Otherwise it holds steady, even
+through a name change (tomato → marinara → spaghetti stays Savory throughout).
+
+| id | Dex | Name       | Type    | Evolutions (atLevel → dex)                         |
+|----|-----|------------|---------|-----------------------------------------------------|
+| 1  | 1   | Tomotot    | Savory  | 16 → Marinaro #2 (Savory), 36 → Strangletti #3 (Savory) |
+| 3  | 4   | Avocuddle  | Savory  | 20 → Pittsworth #5 (Bitter), 36 → Guacamonger #6 (Savory) |
+| 4  | 7   | Chilino    | Spicy   | 20 → Scorchpepper #8 (Spicy), 36 → Ghostpepper #9 (Spicy) |
+| 6  | 10  | Donot      | Sweet   | —                                                    |
+| 5  | 11  | Bluble     | Sour    | 20 → Mufman #12 (Sweet)                              |
+| 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
+| 8  | 15  | Marshpuff  | Sweet   | 20 → Marshmelt #16 (Sweet)                           |
+| 9  | 17  | Wedgling   | Savory  | —                                                    |
+| 10 | 18  | Purrplant  | Savory  | —                                                    |
+| 11 | 19  | Chillcone  | Sweet   | —                                                    |
+| 12 | 20  | Cocokid    | Sweet   | —                                                    |
 
 Spawning is **uniform** across base mons (no rarity weighting). Shiny (1%) and
 dark (5%) variant rolls are independent of species — see game-mechanics.md.

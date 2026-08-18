@@ -142,8 +142,8 @@ const SFX = (() => {
       osc.frequency.linearRampToValueAtTime(70,  t + dur);
 
       const env = ac.createGain();
-      env.gain.setValueAtTime(0.14, t);
-      env.gain.linearRampToValueAtTime(0.15, t + dur * 0.6);
+      env.gain.setValueAtTime(0.084, t);
+      env.gain.linearRampToValueAtTime(0.09, t + dur * 0.6);
       env.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
       // ── LFO: simulates engine cylinder firing (put-put-put effect)
@@ -154,7 +154,7 @@ const SFX = (() => {
       lfo.frequency.linearRampToValueAtTime(30, t + dur);         // wind down
 
       const lfoDepth      = ac.createGain();
-      lfoDepth.gain.value = 0.11;
+      lfoDepth.gain.value = 0.066;
 
       lfo.connect(lfoDepth);
       lfoDepth.connect(env.gain);

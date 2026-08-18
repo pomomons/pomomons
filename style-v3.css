@@ -1320,22 +1320,25 @@ html::after {
 .mymons-top,
 .collection-header { background: transparent; }
 
-/* True scroll clip, top and bottom. #screen-mymons stops being the
-   scrolling element itself (overflow: hidden) and instead lays out as
-   .mymons-top (fixed height, non-scrolling) + .mymons-scroll (flex:1). The
-   margin-bottom on .mymons-scroll — not padding — is what makes the bottom
-   boundary real: it shrinks the flex item's own box so its overflow clip
-   edge sits exactly at the top of the fixed .stats-strip footer, instead of
-   at the viewport edge behind it. Padding alone still lets scrolling
-   content slide underneath the (translucent) footer on its way to the
-   padded rest position; a smaller box can't. */
-#screen-mymons.screen {
+/* True scroll clip, top and bottom. #screen-mymons and #screen-dex stop
+   being the scrolling element themselves (overflow: hidden) and instead lay
+   out as .mymons-top (fixed height, non-scrolling) + .mymons-scroll
+   (flex:1). The margin-bottom on .mymons-scroll — not padding — is what
+   makes the bottom boundary real: it shrinks the flex item's own box so its
+   overflow clip edge sits exactly at the top of the fixed .stats-strip
+   footer, instead of at the viewport edge behind it. Padding alone still
+   lets scrolling content slide underneath the (translucent) footer on its
+   way to the padded rest position; a smaller box can't. Dex shares this
+   exact structure/CSS (not just the same class names) so both collection
+   screens scroll identically. */
+#screen-mymons.screen,
+#screen-dex.screen {
   overflow: hidden;
   padding-bottom: 12px;
 }
-/* No longer needs position:sticky — #screen-mymons doesn't scroll itself
-   any more, so the base sheet's sticky-to-top behaviour has nothing to
-   react to. Pinning it to static explicitly rather than leaving that as an
+/* No longer needs position:sticky — neither screen scrolls itself any
+   more, so the base sheet's sticky-to-top behaviour has nothing to react
+   to. Pinning it to static explicitly rather than leaving that as an
    incidental no-op. */
 .mymons-top { position: static; flex-shrink: 0; }
 .mymons-scroll {
@@ -1343,7 +1346,12 @@ html::after {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  margin-bottom: var(--stats-h);
+  /* --stats-h reserves more than the strip's actual rendered height (it's
+     sized to cover worst-case wrapped content), so a straight var(--stats-h)
+     margin leaves a ~47px dead gap above the strip. Clawing back 32px of that
+     brings the grid close enough to read as "almost touching" with a small
+     gap left over. */
+  margin-bottom: calc(var(--stats-h) - 32px);
 }
 
 .collection-tab {

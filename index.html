@@ -146,7 +146,7 @@
                    the .pxb wrapper that draws the light edge. -->
               <div class="btn-shadow"><div class="pxb"><button class="btn btn-timer-mode" id="btn-mode"><span class="mode-label">FOCUS SESSION</span><span class="mode-caret">▼</span></button></div></div>
             </div>
-            <div class="btn-shadow"><div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>↺ RESET</button></div></div>
+            <div class="btn-shadow"><div class="pxb"><button class="btn btn-timer-dark" id="btn-reset" disabled>RESET</button></div></div>
           </div>
           <div class="pxb"><button class="btn btn-timer-start" id="btn-start">▶ START</button></div>
           <div class="pxb"><button class="btn btn-collection" id="btn-go-mymons">POMODEX</button></div>
@@ -204,6 +204,8 @@
 
   <!-- ── Dex Screen ─────────────────────────────────────── -->
   <main id="screen-dex" class="screen">
+    <!-- Header pinned while the grid scrolls — same structure as My Mons -->
+    <div class="mymons-top">
     <div class="collection-header">
       <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
       <div class="collection-tabs">
@@ -212,7 +214,14 @@
       </div>
       <span class="collection-count" id="dex-count">0 / 11</span>
     </div>
+    </div>
+
+    <!-- True scroll clip: same fix as My Mons — bounded above by .mymons-top
+         and below (via margin-bottom, see style-v3.css) by the fixed
+         stats-strip footer, so cards can never render behind either. -->
+    <div class="mymons-scroll">
     <div class="collection-grid" id="dex-grid"></div>
+    </div>
   </main>
 
   <!-- ── Encounter Flash (full-screen transition) ─────── -->

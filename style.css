@@ -38,21 +38,17 @@
   --border-frame:  3px solid rgba(255,255,255,.18);   /* canvas / major frame*/
   --border-accent: 3px solid var(--gold);             /* highlighted box     */
 
-  /* Pomomon type colours. Run `node tools/palette-check.js` to audit.
-     Six chromatic types are spread around the wheel (min 21° apart) avoiding
-     30-70° (UI gold) and 150-190° (teal mode background); the three
-     near-achromatic types are separated by lightness instead of hue, since
-     water/dark/steel previously sat within 7° of each other and were
-     indistinguishable at .45rem. All nine clear 4.5:1 against white labels. */
-  --type-fire:     #cf3527;   /*   5° */
-  --type-fighting: #834210;   /*  26° — darker than fire; value carries the split */
-  --type-plant:    #1e811e;   /* 120° */
-  --type-water:    #1c6faa;   /* 205° */
-  --type-ghost:    #863fb4;   /* 276° */
-  --type-sweet:    #bd277e;   /* 325° */
-  --type-basic:    #6e7177;   /* neutral, lightest  */
-  --type-steel:    #515e6c;   /* neutral, mid       */
-  --type-dark:     #2d3a4d;   /* neutral, darkest   */
+  /* Pomomon type colours — five flavour types (Basic/Steel/Dark tier
+     placeholders and the borrowed Fire/Fighting/Ghost/Plant/Water elemental
+     set are gone; every mon now carries a real taste instead). Run
+     `node tools/palette-check.js` to audit. All five are chromatic, spread
+     around the wheel (min 21° apart) avoiding 30-70° (UI gold) and 150-190°
+     (teal mode background), and clear 4.5:1 against white labels. */
+  --type-spicy:    #cc3a24;   /*   8° */
+  --type-sour:     #5a791a;   /*  80° */
+  --type-savory:   #3a7630;   /* 111° */
+  --type-bitter:   #2d7746;   /* 140° */
+  --type-sweet:    #bd277e;   /* 325° — unchanged from the previous palette */
 
   /* Typography scale — whole pixels only. Press Start 2P is drawn on a pixel
      grid, so fractional sizes (.45rem = 7.2px) land its glyph edges between
@@ -457,15 +453,11 @@ body::after {
      of the focus red — without this ring their outline would vanish there. */
   box-shadow: 0 0 0 2px rgba(0,0,0,.38);
 }
-.type-basic   { background: var(--type-basic); }
-.type-water    { background: var(--type-water); }
-.type-fire     { background: var(--type-fire); }
-.type-ghost    { background: var(--type-ghost); }
-.type-dark     { background: var(--type-dark); }
-.type-fighting { background: var(--type-fighting); }
+.type-spicy    { background: var(--type-spicy); }
+.type-sour     { background: var(--type-sour); }
+.type-savory   { background: var(--type-savory); }
+.type-bitter   { background: var(--type-bitter); }
 .type-sweet    { background: var(--type-sweet); }
-.type-plant    { background: var(--type-plant); }
-.type-steel    { background: var(--type-steel); }
 
 /* ── Session tabs ────────────────────────────────────────── */
 .session-tabs {
@@ -1435,13 +1427,17 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* Rarity only shows when it's noteworthy (uncommon / rare / dark / shiny) — hidden for common */
 .encounter-rarity.common { display: none; }
 
-/* Type badge — pixel-staircase style matching the buttons */
+/* Type badge — same shallow corner as every other type badge in the app
+   (My Mons / Dex cards, mon-detail, evolution chain). The deeper
+   --pixel-clip-sm notch used to make this small a badge read as a rounded
+   pill instead of a rectangle — --pixel-clip-2xs keeps it a clean rectangle
+   with just the corner knocked off. */
 .encounter-topbar .type-badge {
   font-size: 10px;
   padding: 8px 12px;
   letter-spacing: .06em;
   border-radius: 0;
-  clip-path: var(--pixel-clip-sm);
+  clip-path: var(--pixel-clip-2xs);
   filter: var(--pxdrop-sm);
 }
 
@@ -1508,7 +1504,9 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   letter-spacing: .06em;
   background: var(--gold);
   padding: 8px 12px;
-  clip-path: var(--pixel-clip-sm);
+  /* Same shallow corner as the companion's LV badge (.lv-frame .companion-lvl)
+     — the deeper --pixel-clip-sm notch read as a rounded pill at this size. */
+  clip-path: var(--pixel-clip-xs);
   filter: var(--pxdrop-sm);
   white-space: nowrap;
 }
@@ -2240,11 +2238,15 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   /* Narrower panel on mobile — keep the left-grouped pills on-panel */
   .companion-meta { left: -85px; right: -55px; }
 
-  /* Collection tabs: keep BACK + tabs + count on one row without clipping the count */
-  .collection-header { gap: 4px; }
+  /* Collection tabs: BACK + tabs + count try to stay on one row, but on the
+     Dex screen "X / Y" is wide enough that at narrow widths there's no room
+     left for it next to BACK + both tabs. Rather than clip it, let it wrap
+     to its own centered line below — happens automatically only when it
+     doesn't fit (My Mons' shorter count never triggers it). */
+  .collection-header { gap: 4px; flex-wrap: wrap; }
   .collection-tabs { gap: 4px; }
   .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
-  .collection-count { font-size: 10px; }
+  .collection-count { font-size: 10px; margin: 2px auto 0; }
 
   /* Map icon: smaller, and its frame position must scale with the size.
      The timer screen is top-anchored (flex-start) with natural bottom slack,
@@ -2535,7 +2537,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .blender-confirm-warn {
-  font-size: 6px;
+  font-size: 8px;
   color: #ff6b6b;
   letter-spacing: .08em;
 }

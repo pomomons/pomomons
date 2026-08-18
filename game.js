@@ -570,6 +570,29 @@ const EncounterScreen = (() => {
   const _groundImg = new Image();
   _groundImg.src = 'assets/sprites/Ground/Ground1.png';
 
+  // Draw one square "pixel" block, snapped to whole screen pixels — same
+  // convention as MonSprite's sparkle FX. Used instead of ctx.arc()/stroke()
+  // for the catch-effect bursts below so they read as chunky 8-bit particles
+  // rather than smooth anti-aliased vector shapes.
+  function block(color, x, y, w, h) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  }
+
+  // A ring of square blocks around (cx, cy) — the pixel-art stand-in for a
+  // stroked/filled circle.
+  function blockRing(color, cx, cy, radius, blockSize, count, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const bx = cx + Math.cos(angle) * radius;
+      const by = cy + Math.sin(angle) * radius;
+      block(color, bx - blockSize / 2, by - blockSize / 2, blockSize, blockSize);
+    }
+    ctx.restore();
+  }
+
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
       elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName,
@@ -719,17 +742,10 @@ const EncounterScreen = (() => {
       if (f / 90 < 1) drawTomato(f / 90);
 
     } else if (st.phase === 'absorbing') {
-      // Expanding white impact ring
+      // Expanding white impact ring — a burst of square pixels, not a smooth stroke
       if (f < 12) {
         const rt = f / 12;
-        ctx.save();
-        ctx.globalAlpha = (1 - rt) * 0.85;
-        ctx.beginPath();
-        ctx.arc(cx, MON_CY, 8 + rt * 50, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.restore();
+        blockRing('#fff', cx, MON_CY, 8 + rt * 50, 6, 12, (1 - rt) * 0.85);
       }
       // Mon shrinks rapidly into the tomato (easeIn scale-down)
       const absT  = Math.min(1, f / 35);
@@ -783,38 +799,20 @@ const EncounterScreen = (() => {
       drawTomatoBall(cx, GROUND_Y, wobble);
 
     } else if (st.phase === 'locked') {
-      // Shimmer effect tied to the click — window frames 22–58, click fires at 25
+      // Shimmer effect tied to the click — window frames 22–58, click fires at 25.
+      // A pixel-dust burst (two block rings) stands in for the old smooth
+      // glow + thin rotating ray lines, so the catch confirmation reads as
+      // 8-bit particles rather than a vector glow.
       if (f >= 22 && f <= 58) {
         const t = (f - 22) / 36;
         const shimAlpha = Math.sin(t * Math.PI);
-        // White glow expands behind the tomato
-        ctx.save();
-        ctx.globalAlpha = shimAlpha * 0.50;
-        ctx.beginPath();
-        ctx.arc(cx, GROUND_Y, 22 + t * 22, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
-        ctx.fill();
-        ctx.restore();
+        blockRing('#fff', cx, GROUND_Y, 14 + t * 16, 5, 10, shimAlpha * 0.55);
       }
       drawTomatoBall(cx, GROUND_Y, 0);
       if (f >= 22 && f <= 58) {
         const t = (f - 22) / 36;
         const shimAlpha = Math.sin(t * Math.PI);
-        // 8 golden rays burst outward on top of the tomato
-        ctx.save();
-        ctx.globalAlpha = shimAlpha * 0.90;
-        ctx.strokeStyle = '#ffe082';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          const r1 = 26;
-          const r2 = r1 + 8 + t * 24;
-          ctx.beginPath();
-          ctx.moveTo(cx + Math.cos(angle) * r1, GROUND_Y + Math.sin(angle) * r1);
-          ctx.lineTo(cx + Math.cos(angle) * r2, GROUND_Y + Math.sin(angle) * r2);
-          ctx.stroke();
-        }
-        ctx.restore();
+        blockRing('#ffe082', cx, GROUND_Y, 26 + t * 24, 6, 8, shimAlpha * 0.90);
       }
 
     } else if (st.phase === 'result') {
