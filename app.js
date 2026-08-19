@@ -34,7 +34,7 @@ let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15'
 // ── TESTING ONLY — short-circuit focus sessions ───────────
 // Set to a number of seconds (e.g. 3) to make focus sessions fire almost
 // immediately; null uses the normal minute-based durations.
-const TEST_FOCUS_SECS = 3;
+const TEST_FOCUS_SECS = null;
 const focusSecs = () => TEST_FOCUS_SECS ?? focusMins * 60;
 
 MODES.focus = focusSecs();
