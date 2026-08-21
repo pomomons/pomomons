@@ -712,6 +712,25 @@ const Collection = (() => {
     overlay.classList.add('active');
   }
 
+  // ── Public: openActiveMonDetail — open the equipped companion's own
+  // detail card (e.g. from clicking its LV badge on the timer screen).
+  // Looks the record up by pm_active_rec_key rather than trusting any
+  // cached copy, since XP/level change constantly while it's active.
+  async function openActiveMonDetail() {
+    const keyStr = localStorage.getItem('pm_active_rec_key');
+    const key    = keyStr ? parseInt(keyStr, 10) : null;
+    if (!key || !db || typeof MONS === 'undefined') return;
+
+    const all = await getAllCaughtWithKeys();
+    const rec = all.find(r => r._key === key);
+    if (!rec) return;
+
+    const mon = MONS.find(m => m.id === rec.id);
+    if (!mon) return;
+
+    openMonDetail(mon, rec);
+  }
+
   // ── Internal: renderDetail — fill the detail card from detailRec ─
   function renderDetail() {
     const rec      = detailRec;
@@ -745,6 +764,32 @@ const Collection = (() => {
     // Stat rows
     document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
     document.getElementById('mds-level').textContent   = `LV ${palLevel}`;
+
+    // How close this mon is to its next level — same idea as the EXP bar
+    // under a Pokémon's level on its summary screen: current/needed XP as
+    // both a number and a fill bar. PAL_MAX mirrors app.js's savePalExp().
+    const PAL_MAX  = 100;
+    const xpTextEl = document.getElementById('mds-xp-text');
+    const xpBarEl  = document.getElementById('mds-xp-bar');
+    if (xpTextEl && xpBarEl) {
+      // The active companion's record only gets its palExp persisted to IDB
+      // on level-up (see updateActivePalLevel) — mid-level it's stale, so
+      // read the live numbers from localStorage for that one mon instead.
+      const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
+      const isActive  = rec._key !== undefined && rec._key === activeKey;
+      const exp = isActive
+        ? parseInt(localStorage.getItem('pm_active_pal_exp') || '0', 10)
+        : (rec.palExp || 0);
+
+      if (palLevel >= PAL_MAX) {
+        xpTextEl.textContent = 'MAX LEVEL';
+        xpBarEl.style.width  = '100%';
+      } else {
+        const needed = typeof palExpThreshold === 'function' ? palExpThreshold(palLevel) : 1;
+        xpTextEl.textContent = `${exp} / ${needed} XP`;
+        xpBarEl.style.width  = Math.max(0, Math.min(100, (exp / needed) * 100)) + '%';
+      }
+    }
 
     // Type badges live in their own stat row
     const typeEl = document.getElementById('mds-type');
@@ -887,5 +932,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail };
+  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail };
 })();

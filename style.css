@@ -1778,7 +1778,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   top: 14px;
   left: 14px;
   z-index: 3;
-  clip-path: var(--pixel-clip-sm);
+  /* Same shallow corner as the Pomodex/My Mons header BACK button
+     (.btn-ghost gets --pixel-clip-xs globally) — the deeper --pixel-clip-sm
+     notch read as a rounded pill at this button's small size. */
+  clip-path: var(--pixel-clip-xs);
   filter: var(--pxdrop-sm);
 }
 
@@ -1789,7 +1792,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   padding: 8px 12px;
   font-size: 8px;
   min-height: 0;
-  clip-path: var(--pixel-clip-sm);
+  clip-path: var(--pixel-clip-xs);
 }
 /* 14px insets match SAVE/CANCEL — at this height they meet in the middle
    for a clean two-tone split rather than a thin band. */
@@ -1933,6 +1936,29 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
    row centres instead of baseline-aligning like the text-only rows. */
 .mds-row-type { align-items: center; }
 .mds-row-type .mds-v { display: flex; justify-content: flex-end; }
+
+/* Next-level progress — text row + bar row read as one grouped block (no
+   divider between them), same gold-on-dark language as the companion's XP
+   bar on the timer screen, just full-width instead of a fixed 164px. */
+.mds-row-xp    { border-bottom: none; padding-bottom: 4px; }
+.mds-row-xpbar { padding-top: 0; align-items: center; }
+
+.mds-xp-wrap {
+  width: 100%;
+  height: 10px;
+  background: #0a1710;
+  clip-path: var(--pixel-clip-xs);
+  overflow: hidden;
+}
+
+.mds-xp-bar {
+  height: 100%;
+  background: var(--gold);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.42),
+    inset 0 -3px 0 rgba(0,0,0,.22);
+  transition: width .4s ease;
+}
 
 .mds-k {
   font-size: 8px;

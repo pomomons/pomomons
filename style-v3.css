@@ -1212,6 +1212,19 @@ html::after {
   flex-shrink: 0;
 }
 
+/* Only the companion's LV badge is a real <button> (opens its mon detail
+   card) — the footer stats-strip LV badge reuses .lv-frame too but stays
+   inert, so the reset/hover live on this extra class, not .lv-frame itself. */
+.companion-lv-btn {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.companion-lv-btn:hover  { filter: brightness(1.12); }
+.companion-lv-btn:active { transform: var(--btn-press); }
+
 .level-badge,
 .companion-lvl {
   display: block;

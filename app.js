@@ -434,6 +434,9 @@ Collection.init().then(async () => {
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
+document.getElementById('btn-companion-level')?.addEventListener('click', () => {
+  if (typeof Collection !== 'undefined') Collection.openActiveMonDetail();
+});
 document.getElementById('btn-back-mymons').addEventListener('click',  () => showScreen('timer'));
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
 document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));

@@ -111,8 +111,10 @@
         <div class="companion-meta">
           <div class="companion-meta-row">
             <!-- .lv-frame draws the badge's dark outline (its background
-                 showing through its padding), as the panels and tiles do. -->
-            <p class="lv-frame"><span class="companion-lvl">LV <span id="companion-level">1</span></span></p>
+                 showing through its padding), as the panels and tiles do.
+                 A real <button> so it's clickable/keyboard-reachable —
+                 opens the companion's own mon detail card. -->
+            <button type="button" class="lv-frame companion-lv-btn" id="btn-companion-level" aria-label="View companion details"><span class="companion-lvl">LV <span id="companion-level">1</span></span></button>
             <span class="companion-xp-text"><span id="companion-xp-cur">0</span> / <span id="companion-xp-max">30</span> XP</span>
           </div>
           <!-- .xp-frame draws the bar's black outline, as .lv-frame does for
@@ -334,6 +336,16 @@
       <div class="mon-detail-stats">
         <div class="mds-row"><span class="mds-k">SPECIES</span><span class="mds-v" id="mds-species">—</span></div>
         <div class="mds-row"><span class="mds-k">LEVEL</span><span class="mds-v" id="mds-level">—</span></div>
+        <!-- Pokémon-style "how close to the next level" readout: cur/max XP
+             text above a fill bar, same visual language as the companion's
+             XP bar on the timer screen (gold fill, dark track). -->
+        <div class="mds-row mds-row-xp">
+          <span class="mds-k">NEXT LEVEL</span>
+          <span class="mds-v" id="mds-xp-text">—</span>
+        </div>
+        <div class="mds-row mds-row-xpbar">
+          <div class="mds-xp-wrap"><div class="mds-xp-bar" id="mds-xp-bar" style="width:0%"></div></div>
+        </div>
         <div class="mds-row mds-row-type"><span class="mds-k">TYPE</span><span class="mds-v" id="mds-type">—</span></div>
         <div class="mds-row"><span class="mds-k">GENDER</span><span class="mds-v" id="mds-gender">—</span></div>
         <div class="mds-row"><span class="mds-k">NATURE</span><span class="mds-v" id="mds-nature">—</span></div>
