@@ -1283,6 +1283,54 @@ html::after {
 
   .companion-area::after,
   .panel-plate::after { inset: 4px; }
+
+  /* The ▲▼ minute steppers sit absolutely positioned over the timer's right
+     edge (style-v2.css .time-adjust). .timer-time has white-space:nowrap,
+     so past a certain width padding can't help any more — the text is a
+     fixed natural width and just overflows its (now-smaller) box instead of
+     shrinking to fit, bleeding out either side of centre. 36px keeps
+     "88:88" (the widest possible reading) narrower than the space actually
+     left over once the steppers' ~65px column is reserved, at any width
+     this rule applies to (≤479px). Lives here, not the base sheet, because
+     style-v2.css's mobile rule sets .timer-display's size/padding after it
+     and would otherwise win. */
+  .timer-display { font-size: 36px; padding-right: 54px; }
+}
+
+/* Short portrait phones (≤700px tall — iPhone SE/8, small Android, or any
+   phone where the browser's own address bar eats into the viewport). The
+   timer screen assumes the companion panel + timer panel both fit in one
+   view; below this height they don't, and since the stats strip is
+   position:fixed (not part of the scrollable flow), whatever doesn't fit
+   renders *underneath* it instead of requiring a scroll. Same idea as the
+   landscape query below — shrink the reserved footer space and every
+   panel — for the still vertically-stacked portrait layout. Also lives here
+   (not the base sheet) so it wins over style-v2.css's unconditional mobile
+   sizing. orientation:portrait keeps it from doubling up with landscape. */
+@media (max-height: 700px) and (orientation: portrait) {
+  :root { --stats-h: 125px; }
+
+  .app-header { padding: 10px 12px 4px; gap: 2px; }
+  .logo-pomo, .logo-mons { font-size: 22px; }
+  .logo-tomato-img { height: 1.4rem; }
+  .logo-icon { font-size: 22px; }
+  .tagline { display: none; }
+
+  .screen { padding: 8px 8px calc(var(--stats-h) + 8px); gap: 6px; }
+
+  #companion-canvas { width: 110px; height: 110px; }
+  .companion-stage   { width: 110px; height: 110px; }
+  .companion-area { padding: 8px 8px 6px; gap: 6px; }
+  /* Smaller + higher, same fix the base sheet already uses for the prompt
+     (see the comment on .companion-name.is-prompt) — just tuned further so
+     it clears the "?" placeholder graphic even wrapped at this width. */
+  .companion-name.is-prompt { font-size: 9px; top: 3%; }
+
+  /* A step smaller than the general 36px above — short *and* narrow phones
+     (e.g. 320×568) need the extra margin on top of the reserved column. */
+  .timer-display { font-size: 32px; padding: 8px 60px 8px 12px; }
+  .controls-group { padding: 8px 16px; gap: 4px; }
+  .timer-controls { gap: 4px; }
 }
 
 /* Landscape phones (≤520px tall). The framed strip is ~18px taller than the
