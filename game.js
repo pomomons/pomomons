@@ -460,45 +460,94 @@ const CompanionCanvas = (() => {
 
     // --- Draw ---
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    if (SPRITE.noMon) { drawPlaceholder(); rafId = requestAnimationFrame(tick); return; }
+    if (SPRITE.noMon) { drawPlaceholderRotation(state.y); rafId = requestAnimationFrame(tick); return; }
     drawSprite(state.y, state.squishX, state.squishY);
 
     rafId = requestAnimationFrame(tick);
   }
 
-  // ── Empty-state placeholder — a gently bobbing pixel "?" where the mon goes ──
-  function drawPlaceholder() {
-    const GROUND_Y = 192; // same bottom anchor as real sprites
-    const bobY = Math.sin(Date.now() / 500) * 5;
-    const cell = 13;
-    // 6×8 bitmap of a question mark
-    const bmp = [
-      [0,1,1,1,1,0],
-      [1,1,0,0,1,1],
-      [0,0,0,0,1,1],
-      [0,0,0,1,1,0],
-      [0,0,1,1,0,0],
-      [0,0,1,1,0,0],
-      [0,0,0,0,0,0],
-      [0,0,1,1,0,0],
-    ];
-    const cols = 6, rows = 8;
-    const w = cols * cell, h = rows * cell;
-    const x0 = CANVAS_SIZE / 2 - w / 2;
-    const y0 = GROUND_Y - h + bobY;
-    // Drop shadow first, then the mark on top.
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (!bmp[r][c]) continue;
-        block('rgba(0,0,0,0.28)', x0 + c * cell + 3, y0 + r * cell + 3, cell, cell);
-      }
+  // ── Empty-state placeholder — no mon caught yet, so there's nothing to
+  // draw for real. Instead of a static "?", cycle through every species'
+  // silhouette (same pool getRandomMon() spawns from, in monsters.js) as a
+  // "who's out there" teaser — quick-fading from one to the next, bottom-
+  // anchored at the same GROUND_Y real mons use so the rotation doesn't
+  // jump around vertically. ──
+  const SILHOUETTE_SHOW_MS = 900;  // how long each species holds before swapping
+  const SILHOUETTE_FADE_MS = 180;  // crossfade duration at the start of each swap
+
+  let silhouettePool  = null; // lazy-built: MONS filtered to sprite-bearing entries
+  let silhouetteIndex = -1;
+  let silhouettePrev  = -1;
+  let silhouetteSwitchAt    = 0;
+  let silhouetteFadeStartAt = 0;
+
+  function ensureSilhouettePool() {
+    if (silhouettePool) return;
+    silhouettePool = (typeof MONS !== 'undefined') ? MONS.filter(m => m.sprite) : [];
+    if (silhouettePool.length) MonSprite.preloadAll(silhouettePool, () => {});
+  }
+
+  // Draws one species as a flat silhouette: same drop-shadow + solid-fill
+  // treatment the old "?" bitmap used, just traced from the sprite's alpha
+  // shape instead of a fixed glyph. brightness(0) flattens every opaque
+  // pixel to black while preserving the sprite's alpha edges; invert(1)
+  // then flips that to white to match the old mark's colour.
+  function drawSilhouette(mon, bobY, alpha) {
+    if (!mon || alpha <= 0) return;
+    const img = MonSprite.getImage(mon.sprite);
+    if (!img.complete || img.naturalWidth === 0) return; // still loading — skip this frame
+
+    const frames = mon.spriteFrames || 1;
+    const axis   = mon.spriteAxis || 'x';
+    const frameIdx = frames > 1 ? frames - 1 : 0; // last frame = eyes-open on blink sheets
+    let srcW, srcH, srcX, srcY;
+    if (axis === 'y') {
+      srcW = img.naturalWidth;
+      srcH = img.naturalHeight / frames;
+      srcX = 0; srcY = frameIdx * srcH;
+    } else {
+      srcW = img.naturalWidth / frames;
+      srcH = img.naturalHeight;
+      srcX = frameIdx * srcW; srcY = 0;
     }
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (!bmp[r][c]) continue;
-        block('rgba(255,255,255,0.82)', x0 + c * cell, y0 + r * cell, cell, cell);
-      }
+
+    const GROUND_Y = 192; // matches drawSprite()'s real-mon anchor
+    const cx   = CANVAS_SIZE / 2;
+    const size = Math.min(srcW * 3, CANVAS_SIZE - 60);
+    const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
+    const dx = Math.round(-size / 2), dy = Math.round(-size / 2);
+
+    ctx.save();
+    ctx.translate(cx, cy + bobY);
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.globalAlpha = alpha * 0.28;
+    ctx.filter = 'brightness(0)';
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, dx + 3, dy + 3, size, size);
+
+    ctx.globalAlpha = alpha * 0.82;
+    ctx.filter = 'brightness(0) invert(1)';
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, dx, dy, size, size);
+
+    ctx.restore();
+  }
+
+  function drawPlaceholderRotation(bobY) {
+    ensureSilhouettePool();
+    if (!silhouettePool.length) return; // MONS not loaded yet — nothing to show
+
+    const now = Date.now();
+    if (now >= silhouetteSwitchAt) {
+      silhouettePrev  = silhouetteIndex;
+      silhouetteIndex = (silhouetteIndex + 1) % silhouettePool.length;
+      silhouetteSwitchAt    = now + SILHOUETTE_SHOW_MS;
+      silhouetteFadeStartAt = now;
     }
+    const fadeT = Math.min(1, (now - silhouetteFadeStartAt) / SILHOUETTE_FADE_MS);
+    if (fadeT < 1 && silhouettePrev >= 0) {
+      drawSilhouette(silhouettePool[silhouettePrev], bobY, 1 - fadeT);
+    }
+    drawSilhouette(silhouettePool[silhouetteIndex], bobY, fadeT);
   }
 
   // ── public API ─────────────────────────────────────────
