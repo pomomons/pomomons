@@ -487,11 +487,13 @@ const CompanionCanvas = (() => {
     if (silhouettePool.length) MonSprite.preloadAll(silhouettePool, () => {});
   }
 
-  // Draws one species as a flat silhouette: same drop-shadow + solid-fill
-  // treatment the old "?" bitmap used, just traced from the sprite's alpha
-  // shape instead of a fixed glyph. brightness(0) flattens every opaque
-  // pixel to black while preserving the sprite's alpha edges; invert(1)
-  // then flips that to white to match the old mark's colour.
+  // Draws one species as a flat silhouette: a drop shadow, then a solid
+  // charcoal-grey fill traced from the sprite's alpha shape (not the old
+  // "?" bitmap's white — a grey silhouette reads more like an unrevealed
+  // shape than a glowing icon). The drawImage's own colours don't matter
+  // here — 'source-in' repaints only the pixels it just covered, i.e.
+  // exactly the sprite's silhouette, with SILHOUETTE_COLOR.
+  const SILHOUETTE_COLOR = '#3a3f3c';
   function drawSilhouette(mon, bobY, alpha) {
     if (!mon || alpha <= 0) return;
     const img = MonSprite.getImage(mon.sprite);
@@ -521,13 +523,16 @@ const CompanionCanvas = (() => {
     ctx.translate(cx, cy + bobY);
     ctx.imageSmoothingEnabled = false;
 
-    ctx.globalAlpha = alpha * 0.28;
+    ctx.globalAlpha = alpha * 0.32;
     ctx.filter = 'brightness(0)';
     ctx.drawImage(img, srcX, srcY, srcW, srcH, dx + 3, dy + 3, size, size);
+    ctx.filter = 'none';
 
-    ctx.globalAlpha = alpha * 0.82;
-    ctx.filter = 'brightness(0) invert(1)';
+    ctx.globalAlpha = alpha * 0.9;
     ctx.drawImage(img, srcX, srcY, srcW, srcH, dx, dy, size, size);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = SILHOUETTE_COLOR;
+    ctx.fillRect(dx - 4, dy - 4, size + 8, size + 8);
 
     ctx.restore();
   }
