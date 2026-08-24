@@ -1284,6 +1284,25 @@ html::after {
   .companion-area::after,
   .panel-plate::after { inset: 4px; }
 
+  /* style-v2.css pins #screen-timer to the top (flex-start + padding-top:28px)
+     for desktop, where there's usually enough content below to fill the
+     viewport. On phones taller than the two panels combined (most modern
+     phones — 844px+ is standard) that left a large dead gap between the
+     START/POMODEX row and the fixed stats strip, reading as the timer
+     being stranded near the top. Centring uses the same free space more
+     evenly, matching the base sheet's original intent (.screen's default
+     is space-evenly — see the comment by #screen-mymons in style.css). */
+  #screen-timer { justify-content: center; padding-top: 0; }
+
+  /* At iPhone-SE widths (~375px) the four items in a row — LV badge, XP
+     bar, SESSIONS tile, MINUTES tile — no longer fit and "MINUTES" gets
+     clipped by the screen edge. Trim the gap and tile padding rather than
+     shrinking text further (already at 13px, the pixel font's practical
+     floor). */
+  .stats-strip .stats-row { gap: 4px; }
+  .stat-item { padding: 2px 3px; }
+  .stats-xp { width: 28%; }
+
   /* The ▲▼ minute steppers sit absolutely positioned over the timer's right
      edge (style-v2.css .time-adjust). .timer-time has white-space:nowrap,
      so past a certain width padding can't help any more — the text is a
