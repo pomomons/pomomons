@@ -1307,13 +1307,38 @@ html::after {
      edge (style-v2.css .time-adjust). .timer-time has white-space:nowrap,
      so past a certain width padding can't help any more — the text is a
      fixed natural width and just overflows its (now-smaller) box instead of
-     shrinking to fit, bleeding out either side of centre. 36px keeps
-     "88:88" (the widest possible reading) narrower than the space actually
-     left over once the steppers' ~65px column is reserved, at any width
-     this rule applies to (≤479px). Lives here, not the base sheet, because
-     style-v2.css's mobile rule sets .timer-display's size/padding after it
-     and would otherwise win. */
-  .timer-display { font-size: 36px; padding-right: 54px; }
+     shrinking to fit, bleeding out either side of centre. Steppers are
+     shrunk below (~46px column now, was ~65px), so the reserved padding
+     comes down to match, leaving the extra room for a bigger "88:88". */
+  .timer-display { font-size: 46px; padding-right: 46px; }
+
+  /* Companion art was reading small next to its own generous panel padding
+     (32px/16px/60px, unchanged from desktop) — the box itself was never
+     small, just what's drawn inside it. Sized up from style-v2.css's 136px. */
+  #companion-canvas { width: 180px; height: 180px; }
+  .companion-stage   { width: 180px; height: 180px; }
+
+  /* START/POMODEX/FOCUS SESSION/RESET were desktop-sized (60px min-height,
+     16px text) and, next to the now-larger timer, read as oversized. Pull
+     them down a step; .controls-group gets a touch more breathing room so
+     the panel doesn't shrink to match — it stays a full, deliberate block,
+     just with lighter buttons inside it. */
+  .btn-timer-start,
+  .btn-timer-pause,
+  .btn-timer-mode,
+  .btn-timer-dark { min-height: 44px; font-size: 13px; }
+  .btn-collection { padding: 10px 8px; font-size: 12px; }
+  .controls-group { padding: 16px 20px; gap: 12px; }
+  .timer-controls,
+  .timer-bottom-row { gap: 10px; }
+
+  /* "?" spawn-odds button and the ▲▼ minute steppers are secondary controls
+     that were sized like primary buttons (38px / 40px). Shrunk so they read
+     as the small utility taps they are, freeing the column width the timer
+     digits now use above. */
+  .btn-help { min-height: 26px; min-width: 26px; font-size: 10px; padding: 4px; }
+  .btn-adjust { min-width: 26px; min-height: 26px; font-size: 10px; padding: 4px; }
+  .time-adjust { right: 14px; gap: 3px; }
 }
 
 /* Short portrait phones (≤700px tall — iPhone SE/8, small Android, or any
