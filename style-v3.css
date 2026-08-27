@@ -1313,8 +1313,12 @@ html::after {
      boxes themselves — they get taller, not just repositioned — while
      min-height:auto's default floor (a flex item never shrinks below its
      content) keeps the short-phone case exactly as safe as before. */
+  /* Grow into the slack (flex-grow 1) but never shrink below content
+     (flex-shrink 0, basis auto): on a short phone the timer box would
+     otherwise collapse under its content and — being overflow:hidden —
+     clip the START / POMODEX row rather than let the screen scroll. */
   #screen-timer .companion-wrap,
-  #screen-timer .combined-timer-wrap { flex: 1 1 0; }
+  #screen-timer .combined-timer-wrap { flex: 1 0 auto; }
   /* flex-grow only resizes the outermost wrap — .panel-rail is a plain
      block child, so its height still comes from its own content and the
      grown space opens up as blank room below the visibly-bordered box
@@ -1392,6 +1396,43 @@ html::after {
   .btn-help { min-height: 22px; min-width: 22px; font-size: 9px; padding: 3px; }
   .btn-adjust { min-width: 22px; min-height: 22px; font-size: 9px; padding: 3px; }
   .time-adjust { right: 12px; gap: 2px; }
+
+  /* ── Bigger mon / dirt / timer; controls lower in their box ──
+     On a phone the companion art and the timer both read small against
+     their panels. Enlarge the stage (and rein the ground width back in so
+     it still fits the narrower panel), bump the "FOCUS TO CATCH A MON"
+     prompt, and grow the timer digits — the ▲▼ steppers shrink right down
+     (letter-spacing goes to 0 too) so the larger digits still clear them.
+     A fixed margin above
+     .controls-group drops the FOCUS SESSION / RESET / START / POMODEX
+     block a step below the digits without the gap ballooning on a tall
+     phone the way space-between would. --stats-h eases down to give the
+     boxes a little more room; the collection grid's gap above the strip
+     is re-pinned to match. */
+  :root { --stats-h: 134px; }
+
+  #companion-canvas,
+  .companion-stage { width: 226px; height: 226px; }
+  .companion-area { padding: 14px 12px 40px; }
+  .companion-ground { width: 132%; bottom: -18%; }
+  /* .companion-meta is offset off the (now wider) stage's left edge; ease
+     the offsets in so the LV pill + XP bar stay on the panel. */
+  .companion-meta { left: -34px; right: -20px; }
+  .companion-name { font-size: 14px; }
+  .companion-name.is-prompt { font-size: 15px; top: 2%; }
+
+  .timer-display { font-size: 52px; padding: 8px 30px 8px 10px; letter-spacing: 0; }
+  /* Steppers pared back — frame layers and all — so the bigger digits have
+     room to sit centred without running into them. */
+  .btn-adjust { min-width: 18px; min-height: 18px; font-size: 8px; padding: 2px; }
+  .time-adjust { right: 3px; gap: 2px; }
+  .time-adjust .btn-shadow--sm { padding: 1px 2px 2px 1px; }
+  .time-adjust .pxb-sm { padding: 1px; }
+
+  #screen-timer .controls-group { margin-top: 18px; }
+  .controls-group { padding: 16px 20px 20px; }
+
+  .mymons-scroll { margin-bottom: calc(var(--stats-h) - 20px); }
 }
 
 /* Short portrait phones (≤700px tall — iPhone SE/8, small Android, or any
