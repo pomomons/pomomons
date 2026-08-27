@@ -1623,3 +1623,139 @@ html::after,
 .panel-plate::after {
   display: none;
 }
+
+/* ── Short LANDSCAPE viewports (laptops) ───────────────────────
+   The responsive tiers that already exist are either WIDTH-based
+   (`max-width: 479px`, style.css — phones) or locked to an orientation
+   (`max-height: 520px` + landscape, `max-height: 700px` + portrait). Nothing
+   covered a screen that is WIDE but SHORT — which is essentially every
+   laptop. Those got the full desktop layout: 42px of header padding, a 56px
+   wordmark, a 200-220px companion stage, the 88px timer and two rows of
+   ~60px buttons stack to ~950px before the reserved stats-strip space, so on
+   a ~600-820px laptop viewport the START / POMODEX row sat behind the fixed
+   strip (the strip's space is reserved by padding, but the timer panel is
+   taller than what's left) and the encounter overlay's THROW button fell off
+   the bottom edge with nothing to scroll.
+
+   Two tiers scale the timer screen and the encounter overlay down for that
+   band — the same thing the phone query does for narrow screens, integer px
+   throughout so the pixel font never lands off the grid — and switch the
+   timer screen from top-anchored to `safe center` so a layout that now fits
+   isn't left with the mon panel stranded up top. `safe` degrades to
+   start-alignment if content still overflows (short end of the lower tier),
+   keeping the top reachable; an engine that doesn't know the keyword drops
+   just that declaration and keeps style-v2's flex-start — i.e. today's
+   behaviour, no regression.
+
+   Bands are disjoint from every existing query: `min-width: 480px` keeps
+   phones out, `orientation: landscape` keeps the portrait query out, and
+   `min-height: 521px` sits strictly above the landscape row-layout one. */
+
+/* Tier 1 — moderately short. Covers up to 940px because the untouched
+   desktop layout needs ~950px of viewport to clear the fixed strip with the
+   START / POMODEX row fully visible — so common laptop panels (1440x900,
+   1536x864) belong here, not on the desktop path. Real monitors (1080p+,
+   ~950px+ of content area) keep the full layout and have the room for it. */
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 741px) and (max-height: 940px) {
+  :root { --stats-h: 136px; }
+
+  .app-header { padding-top: 20px; }
+  .logo-pomo, .logo-mons { font-size: 40px; }
+  .logo-tomato-img { height: 2.2rem; }
+  .logo-icon { font-size: 30px; }
+
+  #screen-timer {
+    justify-content: safe center;
+    padding-top: 8px;
+    gap: 10px;
+  }
+
+  #companion-canvas,
+  .companion-stage { width: 156px; height: 156px; }
+  .companion-area { padding: 18px 16px 32px; gap: 10px; }
+
+  .timer-display { font-size: 60px; padding: 10px 16px; }
+
+  .btn-timer-start,
+  .btn-timer-pause,
+  .btn-timer-mode,
+  .btn-timer-dark { min-height: 46px; }
+  .btn-timer-start,
+  .btn-timer-pause { font-size: 15px; }
+  .btn-collection { padding: 11px 8px; font-size: 13px; }
+  .controls-group { padding: 10px 24px; }
+  .timer-controls,
+  .timer-bottom-row { gap: 6px; }
+
+  /* Strip footprint is unchanged in this tier, so keep the collection grid's
+     gap above it identical to desktop (base formula is `--stats-h - 32`). */
+  .mymons-scroll { margin-bottom: calc(var(--stats-h) - 18px); }
+
+  /* Encounter overlay — it has no scroll of its own until a screen this
+     short. Let it scroll from the top and pull the arena / canvas / buttons
+     in so THROW / RUN AWAY stay on screen. */
+  .encounter-overlay { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
+  .encounter-body { justify-content: flex-start; gap: 8px; }
+  .encounter-arena { padding: 16px 18px 20px; gap: 10px; }
+  #encounter-canvas { max-width: 380px; }
+  .encounter-msg { font-size: 18px; }
+  .encounter-sub { font-size: 16px; }
+  .encounter-controls { padding: 12px 16px; }
+  .encounter-controls .btn,
+  #btn-flee { min-height: 48px; font-size: 15px; padding: 12px 20px; }
+}
+
+/* Tier 2 — short (1366x768-class laptops after browser chrome, non-maximised
+   windows). Everything from Tier 1, one more step down: the tagline goes and
+   the ▲▼ / ? controls shrink to the utility taps they are. */
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 521px) and (max-height: 740px) {
+  :root { --stats-h: 120px; }
+
+  .app-header { padding-top: 10px; padding-bottom: 2px; }
+  .logo-pomo, .logo-mons { font-size: 30px; }
+  .logo-tomato-img { height: 1.7rem; }
+  .logo-icon { font-size: 24px; }
+  .tagline { display: none; }
+
+  #screen-timer {
+    justify-content: safe center;
+    padding-top: 6px;
+    gap: 8px;
+  }
+
+  #companion-canvas,
+  .companion-stage { width: 128px; height: 128px; }
+  .companion-area { padding: 12px 12px 20px; gap: 8px; }
+
+  .timer-display { font-size: 46px; padding: 8px 12px; }
+
+  .btn-timer-start,
+  .btn-timer-pause,
+  .btn-timer-mode,
+  .btn-timer-dark { min-height: 42px; font-size: 13px; }
+  .btn-collection { padding: 9px 8px; font-size: 12px; }
+  .controls-group { padding: 8px 20px; }
+  .timer-controls,
+  .timer-bottom-row { gap: 6px; }
+
+  .btn-help,
+  .btn-adjust { min-width: 32px; min-height: 32px; font-size: 11px; padding: 4px; }
+  .time-adjust { right: 16px; gap: 3px; }
+
+  /* Compact the strip a row's worth so --stats-h can come down with it. */
+  .stats-strip .stats-row { padding: 8px 12px; }
+  .mymons-scroll { margin-bottom: calc(var(--stats-h) - 8px); }
+
+  /* Encounter overlay — one step smaller than Tier 1. */
+  .encounter-overlay { padding-top: 10px; justify-content: flex-start; overflow-y: auto; }
+  .encounter-body { justify-content: flex-start; gap: 6px; }
+  .encounter-arena { padding: 12px 14px 16px; gap: 8px; }
+  #encounter-canvas { max-width: 300px; }
+  .encounter-msg { font-size: 15px; }
+  .encounter-sub { font-size: 13px; }
+  .encounter-controls { padding: 10px 14px; }
+  .encounter-controls .btn,
+  #btn-flee { min-height: 42px; font-size: 13px; padding: 10px 16px; }
+}
