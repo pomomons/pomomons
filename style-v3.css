@@ -1774,16 +1774,11 @@ html::after,
 
   .timer-display { font-size: 60px; padding: 10px 16px; }
 
-  .btn-timer-start,
-  .btn-timer-pause,
-  .btn-timer-mode,
-  .btn-timer-dark { min-height: 46px; }
-  .btn-timer-start,
-  .btn-timer-pause { font-size: 15px; }
-  .btn-collection { padding: 11px 8px; font-size: 13px; }
+  /* Action buttons keep their full desktop height here — only the spacing
+     around them tightens. */
   .controls-group { padding: 10px 24px; }
   .timer-controls,
-  .timer-bottom-row { gap: 6px; }
+  .timer-bottom-row { gap: 8px; }
 
   /* Strip footprint is unchanged in this tier; keep the collection grid's
      gap above it identical to desktop (which lands at `--stats-h - 32` =
@@ -1835,14 +1830,13 @@ html::after,
 
   .timer-display { font-size: 46px; padding: 8px 12px; }
 
-  .btn-timer-start,
-  .btn-timer-pause,
-  .btn-timer-mode,
-  .btn-timer-dark { min-height: 42px; font-size: 13px; }
-  .btn-collection { padding: 9px 8px; font-size: 12px; }
+  /* Action buttons keep their full desktop height here too — this tier
+     already claws space back from the header, tagline, companion stage and
+     strip; the panels' flex:1 0 auto lets the screen scroll on the very
+     shortest windows rather than squashing the buttons. */
   .controls-group { padding: 8px 20px; }
   .timer-controls,
-  .timer-bottom-row { gap: 6px; }
+  .timer-bottom-row { gap: 8px; }
 
   .btn-help,
   .btn-adjust { min-width: 32px; min-height: 32px; font-size: 11px; padding: 4px; }
