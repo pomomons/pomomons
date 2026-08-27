@@ -348,10 +348,10 @@ function updateCompanionDisplay() {
     const nameEl = document.getElementById('companion-name');
     const metaEl = document.querySelector('.companion-meta');
     if (nameEl) {
-      nameEl.textContent = 'focus to catch a mon!';
-      // The prompt wraps to two lines where a mon's name is one, so it needs
-      // its own placement clear of the "?" placeholder underneath.
-      nameEl.classList.add('is-prompt');
+      // No companion yet: the rotating silhouette teaser stands on its own,
+      // no caption. (The "how to catch" explainer lives in the ? popup.)
+      nameEl.textContent = '';
+      nameEl.classList.remove('is-prompt');
     }
     if (metaEl) metaEl.style.visibility = 'hidden';
     if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.clearMon();
@@ -458,7 +458,13 @@ document.addEventListener('visibilitychange', () => {
 
 // Spawn-rate info modal
 const spawnInfo = document.getElementById('spawn-info');
-document.getElementById('btn-spawn-help')?.addEventListener('click', () => spawnInfo?.classList.add('active'));
+document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
+  // Fill in the "how it works" line with the player's actual focus length.
+  const intro = document.getElementById('spawn-info-intro');
+  if (intro) intro.textContent =
+    `COMPLETE A ${focusMins}-MINUTE FOCUS SESSION AND A WILD POMOMON MAY APPEAR.`;
+  spawnInfo?.classList.add('active');
+});
 document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
 spawnInfo?.addEventListener('click', e => { if (e.target === spawnInfo) spawnInfo.classList.remove('active'); });
 

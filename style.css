@@ -2602,6 +2602,15 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   box-shadow: 0 0 30px rgba(255,200,0,.2);
 }
 
+/* "How catching works" line at the top of the ? popup, above the rarity list */
+.spawn-info-intro {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--text);
+  letter-spacing: .04em;
+}
+.spawn-info-intro:empty { display: none; }
+
 .spawn-info-title {
   font-size: 10px;
   color: var(--gold);
