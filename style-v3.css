@@ -894,7 +894,7 @@ html::after {
 .btn-adjust,
 .btn-help,
 .btn-audio {
-  background: var(--scanlines), var(--btn-dark);
+  background: var(--btn-dark);
   color: var(--cream);
   box-shadow:
     inset 0 4px 0 rgba(255,255,255,.10),
@@ -940,10 +940,10 @@ html::after {
   color: #2a1a02;
   /* Same gold as the LV badges/XP bars — this used to be its own deeper,
      more orange shade; now everything gold is one brighter colour. The
-     highlight is copied from the LV badge too (.companion-lvl, below): the
-     fill colour alone already matched, but --scanlines-soft plus a thin,
-     faint top edge read visibly duller next to the badge's stronger gloss. */
-  background: var(--scanlines), var(--gold);
+     highlight is copied from the LV badge too (.companion-lvl, below).
+     No scanline layer on buttons — only the panels/tiles carry the CRT
+     texture now. */
+  background: var(--gold);
   box-shadow:
     inset 0 3px 0 rgba(255,255,255,.45),
     inset 0 -3px 0 rgba(0,0,0,.18);
@@ -1554,7 +1554,7 @@ html::after {
 }
 
 .collection-tab {
-  background: var(--scanlines), var(--btn-dark);
+  background: var(--btn-dark);
   color: var(--cream);
   clip-path: var(--pixel-clip-xs);
   box-shadow:
@@ -1563,7 +1563,7 @@ html::after {
 }
 
 .collection-tab--active {
-  background: var(--scanlines), var(--gold);
+  background: var(--gold);
   color: #2a1a02;
   box-shadow:
     inset 0 3px 0 rgba(255,255,255,.45),
