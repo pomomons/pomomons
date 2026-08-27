@@ -1281,6 +1281,16 @@ html::after {
   .stats-strip .level-badge { font-size: 11px; padding: 0 10px; }
   .stats-strip .exp-bar-wrap { height: 18px; }
 
+  /* The strip's default inset — `bezel-gap + bezel-w + 18px` — was picked to
+     clear the outer bezel's corner rivets. Those are hidden on phones
+     (`html::after { background-image: none }` above) and the whole bezel is
+     off entirely (TEMP block at the end of this file), so that inset just
+     leaves the strip visibly narrower than, and floating well clear of, the
+     two near-full-width panels above it. Pull it back to the panels' own
+     16px side gutter (`.screen` padding) and a matching bottom gap so all
+     three boxes share one edge. */
+  .stats-strip { left: 16px; right: 16px; bottom: 12px; }
+
   .companion-area::after,
   .panel-plate::after { inset: 4px; }
 
