@@ -112,7 +112,12 @@ function renderStats() {
 
 function updateButtonStates() {
   const isIdle = !running && timeLeft === MODES[currentMode];
-  btnStart.textContent = running ? '⏸ PAUSE' : '▶ START';
+  // Icon in its own span so the button can flex-centre it against the label
+  // with a controlled gap — the ▶ / ⏸ glyphs fall back to a non-pixel font
+  // and their wide advance threw the plain "▶ START" string off-centre.
+  btnStart.innerHTML = running
+    ? '<span class="btn-ico">⏸</span>PAUSE'
+    : '<span class="btn-ico">▶</span>START';
   btnStart.classList.toggle('btn-timer-start', !running);
   btnStart.classList.toggle('btn-timer-pause', running);
   btnReset.disabled = isIdle;

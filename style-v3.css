@@ -949,6 +949,23 @@ html::after {
     inset 0 -3px 0 rgba(0,0,0,.18);
 }
 
+/* START / PAUSE carry a leading ▶ / ⏸ glyph. Those fall back to a non-pixel
+   font whose wide advance box left a big visible gap before the word, so
+   "▶ START" read as shoved left of centre even though the string itself was
+   centred. Flex-centre the icon span and the label as two items with a
+   tight, controlled gap instead. */
+#btn-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+#btn-start .btn-ico {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
 /* The page vignette (body::after) is a fixed z-index:0 overlay that paints
    OVER in-flow content, multiplying it darker toward the screen edges. The
    stats strip escapes it (z-index:50) and the companion LV badge sits in
