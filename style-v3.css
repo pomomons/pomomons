@@ -949,6 +949,22 @@ html::after {
     inset 0 -3px 0 rgba(0,0,0,.18);
 }
 
+/* The page vignette (body::after) is a fixed z-index:0 overlay that paints
+   OVER in-flow content, so it dims the gold buttons far from its bright
+   centre — START / POMODEX / THROW sit low on the screen and came out
+   noticeably duller than the companion LV badge / XP bar up top. Lift the
+   gold buttons (and the gold active tab) into their own stacking context
+   above the vignette so their fill and lit top edge read at full strength
+   everywhere, matching the badge. */
+.pxb .btn-primary,
+.btn-timer-start,
+.btn-timer-pause,
+.btn-collection,
+.collection-tab--active {
+  position: relative;
+  z-index: 1;
+}
+
 /* C2 — caret pinned to the button's right edge, label stays centred.
    Paired with the two-span markup set in app.js setMode(). */
 .btn-timer-mode { position: relative; }
