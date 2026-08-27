@@ -467,13 +467,13 @@ const CompanionCanvas = (() => {
   }
 
   // ── Empty-state placeholder — no mon caught yet, so there's nothing to
-  // draw for real. Instead of a static "?", cycle through every species'
-  // silhouette (same pool getRandomMon() spawns from, in monsters.js) as a
-  // "who's out there" teaser — quick-fading from one to the next, bottom-
-  // anchored at the same GROUND_Y real mons use so the rotation doesn't
-  // jump around vertically. ──
-  const SILHOUETTE_SHOW_MS = 900;  // how long each species holds before swapping
-  const SILHOUETTE_FADE_MS = 180;  // crossfade duration at the start of each swap
+  // draw for real. Instead of a static "?", cycle through every Pomomon's
+  // silhouette — every entry in MONS *plus* every evolution stage, even the
+  // ones that can't be caught yet — as a "who's out there" teaser. It
+  // quick-fades from one to the next, bottom-anchored at the same GROUND_Y
+  // real mons use so the rotation doesn't jump around vertically. ──
+  const SILHOUETTE_SHOW_MS = 700;  // how long each species holds before swapping
+  const SILHOUETTE_FADE_MS = 150;  // crossfade duration at the start of each swap
 
   let silhouettePool  = null; // lazy-built: MONS filtered to sprite-bearing entries
   let silhouetteIndex = -1;
@@ -482,17 +482,30 @@ const CompanionCanvas = (() => {
   let silhouetteFadeStartAt = 0;
 
   function ensureSilhouettePool() {
-    if (silhouettePool) return;
-    silhouettePool = (typeof MONS !== 'undefined') ? MONS.filter(m => m.sprite) : [];
-    if (silhouettePool.length) MonSprite.preloadAll(silhouettePool, () => {});
+    if (silhouettePool && silhouettePool.length) return;
+    if (typeof MONS === 'undefined') { silhouettePool = []; return; } // not loaded yet
+    // Flatten the roster: each base mon, then each of its evolution stages
+    // merged onto the base so every stage carries its own sprite fields.
+    // Evolutions that aren't catchable yet are still previewed here.
+    silhouettePool = [];
+    for (const m of MONS) {
+      if (m.sprite) silhouettePool.push(m);
+      for (const evo of (m.evolutions || [])) {
+        const stage = { ...m, ...evo };
+        if (stage.sprite) silhouettePool.push(stage);
+      }
+    }
+    MonSprite.preloadAll(silhouettePool, () => {});
   }
 
-  // Draws one species as a flat silhouette: a drop shadow, then a solid
-  // charcoal-grey fill traced from the sprite's alpha shape (not the old
-  // "?" bitmap's white — a grey silhouette reads more like an unrevealed
-  // shape than a glowing icon). The drawImage's own colours don't matter
-  // here — 'source-in' repaints only the pixels it just covered, i.e.
-  // exactly the sprite's silhouette, with SILHOUETTE_COLOR.
+  // Draws one species as a flat silhouette: a drop shadow, then a solid,
+  // fully-opaque charcoal-grey fill traced from the sprite's alpha shape
+  // (not the old "?" bitmap's white — a grey silhouette reads more like an
+  // unrevealed shape than a glowing icon). The drawImage's own colours
+  // don't matter here — 'source-in' repaints only the pixels it just
+  // covered, i.e. exactly the sprite's silhouette, with SILHOUETTE_COLOR.
+  // `alpha` only drives the brief crossfade between one species and the
+  // next; a settled silhouette sits at full opacity.
   const SILHOUETTE_COLOR = '#3a3f3c';
   function drawSilhouette(mon, bobY, alpha) {
     if (!mon || alpha <= 0) return;
@@ -523,12 +536,12 @@ const CompanionCanvas = (() => {
     ctx.translate(cx, cy + bobY);
     ctx.imageSmoothingEnabled = false;
 
-    ctx.globalAlpha = alpha * 0.32;
+    ctx.globalAlpha = alpha * 0.35;
     ctx.filter = 'brightness(0)';
     ctx.drawImage(img, srcX, srcY, srcW, srcH, dx + 3, dy + 3, size, size);
     ctx.filter = 'none';
 
-    ctx.globalAlpha = alpha * 0.9;
+    ctx.globalAlpha = alpha;
     ctx.drawImage(img, srcX, srcY, srcW, srcH, dx, dy, size, size);
     ctx.globalCompositeOperation = 'source-in';
     ctx.fillStyle = SILHOUETTE_COLOR;
