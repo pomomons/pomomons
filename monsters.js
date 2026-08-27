@@ -45,7 +45,7 @@ const MONS = [
         sprite: 'assets/sprites/Scorchpepper/Scorchpepper.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1000 },
       { atLevel: 36, dexNum: 9,  name: 'Ghostpepper',  type: 'Spicy',           color: '#a8c8d8', accent: '#6a9ab0',
-        sprite: 'assets/sprites/Ghostpepper/Ghostpepper.png', spriteFrames: 2, spriteAxis: 'y',
+        sprite: 'assets/sprites/GhostPepper/ghostpepper.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
