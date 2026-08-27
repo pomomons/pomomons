@@ -950,17 +950,17 @@ html::after {
 }
 
 /* The page vignette (body::after) is a fixed z-index:0 overlay that paints
-   OVER in-flow content, so it dims the gold buttons far from its bright
-   centre — START / POMODEX / THROW sit low on the screen and came out
-   noticeably duller than the companion LV badge / XP bar up top. Lift the
-   gold buttons (and the gold active tab) into their own stacking context
-   above the vignette so their fill and lit top edge read at full strength
-   everywhere, matching the badge. */
-.pxb .btn-primary,
-.btn-timer-start,
-.btn-timer-pause,
-.btn-collection,
-.collection-tab--active {
+   OVER in-flow content, multiplying it darker toward the screen edges. The
+   stats strip escapes it (z-index:50) and the companion LV badge sits in
+   the vignette's clear centre, but the timer/collection panels don't —
+   their gold buttons (START / POMODEX) sampled ~#c1912c against the badge's
+   true #e5ac35, and a per-button z-index couldn't help because .panel-plate's
+   clip-path traps its contents in a stacking context below the vignette.
+   Lift the whole content column above the vignette so every panel, button
+   and label renders at its true colour; the vignette then only shades the
+   background photo, which is its point. */
+.app-header,
+.screen {
   position: relative;
   z-index: 1;
 }
