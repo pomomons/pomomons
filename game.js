@@ -341,13 +341,16 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
-        // Cap leaves room above the sprite for BOTH the floating name and the
-        // LVL/type pill row. The sprite bottom-anchors at GROUND_Y, so
-        // headY = GROUND_Y - size and the name sits 20px above that; the pills
-        // occupy the top 26px. size <= 142 keeps the name clear of them —
-        // at the old 160 cap, big mons (Guacamonger's frames are 64x64, twice
-        // a typical mon) pushed the name straight into the type pill.
-        const size = Math.min(srcW * 3, CANVAS_SIZE - 60);
+        // Every mon is drawn to the SAME display size regardless of its
+        // native sprite resolution — the roster runs 32px .. 64px wide, so
+        // `srcW * 3` (the old rule) drew a 32px tomato at 96 and any 48px+
+        // mon at the 140 cap, a ~1.5x difference that made the small mons
+        // look stunted. A flat target normalises them and, being bigger than
+        // the old cap, fills more of the stage. The floating name has a 15%
+        // floor (see drawSprite bob code) so it still clears the pill row.
+        // 160 is a clean 5x for the 32px sprites (most of the roster); the
+        // 48/64px ones land on a fractional scale but read fine pixelated.
+        const size = 160;
         const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
         state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
@@ -528,7 +531,7 @@ const CompanionCanvas = (() => {
 
     const GROUND_Y = 192; // matches drawSprite()'s real-mon anchor
     const cx   = CANVAS_SIZE / 2;
-    const size = Math.min(srcW * 3, CANVAS_SIZE - 60);
+    const size = 160; // flat, same as drawSprite() — normalise across sprite resolutions
     const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
     const dx = Math.round(-size / 2), dy = Math.round(-size / 2);
 
