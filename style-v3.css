@@ -966,6 +966,23 @@ html::after {
   line-height: 1;
 }
 
+/* Action-button height scales with the viewport instead of stepping between
+   fixed sizes — roughly the same share of the screen everywhere (~60px on a
+   1080p desktop, ~48px on a 800px laptop, floored at 42, capped at 66). Only
+   the height is fluid; the pixel label stays whole-px. POMODEX's vertical
+   padding drops so its min-height governs too and it tracks the row. */
+.btn-timer-start,
+.btn-timer-pause,
+.btn-timer-mode,
+.btn-timer-dark,
+.btn-collection {
+  min-height: clamp(42px, 6vh, 66px);
+}
+.btn-collection {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 /* The page vignette (body::after) is a fixed z-index:0 overlay that paints
    OVER in-flow content, multiplying it darker toward the screen edges. The
    stats strip escapes it (z-index:50) and the companion LV badge sits in
@@ -1408,15 +1425,12 @@ html::after {
   #companion-canvas { width: 180px; height: 180px; }
   .companion-stage   { width: 180px; height: 180px; }
 
-  /* START/POMODEX/FOCUS SESSION/RESET were desktop-sized (60px min-height,
-     16px text) and, next to the now-larger timer, read as oversized. Pull
-     them down a step; .controls-group gets a touch more breathing room so
-     the panel doesn't shrink to match — it stays a full, deliberate block,
-     just with lighter buttons inside it. */
+  /* Button height comes from the viewport-scaled clamp() up top; here the
+     phone just steps the label down and trims POMODEX's side padding. */
   .btn-timer-start,
   .btn-timer-pause,
   .btn-timer-mode,
-  .btn-timer-dark { min-height: 44px; font-size: 13px; }
+  .btn-timer-dark { font-size: 13px; }
   .btn-collection { padding: 10px 8px; font-size: 12px; }
   .controls-group { padding: 16px 20px; gap: 12px; }
   .timer-controls,
