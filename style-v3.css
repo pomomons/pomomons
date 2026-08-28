@@ -1192,8 +1192,13 @@ html::after {
 }
 
 /* Wordmark: POMO to cream so it sits with the new palette instead of
-   punching pure white out of it. MONS keeps the gold. */
+   punching pure white out of it. MONS keeps the gold — but its outline was
+   --gold-dk, which sampled as ~22% of the glyph and pulled the whole word
+   darker/oranger than the flat gold on the LV badge and START/POMODEX.
+   Recolour the outline to --gold itself: same weight as POMO's stroke,
+   but now the whole word reads as the one app yellow. */
 .logo-pomo { color: var(--cream); }
+.logo-mons { -webkit-text-stroke-color: var(--gold); }
 
 /* ── F1/F2 — header ────────────────────────────────────────
    Wordmark and mute button share a row, as in the reference, instead of the
