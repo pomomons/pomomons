@@ -1232,10 +1232,19 @@ html::after {
    steppers' 24px, so the row ran wider than the steppers above it. Matching
    the inset on both sides keeps the row centred, just narrower — its right
    edge now lines up with the steppers' right edge. */
-.controls-group { padding: 12px 24px; }
+/* Trim the dead space under START / POMODEX inside the timer box. */
+.controls-group { padding: 12px 24px 2px; }
+
+/* Tighter companion box (less padding around the stage) and a bigger gap
+   between FOCUS·CATCH·COLLECT and it. The stage also rides ~6px higher so
+   the trimmed bottom padding doesn't crop the grass and the mon sits less
+   marooned in the box's top air. All overridden by the short-screen tiers,
+   so this only re-proportions the full-monitor view. */
+.companion-area { padding: 14px 16px 50px; }
+.companion-stage { transform: translateY(-12px); }
 
 /* ── A2 — the two boxes sit closer together ──────────────── */
-#screen-timer { gap: 12px; }
+#screen-timer { gap: 12px; padding-top: 44px; }
 
 /* ── Companion readout ─────────────────────────────────────
    Reference shows a LV pill with the bar directly beneath it, sharing its left
