@@ -343,10 +343,10 @@ body::after {
 .companion-ground {
   position: absolute;
   z-index: 0;
-  width: 172%;
-  height: 84%;
+  width: 156%;
+  height: 78%;
   left: 50%;
-  bottom: -32%;
+  bottom: -33%;
   transform: translateX(-50%);
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -2311,8 +2311,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 /* Standard and up (≥ 400px) */
 @media (min-width: 400px) {
-  #companion-canvas { width: 250px; height: 250px; }
-  .companion-stage { width: 250px; height: 250px; }
+  #companion-canvas { width: 224px; height: 224px; }
+  .companion-stage { width: 224px; height: 224px; }
   .timer-display { font-size: 80px; }
 }
 

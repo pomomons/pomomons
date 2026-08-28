@@ -976,7 +976,7 @@ html::after {
 .btn-timer-mode,
 .btn-timer-dark,
 .btn-collection {
-  min-height: clamp(42px, 6vh, 66px);
+  min-height: clamp(42px, 6vh, 60px);
 }
 .btn-collection {
   padding-top: 10px;
@@ -1215,11 +1215,13 @@ html::after {
   flex: 0 0 auto;
 }
 
-/* Logo sits lower in the header, and larger than the base sheet's 48px */
-.app-header { padding-top: 42px; }
+/* Wordmark sized so POMOMONS spans roughly the width of the panels below it
+   on a full monitor; header padding eases back so the taller wordmark
+   doesn't push everything down. The short-screen tiers scale it back. */
+.app-header { padding-top: 34px; }
 
-.logo-pomo, .logo-mons { font-size: 56px; }
-.logo-tomato-img { height: 3rem; }
+.logo-pomo, .logo-mons { font-size: 60px; }
+.logo-tomato-img { height: 3.1rem; }
 
 /* Steppers pulled in from the timer panel's right edge (style-v2 puts them
    at 12px), to sit level with the ? button above them. */
@@ -1764,8 +1766,8 @@ html::after,
   :root { --stats-h: 126px; }
 
   .app-header { padding-top: 20px; }
-  .logo-pomo, .logo-mons { font-size: 40px; }
-  .logo-tomato-img { height: 2.2rem; }
+  .logo-pomo, .logo-mons { font-size: 52px; }
+  .logo-tomato-img { height: 2.7rem; }
   .logo-icon { font-size: 30px; }
 
   /* Fill the column: both panels grow into the free vertical space so they
@@ -1826,8 +1828,8 @@ html::after,
   :root { --stats-h: 112px; }
 
   .app-header { padding-top: 10px; padding-bottom: 2px; }
-  .logo-pomo, .logo-mons { font-size: 30px; }
-  .logo-tomato-img { height: 1.7rem; }
+  .logo-pomo, .logo-mons { font-size: 40px; }
+  .logo-tomato-img { height: 2.1rem; }
   .logo-icon { font-size: 24px; }
   .tagline { display: none; }
 
