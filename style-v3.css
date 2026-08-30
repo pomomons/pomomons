@@ -1215,13 +1215,19 @@ html::after {
   flex: 0 0 auto;
 }
 
-/* Wordmark sized so POMOMONS spans roughly the width of the panels below it
-   on a full monitor; header padding eases back so the taller wordmark
-   doesn't push everything down. The short-screen tiers scale it back. */
+/* Wordmark sized so the cluster — tomato's left edge through the mute
+   button's right edge — spans the panels below it; the row centres that
+   cluster, so both ends land on the panel edges. Header padding eases back
+   so the taller wordmark doesn't push everything down. The short-screen
+   tiers scale it back (see the logo height ladder near the end of the
+   file, which is what actually applies on a laptop-height window). */
 .app-header { padding-top: 34px; }
 
 .logo-pomo, .logo-mons { font-size: 60px; }
 .logo-tomato-img { height: 3.1rem; }
+/* Keep POMO and MONS on one line at every width — the tiers below shrink the
+   wordmark rather than letting it wrap. */
+.logo { flex-wrap: nowrap; }
 
 /* Steppers pulled in from the timer panel's right edge (style-v2 puts them
    at 12px), to sit level with the ? button above them. */
@@ -1314,6 +1320,38 @@ html::after {
 .level-badge {
   padding: 9px 14px;
   color: #2a1a02;
+}
+
+/* ── Wordmark size by WIDTH, 480–675px ────────────────────
+   The 60px cluster needs a ~676px run. Below that, step the wordmark down
+   in whole-pixel notches (Press Start 2P blurs at fractional sizes, so it
+   can't ride a clamp) so it stays on one line and never forces a sideways
+   scroll. Note this ladder is about the window's WIDTH; the separate
+   height ladder at the end of the file handles short windows and, being
+   later, wins where both apply. */
+@media (min-width: 644px) and (max-width: 675px) {
+  .logo-pomo, .logo-mons { font-size: 56px; }
+  .logo-tomato-img { height: 2.9rem; }
+}
+@media (min-width: 606px) and (max-width: 643px) {
+  .logo-pomo, .logo-mons { font-size: 52px; }
+  .logo-tomato-img { height: 2.7rem; }
+}
+@media (min-width: 572px) and (max-width: 605px) {
+  .logo-pomo, .logo-mons { font-size: 48px; }
+  .logo-tomato-img { height: 2.5rem; }
+}
+@media (min-width: 536px) and (max-width: 571px) {
+  .logo-pomo, .logo-mons { font-size: 44px; }
+  .logo-tomato-img { height: 2.3rem; }
+}
+@media (min-width: 500px) and (max-width: 535px) {
+  .logo-pomo, .logo-mons { font-size: 40px; }
+  .logo-tomato-img { height: 2.1rem; }
+}
+@media (min-width: 480px) and (max-width: 499px) {
+  .logo-pomo, .logo-mons { font-size: 36px; }
+  .logo-tomato-img { height: 1.9rem; }
 }
 
 /* ── Mobile ────────────────────────────────────────────────
@@ -1766,8 +1804,10 @@ html::after,
   :root { --stats-h: clamp(112px, calc(13.57vh + 22px), 150px); }
 
   /* Header + inter-box rhythm. Upper clamp value = the full-monitor number
-     (reached at 940px); the calc line eases it down from there. */
-  .app-header { padding-top: clamp(12px, calc(9.17vh - 52px), 34px); }
+     (reached at 940px); the calc line eases it down from there. Trimmed
+     from 34px when the wordmark was enlarged — the taller logo line spent
+     that space, and without the trim the timer screen scrolled at 940px. */
+  .app-header { padding-top: clamp(12px, calc(9.17vh - 70px), 18px); }
 
   #screen-timer {
     padding-top: clamp(16px, calc(11.67vh - 66px), 44px);
@@ -1794,6 +1834,11 @@ html::after,
   .encounter-overlay { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
   .encounter-body { justify-content: flex-start; gap: 8px; }
   .encounter-arena { padding: 16px 18px 20px; gap: 10px; }
+  /* Cap the STAGE, not just the canvas. The floating mon name and the
+     LV/rarity topbar are absolutely positioned against the stage, so if only
+     the canvas shrank they'd stay centred on a 480px box while the mon sat in
+     a 380px one — and the canvas itself would sit flush left of it. */
+  .encounter-stage,
   #encounter-canvas { max-width: 380px; }
   .encounter-msg { font-size: 18px; }
   .encounter-sub { font-size: 16px; }
@@ -1807,19 +1852,11 @@ html::after,
    nudges the type while the spacing stays continuous. */
 @media (min-width: 480px) and (orientation: landscape)
    and (min-height: 521px) and (max-height: 870px) {
-  .logo-pomo, .logo-mons { font-size: 50px; }
-  .logo-tomato-img { height: 2.6rem; }
-  .logo-icon { font-size: 29px; }
-
   .timer-display { font-size: 74px; }
 }
 
 @media (min-width: 480px) and (orientation: landscape)
    and (min-height: 521px) and (max-height: 760px) {
-  .logo-pomo, .logo-mons { font-size: 44px; }
-  .logo-tomato-img { height: 2.3rem; }
-  .logo-icon { font-size: 26px; }
-
   .timer-display { font-size: 60px; }
 }
 
@@ -1830,9 +1867,6 @@ html::after,
 @media (min-width: 480px) and (orientation: landscape)
    and (min-height: 521px) and (max-height: 660px) {
   .app-header { padding-bottom: 2px; }
-  .logo-pomo, .logo-mons { font-size: 40px; }
-  .logo-tomato-img { height: 2.1rem; }
-  .logo-icon { font-size: 24px; }
   .tagline { display: none; }
 
   .timer-display { font-size: 50px; }
@@ -1848,10 +1882,64 @@ html::after,
   .encounter-overlay { padding-top: 10px; }
   .encounter-body { gap: 6px; }
   .encounter-arena { padding: 12px 14px 16px; gap: 8px; }
+  .encounter-stage,
   #encounter-canvas { max-width: 300px; }
   .encounter-msg { font-size: 15px; }
   .encounter-sub { font-size: 13px; }
   .encounter-controls { padding: 10px 14px; }
   .encounter-controls .btn,
   #btn-flee { min-height: 42px; font-size: 13px; padding: 10px 16px; }
+}
+
+/* ── Wordmark size by HEIGHT (landscape) ──────────────────
+   This ladder is last in the file on purpose: it is the one that decides
+   the wordmark's size on any normal laptop window, and it must win over
+   the width ladder above.
+
+   It used to be folded into the three "short screen" blocks above, which
+   dropped the wordmark to 50/44/40px purely to buy vertical room. That was
+   far too aggressive at the top of the range — a 1080p laptop at 110%
+   Windows scaling gives an ~870x807 viewport, which landed on the 50px
+   rung and left the tomato 80px inside the panel's left edge, visibly
+   narrow and lopsided. Anything set on .logo-pomo earlier in the file was
+   silently overridden here, so the header looked frozen no matter what the
+   base rule said.
+
+   Now the rungs only shrink the wordmark once the height genuinely calls
+   for it: a window 800px tall or more keeps the full 60px, where the
+   cluster spans the panels exactly. .logo-icon tracks each step (it sets
+   the inline box the tomato sits in). */
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 800px) and (max-height: 870px) {
+  .logo-pomo, .logo-mons { font-size: 60px; }
+  .logo-tomato-img { height: 3.1rem; }
+  .logo-icon { font-size: 34px; }
+}
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 740px) and (max-height: 799px) {
+  .logo-pomo, .logo-mons { font-size: 56px; }
+  .logo-tomato-img { height: 2.9rem; }
+  .logo-icon { font-size: 32px; }
+}
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 680px) and (max-height: 739px) {
+  .logo-pomo, .logo-mons { font-size: 52px; }
+  .logo-tomato-img { height: 2.7rem; }
+  .logo-icon { font-size: 30px; }
+}
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 640px) and (max-height: 679px) {
+  .logo-pomo, .logo-mons { font-size: 48px; }
+  .logo-tomato-img { height: 2.5rem; }
+  .logo-icon { font-size: 27px; }
+}
+/* Below ~640px tall the timer screen has no slack left to spend on the
+   wordmark. Measured against the previous build, even 44px here pushes the
+   START / POMODEX row a few pixels past the fold, so this last rung keeps
+   the old 40px rather than trading a scrollbar for a bigger logo. */
+@media (min-width: 480px) and (orientation: landscape)
+   and (min-height: 521px) and (max-height: 639px) {
+  .logo-pomo, .logo-mons { font-size: 40px; }
+  .logo-tomato-img { height: 2.1rem; }
+  .logo-icon { font-size: 23px; }
 }

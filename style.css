@@ -1511,10 +1511,15 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   white-space: nowrap;
 }
 
+/* display:block + auto side margins so that whenever a short-screen tier caps
+   the canvas narrower than its stage, it stays centred instead of collapsing
+   to the stage's left edge (inline elements don't self-centre). */
 #encounter-canvas {
+  display: block;
   width: 100%;
   max-width: 480px;
   height: auto;
+  margin-inline: auto;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -2365,7 +2370,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
     gap: 4px;
     overflow-y: auto;
   }
-  #encounter-canvas { height: 180px; width: 95px; }
+  /* Keep the canvas's own 480x380 aspect — a fixed 95px width squashed the
+     mon and the ground platform into a narrow sliver. */
+  .encounter-stage { max-width: 227px; }
+  #encounter-canvas { height: 180px; width: 227px; }
   .encounter-controls {
     position: relative;
     bottom: auto;

@@ -20,7 +20,55 @@ const MonSprite = (() => {
     return _imgCache[src];
   }
 
-  // Returns the draw scale capped so the sprite fits within maxPx (width or height).
+  // ── Display size from native sprite resolution ─────────────
+  // The roster is drawn at 32, 36, 48 and 64 px per frame, and that native
+  // resolution IS how each creature's size is encoded — a 32px Bluble is
+  // meant to read as half a 64px Guacamonger. Every screen derives its
+  // on-screen size from this one rule so that relationship holds
+  // everywhere.
+  //
+  // Two earlier approaches both destroyed it, in opposite directions:
+  // a flat display size made every mon identical, and `min(srcW * 3, cap)`
+  // flattened only the top end (48px and 64px mons both pinned to the cap)
+  // while leaving 32px ones small — which is what made the sizing look
+  // arbitrary rather than simply uniform.
+  //
+  // `boxPx` is the room available for the LARGEST mon in the roster;
+  // everything else scales down from there in proportion to its native
+  // width. Change NATIVE_MAX only if art larger than 64px is added.
+  const NATIVE_MAX = 64;
+  // 1 = true proportion (a 32px mon renders at half a 64px one). Lower it to
+  // compress the spread if the smallest mons end up reading too small —
+  // 0.6 would put 32px at ~66% of 64px instead of 50%. Single knob: every
+  // screen sizes its mons through displaySize().
+  const SIZE_CURVE = 1;
+  function displaySize(srcW, boxPx) {
+    return Math.round(boxPx * Math.pow(srcW / NATIVE_MAX, SIZE_CURVE));
+  }
+
+  // Native per-frame width of a mon's sprite, or null if it isn't loaded yet.
+  function nativeFrameW(mon, shiny = false) {
+    const src = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
+    if (!src) return null;
+    const img = getImage(src);
+    if (!img.complete || img.naturalWidth === 0) return null;
+    const frames = mon.spriteFrames || 1;
+    return mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
+  }
+
+  // Draw scale that lands a mon at its proportional display size within a
+  // box sized for the largest mon. Falls back to desiredScale pre-load.
+  function sizeScale(mon, boxPx, desiredScale = 1, shiny = false) {
+    const srcW = nativeFrameW(mon, shiny);
+    if (srcW === null) return desiredScale;
+    return displaySize(srcW, boxPx) / (srcW * 3);
+  }
+
+  // Returns the draw scale capped so the sprite fits within maxPx (width or
+  // height). Kept for callers that genuinely want "as big as will fit"; for
+  // drawing a mon use sizeScale() instead, which preserves the size
+  // relationship between mons. Capping is what made a 48px and a 64px mon
+  // render identically — both pinned to the cap.
   // Falls back to desiredScale if the image isn't loaded yet.
   function fitScale(mon, maxPx, desiredScale = 1, shiny = false) {
     const src = shiny ? (mon.shinySprite || mon.sprite) : mon.sprite;
@@ -239,8 +287,12 @@ const MonSprite = (() => {
   }
 
   // Convenience: clear a canvas and draw a mon centred in it.
-  // fit (0–1): if provided, auto-scales the sprite so it fills that fraction of
-  // the canvas regardless of stage size. Overrides scale for PNG mons.
+  // fit (0–1): the fraction of the canvas the LARGEST mon in the roster
+  // fills; every other mon scales down from that in proportion to its
+  // native sprite width (see displaySize). This used to size every mon to
+  // the same `canvas * fit`, which made a 32px mon and a 64px one identical
+  // in the collection grids — the place the flattening was most obvious,
+  // since the cards sit side by side. Overrides scale for PNG mons.
   function draw(canvas, mon, { scale = 1, shiny = false, dark = false, fit = null } = {}) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -252,15 +304,16 @@ const MonSprite = (() => {
         if (img.complete && img.naturalWidth > 0) {
           const frames = mon.spriteFrames || 1;
           const srcW   = mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
-          const targetSize = Math.min(canvas.width, canvas.height) * fit;
-          drawScale = targetSize / (srcW * 3);
+          const boxPx = Math.min(canvas.width, canvas.height) * fit;
+          drawScale = displaySize(srcW, boxPx) / (srcW * 3);
         }
       }
     }
     drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny, dark });
   }
 
-  return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle };
+  return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle,
+           displaySize, nativeFrameW, sizeScale };
 })();
 
 // ── Companion idle animation ───────────────────────────────
@@ -341,16 +394,11 @@ const CompanionCanvas = (() => {
           srcX = frameIndex * srcW;
           srcY = 0;
         }
-        // Every mon is drawn to the SAME display size regardless of its
-        // native sprite resolution — the roster runs 32px .. 64px wide, so
-        // `srcW * 3` (the old rule) drew a 32px tomato at 96 and any 48px+
-        // mon at the 140 cap, a ~1.5x difference that made the small mons
-        // look stunted. A flat target normalises them and, being bigger than
-        // the old cap, fills more of the stage. The floating name has a 15%
-        // floor (see drawSprite bob code) so it still clears the pill row.
-        // 160 is a clean 5x for the 32px sprites (most of the roster); the
-        // 48/64px ones land on a fractional scale but read fine pixelated.
-        const size = 160;
+        // Proportional to the sprite's native resolution (see displaySize):
+        // 160 is the room for a 64px mon, so 48px -> 120, 36px -> 90 and
+        // 32px -> 80. This used to be a flat 160 for every mon, which made
+        // a 32px starter exactly as large as a 64px final evolution.
+        const size = MonSprite.displaySize(srcW, 160);
         const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
         state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
@@ -531,7 +579,7 @@ const CompanionCanvas = (() => {
 
     const GROUND_Y = 192; // matches drawSprite()'s real-mon anchor
     const cx   = CANVAS_SIZE / 2;
-    const size = 160; // flat, same as drawSprite() — normalise across sprite resolutions
+    const size = MonSprite.displaySize(srcW, 160); // same rule as drawSprite()
     const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
     const dx = Math.round(-size / 2), dy = Math.round(-size / 2);
 
@@ -630,6 +678,14 @@ const EncounterScreen = (() => {
   const SIZE      = 480;          // logical canvas width (wider to fit ground sprite)
   const H         = 380;          // logical canvas height — tall for long throw arc
   const MON_SCALE = 1.5;          // wild mon drawn at 1.5× base size
+  // Room a 64px mon would get; smaller sprites scale down from it in
+  // proportion to their native width. Wild spawns come from getRandomMon(),
+  // which only ever returns first-stage mons (32/36/48px) — so this is set
+  // so that a 48px mon, the largest that can actually appear, lands on 184,
+  // exactly where it sat under the old hard cap. Only the smaller classes
+  // move, and they move down to where they belong rather than everything
+  // being pinned to one size.
+  const MON_BOX   = 245;
   const MON_CY    = H * 0.5;      // mon centre-Y resting position (50% — vertical centre)
   const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
   const GROUND_Y  = Math.min(H - 50, MON_CY + 110 + THROW_Y_SHIFT); // where tomato lands
@@ -687,7 +743,16 @@ const EncounterScreen = (() => {
   // ── draw a wild mon sprite centred at (cx, cy) ────────────
   function drawMon(cx, cy, { scale = MON_SCALE, xOffset = 0, alpha = 1 } = {}) {
     const shiny = (st.mon.shiny && !st.mon.dark) || false;
-    const s = MonSprite.fitScale(st.mon, 184, scale, shiny);
+    // Proportional to native resolution — MON_BOX is the room a 64px mon
+    // gets, everything else scales down from it. This was
+    // `fitScale(mon, 184, ...)`, a hard cap: at MON_SCALE 1.5 a 48px and a
+    // 64px mon both landed on exactly 184 while a 32px one sat at 144, so
+    // the top three size classes were nearly indistinguishable.
+    const srcW = MonSprite.nativeFrameW(st.mon, shiny);
+    const base = srcW === null ? MON_SCALE
+                               : MonSprite.displaySize(srcW, MON_BOX) / (srcW * 3);
+    // `scale` still rides along so the catch animation can shrink the mon.
+    const s = base * (scale / MON_SCALE);
     MonSprite.drawOnCtx(ctx, st.mon, cx, cy, { scale: s, xOffset, alpha, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
     // Track the drawn sprite size so the floating name can sit above the mon's head
     const img = MonSprite.getImage(shiny ? (st.mon.shinySprite || st.mon.sprite) : st.mon.sprite);
@@ -1346,7 +1411,7 @@ const CatchScreen = (() => {
     st.frame++;
     ctx.clearRect(0, 0, SIZE, SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
-    const scale = MonSprite.fitScale(st.mon, SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
+    const scale = MonSprite.sizeScale(st.mon, SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
     MonSprite.drawOnCtx(ctx, st.mon, SIZE / 2, SIZE / 2 + bobY,
       { scale, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
     rafId = requestAnimationFrame(tick);
@@ -1414,7 +1479,7 @@ const MonInfoScreen = (() => {
     st.frame++;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
-    const scale = MonSprite.fitScale(st.mon, CANVAS_SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
+    const scale = MonSprite.sizeScale(st.mon, CANVAS_SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
     MonSprite.drawOnCtx(ctx, st.mon, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + bobY,
       { scale, shiny: st.mon.shiny || false, dark: st.mon.dark || false });
     rafId = requestAnimationFrame(tick);
@@ -1439,7 +1504,7 @@ const MonInfoScreen = (() => {
       if (!owned) c.style.filter = 'brightness(0) opacity(0.55)';
       const miniCtx = c.getContext('2d');
       if (dpr !== 1) miniCtx.scale(dpr, dpr);
-      const s = MonSprite.fitScale(monData, EVO_NODE_SIZE * 0.88, 0.9, false);
+      const s = MonSprite.sizeScale(monData, EVO_NODE_SIZE * 0.88, 0.9, false);
       MonSprite.drawOnCtx(miniCtx, monData,
         EVO_NODE_SIZE / 2, EVO_NODE_SIZE / 2,
         { scale: s, shiny: mon.shiny || false, dark: mon.dark || false });
@@ -1565,7 +1630,7 @@ const MonDetailCanvas = (() => {
     frame++;
     ctx.clearRect(0, 0, SIZE, SIZE);
     const bobY  = Math.sin(frame / 22) * 6;
-    const scale = MonSprite.fitScale(mon, SIZE * 0.92, 1.5, (mon.shiny && !mon.dark) || false);
+    const scale = MonSprite.sizeScale(mon, SIZE * 0.92, 1.5, (mon.shiny && !mon.dark) || false);
     MonSprite.drawOnCtx(ctx, mon, SIZE / 2, SIZE / 2 + bobY,
       { scale, shiny: mon.shiny || false, dark: mon.dark || false });
     rafId = requestAnimationFrame(tick);
