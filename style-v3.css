@@ -1609,7 +1609,46 @@ html::after {
   #companion-canvas,
   .companion-stage { width: 234px; height: 234px; }
   .companion-area { padding: 14px 12px 40px; }
-  .companion-ground { width: 138%; bottom: -24%; }
+
+  /* ── Mon + ground at 1.7x, phone only ──────────────────
+     The art still read small against the panel. Everything below is sized
+     as a percentage of .companion-stage so it rides whatever size the stage
+     is — the short-portrait tier further down drops it to 110px.
+
+     The stage's own box stays 234px and does NOT grow. That matters: the
+     phone timer screen has no spare height at all, so a taller companion
+     panel would push the screen over and fitTimerScreen() (app.js) would
+     scale the whole thing back down — shrinking the timer and buttons to
+     pay for a bigger mon. Growing the art *out of* a fixed box keeps the
+     layout, and the auto-fit, exactly where they were.
+
+     Both layers scale about the same line: where the mon's feet meet the
+     grass, which is the canvas's GROUND_Y (96% of its height). The nudge
+     below moves that line down 6% of the stage first, so the enlarged mon
+     gains headroom at the top of the panel instead of running straight into
+     the LV pill — 96% + 6% = the 102% both layers are anchored to. */
+
+  /* 170% tall, positioned so its 96% line lands on 102% of the stage:
+     102 - (0.96 x 170) = -61.2. Absolute, so the bigger box doesn't take
+     part in layout. game.js floats the mon's name off this box, not the
+     stage, so the caption follows the head up. */
+  #companion-canvas {
+    position: absolute;
+    width: 170%;
+    height: 170%;
+    left: 50%;
+    margin-left: -85%;
+    top: -61.2%;
+  }
+
+  /* 138% x 78% x 1.7. The grass surface sits 64.1% down the PNG's box, so
+     it lands at 102% - (0.641 x 132.6) = 17% from the stage top, putting the
+     box's bottom edge at 149.6% — hence bottom: -49.6%. The image carries
+     ~19% transparent padding under the grass, so the front rim stays inside
+     the panel; its left and right edges do run past the panel and are
+     trimmed by .panel-plate's clip, which is what turns the oval platform
+     into a full-width strip of ground at this size. */
+  .companion-ground { width: 234.6%; height: 132.6%; bottom: -49.6%; }
   /* .companion-meta is offset off the (now wider) stage's left edge; ease
      the offsets in so the LV pill + XP bar stay on the panel. */
   .companion-meta { left: -34px; right: -20px; }
@@ -1664,6 +1703,25 @@ html::after {
   .timer-display { font-size: 32px; padding: 8px 60px 8px 12px; }
   .controls-group { padding: 8px 16px; gap: 4px; }
   .timer-controls { gap: 4px; }
+}
+
+/* The tier above re-pins the canvas to the stage's px size, which on a phone
+   undoes the 170% that makes the mon bigger — and it only undoes the size,
+   not the absolute placement that goes with it, so the mon ended up drawn
+   clear above the panel. Restate it in the overlap of the two queries; a
+   short portrait window that is NOT phone-width keeps the plain 110px canvas,
+   since the 1.7x block never applied there in the first place. */
+@media (max-width: 479px) and (max-height: 700px) and (orientation: portrait) {
+  /* 1.35x, not the 1.7x a full-height phone gets. This tier shrinks the
+     stage to 110px while the LV pill + XP bar keep their size, so they take
+     83px of a 174px panel and leave only ~91px underneath — a 1.7x mon needs
+     about 101px of that with its name, and the name ends up sitting on its
+     face. Both layers move together: with the anchor line at 102% of the
+     stage, the canvas's own 96% line lands there at 102 - (96 x 1.35), and
+     the ground's grass line (50% of its box) at 102 - (50 x 1.35), putting
+     its bottom edge at 102 + (28 x 1.35). */
+  #companion-canvas { width: 135%; height: 135%; margin-left: -67.5%; top: -27.6%; }
+  .companion-ground { width: 186.3%; height: 105.3%; bottom: -39.8%; }
 }
 
 /* Landscape phones (≤520px tall). The framed strip is ~18px taller than the

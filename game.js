@@ -488,10 +488,26 @@ const CompanionCanvas = (() => {
         nameEl.style.top = '';
         nameEl.style.transform = '';
       } else {
-        const headPct = (state.headY || 96) / CANVAS_SIZE * 100;
-        // Floor of 15% (30px) keeps the name below the LVL/type pill row, which
-        // occupies the top 26px of the stage, whatever a future sprite's size.
-        nameEl.style.top = `${Math.max(15, headPct - 10)}%`;
+        // Measured against the canvas's own box rather than the stage's.
+        // The two coincide everywhere except on a phone, where style-v3.css
+        // draws the canvas larger than the stage it sits in (and offset above
+        // it) so the mon can be bigger without the panel growing — a stage
+        // percentage there would put the name somewhere on the mon's face.
+        // The name is floored so it can't ride up into the LV pill / XP bar.
+        // That floor used to be a flat 15% of the stage, from when the row
+        // was ~26px tall and the mon's head never got near it; at the phone's
+        // 1.7x the head clears the row entirely and the caption landed on top
+        // of the XP bar. Measured off the row itself now, so it holds at any
+        // mon size — and falls back to the old 15% when the row is hidden
+        // (no companion yet), where the stage's whole top is free.
+        const headFrac = (state.headY || 96) / CANVAS_SIZE;
+        const stageH   = nameEl.offsetParent ? nameEl.offsetParent.offsetHeight : canvas.offsetHeight;
+        const metaEl   = document.querySelector('.companion-meta');
+        const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
+        const floorPx  = metaShown ? metaEl.offsetTop + metaEl.offsetHeight + 4
+                                   : 0.15 * stageH;
+        const topPx    = canvas.offsetTop + (headFrac - 0.10) * canvas.offsetHeight;
+        nameEl.style.top = `${Math.max(floorPx, topPx)}px`;
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
       }
     }
