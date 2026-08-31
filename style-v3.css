@@ -2056,3 +2056,27 @@ html::after,
 @media (min-width: 480px) and (max-width: 820px) and (orientation: landscape) {
   :root { --stats-h: 126px; }
 }
+
+/* ── Timer screen: fit, don't scroll ───────────────────────
+   Two problems this section and fitTimerScreen() in app.js solve together.
+
+   1. --stats-h is a worst-case reserve — it has to cover the strip wrapped
+      to two rows, so on a desktop window it holds back ~150px above an
+      80px strip and the timer screen loses ~70px it could have used.
+      app.js measures the strip where it actually sits (height plus the gap
+      it floats above the bezel) and publishes that as --stats-reserve; the
+      var() fallback keeps the old behaviour if the script hasn't run yet.
+      Scoped to the timer screen on purpose — My Mons and the Dex size their
+      scroll box off --stats-h with their own hand-tuned clawback, and
+      re-basing those is a separate change.
+
+   2. The fluid tier above was hand-tuned to *just* fit: at 807px tall the
+      screen clears its box by about a pixel, and it still overflows between
+      941-949px (above the tier's max-height, below what the full desktop
+      layout needs), around 765-790px, and everywhere under ~710px. Rather
+      than chase those bands with more breakpoints, app.js scales the whole
+      screen down by whatever is left over. This var is what it sets. */
+#screen-timer {
+  padding-bottom: calc(var(--stats-reserve, var(--stats-h)) + 12px);
+  zoom: var(--timer-fit, 1);
+}

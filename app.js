@@ -14,6 +14,9 @@ function showScreen(name) {
   // Blender is only visible on My Mons
   const blenderZone = document.getElementById('blender-zone');
   if (blenderZone && name !== 'mymons') blenderZone.classList.remove('active');
+  // The timer screen can only be measured while it's the visible one — a
+  // display:none screen has no height to fit against. (See fitTimerScreen.)
+  if (name === 'timer') fitTimerScreen();
 }
 
 // ── Timer state ───────────────────────────────────────────
@@ -583,3 +586,67 @@ updateButtonStates();
 elColon.style.animationPlayState = 'paused';
 elColon.style.opacity = '1';
 CompanionCanvas.init(document.getElementById('companion-canvas'));
+
+// ── Timer screen fit ──────────────────────────────────────
+// The two panels hold their natural height on purpose (see the "neither one
+// flexes" comment in style-v3.css: letting them shrink clipped the timer
+// panel's bottom border and the grass platform), so anything that doesn't
+// fit became a scroll in the middle of the screen — with the scrollbar
+// hidden, which is what made it feel like the middle was drifting on its own
+// while the logo and the strip stayed put.
+//
+// The fluid tier in style-v3.css already trims spacing to claw that back,
+// but it was tuned to *just* fit: at 807px tall the screen clears its box by
+// about a pixel, and it still overflows between 941-949px, around 765-790px,
+// and everywhere under ~710px. These two steps close the gap for good.
+const timerScreen = document.getElementById('screen-timer');
+const statsStrip  = document.querySelector('.stats-strip');
+
+// Step 1 — reserve the room the strip actually takes, not the worst case.
+// --stats-h has to cover the strip wrapped to two rows, so on a desktop
+// window it holds back ~150px above an 80px strip. Both parts of the real
+// figure have to be measured: the height is content-driven (the tiles wrap
+// under 820px wide) and the strip floats clear of the bottom bezel rather
+// than sitting on the viewport edge.
+function updateStatsReserve() {
+  if (!statsStrip) return;
+  const r = statsStrip.getBoundingClientRect();
+  if (!r.height) return;                       // hidden / not laid out yet
+  const gapBelow = window.innerHeight - r.bottom;
+  document.documentElement.style.setProperty(
+    '--stats-reserve', Math.ceil(r.height + gapBelow + 8) + 'px');
+}
+
+// Step 2 — if the panels still don't fit, scale the whole screen down by
+// exactly the shortfall. zoom, unlike transform: scale, is part of layout:
+// the screen's own box shrinks with its contents, so nothing is left half
+// scrolled and the strip and logo stay exactly where they are.
+function fitTimerScreen() {
+  updateStatsReserve();
+  if (!timerScreen || !timerScreen.classList.contains('active')) return;
+
+  timerScreen.style.setProperty('--timer-fit', '1');
+
+  // Settle rather than solve in one shot. clientHeight and scrollHeight are
+  // both rounded to whole pixels, and zooming re-runs the layout underneath
+  // the numbers the ratio was derived from, so a single pass can land a
+  // pixel or two short. Three passes is comfortably enough to converge; the
+  // 2px tolerance keeps an exact fit from triggering a pointless 0.998.
+  let fit = 1;
+  for (let pass = 0; pass < 3; pass++) {
+    const available = timerScreen.clientHeight;  // reading this forces reflow
+    const needed    = timerScreen.scrollHeight;
+    if (!(available > 0) || needed <= available + 2) break;
+    fit *= (available - 2) / needed;
+    timerScreen.style.setProperty('--timer-fit', fit);
+  }
+}
+
+window.addEventListener('resize', fitTimerScreen);
+// The pixel font lands after first paint and every panel is sized in it.
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimerScreen);
+// The strip changes height on its own — the tiles wrap, and the LV badge and
+// XP numbers grow a digit as the player levels.
+if (window.ResizeObserver && statsStrip) new ResizeObserver(fitTimerScreen).observe(statsStrip);
+
+fitTimerScreen();
