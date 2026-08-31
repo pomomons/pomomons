@@ -319,6 +319,11 @@ const MonSprite = (() => {
 // ── Companion idle animation ───────────────────────────────
 const CompanionCanvas = (() => {
   const CANVAS_SIZE = 200; // logical px (canvas element attribute)
+  // Room a 64px mon fills on this stage; every smaller mon scales down from
+  // it in proportion (see MonSprite.displaySize). 176 is the ceiling here:
+  // the stage bottom-anchors at GROUND_Y 192 with a 16px top margin, so
+  // anything larger stops touching the ground and starts sinking through it.
+  const MON_BOX = 176;
 
   const SPRITE = {
     noMon:      true,    // true until setMon() is called; suppresses all drawing
@@ -395,10 +400,10 @@ const CompanionCanvas = (() => {
           srcY = 0;
         }
         // Proportional to the sprite's native resolution (see displaySize):
-        // 160 is the room for a 64px mon, so 48px -> 120, 36px -> 90 and
-        // 32px -> 80. This used to be a flat 160 for every mon, which made
+        // MON_BOX is the room for a 64px mon, so 48px -> 132, 36px -> 99 and
+        // 32px -> 88. This used to be a flat 160 for every mon, which made
         // a 32px starter exactly as large as a 64px final evolution.
-        const size = MonSprite.displaySize(srcW, 160);
+        const size = MonSprite.displaySize(srcW, MON_BOX);
         const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
         state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
@@ -579,7 +584,7 @@ const CompanionCanvas = (() => {
 
     const GROUND_Y = 192; // matches drawSprite()'s real-mon anchor
     const cx   = CANVAS_SIZE / 2;
-    const size = MonSprite.displaySize(srcW, 160); // same rule as drawSprite()
+    const size = MonSprite.displaySize(srcW, MON_BOX); // same rule as drawSprite()
     const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
     const dx = Math.round(-size / 2), dy = Math.round(-size / 2);
 
