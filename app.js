@@ -102,14 +102,62 @@ function renderTime() {
   document.title = running ? `${mm}:${ss} — PomoMons` : 'PomoMons';
 }
 
+// ── Stats scope: all-time totals vs. today only ────────────
+// Each stat is written twice — a lifetime total (pm_total_*) and a per-day
+// bucket (pm_today_*) stamped with the local date it belongs to. The bucket is
+// zeroed lazily on the first read or write after the date rolls over, so there
+// is no midnight timer to keep alive: simply opening the app the next day (or
+// finishing a session past midnight) is enough to start the new day at zero.
+const STAT_KINDS = ['sessions', 'minutes', 'catches'];
+
+// Local date, not UTC — "today" has to mean the player's today.
+function todayStamp() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function rollDayIfNeeded() {
+  const stamp = todayStamp();
+  if (localStorage.getItem('pm_today_date') === stamp) return;
+  localStorage.setItem('pm_today_date', stamp);
+  STAT_KINDS.forEach(k => localStorage.setItem('pm_today_' + k, '0'));
+}
+
+// The single entry point for changing a stat, so the lifetime total and
+// today's bucket can never drift apart.
+function addStat(kind, delta) {
+  rollDayIfNeeded();
+  for (const key of ['pm_total_' + kind, 'pm_today_' + kind]) {
+    localStorage.setItem(key, parseInt(localStorage.getItem(key) || '0', 10) + delta);
+  }
+}
+
+// Which set the strip is showing. Defaults to 'total' — the behaviour the
+// strip has always had — so nothing changes for an existing player until they
+// press the button.
+let statsScope = localStorage.getItem('pm_stats_scope') === 'today' ? 'today' : 'total';
+
 function renderStats() {
-  const sessions = parseInt(localStorage.getItem('pm_total_sessions') || '0', 10);
-  const minutes  = parseInt(localStorage.getItem('pm_total_minutes')  || '0', 10);
-  const catches  = parseInt(localStorage.getItem('pm_total_catches')  || '0', 10);
+  rollDayIfNeeded();
+  const prefix = statsScope === 'today' ? 'pm_today_' : 'pm_total_';
+  const read = kind => parseInt(localStorage.getItem(prefix + kind) || '0', 10);
   const el = id => document.getElementById(id);
-  if (el('stat-sessions')) el('stat-sessions').textContent = sessions;
-  if (el('stat-minutes'))  el('stat-minutes').textContent  = minutes;
-  if (el('stat-catches'))  el('stat-catches').textContent  = catches;
+  if (el('stat-sessions')) el('stat-sessions').textContent = read('sessions');
+  if (el('stat-minutes'))  el('stat-minutes').textContent  = read('minutes');
+  if (el('stat-catches'))  el('stat-catches').textContent  = read('catches');
+  const scopeBtn = el('btn-stats-scope');
+  if (scopeBtn) {
+    // Only the visible span — the button also holds the hidden width-setting
+    // twin, which textContent would wipe out.
+    el('stats-scope-val').textContent = statsScope === 'today' ? 'TODAY' : 'ALL TIME';
+    // Tells a screen reader which set is showing, and what pressing it does.
+    scopeBtn.setAttribute('aria-label',
+      statsScope === 'today' ? "Showing today's stats — switch to all time"
+                             : 'Showing all-time stats — switch to today');
+    scopeBtn.title = statsScope === 'today' ? 'Showing today — tap for all time'
+                                            : 'Showing all time — tap for today';
+  }
 }
 
 function updateButtonStates() {
@@ -203,11 +251,9 @@ function onSessionEnd() {
     sessionsToday++;
     // Every 4th session → long break; otherwise → short break
     const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
-    // Update persistent stats
-    const prevSessions = parseInt(localStorage.getItem('pm_total_sessions') || '0', 10);
-    const prevMinutes  = parseInt(localStorage.getItem('pm_total_minutes')  || '0', 10);
-    localStorage.setItem('pm_total_sessions', prevSessions + 1);
-    localStorage.setItem('pm_total_minutes',  prevMinutes + focusMins);
+    // Update persistent stats (lifetime + today, see addStat)
+    addStat('sessions', 1);
+    addStat('minutes',  focusMins);
     renderStats();
     CompanionCanvas.stop();
     EncounterScreen.start(() => {
@@ -433,6 +479,7 @@ Collection.init().then(async () => {
     ['pm_active', 'pm_active_rec_key', 'pm_active_pal_level', 'pm_active_pal_exp',
      'pm_active_shiny', 'pm_active_dark'].forEach(k => localStorage.removeItem(k));
     localStorage.setItem('pm_total_catches', '0');
+    localStorage.setItem('pm_today_catches', '0');
     localStorage.setItem('pm_seed_purged', '1');
     if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
     if (typeof renderStats === 'function') renderStats();
@@ -448,6 +495,14 @@ document.getElementById('btn-back-mymons').addEventListener('click',  () => show
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
 document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));
 document.getElementById('btn-to-mymons').addEventListener('click', () => showScreen('mymons'));
+
+// Stats strip: swap the three tiles between all-time totals and today only.
+document.getElementById('btn-stats-scope')?.addEventListener('click', () => {
+  statsScope = statsScope === 'today' ? 'total' : 'today';
+  localStorage.setItem('pm_stats_scope', statsScope);
+  SFX.play('click');
+  renderStats();
+});
 
 // Sync timer when tab becomes visible again after being hidden
 document.addEventListener('visibilitychange', () => {

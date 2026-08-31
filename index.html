@@ -395,6 +395,21 @@
       <!-- .stat-frame draws each tile's outline via its own background showing
            through its padding — same two-layer trick as the panels. -->
       <div class="stats-inline">
+        <!-- Scope toggle: swaps the three tiles between all-time totals and
+             today only. Its own label IS the readout of which set is showing,
+             so the tiles don't need a caption of their own. Text and title are
+             filled in by renderStats(). -->
+        <div class="stat-frame stat-frame--scope">
+          <button type="button" class="stat-item stat-scope" id="btn-stats-scope">
+            <span class="stat-scope-label" id="stats-scope-val">ALL TIME</span>
+            <!-- Invisible twin carrying the LONGEST label. Both spans sit in the
+                 same grid cell, so this one sets the button's width: the box is
+                 always wide enough for its text at whatever font size the
+                 breakpoint picks, and the tiles beside it don't shift when the
+                 label changes. Nothing here needs a hand-tuned pixel width. -->
+            <span class="stat-scope-ghost" aria-hidden="true">ALL TIME</span>
+          </button>
+        </div>
         <div class="stat-frame"><div class="stat-item">
           <span class="stat-val" id="stat-sessions">0</span>
           <span class="stat-label">SESSIONS</span>

@@ -107,6 +107,16 @@ const Collection = (() => {
     });
   }
 
+  // Catches feed the stats strip, which tracks a lifetime total and a
+  // per-day bucket side by side. app.js owns that pairing (addStat); this
+  // falls back to the lifetime total alone if it somehow isn't loaded, the
+  // same defensive shape the renderStats calls below use.
+  function bumpCatchCount() {
+    if (typeof addStat === 'function') { addStat('catches', 1); return; }
+    const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
+    localStorage.setItem('pm_total_catches', prev + 1);
+  }
+
   // ── Public: addCaught ────────────────────────────────────────
   async function addCaught(record) {
     // Stamp per-individual traits once, at catch time (stable forever after).
@@ -122,8 +132,7 @@ const Collection = (() => {
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);
       localStorage.setItem('pm_caught', JSON.stringify(list));
-      const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
-      localStorage.setItem('pm_total_catches', prev + 1);
+      bumpCatchCount();
       if (isFirstCatch) {
         const mon = MONS.find(m => m.id === record.id);
         if (mon) await setActiveCompanion(mon, { _key: list.length - 1, ...record });
@@ -140,8 +149,7 @@ const Collection = (() => {
       tx.onerror    = () => reject(tx.error);
     });
 
-    const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
-    localStorage.setItem('pm_total_catches', prev + 1);
+    bumpCatchCount();
 
     // First catch → auto-equip it as the companion on the main screen.
     if (isFirstCatch) {

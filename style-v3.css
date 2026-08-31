@@ -1156,6 +1156,88 @@ html::after {
 
 .stats-inline { gap: 10px; }
 
+/* ── Stats scope toggle ────────────────────────────────────
+   Reuses .stat-frame/.stat-item so it sits in the tile row as one of them,
+   but deliberately narrower — it is a control, not a fourth number, and the
+   tiles' 126px min-width would give it more weight than the stats it labels.
+   Gold text is what marks it as pressable; the tile numbers are cream. */
+.stat-scope {
+  /* Grid, not .stat-item's flex column: the visible label and its hidden twin
+     share one cell so the longer of the two always sets the width. A fixed
+     px width can't work here — 'Press Start 2P' is ~1em per glyph, so
+     "ALL TIME" needs ~86px at 10px and ~78px at 9px, and the breakpoints
+     below change the font size. Letting the ghost measure it means the box
+     fits its text at every size on its own. */
+  display: grid;
+  grid-template-areas: 'label';
+  place-items: center;
+  min-width: 0;
+  width: auto;
+  padding: 8px 12px;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: .08em;
+  line-height: 1.2;
+  color: var(--gold);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* letter-spacing also lands after the LAST glyph, so both spans measure ~.08em
+   wider than their ink. Pulling that back makes the ghost's width exactly the
+   text's, which keeps the padding even on both sides and stops the box from
+   being fractionally narrower than the string it just measured. */
+.stat-scope > * { grid-area: label; margin-right: -.08em; }
+.stat-scope-ghost { visibility: hidden; }
+
+.stat-scope:hover  { filter: brightness(1.18); }
+.stat-scope:active { filter: brightness(.9); }
+.stat-scope:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ── Tiles drop to their own row before they can overflow ───
+   The one-line strip (LV | XP | tiles) needs ~718px of plate width to hold
+   the scope toggle plus three tiles, and the plate runs ~78px narrower than
+   the viewport — so below ~800px the right-hand tile slid under
+   .panel-plate's overflow:hidden and was silently cut off rather than
+   wrapping. The phone tier already stacks the tiles onto their own row to
+   solve exactly this; it just started too late, at 479px. Starting it here
+   also fixes the pre-existing case: with only three tiles the row already
+   needed ~596px of plate (~674px of viewport), so CATCHES was being clipped
+   between 480px and 674px before the toggle was ever added. */
+@media (max-width: 820px) {
+  .stats-strip .stats-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'lv xp' 'tiles tiles';
+    row-gap: 8px;
+  }
+  .stats-strip .stats-row > .lv-frame { grid-area: lv; }
+  .stats-strip .stats-row > .stats-xp { grid-area: xp; width: auto; }
+  .stats-strip .stats-row > .stats-inline {
+    grid-area: tiles;
+    width: 100%;
+    flex-shrink: 1;
+  }
+  /* The three numbers share the row evenly; the toggle takes only what its
+     label needs rather than a full quarter of it. */
+  .stats-strip .stats-row > .stats-inline .stat-frame { flex: 1; min-width: 0; }
+  .stats-strip .stats-row > .stats-inline .stat-frame--scope { flex: 0 0 auto; }
+  /* The tiles' desktop 126px floor is what actually blocks the shrink — the
+     frame around them can flex all it likes while the fill inside refuses. */
+  .stats-strip .stats-row > .stats-inline .stat-item { min-width: 0; }
+}
+
+/* Once three tiles share a ~450px row they are too narrow for "SESSIONS" at
+   10px — the caption is the widest thing in the tile, so it, not the number,
+   is what sets the tile's minimum. Step the caption down rather than drop it:
+   the bare numbers don't say what they are counting. */
+@media (max-width: 560px) {
+  .stat-label { font-size: 8px; letter-spacing: .04em; }
+  .stat-val   { font-size: 14px; }
+  .stat-item  { padding: 6px 4px; }
+}
+
 
 /* ── XP bars ───────────────────────────────────────────────
    Built like the LV badges: .xp-frame is the black outline (its background
@@ -1381,6 +1463,11 @@ html::after {
   .stat-frame { padding: 1px; }
   .stat-item  { padding: 2px 6px; min-width: 0; }
   .stat-val   { font-size: 13px; }
+  /* Trimmed to match the tiles; the ghost twin re-measures the box for the
+     smaller type, so nothing needs re-pinning here. */
+  /* Slightly taller than the tiles' 2px here — it spans the full width above
+     them (see the flex-wrap rule below), so it needs to read as a control. */
+  .stat-scope { padding: 4px 6px; font-size: 9px; }
   .stats-strip .stats-row { padding: 6px 8px; gap: 8px; }
   .stats-strip .level-badge { font-size: 11px; padding: 0 10px; }
   .stats-strip .exp-bar-wrap { height: 18px; }
@@ -1463,6 +1550,13 @@ html::after {
     flex-shrink: 1;
   }
   .stats-strip .stats-row > .stats-inline .stat-frame { flex: 1; min-width: 0; }
+  /* At phone widths the toggle can't share the tiles' line: three tiles plus
+     it leaves each tile ~59px, and "SESSIONS" needs ~81px even at 8px type,
+     so the captions got cut. Give it the full width above them instead — it
+     then reads as a heading for the three numbers, and they split the line
+     below exactly as they did before the toggle existed. */
+  .stats-strip .stats-row > .stats-inline { flex-wrap: wrap; row-gap: 6px; }
+  .stats-strip .stats-row > .stats-inline .stat-frame--scope { flex: 1 0 100%; }
 
   /* The ▲▼ minute steppers sit absolutely positioned over the timer's right
      edge (style-v2.css .time-adjust). .timer-time has white-space:nowrap,
@@ -1942,4 +2036,23 @@ html::after,
   .logo-pomo, .logo-mons { font-size: 40px; }
   .logo-tomato-img { height: 2.1rem; }
   .logo-icon { font-size: 23px; }
+}
+
+/* ── Reserve for the stacked strip ─────────────────────────
+   Below 820px the tiles drop onto their own row, which makes the strip
+   ~130px tall in portrait and ~118px in landscape. The short-screen tiers
+   above set --stats-h to 96–125px, sized back when the strip only stacked
+   below 479px (where it is shorter, the tiles being smaller). In the band
+   where a short screen and a stacked strip overlap, that reserve is too
+   small and the screen's content runs under the strip. Re-reserve it here,
+   last in the file so it wins over those tiers. */
+@media (min-width: 480px) and (max-width: 820px) {
+  :root { --stats-h: 138px; }
+}
+
+/* Landscape keeps the smaller tile padding, so the stacked strip lands
+   ~12px shorter — and horizontal space is what is scarce there, not
+   vertical. Give the timer those pixels back. */
+@media (min-width: 480px) and (max-width: 820px) and (orientation: landscape) {
+  :root { --stats-h: 126px; }
 }
