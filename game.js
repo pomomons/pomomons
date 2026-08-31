@@ -544,8 +544,12 @@ const CompanionCanvas = (() => {
   // ones that can't be caught yet — as a "who's out there" teaser. It
   // quick-fades from one to the next, bottom-anchored at the same GROUND_Y
   // real mons use so the rotation doesn't jump around vertically. ──
-  const SILHOUETTE_SHOW_MS = 700;  // how long each species holds before swapping
-  const SILHOUETTE_FADE_MS = 150;  // crossfade duration at the start of each swap
+  // Halved from 700/150 to run the rotation at double speed. Both numbers
+  // move together so the crossfade stays the same share of each species'
+  // turn — halving only the hold would leave the fade covering 43% of it and
+  // the teaser would read as a blur rather than a cycle.
+  const SILHOUETTE_SHOW_MS = 350;  // how long each species holds before swapping
+  const SILHOUETTE_FADE_MS = 75;   // crossfade duration at the start of each swap
 
   let silhouettePool  = null; // lazy-built: MONS filtered to sprite-bearing entries
   let silhouetteIndex = -1;
@@ -571,14 +575,12 @@ const CompanionCanvas = (() => {
   }
 
   // Draws one species as a flat silhouette: a drop shadow, then a solid,
-  // fully-opaque charcoal-grey fill traced from the sprite's alpha shape
-  // (not the old "?" bitmap's white — a grey silhouette reads more like an
-  // unrevealed shape than a glowing icon). The drawImage's own colours
-  // don't matter here — 'source-in' repaints only the pixels it just
-  // covered, i.e. exactly the sprite's silhouette, with SILHOUETTE_COLOR.
-  // `alpha` only drives the brief crossfade between one species and the
-  // next; a settled silhouette sits at full opacity.
-  const SILHOUETTE_COLOR = '#3a3f3c';
+  // fully-opaque black fill traced from the sprite's alpha shape. The
+  // drawImage's own colours don't matter here — 'source-in' repaints only
+  // the pixels it just covered, i.e. exactly the sprite's silhouette, with
+  // SILHOUETTE_COLOR. `alpha` only drives the brief crossfade between one
+  // species and the next; a settled silhouette sits at full opacity.
+  const SILHOUETTE_COLOR = '#000';
   function drawSilhouette(mon, bobY, alpha) {
     if (!mon || alpha <= 0) return;
     const img = MonSprite.getImage(mon.sprite);
