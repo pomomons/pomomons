@@ -70,7 +70,7 @@ const MONS = [
   { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
-  { id: 5, dexNum: 11, name: 'Bluble',     type: 'Sour', color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
+  { id: 5, dexNum: 11, name: 'Bluble',     type: 'Sweet', color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [

@@ -43,9 +43,10 @@ unlocked evolution's fields.
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
 line's type only shifts across evolution when the prep genuinely changes the
-flavour (blueberry → muffin: Sour → Sweet; avocado pit is bitter/inedible
-before the guac: Savory → Bitter → Savory). Otherwise it holds steady, even
-through a name change (tomato → marinara → spaghetti stays Savory throughout).
+flavour (avocado pit is bitter/inedible before the guac: Savory → Bitter →
+Savory). Otherwise it holds steady, even through a name change (tomato →
+marinara → spaghetti stays Savory throughout, and Bluble → Mufman stays Sweet).
+Sour is a supported type with no mon currently using it.
 
 | id | Dex | Name       | Type    | Evolutions (atLevel → dex)                         |
 |----|-----|------------|---------|-----------------------------------------------------|
@@ -53,7 +54,7 @@ through a name change (tomato → marinara → spaghetti stays Savory throughout
 | 3  | 4   | Avocuddle  | Savory  | 20 → Pittsworth #5 (Bitter), 36 → Guacamonger #6 (Savory) |
 | 4  | 7   | Chilino    | Spicy   | 20 → Scorchpepper #8 (Spicy), 36 → Ghostpepper #9 (Spicy) |
 | 6  | 10  | Donot      | Sweet   | —                                                    |
-| 5  | 11  | Bluble     | Sour    | 20 → Mufman #12 (Sweet)                              |
+| 5  | 11  | Bluble     | Sweet   | 20 → Mufman #12 (Sweet)                              |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
 | 8  | 15  | Marshpuff  | Sweet   | 20 → Marshmelt #16 (Sweet)                           |
 | 9  | 17  | Wedgling   | Savory  | —                                                    |
