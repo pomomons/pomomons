@@ -1235,10 +1235,22 @@ const EncounterScreen = (() => {
     close();
   }
 
-  function openMonInfo() {
+  // Raise the info card BEFORE dropping the encounter overlay, not after. Its
+  // start() awaits an IndexedDB read (the caught-names set for the evolution
+  // chain) before it shows anything, so hiding the encounter overlay up front
+  // left nothing covering the timer screen for those frames, and it flashed
+  // through in between. The info card is z-index 170 against the encounter
+  // overlay's 100, so it covers it the instant it appears and the swap reads
+  // as one step.
+  async function openMonInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    overlay.classList.remove('active');
-    MonInfoScreen.start(st.mon, onDone);
+    try {
+      await MonInfoScreen.start(st.mon, onDone);
+    } finally {
+      // finally, so a failed lookup can't strand the player on the encounter
+      // overlay with a dead NEXT button.
+      overlay.classList.remove('active');
+    }
   }
 
   // Skip the mon-info card and open the caught mon's own detail card —
@@ -1246,9 +1258,12 @@ const EncounterScreen = (() => {
   // record couldn't be resolved.
   async function openCaughtInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    overlay.classList.remove('active');
-    if (typeof onDone === 'function') onDone();
 
+    // Same ordering as openMonInfo above: resolve everything this needs while
+    // the encounter overlay is still up, open the destination, and only then
+    // take the overlay down. Tearing it down first (and running onDone, which
+    // puts the timer screen back) meant the wait on st.caughtKey was spent
+    // looking at the timer screen.
     await st.caughtKey;   // the record needs its real key before equip/rename work
     const rec  = st.caughtRec;
     const base = rec && typeof MONS !== 'undefined' ? MONS.find(m => m.id === rec.id) : null;
@@ -1258,6 +1273,9 @@ const EncounterScreen = (() => {
     } else if (typeof showScreen === 'function') {
       showScreen('mymons');
     }
+
+    overlay.classList.remove('active');
+    if (typeof onDone === 'function') onDone();
   }
 
   function close() {
