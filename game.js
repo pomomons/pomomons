@@ -1235,17 +1235,46 @@ const EncounterScreen = (() => {
     close();
   }
 
+  // Hold the outgoing overlay until the incoming card has finished animating
+  // in, then drop it. Both cards enter on the mon-info-appear keyframes, which
+  // start at opacity 0 — so whatever sits behind them is visible through the
+  // whole 300-350ms fade, not just for the frame the class changes on. Raising
+  // the card first and dropping this overlay immediately still played that
+  // fade over the timer screen. Waiting for animationend means it plays over
+  // the encounter overlay instead, and reads as a crossfade.
+  //
+  // animationend bubbles, so the listener has to ignore animations finishing
+  // on the card's own children. The timeout is the backstop for when no
+  // animation runs at all — prefers-reduced-motion, or a browser that never
+  // fires the event — where waiting forever would strand the overlay up.
+  function afterCardAppears(el) {
+    return new Promise(resolve => {
+      if (!el) return resolve();
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        el.removeEventListener('animationend', onEnd);
+        clearTimeout(timer);
+        resolve();
+      };
+      const onEnd = e => { if (e.target === el) finish(); };
+      el.addEventListener('animationend', onEnd);
+      const timer = setTimeout(finish, 600);
+    });
+  }
+
   // Raise the info card BEFORE dropping the encounter overlay, not after. Its
   // start() awaits an IndexedDB read (the caught-names set for the evolution
   // chain) before it shows anything, so hiding the encounter overlay up front
-  // left nothing covering the timer screen for those frames, and it flashed
-  // through in between. The info card is z-index 170 against the encounter
-  // overlay's 100, so it covers it the instant it appears and the swap reads
-  // as one step.
+  // left nothing covering the timer screen for those frames too. The info card
+  // is z-index 170 against the encounter overlay's 100, so it covers it from
+  // the moment it appears.
   async function openMonInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     try {
       await MonInfoScreen.start(st.mon, onDone);
+      await afterCardAppears(document.getElementById('mon-info-overlay'));
     } finally {
       // finally, so a failed lookup can't strand the player on the encounter
       // overlay with a dead NEXT button.
@@ -1270,6 +1299,10 @@ const EncounterScreen = (() => {
 
     if (base && typeof Collection !== 'undefined' && Collection.openMonDetail) {
       Collection.openMonDetail(base, rec);
+      // Same 0.3s opacity-0 entry as the info card — hold this overlay behind
+      // it until it lands. The My Mons fallback below is a screen, not an
+      // overlay, and has no entry animation to wait on.
+      await afterCardAppears(document.getElementById('mon-detail-overlay'));
     } else if (typeof showScreen === 'function') {
       showScreen('mymons');
     }
