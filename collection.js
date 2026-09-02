@@ -115,6 +115,7 @@ const Collection = (() => {
     if (typeof addStat === 'function') { addStat('catches', 1); return; }
     const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
     localStorage.setItem('pm_total_catches', prev + 1);
+    if (typeof Signup !== 'undefined') Signup.event('mon-caught');
   }
 
   // ── Public: addCaught ────────────────────────────────────────

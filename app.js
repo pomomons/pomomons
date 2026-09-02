@@ -257,6 +257,8 @@ function onSessionEnd() {
     // Update persistent stats (lifetime + today, see addStat)
     addStat('sessions', 1);
     addStat('minutes',  focusMins);
+    // Pageviews alone can't tell a finished session from a tab left open.
+    if (typeof Signup !== 'undefined') Signup.event('session-complete');
     renderStats();
     CompanionCanvas.stop();
     EncounterScreen.start(() => {
@@ -264,22 +266,33 @@ function onSessionEnd() {
       const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
       const palResult = activeId ? savePalExp(activeId, 25) : null;
 
-      if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
-        EvolutionScreen.start(palResult, () => {
-          CompanionCanvas.init(document.getElementById('companion-canvas'));
-          setMode(nextMode);
-        });
-      } else {
+      // The mailing-list card is offered here, once the encounter (and any
+      // evolution) has played out and we're back on the timer screen — not
+      // mid-celebration. Signup decides whether it's earned and whether it
+      // has been asked too often already.
+      const backOnTimer = () => {
         CompanionCanvas.init(document.getElementById('companion-canvas'));
         setMode(nextMode);
+        if (typeof Signup !== 'undefined') Signup.maybePrompt();
+      };
+
+      if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
+        EvolutionScreen.start(palResult, backOnTimer);
+      } else {
+        backOnTimer();
       }
     });
     return;
   }
 
-  // Break ended — reset to full break duration (user starts it manually)
-  timeLeft = MODES[currentMode];
-  renderTime();
+  // Break ended — go back to a focus session, cued up at its full duration and
+  // waiting to be started. The break's own duration used to be reloaded here
+  // and the mode left where it was, so the next thing the player saw was
+  // another break: they had to reach for the mode dropdown every cycle to get
+  // back to work. setMode() moves the label, the dropdown's ticked row, the
+  // clock and the buttons together, and leaves it stopped — it never
+  // auto-starts a session.
+  setMode('focus');
 }
 
 // ── Mode dropdown ─────────────────────────────────────────

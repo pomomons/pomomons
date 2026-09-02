@@ -64,6 +64,27 @@
          the reference. The button used to be absolutely positioned to the
          header's top-right corner. -->
     <div class="logo-row">
+    <!-- Mailing list. Always available, so anyone who waved the card away can
+         still opt in later. signup.js removes this if no endpoint is set. -->
+    <div class="btn-shadow btn-shadow--sm signup-shadow"><div class="pxb pxb-sm pxb-signup"><button class="btn-signup" id="btn-signup" aria-label="Get PomoMons updates by email">
+      <!-- Pixel envelope: frame, then a flap folding from the top corners -->
+      <svg width="20" height="20" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges">
+        <rect x="0" y="2" width="10" height="1" fill="currentColor"/>
+        <rect x="0" y="7" width="10" height="1" fill="currentColor"/>
+        <rect x="0" y="2" width="1"  height="6" fill="currentColor"/>
+        <rect x="9" y="2" width="1"  height="6" fill="currentColor"/>
+        <rect x="1" y="3" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="3" width="1" height="1" fill="currentColor"/>
+        <rect x="2" y="4" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="4" width="1" height="1" fill="currentColor"/>
+        <rect x="3" y="5" width="1" height="1" fill="currentColor"/>
+        <rect x="6" y="5" width="1" height="1" fill="currentColor"/>
+        <rect x="4" y="6" width="1" height="1" fill="currentColor"/>
+        <rect x="5" y="6" width="1" height="1" fill="currentColor"/>
+      </svg>
+    </button></div></div>
     <div class="logo">
       <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
     </div>
@@ -281,8 +302,8 @@
       <p class="blender-confirm-body">ARE YOU SURE YOU WANT TO BLEND<br><span id="blend-name">???</span><br>INTO A SMOOTHIE ITEM?</p>
       <p class="blender-confirm-warn">THIS CANNOT BE UNDONE!</p>
       <div class="blender-confirm-btns">
-        <button class="btn btn-primary" id="btn-blend-yes">BLEND IT!</button>
-        <button class="btn btn-ghost" id="btn-blend-no">CANCEL</button>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-blend-yes">BLEND IT!</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-no">CANCEL</button></div>
       </div>
     </div>
   </div>
@@ -435,11 +456,39 @@
     <button class="mode-option" data-mode="long">LONG BREAK</button>
   </div>
 
+  <!-- ── Mailing-list card ─────────────────────────────
+       Fixed above the stats strip rather than placed in the timer screen, so
+       it adds no height there and can't trip fitTimerScreen() into shrinking
+       the whole screen to make room. Optional throughout: nothing in the app
+       is ever gated on it, and closing it is one tap. -->
+  <div id="signup-card" class="signup-card" role="dialog" aria-modal="false"
+       aria-labelledby="signup-title" aria-hidden="true">
+    <button type="button" class="signup-x" data-signup-close aria-label="No thanks">✕</button>
+    <div class="signup-text">
+      <p class="signup-title" id="signup-title">NEW MONS INCOMING</p>
+      <!-- Doubles as the result line: signup.js writes errors and the
+           confirmation here and puts this copy back afterwards, so the bar
+           never changes height mid-interaction. -->
+      <p class="signup-msg" role="status" aria-live="polite">Occasional updates. Nothing else.</p>
+    </div>
+    <form class="signup-form" novalidate>
+      <!-- Honeypot. Off-screen and hidden from assistive tech, so a person
+           never sees or tabs to it; bots fill in every field they find. -->
+      <input type="text" name="website" class="signup-hp" tabindex="-1"
+             autocomplete="off" aria-hidden="true">
+      <label class="signup-sr" for="signup-email">Email address</label>
+      <input type="email" id="signup-email" class="signup-input"
+             placeholder="you@mail.com" autocomplete="email" required>
+      <button type="submit" class="btn btn-primary signup-join">JOIN</button>
+    </form>
+  </div>
+
   <script src="monsters.js"></script>
   <script src="game.js"></script>
   <script src="collection.js"></script>
   <script src="audio.js"></script>
   <script src="app.js"></script>
+  <script src="signup.js"></script>
 
   <!-- Analytics (GoatCounter — free, privacy-friendly, no cookies).
        Dashboard: https://specialaccount11.goatcounter.com -->

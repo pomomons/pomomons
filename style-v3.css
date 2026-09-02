@@ -1333,6 +1333,9 @@ html::after {
 
 /* ── A2 — the two boxes sit closer together ──────────────── */
 #screen-timer { gap: 12px; padding-top: 44px; }
+/* Keeps the encounter arena the same distance below the tagline as the
+   timer screen's first box — see .encounter-body in style.css. */
+.encounter-body { padding-top: 44px; }
 
 /* ── Companion readout ─────────────────────────────────────
    Reference shows a LV pill with the bar directly beneath it, sharing its left
@@ -1494,6 +1497,7 @@ html::after {
      evenly, matching the base sheet's original intent (.screen's default
      is space-evenly — see the comment by #screen-mymons in style.css). */
   #screen-timer { justify-content: center; padding-top: 0; }
+  .encounter-body { padding-top: 0; }
 
   /* Both panels used to hold their exact content height (flex: 0 0 auto —
      see the "neither one flexes" comment near .combined-timer-wrap above)
@@ -1652,7 +1656,13 @@ html::after {
   /* .companion-meta is offset off the (now wider) stage's left edge; ease
      the offsets in so the LV pill + XP bar stay on the panel. */
   .companion-meta { left: -34px; right: -20px; }
-  .companion-name { font-size: 14px; }
+  /* The caption's box, not its position: game.js sizes the name off the mon,
+     which is 1.7x the stage here, and it wraps at its own box's edge. Left at
+     the stage's width a long name ("SCORCHPEPPER") would be shrunk to fit a
+     box far narrower than the art it labels. Symmetric so the text stays
+     centred on the mon; the panel is still the hard limit (sizeMonName caps
+     against both). */
+  .companion-name { left: -40px; right: -40px; }
   .companion-name.is-prompt { font-size: 15px; top: 2%; }
 
   .timer-display { font-size: 52px; padding: 8px 30px 8px 10px; letter-spacing: 0; }
@@ -1693,6 +1703,9 @@ html::after {
   #companion-canvas { width: 110px; height: 110px; }
   .companion-stage   { width: 110px; height: 110px; }
   .companion-area { padding: 8px 8px 6px; gap: 6px; }
+  /* Tagline is hidden here too — same reasoning as the landscape block. */
+  .encounter-body { justify-content: center; padding-top: 0; }
+
   /* Smaller + higher, same fix the base sheet already uses for the prompt
      (see the comment on .companion-name.is-prompt) — just tuned further so
      it clears the "?" placeholder graphic even wrapped at this width. */
@@ -1730,6 +1743,14 @@ html::after {
    frame layers, tighter rows, smaller tiles. */
 @media (max-height: 520px) and (orientation: landscape) {
   :root { --stats-h: 96px; }
+
+  /* The tagline is hidden at this height, so there is no gap to match, and
+     the arena + controls are taller than the window either way. Keep the old
+     centring: top-anchoring them here sent THROW! / RUN AWAY 160px below the
+     fold instead of a few px. Has to live in this sheet — the 44px it undoes
+     is unconditional, so a media-query rule in style.css would still lose to
+     it on sheet order. */
+  .encounter-body { justify-content: center; padding-top: 0; }
 
   .stats-strip {
     padding: 1px;
@@ -1905,14 +1926,62 @@ html::after {
 }
 
 /* Blend-confirm / spawn-info: small modal cards over a dark scrim. Square
-   corners + the same translucent fill as everything else, instead of the
-   rounded opaque brown box these used before. */
+   corners instead of the rounded opaque brown box these used before.
+
+   Both use --panel-bg-strong-t, not --panel-bg-t. Same reasoning the blender
+   drop zones already carry: --panel-bg-t's 32% is pitched for a panel meant
+   to sit *on* the artwork, and at that alpha a modal reads as barely tinted —
+   the timer digits showed straight through the rarity list. The strong
+   variant keeps a hint of the screen behind without the copy fighting it, and
+   swaps with the focus-mode palette exactly as the other fills do. */
 .blender-confirm-box,
 .spawn-info-box {
-  background: var(--scanlines), var(--panel-bg-t);
+  background: var(--scanlines), var(--panel-bg-strong-t);
   border: none;
   border-radius: 0;
   clip-path: var(--pixel-clip-xs);
+}
+
+/* BLEND IT! / CANCEL are built the way the LV badge is — a dark frame with a
+   slab inside it, thin 3px edge highlights — rather than .btn-primary's big
+   slab with a 6px black ring inside the gold and 14px shading bands. At .btn's
+   14px/28px the two of them wanted ~350px in a 320px card, so they were being
+   squashed and the clipped corners came out mangled. Sized to match the LV
+   pill: 12px type, 9px/14px padding. */
+.blend-confirm-frame {
+  display: inline-block;
+  background: var(--outline);
+  padding: 2px 2px 4px;
+  clip-path: var(--pixel-clip-xs);
+  flex-shrink: 0;
+}
+.blend-confirm-frame:active { transform: var(--btn-press); }
+
+.blend-confirm-btn {
+  display: block;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  letter-spacing: .05em;
+  padding: 9px 14px;
+  clip-path: var(--pixel-clip-xs);
+  background: var(--gold);
+  color: #2a1a02;
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.blend-confirm-btn:hover { filter: brightness(1.12); }
+
+/* CANCEL keeps the dark fill it always had; only its size comes into line, so
+   the two read as a matched pair rather than one shrinking beside the other. */
+.blend-confirm-btn.is-ghost {
+  background: #222;
+  color: var(--text);
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.14),
+    inset 0 -3px 0 rgba(0,0,0,.42);
 }
 
 /* ── TEMP: rivets + outer border off ────────────────────────
@@ -1984,7 +2053,11 @@ html::after,
      short. Let it scroll from the top and pull the arena in so THROW /
      RUN AWAY stay on screen. */
   .encounter-overlay { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
-  .encounter-body { justify-content: flex-start; gap: 8px; }
+  .encounter-body {
+    justify-content: flex-start;
+    padding-top: clamp(16px, calc(11.67vh - 66px), 44px);  /* = #screen-timer's */
+    gap: 8px;
+  }
   .encounter-arena { padding: 16px 18px 20px; gap: 10px; }
   /* Cap the STAGE, not just the canvas. The floating mon name and the
      LV/rarity topbar are absolutely positioned against the stage, so if only
@@ -2135,6 +2208,213 @@ html::after,
       than chase those bands with more breakpoints, app.js scales the whole
       screen down by whatever is left over. This var is what it sets. */
 #screen-timer {
+  /* --signup-reserve is 0 except while the mailing-list bar is up, when
+     signup.js sets it to the bar's height. The bar is fixed-position, so
+     without this it would simply cover the START button — the one thing a
+     prompt that claims not to block anyone must not do. Reserving the space
+     lifts the screen's content clear of it instead; on a roomy window there
+     is slack to absorb it and nothing visibly moves, and on a tight one the
+     auto-fit below scales the screen down a notch and everything stays
+     reachable. */
   padding-bottom: calc(var(--stats-reserve, var(--stats-h)) + 12px);
   zoom: var(--timer-fit, 1);
+}
+
+/* Space for the mailing-list bar, reserved on the body rather than on the
+   screen. #screen-timer carries the auto-fit `zoom`, which scales its own
+   padding too — a reserve set there came out short by exactly the zoom
+   factor, and the bar clipped the START button again. The body is not
+   zoomed, so this holds its size, and the screen (flex: 1) simply gets a
+   shorter box to lay out in. 0 whenever the bar is down. */
+body { padding-bottom: var(--signup-reserve, 0px); }
+
+
+/* ══ Mailing list ═══════════════════════════════════════════
+   Self-contained: every rule for the envelope button and the signup card
+   lives in this block, including its own responsive tweaks, so the feature
+   can be lifted out in one piece. */
+
+/* Envelope button — the mute button's twin, on the other side of the
+   wordmark so the row stays centred. */
+.pxb-signup { position: static; flex: 0 0 auto; }
+.signup-shadow { flex: 0 0 auto; }
+
+.btn-signup {
+  background: #222;
+  border: none;
+  border-radius: 0;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  clip-path: var(--pixel-clip-sm);
+  color: var(--text);
+  box-shadow:
+    inset 0 10px 0 rgba(255,255,255,.14),
+    inset 0 -10px 0 rgba(0,0,0,.38);
+}
+.pxb-signup:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
+.pxb-signup:active { transform: var(--btn-press); filter: none; }
+/* Already on the list — the envelope stays reachable (addresses change, people
+   re-subscribe) but stops competing for attention. */
+.btn-signup.is-joined { color: var(--gold); }
+
+/* The card. Fixed above the stats strip and out of the timer screen's flow
+   entirely: it adds no height there, so it cannot push the screen over and
+   send fitTimerScreen() into shrinking everything to compensate. */
+.signup-card {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--stats-reserve, var(--stats-h)) + 16px);
+  transform: translate(-50%, 12px);
+  width: calc(100% - 32px);
+  max-width: 520px;
+  z-index: 60;              /* over the screens (1), under the stats strip's
+                               own layers and every overlay (100+) */
+  background: var(--scanlines), var(--panel-bg);
+  clip-path: var(--pixel-clip);
+  /* Right padding clears the ✕ in the corner. */
+  padding: 12px 38px 12px 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  /* Reads as a layer floating over the screen rather than another panel in
+     it — the panels themselves are translucent and frame-railed. */
+  box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 2px #000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .22s ease-out, transform .22s ease-out, visibility .22s;
+}
+
+.signup-card.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+/* Left column: headline over the status line. */
+.signup-text { flex: 1 1 auto; min-width: 0; }
+
+.signup-title {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--gold);
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.signup-form {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.signup-input {
+  flex: 0 1 160px;
+  min-width: 0;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--text);
+  background: #1b3b33;
+  border: none;
+  border-radius: 0;
+  padding: 12px 10px;
+  clip-path: var(--pixel-clip-sm);
+  text-transform: none;
+  box-shadow: inset 0 4px 0 rgba(0,0,0,.35);
+}
+.signup-input::placeholder { color: var(--text-muted); opacity: .7; }
+.signup-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+.signup-join { flex: 0 0 auto; padding: 10px 14px; font-size: 11px; }
+
+/* Second line: the small print by default, errors and the confirmation when
+   there's something to say. One element for both, so the bar never grows or
+   shrinks a row mid-interaction. */
+.signup-msg {
+  font-size: 8px;
+  letter-spacing: .04em;
+  text-transform: none;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.signup-msg.is-ok  { color: var(--gold); }
+.signup-msg.is-err { color: #ffb4a2; }
+
+/* Big enough to hit on a touch screen, and legible enough to find — this is
+   the way out of the bar, so it must not be a hunt. */
+.signup-x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  line-height: 1;
+  padding: 8px;
+  opacity: .75;
+  cursor: pointer;
+}
+.signup-x:hover { opacity: 1; }
+
+/* Honeypot: out of sight, out of the tab order, and hidden from screen
+   readers, so only something filling in fields blindly will touch it. */
+.signup-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Label kept for screen readers; the placeholder carries it visually. */
+.signup-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup-card { transition: opacity .01s; transform: translate(-50%, 0); }
+}
+
+/* Phones: .logo-row goes display:block below 480px and the mute button is
+   pinned to the header's top-right corner. The envelope has to come out of
+   the flow for the same reason — mirrored to the left corner. */
+/* Not enough width for two columns on a phone: headline over the field,
+   both full width. */
+@media (max-width: 479px) {
+  .pxb-signup { position: absolute; top: 10px; left: 12px; }
+  .signup-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 32px 12px 14px;
+  }
+  .signup-form { width: 100%; }
+  .signup-input { flex: 1 1 auto; }
+}
+
+/* Landscape phones have no height to spare at all — drop the second line and
+   tighten, so the bar covers as little of the timer as it can. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .signup-card { flex-direction: row; align-items: center; padding: 8px 32px 8px 12px; gap: 10px; }
+  .signup-msg { display: none; }
+  .signup-input { flex: 0 1 150px; padding: 8px; }
+  .signup-join { padding: 8px 12px; }
 }

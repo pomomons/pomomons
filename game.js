@@ -4,6 +4,73 @@
 // version of any mon (analogous to shiny, but shadowy instead of golden).
 const DARK_FILTER = 'brightness(0.28) grayscale(0.9) contrast(1.15)';
 
+// ── Floating mon-name sizing ──────────────────────────────
+// Both the companion panel and the encounter arena caption the mon with its
+// name floating just above its head, so the caption reads as part of the art
+// and has to grow and shrink with the mon. It didn't: every rule set a fixed
+// size (16px, re-hardcoded to 8/12/14px per breakpoint) while the canvas it
+// labels ranges from 90px to 398px wide. The phone was the worst of it —
+// style-v3.css draws the companion at 1.7x there, and the name was pinned
+// *smaller* than desktop's.
+//
+// Callers pass the size the name wants at the mon's current drawn size; this
+// backs it off only if the name wouldn't fit the panel.
+const NAME_MIN_PX   = 8;    // default floor: the pixel font's readable limit
+const NAME_TRACKING = 0.1;  // letter-spacing on both name rules, in em
+
+// Measurement only — nothing is ever drawn on this context.
+const _nameMeasureCtx = document.createElement('canvas').getContext('2d');
+
+// Press Start 2P arrives async. measureText before it lands reports the
+// fallback font's metrics, and none of the other cache inputs change when
+// the real font swaps in — so bump an epoch and let every name re-measure.
+let _nameFontEpoch = 0;
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => { _nameFontEpoch++; });
+}
+
+// Content-box width. clientWidth still includes padding, hence the subtraction.
+function contentWidth(el) {
+  if (!el) return 0;
+  const cs = getComputedStyle(el);
+  return el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+}
+
+// Size `el` to `targetPx`, backed off if the name wouldn't fit on one line.
+// The long names ("SCORCHPEPPER") need that: at the phone's 1.7x they would
+// otherwise wrap onto the mon's face. Two limits, whichever is tighter:
+//
+//   - el's own box, which is what actually decides where the text wraps;
+//   - the content box of `boxEl`, the panel, which is what clips it. On a
+//     phone the name's box is widened past the stage (see .companion-name)
+//     so a long name isn't shrunk to fit a box narrower than the art it
+//     labels — the panel is the real edge there.
+//
+// Neither depends on font-size, so there's no feedback loop. Whole pixels
+// only — Press Start 2P blurs at fractional sizes.
+//
+// `cache` is a plain object owned by the caller. This runs from the render
+// loop, so the measuring is skipped unless an input actually changed.
+function sizeMonName(el, targetPx, boxEl, cache, minPx) {
+  if (!el || !(targetPx > 0)) return;
+  const text = (el.textContent || '').toUpperCase();  // text-transform: uppercase
+  const own  = el.clientWidth;
+  const key  = _nameFontEpoch + '|' + Math.round(targetPx) + '|' + own + '|' +
+               (boxEl ? boxEl.clientWidth : 0) + '|' + text;
+  if (cache.key === key) return;
+  cache.key = key;
+
+  let size = targetPx;
+  const outer = contentWidth(boxEl);
+  const avail = outer > 0 ? Math.min(own, outer) : own;
+  if (text && avail > 0) {
+    _nameMeasureCtx.font = size + 'px ' + getComputedStyle(el).fontFamily;
+    const w = _nameMeasureCtx.measureText(text).width + size * NAME_TRACKING * text.length;
+    if (w > avail) size *= avail / w;
+  }
+  el.style.fontSize = Math.max(minPx || NAME_MIN_PX, Math.floor(size)) + 'px';
+}
+
 // ── Shared sprite renderer ────────────────────────────────
 // Used by EncounterScreen (encounter canvas) and Collection (card thumbnails).
 const MonSprite = (() => {
@@ -356,7 +423,12 @@ const CompanionCanvas = (() => {
     eyeDir:    1,
   };
 
-  let canvas, ctx, rafId, nameEl;
+  let canvas, ctx, rafId, nameEl, areaEl;
+
+  // Name size relative to the drawn mon. Ratio is the desktop pairing this
+  // layout has always used: a 224px canvas captioned at 16px.
+  const NAME_PER_CANVAS = 16 / 224;
+  const nameFit = {};
 
   // ── pixel helpers ──────────────────────────────────────
   function px(n) { return Math.round(n); }
@@ -487,6 +559,8 @@ const CompanionCanvas = (() => {
         // inline styles so the stylesheet (.companion-name.is-prompt) places it.
         nameEl.style.top = '';
         nameEl.style.transform = '';
+        nameEl.style.fontSize = '';
+        nameFit.key = null;
       } else {
         // Measured against the canvas's own box rather than the stage's.
         // The two coincide everywhere except on a phone, where style-v3.css
@@ -509,6 +583,10 @@ const CompanionCanvas = (() => {
         const topPx    = canvas.offsetTop + (headFrac - 0.10) * canvas.offsetHeight;
         nameEl.style.top = `${Math.max(floorPx, topPx)}px`;
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
+        // Same reason the top is measured off the canvas and not the stage:
+        // on a phone the canvas is the box that actually grew. Width cap is
+        // the panel, which the 1.7x canvas is wider than.
+        sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
       }
     }
 
@@ -553,7 +631,10 @@ const CompanionCanvas = (() => {
 
   let silhouettePool  = null; // lazy-built: MONS filtered to sprite-bearing entries
   let silhouetteIndex = -1;
-  let silhouettePrev  = -1;
+  // The outgoing species itself, not its index: the pool is reshuffled between
+  // passes, so an index kept across one would point at a different mon and the
+  // crossfade would fade out something that was never on screen.
+  let silhouettePrevMon = null;
   let silhouetteSwitchAt    = 0;
   let silhouetteFadeStartAt = 0;
 
@@ -571,7 +652,26 @@ const CompanionCanvas = (() => {
         if (stage.sprite) silhouettePool.push(stage);
       }
     }
+    shuffleSilhouettes();
     MonSprite.preloadAll(silhouettePool, () => {});
+  }
+
+  // Roster order walked the dex 1, 2, 3... and, worse, put each mon directly
+  // next to its own evolutions — the teaser read as a list being recited
+  // rather than a glimpse of what's out there. Fisher-Yates, reshuffled at the
+  // end of every pass so the sequence doesn't visibly repeat either (a pass is
+  // only ~10s at 350ms a species).
+  function shuffleSilhouettes(avoid) {
+    for (let i = silhouettePool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = silhouettePool[i]; silhouettePool[i] = silhouettePool[j]; silhouettePool[j] = t;
+    }
+    // A reshuffle can deal the species that's still on screen back into first
+    // place, which would read as the rotation having stalled. Swap it away.
+    if (avoid && silhouettePool.length > 1 && silhouettePool[0] === avoid) {
+      const j = 1 + Math.floor(Math.random() * (silhouettePool.length - 1));
+      const t = silhouettePool[0]; silhouettePool[0] = silhouettePool[j]; silhouettePool[j] = t;
+    }
   }
 
   // Draws one species as a flat silhouette: a drop shadow, then a solid,
@@ -630,14 +730,19 @@ const CompanionCanvas = (() => {
 
     const now = Date.now();
     if (now >= silhouetteSwitchAt) {
-      silhouettePrev  = silhouetteIndex;
-      silhouetteIndex = (silhouetteIndex + 1) % silhouettePool.length;
+      silhouettePrevMon = silhouettePool[silhouetteIndex] || null;
+      if (silhouetteIndex + 1 >= silhouettePool.length) {
+        shuffleSilhouettes(silhouettePrevMon);   // new order for the next pass
+        silhouetteIndex = 0;
+      } else {
+        silhouetteIndex++;
+      }
       silhouetteSwitchAt    = now + SILHOUETTE_SHOW_MS;
       silhouetteFadeStartAt = now;
     }
     const fadeT = Math.min(1, (now - silhouetteFadeStartAt) / SILHOUETTE_FADE_MS);
-    if (fadeT < 1 && silhouettePrev >= 0) {
-      drawSilhouette(silhouettePool[silhouettePrev], bobY, 1 - fadeT);
+    if (fadeT < 1 && silhouettePrevMon) {
+      drawSilhouette(silhouettePrevMon, bobY, 1 - fadeT);
     }
     drawSilhouette(silhouettePool[silhouetteIndex], bobY, fadeT);
   }
@@ -665,6 +770,7 @@ const CompanionCanvas = (() => {
     canvas = canvasEl;
     ctx    = canvas.getContext('2d');
     nameEl = document.getElementById('companion-name');
+    areaEl = canvas.closest('.companion-area');
 
     // HiDPI / retina support: scale the drawing buffer by devicePixelRatio
     // so sprites stay crisp on high-density screens. CSS size stays at 160px
@@ -750,6 +856,13 @@ const EncounterScreen = (() => {
   let rafId    = null;
   let onDone   = null;
 
+  // As in CompanionCanvas, but off this canvas's own reference size: the
+  // encounter mon sits in a 480x380 box, captioned at 16px when the stage
+  // is at its full 480px. Short-screen tiers cap the stage at 380/300/227px
+  // and the canvas scales with it, so the caption now scales too.
+  const NAME_PER_CANVAS = 16 / SIZE;
+  const nameFit = {};
+
   // State machine
   const st = {
     phase:        'idle',  // appearing|idle|throwing|shaking|result|done
@@ -792,6 +905,12 @@ const EncounterScreen = (() => {
     if (!st.monSize) { elMonName.style.opacity = '0'; return; }
     const boxTop = (MON_CY - st.monSize / 2) / H * 100; // sprite-box top, % of canvas
     elMonName.style.top = (boxTop - 7) + '%';
+    // Floored at 12px rather than the default 8. The arena's other copy
+    // (.encounter-sub is 13px on a phone) doesn't shrink with the canvas,
+    // so a pure ratio would leave the mon's own name the smallest text on
+    // the screen it headlines.
+    sizeMonName(elMonName, canvas.offsetWidth * NAME_PER_CANVAS,
+                canvas.closest('.encounter-arena'), nameFit, 12);
     elMonName.style.transform = `translateY(${st.monY.toFixed(1)}px)`;
     elMonName.style.opacity = '1';
   }

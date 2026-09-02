@@ -352,6 +352,10 @@ body::after {
   image-rendering: crisp-edges;
 }
 
+/* font-size here is the reference pairing only — game.js (sizeMonName) sets
+   it inline from the mon's drawn size, so 16px is what a 224px canvas gets and
+   also the fallback if the script hasn't run. The empty state below keeps its
+   own size: that copy is a prompt, not a mon's name. */
 .companion-name {
   position: absolute;
   top: 24%;
@@ -1354,7 +1358,19 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .encounter-overlay.active { display: flex; }
 
-/* Logo + arena + controls: logo pinned near the top, arena/controls centered below */
+/* Logo + arena + controls: logo pinned near the top, arena/controls below it.
+   The gap under the tagline is set here, deliberately, to match the timer
+   screen's — where it comes from .app-header's bottom padding (4px, same as
+   this overlay's own row gap) plus #screen-timer's padding-top. So this
+   padding tracks that padding-top, tier for tier.
+
+   It used to be justify-content:center, which handed the gap to whatever
+   space was left over: the arena is one box where the timer screen has two,
+   so on a tall window it was pushed 185px below the tagline against the
+   timer screen's 54px, and on a laptop the short-screen tier's flex-start
+   collapsed it to 4px. Neither matched, and they missed in opposite
+   directions. Anchored to the top the gap is the same number on both
+   screens; the leftover space goes to the bottom instead. */
 .encounter-body {
   flex: 1;
   width: 100%;
@@ -1362,7 +1378,8 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 12px;   /* = .screen's base padding-top */
   gap: 12px;
 }
 
@@ -1389,7 +1406,9 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   max-width: 480px;
 }
 
-/* Floating mon name above the wild mon's head (bobs in sync via JS, un-bold) */
+/* Floating mon name above the wild mon's head (bobs in sync via JS, un-bold).
+   font-size is the reference pairing — 16px is what a full-width 480px stage
+   gets; game.js scales it down with the canvas on short screens. */
 .encounter-mon-name {
   position: absolute;
   top: 26%;
@@ -2263,8 +2282,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   /* Level-up banner: prevent off-screen overflow */
   .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 
-  /* Companion name: shrink on mobile (now overlaid above the mon, not in the top row) */
-  .companion-name { font-size: 12px; line-height: var(--lh-normal); }
+  /* Companion name: size comes from game.js now, which scales it with the
+     mon's drawn size instead of re-hardcoding a px value per breakpoint
+     (see sizeMonName). Only the line box is set here. */
+  .companion-name { line-height: var(--lh-normal); }
 
   /* Narrower panel on mobile — keep the left-grouped pills on-panel */
   .companion-meta { left: -85px; right: -55px; }
@@ -2346,7 +2367,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   #companion-canvas { width: 90px; height: 90px; }
   .companion-stage { width: 90px; height: 90px; }
   .companion-area { padding: 8px 8px 8px; gap: 4px; }
-  .companion-name { font-size: 8px; }
 
   .timer-display { font-size: 40px; padding: 8px 8px; }
   .controls-group { padding: 8px; gap: 4px; }
