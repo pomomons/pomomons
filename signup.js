@@ -43,16 +43,20 @@ const Signup = (() => {
     prompts: 'pm_email_prompts',
     last:    'pm_email_last',
     queue:   'pm_email_queue',
+    addr:    'pm_email_addr',     // remembered only to prefill a repeat backup
   };
 
   const get  = (k, d = '') => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
   const set  = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
   const num  = (k) => parseInt(get(k, '0'), 10) || 0;
 
-  let card, form, input, btnOpen, msgEl, shownAt = 0, wired = false;
+  let card, form, input, btnOpen, msgEl, titleEl, consentEl, shownAt = 0, wired = false;
   // Whatever the markup ships with — the status line falls back to it, so the
   // bar always has a second line and never changes height.
   let defaultMsg = '';
+  // The card's shipped wording, kept so a repeat visit can swap to the
+  // fresh-backup copy and back again without hardcoding either in two places.
+  let firstTitle = '', firstMsg = '';
 
   // ── Usage events ────────────────────────────────────────
   // GoatCounter is already on the page (index.html). It counts pageviews on
@@ -126,7 +130,23 @@ const Signup = (() => {
     card.dataset.source = source || 'manual';
     shownAt = Date.now();
     message('');
-    if (input) input.value = '';
+
+    // Someone already on the list is here for a fresh code, not to join again.
+    // A backup taken three mons ago is not a backup, so this path has to be
+    // easy — otherwise the promise quietly rots as they keep playing.
+    const rejoining = get(K.state) === 'joined';
+    if (titleEl) titleEl.textContent = rejoining ? 'SEND A FRESH BACKUP' : firstTitle;
+    if (msgEl)   defaultMsg = rejoining
+      ? 'Your last code only covers the mons you had then. This one covers all of them.'
+      : firstMsg;
+    message('');
+
+    // The tickbox is consent for the mailing list, which is a one-time
+    // decision. Showing it again on a repeat send would invite an unticked box
+    // to read as a withdrawal, and it is not — that is what unsubscribe is for.
+    if (consentEl) consentEl.hidden = rejoining;
+
+    if (input) input.value = rejoining ? get(K.addr, '') : '';
     reserveSpace();
   }
 
@@ -169,13 +189,40 @@ const Signup = (() => {
     const btn = form.querySelector('button[type="submit"]');
     if (btn) { btn.disabled = true; btn.textContent = 'SENDING'; }
 
+    // The backup code is the whole reason someone hands over an address, so a
+    // failure to build one must not be silent — better to say so than to send
+    // a cheerful email with nothing useful in it.
+    let code = '';
+    try {
+      if (typeof Backup !== 'undefined') code = await Backup.create();
+    } catch (err) {
+      code = '';
+    }
+    if (!code) {
+      message("Couldn't build your backup code — try again in a moment.", 'err');
+      if (btn) { btn.disabled = false; btn.textContent = 'SEND'; }
+      return;
+    }
+
     const payload = {
       email,
       source:   card.dataset.source || 'manual',
       sessions: num('pm_total_sessions'),
       catches:  num('pm_total_catches'),
       at:       new Date().toISOString(),
+      code,
+      // Sent so the email can carry a one-click restore link back to wherever
+      // the game is actually being played.
+      origin:   location.origin + location.pathname,
     };
+
+    // Consent is reported only on the send where it was actually asked for.
+    // Repeat backups hide the tickbox, and a hidden box still carries its old
+    // state — sending that would claim someone agreed on a screen that never
+    // put the question to them. Omitting the field leaves the sheet's existing
+    // answer alone, which is what the script does with a missing value.
+    const consent = form.querySelector('#signup-updates');
+    if (consentEl && !consentEl.hidden) payload.updates = !!(consent && consent.checked);
 
     try {
       await post(payload);
@@ -186,10 +233,11 @@ const Signup = (() => {
     }
 
     set(K.state, 'joined');
+    set(K.addr, email);            // so a later "send me a fresh one" is one tap
     event('email-signup');
-    message("You're on the list!", 'ok');
-    if (btn) { btn.disabled = false; btn.textContent = 'JOIN'; }
-    setTimeout(close, 1400);
+    message('Sent! Check your email for your code.', 'ok');
+    if (btn) { btn.disabled = false; btn.textContent = 'SEND'; }
+    setTimeout(close, 2200);
   }
 
   // ── Auto-prompt ─────────────────────────────────────────
@@ -243,10 +291,13 @@ const Signup = (() => {
     btnOpen = document.getElementById('btn-signup');
     if (!card) return;
 
-    form   = card.querySelector('form');
-    input  = document.getElementById('signup-email');
-    msgEl  = card.querySelector('.signup-msg');
-    if (msgEl) defaultMsg = msgEl.textContent.trim();
+    form      = card.querySelector('form');
+    input     = document.getElementById('signup-email');
+    msgEl     = card.querySelector('.signup-msg');
+    titleEl   = card.querySelector('.signup-title');
+    consentEl = card.querySelector('.signup-consent');
+    if (msgEl)   defaultMsg = firstMsg = msgEl.textContent.trim();
+    if (titleEl) firstTitle = titleEl.textContent.trim();
 
     // No endpoint configured yet: leave the app exactly as it was.
     if (!ENDPOINT) {

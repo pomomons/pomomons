@@ -13,8 +13,30 @@ Two separate things, deliberately kept apart:
 
 | | What it collects | Where it goes |
 |---|---|---|
-| **Mailing list** | Email addresses people choose to give | A Google Sheet you own |
+| **Backup codes** | An address, so a save code can be emailed back | Emailed, then forgotten |
+| **Mailing list** | Consent to updates and polls, ticked separately | An `Updates OK` column |
 | **Usage stats** | Anonymous counts — visits, sessions finished, mons caught | GoatCounter dashboard |
+
+The offer is the **backup code**, not the newsletter. Mons live in one browser
+and clearing it loses them; the code is how they come back, and that is what
+people are handing over an address for.
+
+The mailing list rides along as an **unticked** checkbox. Keep it unticked — a
+pre-ticked box is not consent under GDPR — and keep its wording naming both
+things it covers, updates *and* polls, because consent only covers what was
+actually described. Repeat backups hide the box and omit the field entirely
+rather than sending `false`, so a screen that never asked can never be
+recorded as an answer.
+
+**The save code is never written to the sheet.** It is emailed and dropped.
+The sheet stays a list of addresses, which also means nobody can be rescued if
+they lose both the email and their browser — that was a deliberate call.
+
+> **Sending limit.** A consumer Gmail account can send about **100 emails a
+> day** through Apps Script. Past that `MailApp.sendEmail` throws, the signup
+> is still recorded, and the person gets no code. On a launch day that is a
+> real ceiling: check the `Backups Sent` column against it, and move the
+> sending to a proper mail service before any day likely to pass it.
 
 Nothing in the app is ever gated on an email. The card is dismissible, the
 app works identically whether someone signs up or not, and if `ENDPOINT` in
@@ -56,11 +78,9 @@ spreadsheet and every signup fails.
 
 ```javascript
 // PomoMons signup collector.
-// Appends one row per signup to the "Signups" tab. Deployed as a web app so
-// the site can POST to it; see agent_docs/email-signups.md.
-
 const SHEET_NAME = 'Signups';
-const HEADERS = ['Timestamp', 'Email', 'Source', 'Sessions', 'Catches'];
+const HEADERS = ['Timestamp', 'Email', 'Source', 'Sessions', 'Catches', 'Updates OK', 'Backups Sent'];
+const SITE = 'https://pomomons.io/';
 
 // Run this once, by hand, from the Apps Script editor: it names the
 // spreadsheet, makes sure there is a "Signups" tab, and writes the header row.
@@ -83,7 +103,7 @@ function setup() {
        .setValues([HEADERS])
        .setFontWeight('bold');
   sheet.setFrozenRows(1);
-  sheet.getRange(1, 1, 1, HEADERS.length).getSheet().autoResizeColumns(1, HEADERS.length);
+  sheet.autoResizeColumns(1, HEADERS.length);
 
   return 'Ready: "' + SHEET_NAME + '" tab with headers ' + HEADERS.join(', ');
 }
@@ -101,31 +121,93 @@ function doPost(e) {
       return fail('bad email');
     }
 
+    const code = String(data.code || '');
+    // Codes are ~600 chars for a full collection. The ceiling is a sanity
+    // check on what gets pasted into an email, not a real limit.
+    if (code.length > 20000) return fail('code too large');
+
+    const wantsUpdates = data.updates === true;
+
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);            // two people signing up at once would
     try {                            // otherwise race for the same row
       const sheet = SpreadsheetApp.getActiveSpreadsheet()
                                   .getSheetByName(SHEET_NAME);
+      if (!sheet) return fail('no "' + SHEET_NAME + '" tab — run setup() once');
 
-      // Already on the list: succeed without adding a duplicate row.
-      const existing = sheet.getLastRow() > 1
-        ? sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues().flat()
-        : [];
-      if (existing.some(v => String(v).trim().toLowerCase() === email)) return ok();
+      const row = findRow(sheet, email);
 
-      sheet.appendRow([
-        new Date(),
-        email,
-        String(data.source   || '').slice(0, 40),
-        Number(data.sessions) || 0,
-        Number(data.catches)  || 0,
-      ]);
+      if (row) {
+        // Already on the list. Count the extra backup, and let consent be
+        // granted but never withdrawn here — an unticked box on a repeat send
+        // means "not asking again", not "unsubscribe me". Withdrawal is what
+        // the unsubscribe link is for, and inferring it from a hidden checkbox
+        // would silently drop people who never asked to leave.
+        sheet.getRange(row, 7).setValue((Number(sheet.getRange(row, 7).getValue()) || 0) + 1);
+        if (wantsUpdates) sheet.getRange(row, 6).setValue(true);
+      } else {
+        sheet.appendRow([
+          new Date(),
+          email,
+          String(data.source   || '').slice(0, 40),
+          Number(data.sessions) || 0,
+          Number(data.catches)  || 0,
+          wantsUpdates,
+          1,
+        ]);
+      }
     } finally {
       lock.releaseLock();
     }
+
+    // Sent after the row is written and outside the lock: a mail failure must
+    // not cost us the signup, and must not hold the lock while it retries.
+    if (code) sendBackup(email, code, data.origin);
+
     return ok();
   } catch (err) {
     return fail(String(err));
+  }
+}
+
+// Column B, from row 2 down. Returns the sheet row number, or 0.
+function findRow(sheet, email) {
+  const last = sheet.getLastRow();
+  if (last < 2) return 0;
+  const values = sheet.getRange(2, 2, last - 1, 1).getValues();
+  for (let i = 0; i < values.length; i++) {
+    if (String(values[i][0]).trim().toLowerCase() === email) return i + 2;
+  }
+  return 0;
+}
+
+function sendBackup(email, code, origin) {
+  const site = /^https:\/\/[^\s"'<>]+$/.test(String(origin || '')) ? origin : SITE;
+  const link = site + '#restore=' + encodeURIComponent(code);
+
+  const body =
+    'Here is your PomoMons save code.\n\n' +
+    'Your collection lives in your browser, so if you clear it, switch\n' +
+    'computers, or use a different browser, this code is how you get your\n' +
+    'mons back.\n\n' +
+    'One-click restore:\n' + link + '\n\n' +
+    'Or open PomoMons, go to MY MONS, press SAVE CODE, and paste this in:\n\n' +
+    code + '\n\n' +
+    'Keep this email. Catch more mons and send yourself a fresh code any\n' +
+    'time from the envelope button — this one only covers the mons you had\n' +
+    'when you asked for it.\n';
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: 'Your PomoMons save code',
+      body: body,
+      name: 'PomoMons',
+    });
+  } catch (err) {
+    // Out of daily quota, or a bad address that passed the format check.
+    // The signup is already recorded, so this must not fail the request.
+    console.error('backup mail failed for ' + email + ': ' + err);
   }
 }
 

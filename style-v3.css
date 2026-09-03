@@ -1454,7 +1454,30 @@ html::after {
      side — POMOMONS wrapped onto two lines. The button goes back to the
      header's top-right corner here, which is where it has always sat. */
   .logo-row  { display: block; }
-  .pxb-audio { position: absolute; top: 10px; right: 12px; }
+
+  /* Both header buttons leave the flow and pin to the top corners — the
+     envelope on the left, mute on the right.
+
+     The `width: auto` is the part that matters. `.btn-shadow > .pxb` sets
+     `width: 100%` (further up this file) so a wrapped button fills its grid
+     cell. Once the wrapper is taken out of the flow that 100% resolves
+     against .app-header instead, and the 44px button stretched to the full
+     390px viewport, hung off both edges, and ended up painted underneath the
+     header — untappable. Mute had that bug from the start (it rendered at
+     left:-10px, off the side of the screen); the envelope inherited it when
+     the mailing list shipped. On a phone neither could be pressed, so there
+     was no way to mute the game or to open the signup card by hand. */
+  .signup-shadow,
+  .audio-shadow {
+    position: absolute;
+    top: 10px;
+    width: auto;
+    z-index: 2;
+  }
+  .signup-shadow { left: 12px; }
+  .audio-shadow  { right: 12px; }
+  .signup-shadow > .pxb,
+  .audio-shadow  > .pxb { position: static; width: auto; flex: 0 0 auto; }
   /* ...and the wordmark comes down a step so it clears the button rather than
      running underneath it. (It overlapped at 28px even before this work.) */
   .logo-pomo, .logo-mons { font-size: 24px; }
@@ -2310,12 +2333,52 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   margin-bottom: 4px;
 }
 
+/* Two rows now: the address and SEND on one line, the consent tickbox under
+   it. The card is fixed-position and out of the timer screen's flow, so the
+   extra line costs the screen behind it nothing. */
 .signup-form {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.signup-fields {
   display: flex;
   gap: 8px;
   align-items: stretch;
 }
+
+/* Set in sentence case rather than the card's pixel shouting: this is the
+   record of what someone agreed to, so it has to read as a sentence. */
+.signup-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 8px;
+  line-height: 1.65;
+  text-transform: none;
+  letter-spacing: .02em;
+  color: var(--text);
+  opacity: .82;
+  cursor: pointer;
+  max-width: 280px;
+}
+.signup-consent:hover { opacity: 1; }
+/* display:flex above would otherwise beat the hidden attribute, and the
+   repeat-backup path hides this row by setting .hidden. */
+.signup-consent[hidden] { display: none; }
+
+.signup-check {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin: 1px 0 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+.signup-check:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .signup-input {
   flex: 0 1 160px;
@@ -2393,13 +2456,9 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   .signup-card { transition: opacity .01s; transform: translate(-50%, 0); }
 }
 
-/* Phones: .logo-row goes display:block below 480px and the mute button is
-   pinned to the header's top-right corner. The envelope has to come out of
-   the flow for the same reason — mirrored to the left corner. */
 /* Not enough width for two columns on a phone: headline over the field,
    both full width. */
 @media (max-width: 479px) {
-  .pxb-signup { position: absolute; top: 10px; left: 12px; }
   .signup-card {
     flex-direction: column;
     align-items: stretch;
@@ -2417,7 +2476,11 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   .signup-msg { display: none; }
   .signup-input { flex: 0 1 150px; padding: 8px; }
   .signup-join { padding: 8px 12px; }
+  /* The consent line stays — it is the record of what was agreed to, so it
+     cannot be the thing that gets dropped to save two rows of height. */
+  .signup-consent { font-size: 7px; line-height: 1.5; max-width: 210px; }
 }
+
 
 /* ── Save code modal ───────────────────────────────────────────
    Backups and restores for a game with no accounts. Reuses the blender
