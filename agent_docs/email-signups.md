@@ -32,11 +32,10 @@ recorded as an answer.
 The sheet stays a list of addresses, which also means nobody can be rescued if
 they lose both the email and their browser — that was a deliberate call.
 
-> **Sending limit.** A consumer Gmail account can send about **100 emails a
-> day** through Apps Script. Past that `MailApp.sendEmail` throws, the signup
-> is still recorded, and the person gets no code. On a launch day that is a
-> real ceiling: check the `Backups Sent` column against it, and move the
-> sending to a proper mail service before any day likely to pass it.
+> **Sending.** Backup emails go out through Brevo's transactional API from
+> `hello@pomomons.io`, not the personal Gmail — free tier caps at **300
+> emails a day**. Past that Brevo's call fails, the signup is still recorded,
+> and the person gets no code that day.
 
 Nothing in the app is ever gated on an email. The card is dismissible, the
 app works identically whether someone signs up or not, and if `ENDPOINT` in
@@ -198,14 +197,24 @@ function sendBackup(email, code, origin) {
     'when you asked for it.\n';
 
   try {
-    MailApp.sendEmail({
-      to: email,
-      subject: 'Your PomoMons save code',
-      body: body,
-      name: 'PomoMons',
+    const key = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY');
+    if (!key) throw new Error('no BREVO_API_KEY script property set');
+
+    const resp = UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { 'api-key': key },
+      muteHttpExceptions: true,
+      payload: JSON.stringify({
+        sender: { email: 'hello@pomomons.io', name: 'PomoMons' },
+        to: [{ email: email }],
+        subject: 'Your PomoMons save code',
+        textContent: body,
+      }),
     });
+    if (resp.getResponseCode() >= 300) throw new Error(resp.getContentText());
   } catch (err) {
-    // Out of daily quota, or a bad address that passed the format check.
+    // Out of quota, bad key, or a bad address that passed the format check.
     // The signup is already recorded, so this must not fail the request.
     console.error('backup mail failed for ' + email + ': ' + err);
   }
@@ -236,6 +245,20 @@ deployment settings, which are not the problem.
 > **If the authorisation popup keeps vanishing**, open the deployed `/exec`
 > URL directly in a browser tab where you are signed in. Google then serves
 > the consent screen as a full page instead of a popup.
+
+### 4a. Add the Brevo API key
+
+The key is a secret — it does **not** go in the script body, which is
+tracked in this repo. Instead:
+
+**Project Settings (gear icon, left sidebar) → Script Properties → Add
+script property**
+
+- Property: `BREVO_API_KEY`
+- Value: the key from Brevo → SMTP & API → API Keys
+
+Domain `pomomons.io` must also be verified in Brevo and `hello@pomomons.io`
+added as a verified sender, or sends will fail.
 
 ### 5. Deploy
 
