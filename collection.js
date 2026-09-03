@@ -920,6 +920,48 @@ const Collection = (() => {
     });
   }
 
+  // ── Public: exportRecords / importRecords — for backup.js ────
+  // The store owns the DB handle, so reading and writing whole collections
+  // lives here rather than backup.js reaching into IndexedDB behind its back.
+  //
+  // Records travel with their primary keys. pm_active_rec_key points at one of
+  // them, so letting autoIncrement hand out fresh keys on restore would leave
+  // the player's chosen companion pointing at nothing.
+  function exportRecords() {
+    if (!db) {
+      try { return JSON.parse(localStorage.getItem('pm_caught') || '[]'); }
+      catch (e) { return []; }
+    }
+    return getAllCaughtWithKeys();
+  }
+
+  async function importRecords(records) {
+    if (!Array.isArray(records)) throw new Error('not a record list');
+
+    if (!db) {
+      localStorage.setItem('pm_caught', JSON.stringify(
+        records.map(({ _key, ...rest }) => rest)
+      ));
+      return records.length;
+    }
+
+    await clearAll();
+    await new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      for (const rec of records) {
+        const { _key, ...value } = rec;
+        // An explicit key is allowed on an autoIncrement store, and the store's
+        // counter moves past it, so later catches don't collide with restored ones.
+        if (Number.isInteger(_key)) store.add(value, _key);
+        else store.add(value);
+      }
+      tx.oncomplete = resolve;
+      tx.onerror    = () => reject(tx.error);
+    });
+    return records.length;
+  }
+
   // ── Public: getCaughtNames ───────────────────────────────────
   // Returns a Set of mon names the player has obtained, including
   // evolution stages they have already reached.
@@ -941,5 +983,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, clearAll, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail };
+  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail };
 })();

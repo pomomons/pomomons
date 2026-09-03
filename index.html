@@ -191,7 +191,13 @@
         <button class="btn collection-tab collection-tab--active" id="btn-tab-mymons">MY MONS</button>
         <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
       </div>
-      <span class="collection-count" id="mymons-count">0</span>
+      <!-- Wrapped together so .collection-header keeps exactly three flex
+           children and its space-between layout is unchanged. -->
+      <div class="collection-header-end">
+        <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
+                aria-label="Back up or restore your collection">SAVE CODE</button>
+        <span class="collection-count" id="mymons-count">0</span>
+      </div>
     </div>
 
     <!-- Blender toolbar — docked at the top of My Mons (V1: horizontal cards) -->
@@ -305,6 +311,41 @@
         <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-blend-yes">BLEND IT!</button></div>
         <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-no">CANCEL</button></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Save Code Modal ──────────────────────────────── -->
+  <!-- There are no accounts, so this is the only way a collection outlives the
+       browser it was caught in. Reachable from My Mons, and opened directly by
+       a #restore= link out of the backup email. -->
+  <div id="save-code" class="blender-confirm save-code" role="dialog" aria-modal="true"
+       aria-labelledby="save-code-title" aria-hidden="true">
+    <div class="blender-confirm-box save-code-box">
+      <p class="blender-confirm-title" id="save-code-title">YOUR SAVE CODE</p>
+      <p class="blender-confirm-body save-code-body">
+        YOUR MONS LIVE IN THIS BROWSER ONLY.<br>
+        KEEP THIS CODE TO BRING THEM BACK ANYWHERE.
+      </p>
+
+      <textarea class="save-code-text" id="save-code-text" readonly rows="3"
+                aria-label="Your save code" spellcheck="false"></textarea>
+      <div class="save-code-row">
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-copy-code">COPY</button></div>
+        <span class="save-code-msg" id="save-code-msg" role="status" aria-live="polite"></span>
+      </div>
+
+      <hr class="save-code-rule">
+
+      <p class="blender-confirm-title save-code-sub">RESTORE A COLLECTION</p>
+      <textarea class="save-code-text" id="restore-code-text" rows="3"
+                aria-label="Paste a save code to restore"
+                placeholder="PASTE A CODE HERE" spellcheck="false"></textarea>
+      <p class="blender-confirm-warn save-code-warn">THIS REPLACES WHAT YOU HAVE NOW!</p>
+      <div class="save-code-row">
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-restore-code">RESTORE</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-save-code-close">CLOSE</button></div>
+      </div>
+      <p class="save-code-msg save-code-msg--restore" id="restore-msg" role="status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -486,6 +527,7 @@
   <script src="monsters.js"></script>
   <script src="game.js"></script>
   <script src="collection.js"></script>
+  <script src="backup.js"></script>
   <script src="audio.js"></script>
   <script src="app.js"></script>
   <script src="signup.js"></script>

@@ -2418,3 +2418,101 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   .signup-input { flex: 0 1 150px; padding: 8px; }
   .signup-join { padding: 8px 12px; }
 }
+
+/* ── Save code modal ───────────────────────────────────────────
+   Backups and restores for a game with no accounts. Reuses the blender
+   confirm modal's shell (.blender-confirm / -box) so the frame, clip-path and
+   scanlines stay in one place; everything below is only what that shell
+   doesn't already cover. */
+
+.collection-header-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.btn-save-code { white-space: nowrap; }
+
+/* Taller than the blender modal — two panels stacked — so it has to be able
+   to scroll on short viewports rather than overflow off-screen. */
+.save-code-box {
+  max-width: 460px;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  text-align: center;
+}
+
+.save-code-body { margin-bottom: 12px; }
+
+.save-code-sub {
+  margin-top: 0;
+  font-size: 11px;
+}
+
+/* The code is long, unspaced and must survive being copied whole, so it gets
+   a real textarea: wrapping, selectable, and never silently truncated by an
+   ellipsis the way a one-line field would. */
+.save-code-text {
+  width: 100%;
+  font-family: inherit;
+  font-size: 9px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--ink, #eafff2);
+  background: var(--outline);
+  border: none;
+  clip-path: var(--pixel-clip-xs);
+  padding: 10px;
+  resize: vertical;
+  word-break: break-all;
+}
+
+.save-code-text::placeholder { color: rgba(255,255,255,.38); }
+.save-code-text:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.save-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.save-code-rule {
+  border: none;
+  border-top: 2px solid var(--outline-t);
+  margin: 18px 0 14px;
+}
+
+.save-code-warn { margin: 10px 0 0; }
+
+/* Status line. Sized for sentences rather than the modal's shouty pixel
+   labels, because it carries real explanations — what a code contains, and
+   why one was refused. */
+.save-code-msg {
+  font-size: 9px;
+  line-height: 1.7;
+  text-transform: none;
+  color: var(--ink, #eafff2);
+  opacity: .85;
+}
+
+.save-code-msg--restore {
+  display: block;
+  margin: 12px 0 0;
+  min-height: 1.7em;
+}
+
+.save-code-msg.is-bad {
+  color: #ffd2cc;
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .save-code-box { padding: 16px 14px; }
+  .save-code-text { font-size: 8px; }
+  .btn-save-code { font-size: 8px; padding: 6px 8px; }
+}
