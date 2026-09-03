@@ -15,7 +15,7 @@ const Signup = (() => {
   // Paste the Apps Script deployment URL here (see agent_docs/email-signups.md).
   // While it is empty the feature stays completely dormant: no card, no
   // envelope button, nothing posted anywhere.
-  const ENDPOINT = '';
+  const ENDPOINT = 'https://script.google.com/macros/s/AKfycbztyYzTn8d_JSzIjuJdX2UGYrBec51cTeotb6SZa5qW0d2hbq1HduOUU0IPO7oCJO_laA/exec';
 
   // When to offer it. Whichever comes first — a player who catches is engaged,
   // a player who only runs the timer is too, and they get there at different

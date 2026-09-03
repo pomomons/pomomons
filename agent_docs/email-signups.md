@@ -1,7 +1,9 @@
 # PomoMons — Email Signups & Usage Stats
 
 > Read this before touching `signup.js` or the mailing-list card.
-> The feature is **dormant until you paste an endpoint URL** — see step 5.
+> The feature is **dormant until you paste an endpoint URL** — see step 6.
+> It is **live** as of 2 Sep 2026; `signup.js` holds a working endpoint and
+> signups land in the "PomoMons — Email Signups" sheet.
 
 ---
 
@@ -40,15 +42,15 @@ the top of `signup.js`.
 
 ### 1. Make the sheet
 
-New Google Sheet. Name the first tab `Signups`. Put these headers in row 1:
-
-```
-Timestamp | Email | Source | Sessions | Catches
-```
+New Google Sheet. Leave the tab alone — `setup()` in step 4 names it and
+writes the headers, which is less error-prone than typing them in by hand.
 
 ### 2. Open Apps Script
 
-In the sheet: **Extensions → Apps Script**.
+In the sheet: **Extensions → Apps Script**. It has to be opened *from the
+sheet* — that binds the script to it, and `getActiveSpreadsheet()` below only
+works on a bound script. A standalone project made at script.google.com has no
+spreadsheet and every signup fails.
 
 ### 3. Paste this in, replacing everything
 
@@ -58,6 +60,33 @@ In the sheet: **Extensions → Apps Script**.
 // the site can POST to it; see agent_docs/email-signups.md.
 
 const SHEET_NAME = 'Signups';
+const HEADERS = ['Timestamp', 'Email', 'Source', 'Sessions', 'Catches'];
+
+// Run this once, by hand, from the Apps Script editor: it names the
+// spreadsheet, makes sure there is a "Signups" tab, and writes the header row.
+// Safe to run again — it only fills in whatever is missing.
+function setup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.rename('PomoMons — Email Signups');
+
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    // A brand-new spreadsheet has one tab called "Sheet1"; reuse it rather
+    // than leaving an empty stray tab behind.
+    const first = ss.getSheets()[0];
+    sheet = (ss.getSheets().length === 1 && first.getLastRow() === 0)
+      ? first.setName(SHEET_NAME)
+      : ss.insertSheet(SHEET_NAME);
+  }
+
+  sheet.getRange(1, 1, 1, HEADERS.length)
+       .setValues([HEADERS])
+       .setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  sheet.getRange(1, 1, 1, HEADERS.length).getSheet().autoResizeColumns(1, HEADERS.length);
+
+  return 'Ready: "' + SHEET_NAME + '" tab with headers ' + HEADERS.join(', ');
+}
 
 function doPost(e) {
   try {
@@ -108,7 +137,25 @@ function json(obj) {
 }
 ```
 
-### 4. Deploy
+### 4. Run `setup()` and authorise
+
+Pick `setup` in the function dropdown and press **Run**. Google will say the
+app is unverified — it is yours — so choose **Advanced → Go to … (unsafe)**,
+then **Allow**.
+
+You know it worked when the sheet gains a bold, frozen `Signups` header row
+and renames itself. **Do not skip this.** Authorising is not optional
+housekeeping: a web app set to "Execute as: Me" cannot run at all until you
+have granted it permission to act as you, and until then every request — from
+the site, from anywhere — is refused with a Drive "Access Denied" page. That
+error names Drive, not permissions, so it sends you hunting through the
+deployment settings, which are not the problem.
+
+> **If the authorisation popup keeps vanishing**, open the deployed `/exec`
+> URL directly in a browser tab where you are signed in. Google then serves
+> the consent screen as a full page instead of a popup.
+
+### 5. Deploy
 
 **Deploy → New deployment → Type: Web app**
 
@@ -116,12 +163,13 @@ function json(obj) {
 - **Who has access:** **Anyone** — this must be "Anyone", not "Anyone with
   Google account", or visitors would be asked to sign in to Google.
 
-Authorise when prompted (it will warn the app is unverified — it is yours;
-choose **Advanced → Go to … (unsafe)**).
-
 Copy the **Web app URL**. It ends in `/exec`.
 
-### 5. Paste the URL into the app
+Each deployment has **its own URL and its own access setting**. If you make
+more than one, check under **Manage deployments** that the URL you copied
+belongs to the one set to "Anyone".
+
+### 6. Paste the URL into the app
 
 In `signup.js`:
 
@@ -131,7 +179,23 @@ const ENDPOINT = 'https://script.google.com/macros/s/AKfy…/exec';
 
 That single line switches the feature on.
 
-### 6. Redeploy after any script edit
+### 7. Check it before trusting it with real addresses
+
+`tools/check-signup-endpoint.js` sends four probes at the endpoint — a good
+signup, the same one again, a malformed address, and a honeypot hit — and
+reports which behaviours actually hold. `tools/` is gitignored, so this lives
+only on the dev machine.
+
+```
+node tools/check-signup-endpoint.js            # reads ENDPOINT from signup.js
+node tools/check-signup-endpoint.js "https://…/exec"
+```
+
+An HTML page instead of JSON means the request never reached the script:
+either the deployment's access is not "Anyone", or step 4 was skipped.
+Delete the `pomomons-test-…` rows from the sheet afterwards.
+
+### 8. Redeploy after any script edit
 
 Apps Script serves the **deployed** version, not the one in the editor.
 After editing: **Deploy → Manage deployments → edit (pencil) → Version: New
