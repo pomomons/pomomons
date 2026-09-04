@@ -1888,6 +1888,19 @@ html::after {
   .companion-ground { width: 186.3%; height: 105.3%; bottom: -39.8%; }
 }
 
+/* Compact phones (360px-wide Android is the common case; iPhone SE is 375).
+   The 24px wordmark above still ran its last letter a few px under the gear
+   button — verified by measuring both rects at 360px, an 8px overlap. Has
+   to come after the short-phone query above: iPhone SE (320x568) matches
+   both width and height queries, and without this ordering the height
+   query's own 22px (sized for vertical space, not this overlap) would win
+   and the letter would still clip. */
+@media (max-width: 374px) {
+  .logo-pomo, .logo-mons { font-size: 20px; }
+  .logo-tomato-img { height: 1.3rem; }
+  .audio-shadow { top: 8px; right: 8px; }
+}
+
 /* Landscape phones (≤520px tall). The framed strip is ~18px taller than the
    flat bar it replaced, and on a screen this short that eats into content that
    was already tight. Everything here exists to claw that height back: thinner
@@ -2730,4 +2743,13 @@ html::after,
   /* Match .collection-tab's own mobile shrink (style.css) rather than a
      third, smaller size of its own. */
   .btn-save-code { font-size: 10px; padding: 8px 12px; }
+
+  /* RESTORE + count together are wide enough to trigger .collection-header's
+     own wrap (style.css, same breakpoint), same as the Dex "X / Y" count
+     does on its own. That rule centers the lone wrapped item with an auto
+     margin; .collection-header-end needs the same treatment, and it has to
+     live here (loaded after style.css) to actually win — its unconditional
+     margin-right:10px above is equal specificity and would otherwise cascade
+     over a same-breakpoint rule written in the earlier file. */
+  .collection-header-end { margin: 2px auto 0; }
 }

@@ -2294,7 +2294,10 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
      Dex screen "X / Y" is wide enough that at narrow widths there's no room
      left for it next to BACK + both tabs. Rather than clip it, let it wrap
      to its own centered line below — happens automatically only when it
-     doesn't fit (My Mons' shorter count never triggers it). */
+     doesn't fit (My Mons' shorter count never triggers it).
+     .collection-header-end's own centering override for when RESTORE joins
+     it and it wraps too lives in style-v3.css, which loads after this file
+     and would otherwise cascade-win over anything set here. */
   .collection-header { gap: 4px; flex-wrap: wrap; }
   .collection-tabs { gap: 4px; }
   .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
