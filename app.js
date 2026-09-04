@@ -81,6 +81,32 @@ let intervalId    = null;
 let endTime       = 0;   // wall-clock ms when the current run should finish
 let sessionsToday = 0;
 
+// Background-tab safety net: Chrome throttles setInterval in a hidden tab
+// to roughly once a minute, which could make the end-of-session alarm land
+// up to a minute late. A dedicated Worker isn't subject to that page-level
+// throttling, so it runs alongside the normal interval and just gives
+// timerTick() an extra, on-time nudge — timerTick() recomputes remaining
+// time from endTime rather than counting down, so an extra call is harmless.
+let bgTicker = null;
+function getBgTicker() {
+  if (bgTicker) return bgTicker;
+  try {
+    const code = "let iv=null;onmessage=e=>{if(e.data==='start'){if(!iv)iv=setInterval(()=>postMessage(1),1000);}else{clearInterval(iv);iv=null;}};";
+    const url = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+    bgTicker = new Worker(url);
+    bgTicker.onmessage = () => { if (running) timerTick(); };
+  } catch (_) { bgTicker = null; }
+  return bgTicker;
+}
+function startTicker() {
+  intervalId = setInterval(timerTick, 1000);
+  getBgTicker()?.postMessage('start');
+}
+function stopTicker() {
+  clearInterval(intervalId);
+  bgTicker?.postMessage('stop');
+}
+
 // ── DOM refs ──────────────────────────────────────────────
 const elMinutes = document.getElementById('timer-minutes');
 const elSeconds = document.getElementById('timer-seconds');
@@ -217,7 +243,7 @@ function setMode(mode) {
   currentMode = mode;
   timeLeft    = MODES[mode];
   running     = false;
-  clearInterval(intervalId);
+  stopTicker();
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   document.body.dataset.mode = mode;
@@ -253,14 +279,14 @@ function startTimer() {
   updateBackground();
   updateButtonStates();
   renderTime();
-  intervalId = setInterval(timerTick, 1000);
+  startTicker();
 }
 
 function pauseTimer() {
   if (!running) return;
   timeLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
   running = false;
-  clearInterval(intervalId);
+  stopTicker();
   elColon.style.animationPlayState = 'paused';
   elColon.style.opacity = '1';
   renderTime();
@@ -269,7 +295,7 @@ function pauseTimer() {
 }
 
 function resetTimer() {
-  clearInterval(intervalId);
+  stopTicker();
   titleOverride = null;
   running = false;
   timeLeft = MODES[currentMode];
@@ -281,7 +307,7 @@ function resetTimer() {
 }
 
 function onSessionEnd() {
-  clearInterval(intervalId);
+  stopTicker();
   running = false;
   SFX.play('sessionEnd');
   elColon.style.animationPlayState = 'paused';
