@@ -860,7 +860,9 @@ html::after {
 .pxb-sm,
 .btn-adjust,
 .btn-help,
-.btn-audio {
+.btn-audio,
+.btn-signup,
+.btn-discord {
   clip-path: var(--pixel-clip-xs);
 }
 
@@ -875,6 +877,70 @@ html::after {
 .pxb-help { position: static; }
 
 .audio-shadow { flex: 0 0 auto; }
+
+/* Envelope + Discord link, pinned to the screen's top-left corner rather
+   than sharing the wordmark's row — that row is the wordmark and the mute
+   button's alone, same as before either of these existed. Fixed to the
+   viewport rather than absolute in .app-header: the header is capped at
+   --col (680px) and centred, so anything anchored to it sits only ~16px
+   left of the wordmark on a wide window — nowhere near a corner. Stacked
+   rather than side by side so the pair stays as narrow as the envelope was
+   on its own. The inset matches the corner rivet's (stats-strip, above) so
+   it sits the same distance off the bezel band instead of tucking under it.
+
+   That clears the wordmark once the window is wide enough for --col to
+   actually leave a margin (≥680px). Under that, .app-header is the full
+   viewport width and the centred wordmark itself runs close to this same
+   corner, so the media query below shrinks the pair back to a row instead —
+   see it for why. */
+.header-left-btns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: fixed;
+  top:  calc(var(--bezel-gap) + var(--bezel-w) + 8px);
+  left: calc(var(--bezel-gap) + var(--bezel-w) + 8px);
+  z-index: 2;
+}
+.header-left-btns .pxb { position: static; width: auto; flex: 0 0 auto; }
+.pxb-discord { position: static; flex: 0 0 auto; }
+.discord-shadow { flex: 0 0 auto; }
+.btn-discord {
+  border: none;
+  border-radius: 0;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  text-decoration: none;
+}
+.pxb-discord:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
+.pxb-discord:active { transform: var(--btn-press); filter: none; }
+
+/* --col (680px) is where .app-header stops growing, but the wordmark inside
+   it is centred with its own ~16px lead-in before the tomato, so the margin
+   has to clear the wordmark's start, not just the column's edge — that
+   doesn't happen until ~820px, the same tablet/desktop line style-v3.css
+   already draws elsewhere (--stats-h). Below it the wordmark's own centred
+   row runs close to this corner at every width, all the way down to a
+   phone's tighter wrapped-tagline layout, so one query covers the lot: row
+   instead of stack, and small enough that two fit where the envelope alone
+   used to. */
+@media (max-width: 820px) {
+  .header-left-btns { flex-direction: row; top: 10px; left: 12px; gap: 3px; }
+  .header-left-btns .btn-shadow--sm { padding: 1px; }
+  .header-left-btns .btn-signup,
+  .header-left-btns .btn-discord {
+    min-width: 18px;
+    min-height: 18px;
+    padding: 3px;
+  }
+  .header-left-btns svg { width: 11px; height: 11px; }
+}
 
 /* The press travels on the outer layer now, so the inner one must not also
    shift or the button slides twice as far. */
@@ -893,7 +959,9 @@ html::after {
 .pxb .btn-ghost,
 .btn-adjust,
 .btn-help,
-.btn-audio {
+.btn-audio,
+.btn-signup,
+.btn-discord {
   background: var(--btn-dark);
   color: var(--cream);
   box-shadow:
@@ -904,7 +972,9 @@ html::after {
 /* Small square controls get a 3px edge — 4px on a 36px button is a stripe. */
 .btn-adjust,
 .btn-help,
-.btn-audio {
+.btn-audio,
+.btn-signup,
+.btn-discord {
   box-shadow:
     inset 0 3px 0 rgba(255,255,255,.10),
     inset 0 -3px 0 rgba(0,0,0,.22);
@@ -1455,29 +1525,30 @@ html::after {
      header's top-right corner here, which is where it has always sat. */
   .logo-row  { display: block; }
 
-  /* Both header buttons leave the flow and pin to the top corners — the
-     envelope on the left, mute on the right.
+  /* The mute button leaves the flow and pins to the top-right corner — the
+     envelope+Discord pair already pin to the top-left unconditionally now.
 
      The `width: auto` is the part that matters. `.btn-shadow > .pxb` sets
      `width: 100%` (further up this file) so a wrapped button fills its grid
      cell. Once the wrapper is taken out of the flow that 100% resolves
      against .app-header instead, and the 44px button stretched to the full
      390px viewport, hung off both edges, and ended up painted underneath the
-     header — untappable. Mute had that bug from the start (it rendered at
-     left:-10px, off the side of the screen); the envelope inherited it when
-     the mailing list shipped. On a phone neither could be pressed, so there
-     was no way to mute the game or to open the signup card by hand. */
-  .signup-shadow,
+     header — untappable. That was the mute button's bug from the start (it
+     rendered at left:-10px, off the side of the screen) before it got this
+     fix; on a phone it couldn't be pressed, so there was no way to mute the
+     game. */
   .audio-shadow {
     position: absolute;
     top: 10px;
+    right: 12px;
     width: auto;
     z-index: 2;
   }
-  .signup-shadow { left: 12px; }
-  .audio-shadow  { right: 12px; }
-  .signup-shadow > .pxb,
-  .audio-shadow  > .pxb { position: static; width: auto; flex: 0 0 auto; }
+  .audio-shadow > .pxb { position: static; width: auto; flex: 0 0 auto; }
+
+  /* The envelope+Discord cluster's own row/sizing rules for everything under
+     680px live in one shared query below (it also covers this width), so the
+     wordmark step-down here is all that's left. */
   /* ...and the wordmark comes down a step so it clears the button rather than
      running underneath it. (It overlapped at 28px even before this work.) */
   .logo-pomo, .logo-mons { font-size: 24px; }
@@ -2231,31 +2302,15 @@ html::after,
       than chase those bands with more breakpoints, app.js scales the whole
       screen down by whatever is left over. This var is what it sets. */
 #screen-timer {
-  /* --signup-reserve is 0 except while the mailing-list bar is up, when
-     signup.js sets it to the bar's height. The bar is fixed-position, so
-     without this it would simply cover the START button — the one thing a
-     prompt that claims not to block anyone must not do. Reserving the space
-     lifts the screen's content clear of it instead; on a roomy window there
-     is slack to absorb it and nothing visibly moves, and on a tight one the
-     auto-fit below scales the screen down a notch and everything stays
-     reachable. */
   padding-bottom: calc(var(--stats-reserve, var(--stats-h)) + 12px);
   zoom: var(--timer-fit, 1);
 }
 
-/* Space for the mailing-list bar, reserved on the body rather than on the
-   screen. #screen-timer carries the auto-fit `zoom`, which scales its own
-   padding too — a reserve set there came out short by exactly the zoom
-   factor, and the bar clipped the START button again. The body is not
-   zoomed, so this holds its size, and the screen (flex: 1) simply gets a
-   shorter box to lay out in. 0 whenever the bar is down. */
-body { padding-bottom: var(--signup-reserve, 0px); }
-
 
 /* ══ Mailing list ═══════════════════════════════════════════
-   Self-contained: every rule for the envelope button and the signup card
-   lives in this block, including its own responsive tweaks, so the feature
-   can be lifted out in one piece. */
+   Self-contained: every rule for the envelope button, the popup and its
+   backdrop lives in this block, including its own responsive tweaks, so the
+   feature can be lifted out in one piece. */
 
 /* Envelope button — the mute button's twin, on the other side of the
    wordmark so the row stays centred. */
@@ -2263,7 +2318,6 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 .signup-shadow { flex: 0 0 auto; }
 
 .btn-signup {
-  background: #222;
   border: none;
   border-radius: 0;
   padding: 8px;
@@ -2273,11 +2327,6 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   justify-content: center;
   min-height: 44px;
   min-width: 44px;
-  clip-path: var(--pixel-clip-sm);
-  color: var(--text);
-  box-shadow:
-    inset 0 10px 0 rgba(255,255,255,.14),
-    inset 0 -10px 0 rgba(0,0,0,.38);
 }
 .pxb-signup:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
 .pxb-signup:active { transform: var(--btn-press); filter: none; }
@@ -2285,27 +2334,47 @@ body { padding-bottom: var(--signup-reserve, 0px); }
    re-subscribe) but stops competing for attention. */
 .btn-signup.is-joined { color: var(--gold); }
 
-/* The card. Fixed above the stats strip and out of the timer screen's flow
-   entirely: it adds no height there, so it cannot push the screen over and
-   send fitTimerScreen() into shrinking everything to compensate. */
+/* Dims and blocks the screen behind the popup. Sits just under the card,
+   well above the stats strip and every in-game overlay, but under the
+   bezel frame (html::before/after, 400+) so the cabinet edge stays on top. */
+.signup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+  background: rgba(0,0,0,.6);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .22s ease-out, visibility .22s;
+}
+.signup-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* The card. A true popup, centered over the whole screen — it plays no part
+   in the timer screen's layout, so it cannot push the screen over and send
+   fitTimerScreen() into shrinking everything to compensate. */
 .signup-card {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--stats-reserve, var(--stats-h)) + 16px);
-  transform: translate(-50%, 12px);
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 12px));
   width: calc(100% - 32px);
-  max-width: 520px;
-  z-index: 60;              /* over the screens (1), under the stats strip's
-                               own layers and every overlay (100+) */
+  max-width: 640px;
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  z-index: 351;
   background: var(--scanlines), var(--panel-bg);
   clip-path: var(--pixel-clip);
   /* Right padding clears the ✕ in the corner. */
-  padding: 12px 38px 12px 18px;
+  padding: 40px 48px 36px;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-  text-align: left;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 22px;
+  text-align: center;
   /* Reads as a layer floating over the screen rather than another panel in
      it — the panels themselves are translucent and frame-railed. */
   box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 2px #000;
@@ -2319,34 +2388,36 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, -50%);
 }
 
-/* Left column: headline over the status line. */
-.signup-text { flex: 1 1 auto; min-width: 0; }
+/* Headline over the status line, centered as a dialog's header. */
+.signup-text { flex: 0 0 auto; }
 
 .signup-title {
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 20px;
+  line-height: 1.3;
   color: var(--gold);
-  letter-spacing: .1em;
-  margin-bottom: 4px;
+  letter-spacing: .08em;
+  margin-bottom: 10px;
+  text-wrap: balance;
 }
 
-/* Two rows now: the address and SEND on one line, the consent tickbox under
-   it. The card is fixed-position and out of the timer screen's flow, so the
-   extra line costs the screen behind it nothing. */
+/* The address and SEND on one line, the consent tickbox under it, both
+   left-aligned under the centered header. The card is fixed-position and out
+   of the timer screen's flow, so its size costs the screen behind it nothing. */
 .signup-form {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   align-items: stretch;
+  text-align: left;
 }
 
 .signup-fields {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: stretch;
 }
 
@@ -2355,15 +2426,14 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 .signup-consent {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
-  font-size: 8px;
-  line-height: 1.65;
+  gap: 10px;
+  font-size: 11px;
+  line-height: 1.6;
   text-transform: none;
   letter-spacing: .02em;
   color: var(--text);
   opacity: .82;
   cursor: pointer;
-  max-width: 280px;
 }
 .signup-consent:hover { opacity: 1; }
 /* display:flex above would otherwise beat the hidden attribute, and the
@@ -2372,8 +2442,8 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 
 .signup-check {
   flex: 0 0 auto;
-  width: 13px;
-  height: 13px;
+  width: 17px;
+  height: 17px;
   margin: 1px 0 0;
   accent-color: var(--gold);
   cursor: pointer;
@@ -2381,15 +2451,15 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 .signup-check:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 .signup-input {
-  flex: 0 1 160px;
+  flex: 1 1 auto;
   min-width: 0;
   font-family: var(--font-pixel);
-  font-size: 10px;
+  font-size: 14px;
   color: var(--text);
   background: #1b3b33;
   border: none;
   border-radius: 0;
-  padding: 12px 10px;
+  padding: 17px 16px;
   clip-path: var(--pixel-clip-sm);
   text-transform: none;
   box-shadow: inset 0 4px 0 rgba(0,0,0,.35);
@@ -2397,34 +2467,34 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 .signup-input::placeholder { color: var(--text-muted); opacity: .7; }
 .signup-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 
-.signup-join { flex: 0 0 auto; padding: 10px 14px; font-size: 11px; }
+.signup-join { flex: 0 0 auto; padding: 15px 24px; font-size: 14px; }
 
 /* Second line: the small print by default, errors and the confirmation when
-   there's something to say. One element for both, so the bar never grows or
-   shrinks a row mid-interaction. */
+   there's something to say. One element for both, so the dialog never grows
+   or shrinks mid-interaction. */
 .signup-msg {
-  font-size: 8px;
-  letter-spacing: .04em;
+  font-size: 12px;
+  letter-spacing: .03em;
   text-transform: none;
-  line-height: 1.45;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 .signup-msg.is-ok  { color: var(--gold); }
 .signup-msg.is-err { color: #ffb4a2; }
 
 /* Big enough to hit on a touch screen, and legible enough to find — this is
-   the way out of the bar, so it must not be a hunt. */
+   the way out of the dialog, so it must not be a hunt. */
 .signup-x {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 10px;
+  right: 10px;
   background: none;
   border: none;
   color: var(--text);
   font-family: var(--font-pixel);
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1;
-  padding: 8px;
+  padding: 10px;
   opacity: .75;
   cursor: pointer;
 }
@@ -2453,32 +2523,31 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .signup-card { transition: opacity .01s; transform: translate(-50%, 0); }
+  .signup-card,
+  .signup-backdrop { transition: opacity .01s; }
+  .signup-card { transform: translate(-50%, -50%); }
 }
 
-/* Not enough width for two columns on a phone: headline over the field,
-   both full width. */
+/* Not enough width for the full desktop padding on a phone — the header,
+   field and button all stay full width, just with tighter margins. */
 @media (max-width: 479px) {
-  .signup-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 12px 32px 12px 14px;
-  }
-  .signup-form { width: 100%; }
+  .signup-card { gap: 16px; padding: 28px 26px 24px; }
+  .signup-fields { flex-direction: column; }
   .signup-input { flex: 1 1 auto; }
 }
 
 /* Landscape phones have no height to spare at all — drop the second line and
-   tighten, so the bar covers as little of the timer as it can. */
+   tighten, so the dialog covers as little of the screen as it can. */
 @media (max-height: 520px) and (orientation: landscape) {
-  .signup-card { flex-direction: row; align-items: center; padding: 8px 32px 8px 12px; gap: 10px; }
+  .signup-card { gap: 10px; padding: 16px 34px 14px; }
+  .signup-title { font-size: 14px; margin-bottom: 2px; }
   .signup-msg { display: none; }
-  .signup-input { flex: 0 1 150px; padding: 8px; }
-  .signup-join { padding: 8px 12px; }
+  .signup-fields { flex-direction: row; }
+  .signup-input { flex: 0 1 150px; padding: 10px; font-size: 12px; }
+  .signup-join { padding: 10px 16px; font-size: 12px; }
   /* The consent line stays — it is the record of what was agreed to, so it
-     cannot be the thing that gets dropped to save two rows of height. */
-  .signup-consent { font-size: 7px; line-height: 1.5; max-width: 210px; }
+     cannot be the thing that gets dropped to save height. */
+  .signup-consent { font-size: 9px; line-height: 1.5; }
 }
 
 
@@ -2493,9 +2562,28 @@ body { padding-bottom: var(--signup-reserve, 0px); }
   align-items: center;
   gap: 10px;
   flex: 0 0 auto;
+  /* .collection-header is space-between, so BACK gets the row's left margin
+     for free but this end sits flush against the content column's own edge
+     with none. Give it the same breathing room. */
+  margin-right: 10px;
 }
 
-.btn-save-code { white-space: nowrap; }
+/* Same row as ← BACK and the MY MONS / POMODEX tabs, but it was the only one
+   using .btn-sm's smaller padding — 8px 12px next to their 12px 20px — so it
+   read shorter than the rest of the row. Match their padding, and give all
+   three an explicit line-height: ← BACK's arrow falls outside the pixel
+   font, and the fallback glyph the browser substitutes for it carries taller
+   metrics than the font's own digits and letters, so BACK was rendering 4px
+   taller than the plain-text tabs even with identical padding. */
+.pxb-back .btn,
+.collection-tab,
+.btn-save-code {
+  line-height: 1;
+}
+.btn-save-code {
+  padding: 12px 20px;
+  white-space: nowrap;
+}
 
 /* Taller than the blender modal — two panels stacked — so it has to be able
    to scroll on short viewports rather than overflow off-screen. */
@@ -2577,5 +2665,7 @@ body { padding-bottom: var(--signup-reserve, 0px); }
 @media (max-width: 480px) {
   .save-code-box { padding: 16px 14px; }
   .save-code-text { font-size: 8px; }
-  .btn-save-code { font-size: 8px; padding: 6px 8px; }
+  /* Match .collection-tab's own mobile shrink (style.css) rather than a
+     third, smaller size of its own. */
+  .btn-save-code { font-size: 10px; padding: 8px 12px; }
 }

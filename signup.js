@@ -1,10 +1,11 @@
 // signup.js — optional email capture + usage events.
 //
-// Nothing here ever blocks the app. The card is a fixed-position panel that
-// sits above the stats strip: it takes no space in the timer screen's layout,
-// so it can't push the screen over and make fitTimerScreen() (app.js) shrink
-// everything to pay for it. Dismissing it is always one tap, and the envelope
-// button in the header opens it again for anyone who wants back in later.
+// The card is a popup, centered over the whole screen with a dimmed
+// backdrop: it takes no space in the timer screen's layout, so it can't push
+// the screen over and make fitTimerScreen() (app.js) shrink everything to
+// pay for it. Dismissing it is always one tap — the ✕, Esc, or the backdrop
+// — and the envelope button in the header opens it again for anyone who
+// wants back in later.
 //
 // Signups POST to a Google Apps Script web app, which appends a row to a
 // Google Sheet. See agent_docs/email-signups.md for the script and the setup.
@@ -50,7 +51,7 @@ const Signup = (() => {
   const set  = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
   const num  = (k) => parseInt(get(k, '0'), 10) || 0;
 
-  let card, form, input, btnOpen, msgEl, titleEl, consentEl, shownAt = 0, wired = false;
+  let card, backdrop, form, input, btnOpen, msgEl, titleEl, consentEl, shownAt = 0, wired = false;
   // Whatever the markup ships with — the status line falls back to it, so the
   // bar always has a second line and never changes height.
   let defaultMsg = '';
@@ -110,23 +111,14 @@ const Signup = (() => {
   }
 
   // ── Card ────────────────────────────────────────────────
-  // The bar is fixed-position, so on its own it would sit on top of the timer
-  // screen's controls. Instead it publishes its height as --signup-reserve,
-  // which #screen-timer adds to its bottom padding (style-v3.css), lifting the
-  // content clear. The resize event is how app.js is asked to re-run
-  // fitTimerScreen(); it already listens for it, so nothing new is coupled.
-  function reserveSpace() {
-    const px = card && card.classList.contains('active')
-      ? Math.ceil(card.getBoundingClientRect().height) + 8
-      : 0;
-    document.documentElement.style.setProperty('--signup-reserve', px + 'px');
-    window.dispatchEvent(new Event('resize'));
-  }
-
+  // A popup over the whole screen, backdrop included — it plays no part in
+  // the timer screen's layout, so opening or closing it never touches
+  // fitTimerScreen().
   function open(source) {
     if (!card) return;
     card.classList.add('active');
     card.setAttribute('aria-hidden', 'false');
+    if (backdrop) { backdrop.classList.add('active'); backdrop.setAttribute('aria-hidden', 'false'); }
     card.dataset.source = source || 'manual';
     shownAt = Date.now();
     message('');
@@ -147,14 +139,13 @@ const Signup = (() => {
     if (consentEl) consentEl.hidden = rejoining;
 
     if (input) input.value = rejoining ? get(K.addr, '') : '';
-    reserveSpace();
   }
 
   function close() {
     if (!card) return;
     card.classList.remove('active');
     card.setAttribute('aria-hidden', 'true');
-    reserveSpace();
+    if (backdrop) { backdrop.classList.remove('active'); backdrop.setAttribute('aria-hidden', 'true'); }
   }
 
   function dismiss() {
@@ -287,8 +278,9 @@ const Signup = (() => {
     if (wired) return;
     wired = true;
 
-    card    = document.getElementById('signup-card');
-    btnOpen = document.getElementById('btn-signup');
+    card     = document.getElementById('signup-card');
+    backdrop = document.getElementById('signup-backdrop');
+    btnOpen  = document.getElementById('btn-signup');
     if (!card) return;
 
     form      = card.querySelector('form');
@@ -302,12 +294,14 @@ const Signup = (() => {
     // No endpoint configured yet: leave the app exactly as it was.
     if (!ENDPOINT) {
       card.remove();
+      if (backdrop) backdrop.remove();
       if (btnOpen) btnOpen.closest('.signup-shadow, .btn-shadow')?.remove();
       return;
     }
 
-    if (form)    form.addEventListener('submit', submit);
-    if (btnOpen) btnOpen.addEventListener('click', () => open('header'));
+    if (form)     form.addEventListener('submit', submit);
+    if (btnOpen)  btnOpen.addEventListener('click', () => open('header'));
+    if (backdrop) backdrop.addEventListener('click', dismiss);
     card.querySelectorAll('[data-signup-close]').forEach(el =>
       el.addEventListener('click', dismiss));
 
@@ -315,12 +309,6 @@ const Signup = (() => {
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && card.classList.contains('active')) dismiss();
     });
-
-    // The bar's height changes with the viewport (two columns become one
-    // below 480px), so the space reserved for it has to follow.
-    if (window.ResizeObserver) new ResizeObserver(() => {
-      if (card.classList.contains('active')) reserveSpace();
-    }).observe(card);
 
     if (get(K.state) === 'joined' && btnOpen) {
       btnOpen.setAttribute('aria-label', "You're on the mailing list");
