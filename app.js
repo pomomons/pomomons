@@ -34,17 +34,20 @@ const clampMins = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 let focusMins = clampMins(parseInt(localStorage.getItem('pm_focus_mins') || '30', 10) || 30, MIN_FOCUS, MAX_FOCUS);
 let shortMins = clampMins(parseInt(localStorage.getItem('pm_short_mins') || '5',  10) || 5,  MIN_BREAK, MAX_BREAK);
 let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15', 10) || 15, MIN_BREAK, MAX_BREAK);
-// ── TESTING ONLY — short-circuit focus sessions ───────────
-// Set to a number of seconds (e.g. 3) to make focus sessions fire almost
+// ── TESTING ONLY — short-circuit session durations ────────
+// Set to a number of seconds (e.g. 5) to make sessions fire almost
 // immediately; null uses the normal minute-based durations.
-// Note: while this is set, the ▲▼ steppers are inert — setCurrentModeMins()
-// also routes through focusSecs(). Always return it to null before shipping.
+// Note: while these are set, the ▲▼ steppers are inert — setCurrentModeMins()
+// also routes through these helpers. Always return them to null before shipping.
 const TEST_FOCUS_SECS = null;
+const TEST_BREAK_SECS = null;
 const focusSecs = () => TEST_FOCUS_SECS ?? focusMins * 60;
+const shortSecs = () => TEST_BREAK_SECS ?? shortMins * 60;
+const longSecs  = () => TEST_BREAK_SECS ?? longMins  * 60;
 
 MODES.focus = focusSecs();
-MODES.short = shortMins * 60;
-MODES.long  = longMins  * 60;
+MODES.short = shortSecs();
+MODES.long  = longSecs();
 
 function currentModeMins() {
   return currentMode === 'focus' ? focusMins
@@ -61,11 +64,11 @@ function setCurrentModeMins(val) {
     localStorage.setItem('pm_focus_mins', focusMins);
   } else if (currentMode === 'short') {
     shortMins   = clampMins(val, MIN_BREAK, MAX_BREAK);
-    MODES.short = shortMins * 60;
+    MODES.short = shortSecs();
     localStorage.setItem('pm_short_mins', shortMins);
   } else {
     longMins    = clampMins(val, MIN_BREAK, MAX_BREAK);
-    MODES.long  = longMins * 60;
+    MODES.long  = longSecs();
     localStorage.setItem('pm_long_mins', longMins);
   }
   setMode(currentMode);
@@ -89,6 +92,38 @@ const modeDropdown = document.getElementById('mode-dropdown');
 
 const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG BREAK' };
 
+// ── Session-end signal that outlasts the alarm ────────────
+// SFX.play('sessionEnd') is gone the instant it finishes, so someone who
+// stepped away, muted the tab, or had the volume down comes back to no sign
+// anything happened. These three things fix that: a desktop notification, a
+// tab title that stays changed until you act, and an optional auto-start.
+
+// Parked on the tab title by onSessionEnd(); renderTime() shows it whenever
+// the timer is stopped, in place of the plain 'PomoMons', until the next
+// timer starts or the player picks a mode by hand.
+let titleOverride = null;
+
+const Notify = {
+  supported: 'Notification' in window,
+  icon: 'assets/sprites/Tomato/Tomato.png',
+  // Permission is never requested on page load — only the first time a
+  // session actually ends, which is the moment it's obviously wanted.
+  async fire(title, body) {
+    if (!this.supported) return;
+    if (Notification.permission === 'default') {
+      try { await Notification.requestPermission(); } catch (_) { /* legacy callback API */ }
+    }
+    if (Notification.permission !== 'granted') return;
+    try {
+      const n = new Notification(title, { body, icon: this.icon, tag: 'pomomons-session' });
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch (_) { /* some browsers require a service worker and throw here */ }
+  },
+};
+
+const AUTOSTART_KEY = 'pm_autostart';
+function autoStartEnabled() { return localStorage.getItem(AUTOSTART_KEY) === '1'; }
+
 // ── Background state ──────────────────────────────────────
 // Only two visual states: red (running focus) or teal (everything else)
 function updateBackground() {
@@ -102,7 +137,9 @@ function renderTime() {
   const ss = String(s).padStart(2, '0');
   elMinutes.textContent = mm;
   elSeconds.textContent = ss;
-  document.title = running ? `${mm}:${ss} — PomoMons` : 'PomoMons';
+  document.title = running       ? `${mm}:${ss} — PomoMons`
+                 : titleOverride ? titleOverride
+                 :                 'PomoMons';
 }
 
 // ── Stats scope: all-time totals vs. today only ────────────
@@ -208,6 +245,7 @@ function timerTick() {
 
 function startTimer() {
   if (running) return;
+  titleOverride = null;
   running = true;
   endTime = Date.now() + timeLeft * 1000;
   SFX.play('start');
@@ -232,6 +270,7 @@ function pauseTimer() {
 
 function resetTimer() {
   clearInterval(intervalId);
+  titleOverride = null;
   running = false;
   timeLeft = MODES[currentMode];
   elColon.style.animationPlayState = 'paused';
@@ -254,6 +293,11 @@ function onSessionEnd() {
     sessionsToday++;
     // Every 4th session → long break; otherwise → short break
     const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
+    // Signal that survives the alarm: title stays changed until the break is
+    // started (or a mode is picked by hand); notification reaches a stepped-
+    // away player. setMode(nextMode) below never touches titleOverride.
+    titleOverride = 'Break time! — PomoMons';
+    Notify.fire('Focus session complete', 'Nice work — time for a break. A wild Pomomon showed up.');
     // Update persistent stats (lifetime + today, see addStat)
     addStat('sessions', 1);
     addStat('minutes',  focusMins);
@@ -273,6 +317,7 @@ function onSessionEnd() {
       const backOnTimer = () => {
         CompanionCanvas.init(document.getElementById('companion-canvas'));
         setMode(nextMode);
+        if (autoStartEnabled()) startTimer();
         if (typeof Signup !== 'undefined') Signup.maybePrompt();
       };
 
@@ -290,9 +335,12 @@ function onSessionEnd() {
   // and the mode left where it was, so the next thing the player saw was
   // another break: they had to reach for the mode dropdown every cycle to get
   // back to work. setMode() moves the label, the dropdown's ticked row, the
-  // clock and the buttons together, and leaves it stopped — it never
-  // auto-starts a session.
+  // clock and the buttons together, and leaves it stopped unless the player
+  // opted into auto-start.
+  titleOverride = 'Back to work! — PomoMons';
+  Notify.fire('Break over', 'Back to it — start your next focus session.');
   setMode('focus');
+  if (autoStartEnabled()) startTimer();
 }
 
 // ── Mode dropdown ─────────────────────────────────────────
@@ -312,6 +360,7 @@ btnMode.addEventListener('click', e => {
 
 document.querySelectorAll('.mode-option').forEach(opt => {
   opt.addEventListener('click', () => {
+    titleOverride = null;
     setMode(opt.dataset.mode);
     modeDropdown.hidden = true;
   });
@@ -319,9 +368,58 @@ document.querySelectorAll('.mode-option').forEach(opt => {
 
 document.addEventListener('click', () => { modeDropdown.hidden = true; });
 
+// ── Settings menu ─────────────────────────────────────────
+// Same fixed-position-under-the-button pattern as the mode dropdown, but
+// right-aligned to the gear since it sits at the header's right edge.
+const btnSettings  = document.getElementById('btn-settings');
+const settingsMenu = document.getElementById('settings-menu');
+
+function positionSettingsMenu() {
+  const r = btnSettings.getBoundingClientRect();
+  settingsMenu.style.top   = (r.bottom + 6) + 'px';
+  settingsMenu.style.left  = 'auto';
+  settingsMenu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+}
+
+function closeSettingsMenu() {
+  if (settingsMenu.hidden) return;
+  settingsMenu.hidden = true;
+  btnSettings.setAttribute('aria-expanded', 'false');
+}
+
+if (btnSettings && settingsMenu) {
+  btnSettings.addEventListener('click', e => {
+    e.stopPropagation();
+    modeDropdown.hidden = true;
+    const opening = settingsMenu.hidden;
+    if (opening) positionSettingsMenu();
+    settingsMenu.hidden = !opening;
+    btnSettings.setAttribute('aria-expanded', String(opening));
+  });
+  // Clicks inside the menu (sound toggle, Discord link) keep it open; the
+  // signup button opens its own modal, so let that one close the menu.
+  settingsMenu.addEventListener('click', e => {
+    if (e.target.closest('#btn-signup')) closeSettingsMenu();
+    else e.stopPropagation();
+  });
+  window.addEventListener('resize', () => { if (!settingsMenu.hidden) positionSettingsMenu(); });
+  document.addEventListener('click', closeSettingsMenu);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettingsMenu(); });
+}
+
 // ── Controls ──────────────────────────────────────────────
 btnStart.addEventListener('click', () => running ? pauseTimer() : startTimer());
 btnReset.addEventListener('click', resetTimer);
+
+// Auto-start toggle: remembered across visits, off until the player asks.
+const autostartToggle = document.getElementById('toggle-autostart');
+if (autostartToggle) {
+  autostartToggle.checked = autoStartEnabled();
+  autostartToggle.addEventListener('change', () => {
+    localStorage.setItem(AUTOSTART_KEY, autostartToggle.checked ? '1' : '0');
+    SFX.play('click');
+  });
+}
 
 // ── Player state (localStorage) ───────────────────────────
 function expThreshold(level) {
@@ -541,10 +639,14 @@ document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
 document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
 spawnInfo?.addEventListener('click', e => { if (e.target === spawnInfo) spawnInfo.classList.remove('active'); });
 
-// Audio toggle
+// Audio toggle — lives in the settings menu now; icon swaps waves↔X and the
+// row label reads the current state.
 function renderAudioIcon(muted) {
   document.getElementById('audio-waves').style.display = muted ? 'none' : '';
   document.getElementById('audio-mute').style.display  = muted ? ''     : 'none';
+  const label = document.getElementById('audio-label');
+  if (label) label.textContent = muted ? 'Sound off' : 'Sound on';
+  btnAudio.setAttribute('aria-checked', String(!muted));
 }
 const btnAudio = document.getElementById('btn-audio');
 btnAudio.addEventListener('click', () => renderAudioIcon(SFX.toggle()));

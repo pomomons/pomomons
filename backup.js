@@ -184,16 +184,26 @@ const Backup = (() => {
     el.classList.toggle('is-bad', !!bad);
   }
 
-  async function open(prefill) {
+  // restoreOnly is how #btn-save-code (My Mons' RESTORE button) reaches this:
+  // it never builds or shows a code, only the paste-a-code-in form. The
+  // #restore= link out of the backup email calls open() without it, so that
+  // path still shows both halves, same as always.
+  async function open(prefill, restoreOnly) {
     if (!modal) return;
     modal.classList.add('active');
+    modal.classList.toggle('restore-only', !!restoreOnly);
     modal.setAttribute('aria-hidden', 'false');
+    modal.setAttribute('aria-labelledby', restoreOnly ? 'save-code-sub-title' : 'save-code-title');
     say(copyMsg, ''); say(restoreMsg, '');
 
     if (codeBox) {
-      codeBox.value = 'BUILDING…';
-      try { codeBox.value = await create(); }
-      catch (e) { codeBox.value = ''; say(copyMsg, "Couldn't build a code.", true); }
+      if (restoreOnly) {
+        codeBox.value = '';
+      } else {
+        codeBox.value = 'BUILDING…';
+        try { codeBox.value = await create(); }
+        catch (e) { codeBox.value = ''; say(copyMsg, "Couldn't build a code.", true); }
+      }
     }
     if (prefill && restoreBox) {
       restoreBox.value = prefill;
@@ -262,7 +272,7 @@ const Backup = (() => {
     restoreMsg = $('restore-msg');
     if (!modal) return;
 
-    $('btn-save-code')?.addEventListener('click', () => open());
+    $('btn-save-code')?.addEventListener('click', () => open(null, true));
     $('btn-save-code-close')?.addEventListener('click', close);
     $('btn-copy-code')?.addEventListener('click', copy);
     $('btn-restore-code')?.addEventListener('click', doRestore);

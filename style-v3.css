@@ -1393,6 +1393,63 @@ html::after {
 /* Trim the dead space under START / POMODEX inside the timer box. */
 .controls-group { padding: 12px 24px 2px; }
 
+/* ── Settings menu ────────────────────────────────────────
+   Opened by the gear (#btn-settings), positioned as a fixed panel under it
+   by app.js — same mechanism as .mode-dropdown. Holds sound, Discord, email
+   updates and the auto-start toggle, which used to be scattered around the
+   header corners and the timer box. */
+.settings-menu {
+  position: fixed;
+  min-width: 210px;
+  max-width: calc(100vw - 24px);
+  background: #111827;
+  border: var(--border-soft);
+  z-index: 200;
+  overflow: hidden;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.5);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-hair);
+  color: rgba(255,255,255,.78);
+  font-family: var(--font-pixel);
+  font-size: var(--text-sm);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:hover,
+.settings-row:focus-visible { background: rgba(255,255,255,.1); color: var(--text); outline: none; }
+
+.settings-ico {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 18px;
+  color: var(--gold);
+}
+
+.settings-label { flex: 1 1 auto; }
+
+/* Toggle row: label on the left, checkbox pushed to the right edge. */
+.settings-row--toggle { justify-content: space-between; }
+.settings-row--toggle input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
 /* Tighter companion box (less padding around the stage) and a bigger gap
    between FOCUS·CATCH·COLLECT and it. The stage also rides ~6px higher so
    the trimmed bottom padding doesn't crop the grass and the mon sits less
@@ -2596,6 +2653,11 @@ html::after,
 }
 
 .save-code-body { margin-bottom: 12px; }
+
+/* Restore-only mode (opened from My Mons' RESTORE button, see backup.js):
+   hide the free "here's your current code" half entirely, leaving just the
+   paste-a-code-in form below. */
+.save-code.restore-only .save-code-export { display: none; }
 
 .save-code-sub {
   margin-top: 0;

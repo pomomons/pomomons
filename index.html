@@ -64,95 +64,52 @@
          the reference. The button used to be absolutely positioned to the
          header's top-right corner. -->
     <div class="logo-row">
-    <div class="header-left-btns">
-    <!-- Mailing list. Always available, so anyone who waved the card away can
-         still opt in later. signup.js removes this if no endpoint is set. -->
-    <div class="btn-shadow btn-shadow--sm signup-shadow"><div class="pxb pxb-sm pxb-signup"><button class="btn-signup" id="btn-signup" aria-label="Get PomoMons updates by email">
-      <!-- Pixel floppy disk: notched top-right corner, a solid shutter bar,
-           a hollow label frame lower down -->
-      <svg width="20" height="20" viewBox="0 0 10 10"
-           xmlns="http://www.w3.org/2000/svg"
-           style="display:block;shape-rendering:crispEdges">
-        <rect x="0" y="0" width="8" height="1" fill="currentColor"/>
-        <rect x="0" y="1" width="1" height="1" fill="currentColor"/>
-        <rect x="8" y="1" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="2" width="1" height="1" fill="currentColor"/>
-        <rect x="2" y="2" width="5" height="1" fill="currentColor"/>
-        <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="3" width="1" height="1" fill="currentColor"/>
-        <rect x="2" y="3" width="5" height="1" fill="currentColor"/>
-        <rect x="9" y="3" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="4" width="1" height="1" fill="currentColor"/>
-        <rect x="9" y="4" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="5" width="8" height="1" fill="currentColor"/>
-        <rect x="9" y="5" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="6" width="1" height="1" fill="currentColor"/>
-        <rect x="1" y="6" width="1" height="1" fill="currentColor"/>
-        <rect x="7" y="6" width="1" height="1" fill="currentColor"/>
-        <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="7" width="1" height="1" fill="currentColor"/>
-        <rect x="1" y="7" width="1" height="1" fill="currentColor"/>
-        <rect x="7" y="7" width="1" height="1" fill="currentColor"/>
-        <rect x="9" y="7" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="8" width="8" height="1" fill="currentColor"/>
-        <rect x="9" y="8" width="1" height="1" fill="currentColor"/>
-        <rect x="0" y="9" width="10" height="1" fill="currentColor"/>
-      </svg>
-    </button></div></div>
-    <!-- Community server. -->
-    <div class="btn-shadow btn-shadow--sm discord-shadow"><div class="pxb pxb-sm pxb-discord"><a class="btn-discord" href="https://discord.gg/bXnKR8FeG" target="_blank" rel="noopener" aria-label="Join the PomoMons Discord">
-      <!-- Pixel mascot blob: rounded top and bottom, two eye notches -->
-      <svg width="20" height="20" viewBox="0 0 10 10"
-           xmlns="http://www.w3.org/2000/svg"
-           style="display:block;shape-rendering:crispEdges">
-        <rect x="2" y="0" width="6" height="1" fill="currentColor"/>
-        <rect x="1" y="1" width="8" height="1" fill="currentColor"/>
-        <rect x="0" y="2" width="10" height="1" fill="currentColor"/>
-        <rect x="0" y="3" width="2" height="1" fill="currentColor"/>
-        <rect x="4" y="3" width="2" height="1" fill="currentColor"/>
-        <rect x="8" y="3" width="2" height="1" fill="currentColor"/>
-        <rect x="0" y="4" width="2" height="1" fill="currentColor"/>
-        <rect x="4" y="4" width="2" height="1" fill="currentColor"/>
-        <rect x="8" y="4" width="2" height="1" fill="currentColor"/>
-        <rect x="0" y="5" width="10" height="1" fill="currentColor"/>
-        <rect x="0" y="6" width="10" height="1" fill="currentColor"/>
-        <rect x="1" y="7" width="8" height="1" fill="currentColor"/>
-        <rect x="2" y="8" width="6" height="1" fill="currentColor"/>
-        <rect x="1" y="9" width="1" height="1" fill="currentColor"/>
-        <rect x="8" y="9" width="1" height="1" fill="currentColor"/>
-      </svg>
-    </a></div></div>
-    </div>
     <div class="logo">
       <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
     </div>
-    <div class="btn-shadow btn-shadow--sm audio-shadow"><div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-audio" aria-label="Toggle sound">
-      <!-- Pixel-art speaker: body (cols 1-4), waves/mute (cols 5-9) -->
-      <svg id="audio-icon" width="20" height="20" viewBox="0 0 10 10"
+    <!-- Settings: opens the menu at the end of <body> holding sound, Discord,
+         email updates and auto-start. Reuses the mute button's old wrapper
+         (.audio-shadow / .pxb-audio) so it keeps that button's placement and
+         its mobile top-right pin for free. -->
+    <div class="btn-shadow btn-shadow--sm audio-shadow"><div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false">
+      <!-- Pixel-art gear: 8 teeth (4 full, 4 corner) around a ring, hollow hub -->
+      <svg width="20" height="20" viewBox="0 0 20 20"
            xmlns="http://www.w3.org/2000/svg"
            style="display:block;shape-rendering:crispEdges">
-        <!-- body -->
-        <rect x="1" y="3" width="2" height="4" fill="currentColor"/>
-        <!-- cone (two steps, narrowing right→left) -->
-        <rect x="3" y="2" width="1" height="6" fill="currentColor"/>
-        <rect x="4" y="1" width="1" height="8" fill="currentColor"/>
-        <!-- sound waves (unmuted) -->
-        <g id="audio-waves">
-          <rect x="6" y="2" width="1" height="6" fill="currentColor"/>
-          <rect x="8" y="1" width="1" height="8" fill="currentColor"/>
-        </g>
-        <!-- mute X (muted) — 5×5 diagonal cross -->
-        <g id="audio-mute" style="display:none">
-          <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
-          <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
-          <rect x="6" y="3" width="1" height="1" fill="currentColor"/>
-          <rect x="8" y="3" width="1" height="1" fill="currentColor"/>
-          <rect x="7" y="4" width="1" height="1" fill="currentColor"/>
-          <rect x="6" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="8" y="5" width="1" height="1" fill="currentColor"/>
-          <rect x="5" y="6" width="1" height="1" fill="currentColor"/>
-          <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
-        </g>
+        <rect x="8" y="0" width="4" height="1" fill="currentColor"/>
+        <rect x="8" y="1" width="4" height="1" fill="currentColor"/>
+        <rect x="4" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="2" width="4" height="1" fill="currentColor"/>
+        <rect x="15" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="3" y="3" width="3" height="1" fill="currentColor"/>
+        <rect x="8" y="3" width="4" height="1" fill="currentColor"/>
+        <rect x="14" y="3" width="3" height="1" fill="currentColor"/>
+        <rect x="2" y="4" width="16" height="1" fill="currentColor"/>
+        <rect x="3" y="5" width="14" height="1" fill="currentColor"/>
+        <rect x="4" y="6" width="12" height="1" fill="currentColor"/>
+        <rect x="4" y="7" width="4" height="1" fill="currentColor"/>
+        <rect x="12" y="7" width="4" height="1" fill="currentColor"/>
+        <rect x="0" y="8" width="7" height="1" fill="currentColor"/>
+        <rect x="13" y="8" width="7" height="1" fill="currentColor"/>
+        <rect x="0" y="9" width="7" height="1" fill="currentColor"/>
+        <rect x="13" y="9" width="7" height="1" fill="currentColor"/>
+        <rect x="0" y="10" width="7" height="1" fill="currentColor"/>
+        <rect x="13" y="10" width="7" height="1" fill="currentColor"/>
+        <rect x="0" y="11" width="7" height="1" fill="currentColor"/>
+        <rect x="13" y="11" width="7" height="1" fill="currentColor"/>
+        <rect x="4" y="12" width="4" height="1" fill="currentColor"/>
+        <rect x="12" y="12" width="4" height="1" fill="currentColor"/>
+        <rect x="4" y="13" width="12" height="1" fill="currentColor"/>
+        <rect x="3" y="14" width="14" height="1" fill="currentColor"/>
+        <rect x="2" y="15" width="16" height="1" fill="currentColor"/>
+        <rect x="3" y="16" width="3" height="1" fill="currentColor"/>
+        <rect x="8" y="16" width="4" height="1" fill="currentColor"/>
+        <rect x="14" y="16" width="3" height="1" fill="currentColor"/>
+        <rect x="4" y="17" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="17" width="4" height="1" fill="currentColor"/>
+        <rect x="15" y="17" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="18" width="4" height="1" fill="currentColor"/>
+        <rect x="8" y="19" width="4" height="1" fill="currentColor"/>
       </svg>
     </button></div></div>
     </div>
@@ -230,10 +187,14 @@
         <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
       </div>
       <!-- Wrapped together so .collection-header keeps exactly three flex
-           children and its space-between layout is unchanged. -->
+           children and its space-between layout is unchanged.
+           RESTORE opens #save-code in restore-only mode (see backup.js) — it
+           can paste a code in, but it never builds or shows one, so it can't
+           be used to get a save code without going through Save in the
+           settings menu (#btn-signup), which requires an email address. -->
       <div class="collection-header-end">
         <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
-                aria-label="Back up or restore your collection">SAVE CODE</button>
+                aria-label="Restore your collection from a save code">RESTORE</button>
         <span class="collection-count" id="mymons-count">0</span>
       </div>
     </div>
@@ -354,27 +315,37 @@
 
   <!-- ── Save Code Modal ──────────────────────────────── -->
   <!-- There are no accounts, so this is the only way a collection outlives the
-       browser it was caught in. Reachable from My Mons, and opened directly by
-       a #restore= link out of the backup email. -->
+       browser it was caught in. Opened two ways, and backup.js tells them
+       apart with the restoreOnly flag on open():
+         • #btn-save-code (My Mons, "RESTORE") — restore-only. .save-code-export
+           stays hidden and codeBox is never filled, so this path can paste a
+           code in but can never produce one — getting a fresh code still
+           requires Save in the settings menu, which asks for an email.
+         • a #restore= link out of the backup email — shows both halves, same
+           as before. That link only exists because an email already went out,
+           so showing this browser's own current code alongside it isn't a
+           free-code path. -->
   <div id="save-code" class="blender-confirm save-code" role="dialog" aria-modal="true"
        aria-labelledby="save-code-title" aria-hidden="true">
     <div class="blender-confirm-box save-code-box">
-      <p class="blender-confirm-title" id="save-code-title">YOUR SAVE CODE</p>
-      <p class="blender-confirm-body save-code-body">
-        YOUR MONS LIVE IN THIS BROWSER ONLY.<br>
-        KEEP THIS CODE TO BRING THEM BACK ANYWHERE.
-      </p>
+      <div class="save-code-export">
+        <p class="blender-confirm-title" id="save-code-title">YOUR SAVE CODE</p>
+        <p class="blender-confirm-body save-code-body">
+          YOUR MONS LIVE IN THIS BROWSER ONLY.<br>
+          KEEP THIS CODE TO BRING THEM BACK ANYWHERE.
+        </p>
 
-      <textarea class="save-code-text" id="save-code-text" readonly rows="3"
-                aria-label="Your save code" spellcheck="false"></textarea>
-      <div class="save-code-row">
-        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-copy-code">COPY</button></div>
-        <span class="save-code-msg" id="save-code-msg" role="status" aria-live="polite"></span>
+        <textarea class="save-code-text" id="save-code-text" readonly rows="3"
+                  aria-label="Your save code" spellcheck="false"></textarea>
+        <div class="save-code-row">
+          <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-copy-code">COPY</button></div>
+          <span class="save-code-msg" id="save-code-msg" role="status" aria-live="polite"></span>
+        </div>
+
+        <hr class="save-code-rule">
       </div>
 
-      <hr class="save-code-rule">
-
-      <p class="blender-confirm-title save-code-sub">RESTORE A COLLECTION</p>
+      <p class="blender-confirm-title save-code-sub" id="save-code-sub-title">RESTORE A COLLECTION</p>
       <textarea class="save-code-text" id="restore-code-text" rows="3"
                 aria-label="Paste a save code to restore"
                 placeholder="PASTE A CODE HERE" spellcheck="false"></textarea>
@@ -533,6 +504,107 @@
     <button class="mode-option active" data-mode="focus">FOCUS SESSION</button>
     <button class="mode-option" data-mode="short">SHORT BREAK</button>
     <button class="mode-option" data-mode="long">LONG BREAK</button>
+  </div>
+
+  <!-- Settings menu — anchored under the gear (#btn-settings) by app.js,
+       same fixed-position pattern as .mode-dropdown above. Holds the
+       controls that used to sit loose in the header corners. -->
+  <div class="settings-menu" id="settings-menu" hidden role="menu" aria-label="Settings">
+    <button class="settings-row" id="btn-audio" role="menuitemcheckbox" aria-label="Toggle sound">
+      <svg id="audio-icon" class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <rect x="1" y="3" width="2" height="4" fill="currentColor"/>
+        <rect x="3" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="4" y="1" width="1" height="8" fill="currentColor"/>
+        <g id="audio-waves">
+          <rect x="6" y="2" width="1" height="6" fill="currentColor"/>
+          <rect x="8" y="1" width="1" height="8" fill="currentColor"/>
+        </g>
+        <g id="audio-mute" style="display:none">
+          <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="4" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="5" y="6" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
+        </g>
+      </svg>
+      <span class="settings-label" id="audio-label">Sound on</span>
+    </button>
+
+    <a class="settings-row" id="btn-discord" href="https://discord.gg/bXnKR8FeG"
+       target="_blank" rel="noopener" role="menuitem">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 25 19"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <rect x="6" y="0" width="3" height="1" fill="currentColor"/>
+        <rect x="16" y="0" width="3" height="1" fill="currentColor"/>
+        <rect x="5" y="1" width="5" height="1" fill="currentColor"/>
+        <rect x="15" y="1" width="5" height="1" fill="currentColor"/>
+        <rect x="4" y="2" width="17" height="1" fill="currentColor"/>
+        <rect x="3" y="3" width="19" height="2" fill="currentColor"/>
+        <rect x="2" y="5" width="21" height="2" fill="currentColor"/>
+        <rect x="1" y="7" width="23" height="1" fill="currentColor"/>
+        <rect x="1" y="8" width="6" height="1" fill="currentColor"/>
+        <rect x="10" y="8" width="5" height="1" fill="currentColor"/>
+        <rect x="18" y="8" width="6" height="1" fill="currentColor"/>
+        <rect x="1" y="9" width="5" height="2" fill="currentColor"/>
+        <rect x="11" y="9" width="3" height="2" fill="currentColor"/>
+        <rect x="19" y="9" width="5" height="2" fill="currentColor"/>
+        <rect x="0" y="11" width="7" height="1" fill="currentColor"/>
+        <rect x="10" y="11" width="5" height="1" fill="currentColor"/>
+        <rect x="18" y="11" width="7" height="1" fill="currentColor"/>
+        <rect x="0" y="12" width="25" height="4" fill="currentColor"/>
+        <rect x="1" y="16" width="23" height="1" fill="currentColor"/>
+        <rect x="3" y="17" width="6" height="1" fill="currentColor"/>
+        <rect x="16" y="17" width="6" height="1" fill="currentColor"/>
+        <rect x="5" y="18" width="3" height="1" fill="currentColor"/>
+        <rect x="17" y="18" width="3" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">Join our Discord</span>
+    </a>
+
+    <button class="settings-row signup-shadow" id="btn-signup" role="menuitem"
+            aria-label="Save your progress by email">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <rect x="0" y="0" width="8" height="1" fill="currentColor"/>
+        <rect x="0" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="2" y="2" width="5" height="1" fill="currentColor"/>
+        <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="3" width="1" height="1" fill="currentColor"/>
+        <rect x="2" y="3" width="5" height="1" fill="currentColor"/>
+        <rect x="9" y="3" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="4" width="1" height="1" fill="currentColor"/>
+        <rect x="9" y="4" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="5" width="8" height="1" fill="currentColor"/>
+        <rect x="9" y="5" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="6" width="1" height="1" fill="currentColor"/>
+        <rect x="1" y="6" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="6" width="1" height="1" fill="currentColor"/>
+        <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="1" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="9" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="8" width="8" height="1" fill="currentColor"/>
+        <rect x="9" y="8" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="9" width="10" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">Save</span>
+    </button>
+
+    <label class="settings-row settings-row--toggle">
+      <span class="settings-label">Auto-start next session</span>
+      <input type="checkbox" id="toggle-autostart">
+    </label>
   </div>
 
   <!-- ── Mailing-list card ─────────────────────────────
