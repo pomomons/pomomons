@@ -1991,6 +1991,26 @@ html::after {
   margin-bottom: calc(var(--stats-h) - 32px);
 }
 
+/* RESTORE lives at the foot of the scroll box now, not the header. Making the
+   scroll box a flex column lets margin-top:auto on .mymons-restore park the
+   button against the bottom while the grid is short, then let it trail the
+   last mon once the grid is tall enough to scroll (auto margins only eat
+   free space — with none left they collapse to 0). Scoped to My Mons; Dex
+   reuses .mymons-scroll but has no such row. */
+#screen-mymons .mymons-scroll {
+  display: flex;
+  flex-direction: column;
+}
+#screen-mymons .mymons-scroll > .collection-grid { flex: 0 0 auto; }
+
+.mymons-restore {
+  flex: 0 0 auto;
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 6px;
+}
+
 .collection-tab {
   background: var(--btn-dark);
   color: var(--cream);
@@ -2737,6 +2757,29 @@ html::after,
   opacity: 1;
 }
 
+/* ── Share preview (desktop, no native share sheet) ──────────
+   The branded catch card shown before it's copied or saved. Reuses the
+   blender-confirm shell; only the card frame and a slightly wider box are
+   its own. The canvas dropped in by game.js is portrait 900x1125. */
+.share-preview-box {
+  max-width: 340px;
+  gap: 14px;
+}
+
+.share-preview-frame {
+  width: 100%;
+  line-height: 0;                 /* kill the inline-canvas descender gap */
+  background: #000;
+  border: 2px solid var(--frame-edge, rgba(255,255,255,.16));
+  clip-path: var(--pixel-clip-xs);
+}
+
+.share-preview-frame canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 @media (max-width: 480px) {
   .save-code-box { padding: 16px 14px; }
   .save-code-text { font-size: 8px; }
@@ -2744,13 +2787,10 @@ html::after,
      third, smaller size of its own. */
   .btn-save-code { font-size: 10px; padding: 8px 12px; }
 
-  /* RESTORE + count together are wide enough to trigger .collection-header's
-     own wrap (style.css, same breakpoint), same as the Dex "X / Y" count
-     does on its own. That rule centers the lone wrapped item with an auto
-     margin; .collection-header-end needs the same treatment, and it has to
-     live here (loaded after style.css) to actually win — its unconditional
-     margin-right:10px above is equal specificity and would otherwise cascade
-     over a same-breakpoint rule written in the earlier file. */
+  /* .collection-header-end now holds only the count. If it still wraps to its
+     own line at this width (style.css, same breakpoint), center it — same
+     treatment the Dex "X / Y" count gets. Has to live here (loaded after
+     style.css) to beat the unconditional margin-right:10px above. */
   .collection-header-end { margin: 2px auto 0; }
 
   /* Catch screen's postcatch row (NEXT/INFO/SHARE) and the throw/flee row

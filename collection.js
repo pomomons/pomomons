@@ -129,6 +129,13 @@ const Collection = (() => {
     // If the player has no active companion yet, this catch becomes it.
     const isFirstCatch = !localStorage.getItem('pm_active');
 
+    // A dark or shiny is a rare pull — flag the backup prompt to offer itself
+    // at the next calm moment, regardless of how many catches/sessions in.
+    if ((record.shiny || record.dark) &&
+        typeof Signup !== 'undefined' && Signup.noteRareCatch) {
+      Signup.noteRareCatch();
+    }
+
     if (!db) {
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);

@@ -20,13 +20,16 @@ const Signup = (() => {
 
   // When to offer it. Whichever comes first — a player who catches is engaged,
   // a player who only runs the timer is too, and they get there at different
-  // rates.
-  const AFTER_CATCHES  = 2;
-  const AFTER_SESSIONS = 3;
+  // rates. Set high enough that a first-time visitor poking around never sees
+  // it: by 5 catches or 6 sessions there's a collection actually worth not
+  // losing. Catching a dark or shiny mon (see noteRareCatch) also qualifies
+  // on its own — that's a rare pull nobody wants to lose to a cleared cache.
+  const AFTER_CATCHES  = 5;
+  const AFTER_SESSIONS = 6;
 
-  // Someone who closes the card is telling us something. Ask again after a
-  // fortnight, and give up entirely after this many refusals.
-  const REASK_AFTER_DAYS = 14;
+  // Someone who closes the card is telling us something. Leave a long gap
+  // before asking again, and give up entirely after this many refusals.
+  const REASK_AFTER_DAYS = 30;
   const MAX_PROMPTS      = 3;
 
   // A bot fills every field it can see and submits instantly; a person takes
@@ -39,12 +42,15 @@ const Signup = (() => {
   // pm_email_prompts how many times the card has appeared on its own
   // pm_email_last    when it last appeared (ms)
   // pm_email_queue   submissions that failed to send, retried on next load
+  // pm_email_rare    '1' once a dark/shiny has been caught — qualifies the
+  //                  prompt on its own, cleared when it's actually shown
   const K = {
     state:   'pm_email_state',
     prompts: 'pm_email_prompts',
     last:    'pm_email_last',
     queue:   'pm_email_queue',
     addr:    'pm_email_addr',     // remembered only to prefill a repeat backup
+    rare:    'pm_email_rare',
   };
 
   const get  = (k, d = '') => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
@@ -246,8 +252,18 @@ const Signup = (() => {
       const days = (Date.now() - num(K.last)) / 86400000;
       if (days < REASK_AFTER_DAYS) return false;
     }
-    return num('pm_total_catches')  >= AFTER_CATCHES
+    return get(K.rare) === '1'
+        || num('pm_total_catches')  >= AFTER_CATCHES
         || num('pm_total_sessions') >= AFTER_SESSIONS;
+  }
+
+  // A dark or shiny just went into the collection. Flag it so the next calm
+  // moment on the timer screen offers the backup, even if the catch/session
+  // counts aren't there yet — the joined / max-prompts / cooldown guards in
+  // shouldPrompt still apply.
+  function noteRareCatch() {
+    if (get(K.state) === 'joined') return;
+    set(K.rare, '1');
   }
 
   // Only ever on the timer screen with nothing else up — the card must not
@@ -269,6 +285,7 @@ const Signup = (() => {
       if (!shouldPrompt() || !screenIsClear()) return;
       set(K.prompts, String(num(K.prompts) + 1));
       set(K.last, String(Date.now()));
+      set(K.rare, '');   // spent — a later rare catch can set it again
       open('auto');
     }, 1500);
   }
@@ -318,7 +335,7 @@ const Signup = (() => {
     flushQueue();
   }
 
-  return { init, open, maybePrompt, event };
+  return { init, open, maybePrompt, noteRareCatch, event };
 })();
 
 if (document.readyState === 'loading') {

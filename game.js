@@ -567,21 +567,37 @@ const CompanionCanvas = (() => {
         // draws the canvas larger than the stage it sits in (and offset above
         // it) so the mon can be bigger without the panel growing — a stage
         // percentage there would put the name somewhere on the mon's face.
-        // The name is floored so it can't ride up into the LV pill / XP bar.
-        // That floor used to be a flat 15% of the stage, from when the row
-        // was ~26px tall and the mon's head never got near it; at the phone's
-        // 1.7x the head clears the row entirely and the caption landed on top
-        // of the XP bar. Measured off the row itself now, so it holds at any
-        // mon size — and falls back to the old 15% when the row is hidden
-        // (no companion yet), where the stage's whole top is free.
+        //
+        // The caption sits GAP of the canvas above the sprite-box top. It's
+        // also floored so it can't ride up into the LV pill / XP bar — but
+        // only when those actually sit over the sprite column. On desktop
+        // .companion-meta is pushed right out to the panel's left, clear of
+        // the mon, so a big mon's head has the whole top of the stage free
+        // and the caption should use it instead of being pinned onto the
+        // mon's forehead. Reserving the row's full height unconditionally
+        // (the old rule) is what made medium/large companions look cramped.
+        // Measure the real overlap of the two guard rails — the LV badge and
+        // the XP bar — against the canvas, and only floor when they cross it
+        // (which they do on a phone, where the row is drawn over the stage).
+        const GAP = 0.14;
         const headFrac = (state.headY || 96) / CANVAS_SIZE;
-        const stageH   = nameEl.offsetParent ? nameEl.offsetParent.offsetHeight : canvas.offsetHeight;
-        const metaEl   = document.querySelector('.companion-meta');
+        const metaEl    = document.querySelector('.companion-meta');
         const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
-        const floorPx  = metaShown ? metaEl.offsetTop + metaEl.offsetHeight + 4
-                                   : 0.15 * stageH;
-        const topPx    = canvas.offsetTop + (headFrac - 0.10) * canvas.offsetHeight;
-        nameEl.style.top = `${Math.max(floorPx, topPx)}px`;
+        let topPx = canvas.offsetTop + (headFrac - GAP) * canvas.offsetHeight;
+        if (metaShown) {
+          const parentTop = nameEl.offsetParent
+            ? nameEl.offsetParent.getBoundingClientRect().top : 0;
+          const cRect = canvas.getBoundingClientRect();
+          for (const g of [document.getElementById('btn-companion-level'),
+                           metaEl.querySelector('.xp-frame')]) {
+            if (!g) continue;
+            const r = g.getBoundingClientRect();
+            if (r.right > cRect.left + 8 && r.left < cRect.right - 8) {
+              topPx = Math.max(topPx, r.bottom - parentTop + 4);
+            }
+          }
+        }
+        nameEl.style.top = `${Math.max(2, topPx)}px`;
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
         // Same reason the top is measured off the canvas and not the stage:
         // on a phone the canvas is the box that actually grew. Width cap is
@@ -921,7 +937,9 @@ const EncounterScreen = (() => {
     if (!elMonName) return;
     if (!st.monSize) { elMonName.style.opacity = '0'; return; }
     const boxTop = (MON_CY - st.monSize / 2) / H * 100; // sprite-box top, % of canvas
-    elMonName.style.top = (boxTop - 7) + '%';
+    // 9% of the canvas above that box, up from 7, so a big mon's head keeps a
+    // bit of air between it and the caption.
+    elMonName.style.top = (boxTop - 9) + '%';
     // Floored at 12px rather than the default 8. The arena's other copy
     // (.encounter-sub is 13px on a phone) doesn't shrink with the canvas,
     // so a pure ratio would leave the mon's own name the smallest text on
@@ -1519,23 +1537,26 @@ const EncounterScreen = (() => {
     return sc;
   }
 
-  // Share the catch to Discord, Twitter/X, texts, whatever the OS share
-  // sheet offers — or, on browsers with no share sheet (most desktops),
-  // copy a caption + the catch snapshot so it can be pasted straight into
-  // a Discord message box. Doesn't touch the encounter overlay: NEXT/INFO
-  // stay available after sharing, same postcatch screen either way.
+  // Share the catch. On mobile / anything with a native share sheet this
+  // hands off to navigator.share (the only path that actually lists Discord's
+  // app, iMessage, etc.). On desktop there's no sheet, so instead of a blind
+  // clipboard copy we open a preview modal showing the branded card, and the
+  // player copies or saves it from there — each modal button being its own
+  // fresh user gesture, which is what clipboard.write() needs. Doesn't touch
+  // the encounter overlay: NEXT/INFO stay available afterwards either way.
   async function shareCatch() {
     const mon     = st.mon;
     const variant = mon.shiny ? 'shiny ' : mon.dark ? 'dark ' : '';
     const text    = `I just caught a ${variant}${mon.name} on PomoMons! \u{1F345}`;
     const url     = 'https://pomomons.io';
 
+    // Desktop: preview modal instead of a silent copy.
+    if (!navigator.share && openSharePreview(text, url)) return;
+
     // Built synchronously (toDataURL + atob) rather than the async
-    // canvas.toBlob — share()/clipboard.write() both require a live user
-    // gesture, and awaiting toBlob() first was long enough in testing to
-    // lose it: share() then rejected (silently, not AbortError) and the
-    // clipboard fallback hung forever with no gesture of its own, so
-    // SHARE just quietly did nothing.
+    // canvas.toBlob — share() requires a live user gesture, and awaiting
+    // toBlob() first was long enough in testing to lose it: share() then
+    // rejected silently (not AbortError) and SHARE quietly did nothing.
     let blob = null;
     try {
       const dataUrl = buildShareCanvas().toDataURL('image/png');
@@ -1547,28 +1568,27 @@ const EncounterScreen = (() => {
     } catch (_) { /* snapshot is a nice-to-have, not required to share */ }
     const file = blob ? new File([blob], 'pomomon-catch.png', { type: 'image/png' }) : null;
 
-    // Prefer the native share sheet (this is what actually gets Discord's
-    // mobile app, iMessage, etc. onto the list) — try with the snapshot
-    // attached, then without, before falling back to clipboard.
     if (navigator.share) {
       const withFile = file && navigator.canShare && navigator.canShare({ files: [file] });
-      const shareData = withFile ? { text, url, files: [file] } : { text, url };
       try {
-        await navigator.share(shareData);
+        await navigator.share(withFile ? { text, url, files: [file] } : { text, url });
         return;
       } catch (err) {
         if (err && err.name === 'AbortError') return; // user backed out of the sheet
-        // otherwise fall through to the clipboard fallback below
       }
     }
 
-    // Desktop fallback: no share sheet, so copy instead. Image + text
-    // together when the clipboard API supports it (Chrome/Edge), so
-    // pasting into Discord brings both; plain text everywhere else, and
-    // also if the image attempt itself is the thing that fails. Raced
-    // against a timeout: without a live gesture (e.g. share() above
-    // already spent it) clipboard calls don't reject, they hang forever —
-    // an honest failure message beats a button that quietly does nothing.
+    // Share sheet missing (openSharePreview couldn't find its markup) or it
+    // errored: last-resort plain clipboard copy.
+    await copyShareToClipboard(blob, text, url, elShareMsg);
+  }
+
+  // Copy the caption + card image to the clipboard. Image + text together
+  // when the API supports it (Chrome/Edge) so pasting into Discord brings
+  // both; plain text otherwise, and also if the image attempt is what fails.
+  // Raced against a 2s timeout: with no live gesture, clipboard calls don't
+  // reject — they hang forever — and an honest failure beats a dead button.
+  async function copyShareToClipboard(blob, text, url, msgEl) {
     const withTimeout = p => Promise.race([
       p, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
     ]);
@@ -1581,15 +1601,76 @@ const EncounterScreen = (() => {
       } else {
         await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
       }
-      say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
+      say(msgEl, 'Copied! Paste it in Discord or anywhere.');
     } catch (_) {
       try {
         await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
-        say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
+        say(msgEl, 'Copied! Paste it in Discord or anywhere.');
       } catch (__) {
-        say(elShareMsg, "Couldn't copy — try again?", true);
+        say(msgEl, "Couldn't copy — try again?", true);
       }
     }
+  }
+
+  // Turn a canvas into a PNG Blob synchronously (toDataURL + atob), so the
+  // caller keeps the click's user gesture for clipboard.write().
+  function canvasToPngBlob(cv) {
+    try {
+      const dataUrl = cv.toDataURL('image/png');
+      const base64  = dataUrl.slice(dataUrl.indexOf(',') + 1);
+      const binary  = atob(base64);
+      const bytes   = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new Blob([bytes], { type: 'image/png' });
+    } catch (_) { return null; }
+  }
+
+  // Desktop-only preview modal. Drops the freshly built catch card into
+  // #share-preview-frame and shows it with COPY / SAVE / CLOSE. Returns
+  // false (so shareCatch can fall back) if the markup isn't present.
+  let _sharePrevWired = false;
+  let _sharePrev = { text: '', url: '' };
+  function openSharePreview(text, url) {
+    const modal = document.getElementById('share-preview');
+    const frame = document.getElementById('share-preview-frame');
+    const msgEl = document.getElementById('share-preview-msg');
+    if (!modal || !frame) return false;
+
+    _sharePrev = { text, url };
+    frame.replaceChildren(buildShareCanvas());
+    if (msgEl) { msgEl.textContent = ''; msgEl.classList.remove('is-bad', 'is-shown'); }
+
+    if (!_sharePrevWired) {
+      _sharePrevWired = true;
+      const close = () => {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+      };
+      document.getElementById('btn-share-close')?.addEventListener('click', close);
+      modal.addEventListener('click', e => { if (e.target === modal) close(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) close();
+      });
+      document.getElementById('btn-share-copy')?.addEventListener('click', () => {
+        const cv = frame.querySelector('canvas');
+        copyShareToClipboard(cv && canvasToPngBlob(cv), _sharePrev.text, _sharePrev.url, msgEl);
+      });
+      document.getElementById('btn-share-save')?.addEventListener('click', () => {
+        const cv = frame.querySelector('canvas');
+        if (!cv) return;
+        const a = document.createElement('a');
+        a.href = cv.toDataURL('image/png');
+        a.download = 'pomomon-catch.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        say(msgEl, 'Saved to your downloads.');
+      });
+    }
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    return true;
   }
 
   function say(el, text, bad) {

@@ -188,15 +188,11 @@
         <button class="btn collection-tab collection-tab--active" id="btn-tab-mymons">MY MONS</button>
         <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
       </div>
-      <!-- Wrapped together so .collection-header keeps exactly three flex
-           children and its space-between layout is unchanged.
-           RESTORE opens #save-code in restore-only mode (see backup.js) — it
-           can paste a code in, but it never builds or shows one, so it can't
-           be used to get a save code without going through Save in the
-           settings menu (#btn-signup), which requires an email address. -->
+      <!-- Kept as a wrapper so .collection-header still has exactly three flex
+           children and its space-between layout is unchanged. The RESTORE
+           button that used to live here now sits centered at the bottom of
+           the scroll area (.mymons-restore, below). -->
       <div class="collection-header-end">
-        <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
-                aria-label="Restore your collection from a save code">RESTORE</button>
         <span class="collection-count" id="mymons-count">0</span>
       </div>
     </div>
@@ -230,6 +226,17 @@
     <div class="mymons-scroll">
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
+    </div>
+    <!-- RESTORE opens #save-code in restore-only mode (see backup.js) — it can
+         paste a code in, but never builds or shows one, so it can't be used to
+         get a save code without going through Save in the settings menu
+         (#btn-signup), which requires an email address. margin-top:auto (see
+         style-v3.css) parks this row against the bottom of the scroll box when
+         the grid is short, and lets it follow the last mon once the grid is
+         tall enough to scroll. -->
+    <div class="mymons-restore">
+      <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
+              aria-label="Restore your collection from a save code">RESTORE</button>
     </div>
     </div>
   </main>
@@ -373,6 +380,26 @@
         <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">1%</span></div>
       </div>
       <button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button>
+    </div>
+  </div>
+
+  <!-- ── Share Preview (desktop only) ──────────────────
+       Shown when SHARE is clicked on a browser with no native share sheet
+       (most desktops), so the player sees the branded catch card before
+       copying or saving it. The canvas is filled by game.js
+       (buildShareCanvas) each time it opens. Reuses the blender-confirm
+       modal shell. -->
+  <div id="share-preview" class="blender-confirm share-preview" role="dialog" aria-modal="true"
+       aria-labelledby="share-preview-title" aria-hidden="true">
+    <div class="blender-confirm-box share-preview-box">
+      <p class="blender-confirm-title" id="share-preview-title">YOUR CATCH CARD</p>
+      <div class="share-preview-frame" id="share-preview-frame"></div>
+      <div class="save-code-row share-preview-row">
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-share-copy">COPY</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-share-save">SAVE</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-share-close">CLOSE</button></div>
+      </div>
+      <p class="save-code-msg" id="share-preview-msg" role="status" aria-live="polite"></p>
     </div>
   </div>
 
