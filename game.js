@@ -1400,7 +1400,21 @@ const EncounterScreen = (() => {
     const text    = `I just caught a ${variant}${mon.name} on PomoMons! \u{1F345}`;
     const url     = 'https://pomomons.io';
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    // Built synchronously (toDataURL + atob) rather than the async
+    // canvas.toBlob — share()/clipboard.write() both require a live user
+    // gesture, and awaiting toBlob() first was long enough in testing to
+    // lose it: share() then rejected (silently, not AbortError) and the
+    // clipboard fallback hung forever with no gesture of its own, so
+    // SHARE just quietly did nothing.
+    let blob = null;
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64  = dataUrl.slice(dataUrl.indexOf(',') + 1);
+      const binary  = atob(base64);
+      const bytes   = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      blob = new Blob([bytes], { type: 'image/png' });
+    } catch (_) { /* snapshot is a nice-to-have, not required to share */ }
     const file = blob ? new File([blob], 'pomomon-catch.png', { type: 'image/png' }) : null;
 
     // Prefer the native share sheet (this is what actually gets Discord's
@@ -1421,20 +1435,26 @@ const EncounterScreen = (() => {
     // Desktop fallback: no share sheet, so copy instead. Image + text
     // together when the clipboard API supports it (Chrome/Edge), so
     // pasting into Discord brings both; plain text everywhere else, and
-    // also if the image attempt itself is the thing that fails.
+    // also if the image attempt itself is the thing that fails. Raced
+    // against a timeout: without a live gesture (e.g. share() above
+    // already spent it) clipboard calls don't reject, they hang forever —
+    // an honest failure message beats a button that quietly does nothing.
+    const withTimeout = p => Promise.race([
+      p, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+    ]);
     try {
       if (blob && typeof ClipboardItem !== 'undefined') {
-        await navigator.clipboard.write([new ClipboardItem({
+        await withTimeout(navigator.clipboard.write([new ClipboardItem({
           'text/plain': new Blob([`${text} ${url}`], { type: 'text/plain' }),
           'image/png':  blob,
-        })]);
+        })]));
       } else {
-        await navigator.clipboard.writeText(`${text} ${url}`);
+        await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
       }
       say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
     } catch (_) {
       try {
-        await navigator.clipboard.writeText(`${text} ${url}`);
+        await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
         say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
       } catch (__) {
         say(elShareMsg, "Couldn't copy — try again?", true);
