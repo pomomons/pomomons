@@ -1614,6 +1614,23 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 /* When only NEXT button is shown, centre it */
 .encounter-controls.postcatch { justify-content: center; }
 
+/* Status line for the SHARE button (copied-to-clipboard confirmation, or the
+   rare failure case). Reserves its line height up front so it doesn't nudge
+   the panel taller only once it has something to say. */
+.encounter-share-msg {
+  font-size: 9px;
+  line-height: 1.7;
+  text-transform: none;
+  text-align: center;
+  color: var(--ink, #eafff2);
+  opacity: 0;
+  min-height: 1.7em;
+  margin: 8px 0 0;
+  transition: opacity .2s ease;
+}
+.encounter-share-msg.is-shown { opacity: .85; }
+.encounter-share-msg.is-bad   { color: #ffd2cc; opacity: 1; }
+
 /* 1.5em of the 14px button = 21px, a whole pixel; 1.6em gave 22.4px and blurred
    the glyph. Kept relative so it tracks the button's size. */
 .btn-arrow { font-size: 1.5em; vertical-align: middle; position: relative; top: -0.22em; line-height: 1; }

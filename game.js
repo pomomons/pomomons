@@ -850,8 +850,8 @@ const EncounterScreen = (() => {
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
-      elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName,
-      btnThrow, btnFlee, btnCatchNext, btnCatchDex;
+      elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName, elShareMsg,
+      btnThrow, btnFlee, btnCatchNext, btnCatchDex, btnCatchShare;
 
   let rafId    = null;
   let onDone   = null;
@@ -1163,11 +1163,12 @@ const EncounterScreen = (() => {
         elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
         elSub.style.color = '#fff';
 
-        // Swap buttons: hide throw/flee, show NEXT
-        btnThrow.hidden     = true;
-        btnFlee.hidden      = true;
-        btnCatchNext.hidden = false;
-        btnCatchDex.hidden  = false;
+        // Swap buttons: hide throw/flee, show NEXT/INFO/SHARE
+        btnThrow.hidden      = true;
+        btnFlee.hidden       = true;
+        btnCatchNext.hidden  = false;
+        btnCatchDex.hidden   = false;
+        btnCatchShare.hidden = false;
         elControls.classList.add('postcatch');
         elControls.style.opacity = '1';
       }
@@ -1250,10 +1251,12 @@ const EncounterScreen = (() => {
       elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
       elMonName   = document.getElementById('encounter-mon-name');
+      elShareMsg  = document.getElementById('encounter-share-msg');
       btnThrow    = document.getElementById('btn-throw');
       btnFlee     = document.getElementById('btn-flee');
       btnCatchNext = document.getElementById('btn-catch-next');
       btnCatchDex = document.getElementById('btn-catch-dex');
+      btnCatchShare = document.getElementById('btn-catch-share');
 
       // HiDPI
       st.dpr = window.devicePixelRatio || 1;
@@ -1267,6 +1270,7 @@ const EncounterScreen = (() => {
       btnFlee.addEventListener('click',  flee);
       btnCatchNext.addEventListener('click', openMonInfo);
       btnCatchDex.addEventListener('click', openCaughtInfo);
+      btnCatchShare.addEventListener('click', shareCatch);
     }
 
     onDone = doneCb;
@@ -1316,7 +1320,9 @@ const EncounterScreen = (() => {
     btnFlee.hidden       = false;
     btnCatchNext.hidden  = true;
     btnCatchDex.hidden   = true;
+    btnCatchShare.hidden = true;
     elControls.classList.remove('postcatch');
+    if (elShareMsg) { elShareMsg.textContent = ''; elShareMsg.classList.remove('is-shown', 'is-bad'); }
 
     enableButtons(false); // disabled until 'idle' phase
 
@@ -1381,6 +1387,68 @@ const EncounterScreen = (() => {
       el.addEventListener('animationend', onEnd);
       const timer = setTimeout(finish, 600);
     });
+  }
+
+  // Share the catch to Discord, Twitter/X, texts, whatever the OS share
+  // sheet offers — or, on browsers with no share sheet (most desktops),
+  // copy a caption + the catch snapshot so it can be pasted straight into
+  // a Discord message box. Doesn't touch the encounter overlay: NEXT/INFO
+  // stay available after sharing, same postcatch screen either way.
+  async function shareCatch() {
+    const mon     = st.mon;
+    const variant = mon.shiny ? 'shiny ' : mon.dark ? 'dark ' : '';
+    const text    = `I just caught a ${variant}${mon.name} on PomoMons! \u{1F345}`;
+    const url     = 'https://pomomons.io';
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const file = blob ? new File([blob], 'pomomon-catch.png', { type: 'image/png' }) : null;
+
+    // Prefer the native share sheet (this is what actually gets Discord's
+    // mobile app, iMessage, etc. onto the list) — try with the snapshot
+    // attached, then without, before falling back to clipboard.
+    if (navigator.share) {
+      const withFile = file && navigator.canShare && navigator.canShare({ files: [file] });
+      const shareData = withFile ? { text, url, files: [file] } : { text, url };
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user backed out of the sheet
+        // otherwise fall through to the clipboard fallback below
+      }
+    }
+
+    // Desktop fallback: no share sheet, so copy instead. Image + text
+    // together when the clipboard API supports it (Chrome/Edge), so
+    // pasting into Discord brings both; plain text everywhere else, and
+    // also if the image attempt itself is the thing that fails.
+    try {
+      if (blob && typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/plain': new Blob([`${text} ${url}`], { type: 'text/plain' }),
+          'image/png':  blob,
+        })]);
+      } else {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+      }
+      say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
+    } catch (_) {
+      try {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        say(elShareMsg, 'Copied! Paste it in Discord or anywhere.');
+      } catch (__) {
+        say(elShareMsg, "Couldn't copy — try again?", true);
+      }
+    }
+  }
+
+  function say(el, text, bad) {
+    if (!el) return;
+    clearTimeout(el._hideTimer);
+    el.textContent = text;
+    el.classList.toggle('is-bad', !!bad);
+    el.classList.add('is-shown');
+    el._hideTimer = setTimeout(() => el.classList.remove('is-shown'), 3500);
   }
 
   // Raise the info card BEFORE dropping the encounter overlay, not after. Its
