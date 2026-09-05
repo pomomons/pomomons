@@ -100,9 +100,9 @@ const SFX = (() => {
     // Heavy impact thud → ball rocks during shake
     shake() {
       const t = getCtx().currentTime;
-      tone({ start: 160, end: 40  }, 'square',   t,        0.18, 0.70); // heavy low thud
-      tone({ start: 320, end: 100 }, 'square',   t,        0.10, 0.45); // mid punch layer
-      tone(95,                       'triangle', t + 0.03, 0.16, 0.35); // deep sub rumble
+      tone({ start: 160, end: 40  }, 'square',   t,        0.18, 0.35); // heavy low thud
+      tone({ start: 320, end: 100 }, 'square',   t,        0.10, 0.225); // mid punch layer
+      tone(95,                       'triangle', t + 0.03, 0.16, 0.175); // deep sub rumble
     },
 
     // Satisfying low mechanical click → ball locks shut

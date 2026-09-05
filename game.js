@@ -835,7 +835,7 @@ const EncounterScreen = (() => {
   function getShareBg(kind) {
     if (!_shareBg[kind]) {
       const img = new Image();
-      img.src = kind === 'focus' ? 'assets/backgrounds/forest-red.jpg' : 'assets/backgrounds/forest.jpg';
+      img.src = kind === 'focus' ? 'assets/backgrounds/forest-red.webp' : 'assets/backgrounds/forest.webp';
       _shareBg[kind] = img;
     }
     return _shareBg[kind];

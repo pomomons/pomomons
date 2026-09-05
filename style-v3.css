@@ -265,7 +265,7 @@
    image's busy detail sits in the vertical middle band (the sunset horizon),
    with plain sky and repetitive treeline as safe margins top and bottom, so
    the crop only ever eats into forgiving areas. */
-body { background: var(--mode-bg) url("assets/backgrounds/forest.jpg") center/cover no-repeat; }
+body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") center/cover no-repeat; }
 
 /* Full-screen overlays get the same photo as the body — they were still on
    the base sheet's hardcoded teal/red (#228674/#af4d4d), disconnected from
@@ -285,7 +285,7 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.jpg") center/co
 .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest.jpg") center/cover no-repeat;
+    var(--mode-bg) url("assets/backgrounds/forest.webp") center/cover no-repeat;
 }
 
 /* Running a focus session stays red, re-tuned to the new deeper register
@@ -302,14 +302,14 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.jpg") center/co
    and horizon as the default photo, painted red rather than approximated
    with a multiply-blend tint over the green one. */
 body.run-focus {
-  background: var(--mode-bg) url("assets/backgrounds/forest-red.jpg") center/cover no-repeat;
+  background: var(--mode-bg) url("assets/backgrounds/forest-red.webp") center/cover no-repeat;
 }
 body.run-focus .encounter-overlay,
 body.run-focus .mon-info-overlay,
 body.run-focus .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest-red.jpg") center/cover no-repeat;
+    var(--mode-bg) url("assets/backgrounds/forest-red.webp") center/cover no-repeat;
 }
 body.run-focus {
   --mode-bg:    #8f3b34;
