@@ -825,6 +825,23 @@ const EncounterScreen = (() => {
   const _groundImg = new Image();
   _groundImg.src = 'assets/sprites/Ground/Ground1.png';
 
+  // Warmed for the SHARE card's backdrop (buildShareCanvas, below) — same
+  // forest art as the page background, red variant to match a focus-session
+  // catch. Loaded now rather than at share time: canvas.toDataURL() has to
+  // run synchronously off the click (see shareCatch's comment), and by the
+  // time a player reaches SHARE the throw+catch animation has taken several
+  // seconds, plenty for these to finish loading.
+  const _shareBg = {};
+  function getShareBg(kind) {
+    if (!_shareBg[kind]) {
+      const img = new Image();
+      img.src = kind === 'focus' ? 'assets/backgrounds/forest-red.jpg' : 'assets/backgrounds/forest.jpg';
+      _shareBg[kind] = img;
+    }
+    return _shareBg[kind];
+  }
+  getShareBg('default'); getShareBg('focus');
+
   // Draw one square "pixel" block, snapped to whole screen pixels — same
   // convention as MonSprite's sparkle FX. Used instead of ctx.arc()/stroke()
   // for the catch-effect bursts below so they read as chunky 8-bit particles
@@ -1389,6 +1406,119 @@ const EncounterScreen = (() => {
     });
   }
 
+  // Build a branded card for SHARE rather than a bare grab of the live
+  // encounter canvas (which is transparent apart from the mon + platform —
+  // no name, no level, no PomoMons branding, so it read as a random cutout
+  // sprite once posted anywhere). Same forest backdrop as the rest of the
+  // app, the mon on its usual ground platform, its name/level/variant, and
+  // a footer. Pure canvas drawing, no DOM — every image it touches
+  // (backgrounds, ground, mon sprite) is already loaded by postcatch time,
+  // so this runs synchronously (required — see shareCatch's own comment).
+  function buildShareCanvas() {
+    const mon = st.mon;
+    const W = 900, H2 = 1125;
+    const sc = document.createElement('canvas');
+    sc.width = W; sc.height = H2;
+    const c = sc.getContext('2d');
+
+    const isFocus = document.body.classList.contains('run-focus');
+    const bg = getShareBg(isFocus ? 'focus' : 'default');
+    if (bg.complete && bg.naturalWidth) {
+      const s  = Math.max(W / bg.naturalWidth, H2 / bg.naturalHeight);
+      const dw = bg.naturalWidth * s, dh = bg.naturalHeight * s;
+      c.drawImage(bg, (W - dw) / 2, (H2 - dh) / 2, dw, dh);
+    } else {
+      c.fillStyle = isFocus ? '#af4d4d' : '#228674';
+      c.fillRect(0, 0, W, H2);
+    }
+
+    // Darken top/bottom a touch so white text stays legible over sky or trees.
+    const grad = c.createLinearGradient(0, 0, 0, H2);
+    grad.addColorStop(0,    'rgba(0,0,0,.5)');
+    grad.addColorStop(0.2,  'rgba(0,0,0,.05)');
+    grad.addColorStop(0.78, 'rgba(0,0,0,.05)');
+    grad.addColorStop(1,    'rgba(0,0,0,.6)');
+    c.fillStyle = grad;
+    c.fillRect(0, 0, W, H2);
+
+    const FONT = '"Press Start 2P", monospace';
+    const shadow = (on) => {
+      c.shadowColor = 'rgba(0,0,0,.55)';
+      c.shadowOffsetX = on ? 3 : 0;
+      c.shadowOffsetY = on ? 3 : 0;
+    };
+
+    // Wordmark — tomato + POMO (white) + MONS (gold), same split as the
+    // in-page header.
+    c.textBaseline = 'alphabetic';
+    c.font = `40px ${FONT}`;
+    const wPomo = c.measureText('\u{1F345} POMO').width;
+    let x = W / 2 - (wPomo + c.measureText('MONS').width) / 2;
+    shadow(true);
+    c.textAlign = 'left';
+    c.fillStyle = '#fff';
+    c.fillText('\u{1F345} POMO', x, 100);
+    x += wPomo;
+    c.fillStyle = '#ffd600';
+    c.fillText('MONS', x, 100);
+
+    // Badges — LV always, SHINY/DARK when it applies. Sized/paired as a
+    // centred group, same trick as the wordmark above.
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.font = `16px ${FONT}`;
+    shadow(false);
+    const badges = [{ text: `LV ${st.monLevel || 1}`, bg: '#ffd600', fg: '#1a0a00' }];
+    if (mon.dark)       badges.push({ text: 'DARK',  bg: '#141414', fg: '#fff'    });
+    else if (mon.shiny) badges.push({ text: 'SHINY', bg: '#f1c40f', fg: '#5c4400' });
+    const gap = 14, padX = 18, pillH = 40;
+    const widths = badges.map(b => c.measureText(b.text).width + padX * 2);
+    let bx = W / 2 - (widths.reduce((a, b) => a + b, 0) + gap * (badges.length - 1)) / 2;
+    const badgeY = 160;
+    badges.forEach((b, i) => {
+      const w = widths[i];
+      c.fillStyle = b.bg;
+      c.beginPath();
+      c.roundRect(bx, badgeY - pillH / 2, w, pillH, 8);
+      c.fill();
+      c.fillStyle = b.fg;
+      c.fillText(b.text, bx + w / 2, badgeY + 1);
+      bx += w + gap;
+    });
+
+    // Mon name
+    c.textBaseline = 'alphabetic';
+    c.font = `30px ${FONT}`;
+    c.fillStyle = '#fff';
+    shadow(true);
+    c.fillText(mon.name.toUpperCase(), W / 2, 235);
+
+    // Ground platform + mon, same art as the encounter screen itself.
+    shadow(false);
+    const stageCX = W / 2, stageCY = 640;
+    if (_groundImg.complete && _groundImg.naturalWidth) {
+      const pw = W * 0.82, ph = pw * (230 / 460);
+      c.imageSmoothingEnabled = false;
+      c.drawImage(_groundImg, stageCX - pw / 2, stageCY + 55 - ph / 2, pw, ph);
+    }
+    const shiny = (mon.shiny && !mon.dark) || false;
+    const scale = MonSprite.sizeScale(mon, 460, 2.2, shiny);
+    MonSprite.drawOnCtx(c, mon, stageCX, stageCY, { scale, shiny: mon.shiny || false, dark: mon.dark || false });
+
+    // Caption + footer
+    c.textBaseline = 'alphabetic';
+    c.font = `20px ${FONT}`;
+    c.fillStyle = '#ffd600';
+    shadow(true);
+    c.fillText('WAS CAUGHT!', W / 2, 985);
+    shadow(false);
+    c.font = `13px ${FONT}`;
+    c.fillStyle = 'rgba(255,255,255,.85)';
+    c.fillText('pomomons.io', W / 2, 1065);
+
+    return sc;
+  }
+
   // Share the catch to Discord, Twitter/X, texts, whatever the OS share
   // sheet offers — or, on browsers with no share sheet (most desktops),
   // copy a caption + the catch snapshot so it can be pasted straight into
@@ -1408,7 +1538,7 @@ const EncounterScreen = (() => {
     // SHARE just quietly did nothing.
     let blob = null;
     try {
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = buildShareCanvas().toDataURL('image/png');
       const base64  = dataUrl.slice(dataUrl.indexOf(',') + 1);
       const binary  = atob(base64);
       const bytes   = new Uint8Array(binary.length);
