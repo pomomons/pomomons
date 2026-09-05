@@ -2752,4 +2752,19 @@ html::after,
      margin-right:10px above is equal specificity and would otherwise cascade
      over a same-breakpoint rule written in the earlier file. */
   .collection-header-end { margin: 2px auto 0; }
+
+  /* Catch screen's postcatch row (NEXT/INFO/SHARE) and the throw/flee row
+     before it had no width-based shrink at all — only a landscape,
+     min-width:480px query further down sizes these buttons, which never
+     matches a phone in portrait. At a phone's actual width the 3-button
+     postcatch row didn't fit: NEXT's own "NEXT ▶" text wrapped onto two
+     lines (taller than INFO/SHARE, which stayed one line), and even
+     un-wrapped the row itself would wrap into two lines below ~400px.
+     white-space:nowrap fixes the height mismatch; the smaller font/padding
+     below is what actually buys the room for one row down to 320px. */
+  .encounter-controls { gap: 6px; padding: 12px 12px; }
+  .encounter-controls .pxb { max-width: none; }
+  .encounter-controls .btn,
+  #btn-flee { min-height: 48px; font-size: 11px; padding: 10px 6px; letter-spacing: .02em; white-space: nowrap; }
+  .encounter-controls .btn-arrow { font-size: 1.2em; }
 }

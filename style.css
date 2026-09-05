@@ -1635,11 +1635,17 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
    the glyph. Kept relative so it tracks the button's size. */
 .btn-arrow { font-size: 1.5em; vertical-align: middle; position: relative; top: -0.22em; line-height: 1; }
 
-/* Bigger action buttons — similar footprint to the main-screen START / POMODEX */
+/* Bigger action buttons — similar footprint to the main-screen START / POMODEX.
+   white-space:nowrap + the tighter horizontal padding are load-bearing, not
+   cosmetic: encounter-controls-wrap caps at 560px even on a full desktop
+   window, and once NEXT/INFO/SHARE share that row three-wide, "NEXT ▶" wrapped
+   onto its own second line at the old 28px padding — same bug on desktop as
+   on a phone, just less obviously since nothing narrows further to explain it. */
 .encounter-controls .btn {
   min-height: 60px;
   font-size: 16px;
-  padding: 16px 28px;
+  padding: 16px 16px;
+  white-space: nowrap;
 }
 
 #btn-flee { min-height: 60px; padding: 16px 24px; }
