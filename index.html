@@ -33,6 +33,17 @@
   <link rel="preload" as="image" href="assets/backgrounds/forest.webp">
   <link rel="preload" as="image" href="assets/backgrounds/forest-red.webp">
   <link rel="icon" type="image/png" href="assets/sprites/Tomato/Tomato.png">
+
+  <!-- Installable web app (PWA). manifest.webmanifest + sw.js at the repo root;
+       the "Install" prompt needs both, plus HTTPS (GitHub Pages is). The
+       apple-* tags are the iOS equivalent — Safari ignores the manifest's
+       icon/standalone settings and reads these instead. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PomoMons">
+  <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body>
 
@@ -695,5 +706,18 @@
        Dashboard: https://specialaccount11.goatcounter.com -->
   <script data-goatcounter="https://specialaccount11.goatcounter.com/count"
           async src="//gc.zgo.at/count.js"></script>
+
+  <!-- Register the service worker (see sw.js). Wrapped in a feature check and
+       deferred to load so it never competes with first paint; a failure here
+       must not affect the app, hence the silent catch. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function (err) {
+          console.warn('Service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
