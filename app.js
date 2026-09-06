@@ -635,6 +635,11 @@ document.getElementById('btn-back-mymons').addEventListener('click',  () => show
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
 document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));
 document.getElementById('btn-to-mymons').addEventListener('click', () => showScreen('mymons'));
+// The already-active tab in each collection header (gold) still looks and
+// clicks like a button — wire it to re-assert its own screen so a click is a
+// harmless no-op instead of doing nothing at all.
+document.getElementById('btn-tab-mymons')?.addEventListener('click', () => showScreen('mymons'));
+document.getElementById('btn-tab-dex')?.addEventListener('click',    () => showScreen('dex'));
 
 // Stats strip: swap the three tiles between all-time totals and today only.
 document.getElementById('btn-stats-scope')?.addEventListener('click', () => {
