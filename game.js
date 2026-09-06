@@ -884,7 +884,21 @@ const EncounterScreen = (() => {
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
       elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName, elShareMsg,
+      elMonNameText, elNameTomato, elDexProg, elDexCount,
       btnThrow, btnFlee, btnCatchNext, btnCatchDex, btnCatchShare;
+
+  // Total number of Pomodex entries (base mons + every evolution stage) —
+  // mirrors renderDex() in collection.js. This is the denominator shown as
+  // "N / TOTAL" on the catch screen.
+  function dexEntryTotal() {
+    if (typeof MONS === 'undefined') return 0;
+    let n = 0;
+    for (const mon of MONS) {
+      n++;
+      if (mon.evolutions) n += mon.evolutions.length;
+    }
+    return n;
+  }
 
   let rafId    = null;
   let onDone   = null;
@@ -1206,6 +1220,8 @@ const EncounterScreen = (() => {
         btnCatchShare.hidden = false;
         elControls.classList.add('postcatch');
         elControls.style.opacity = '1';
+
+        showDexProgress();
       }
     } else if (st.phase === 'result' && st.frame >= 40) {
       st.phase = 'done';
@@ -1221,6 +1237,40 @@ const EncounterScreen = (() => {
     btnThrow.disabled = !on;
     btnFlee.disabled  = !on;
     elControls.style.opacity = on ? '1' : '0.4';
+  }
+
+  // Reveal the Pomodex progress line on the catch screen and, when this was
+  // a brand-new entry, tick the count up by one (N / TOTAL → N+1 / TOTAL)
+  // with a blip. dexBefore/dexAfter are filled in asynchronously by start()
+  // and saveCaught(); fall back to a +1 estimate if either didn't land.
+  function showDexProgress() {
+    if (!elDexProg || !elDexCount) return;
+    const total = dexEntryTotal();
+    if (!total) return;
+
+    let before = st.dexBefore;
+    let after  = st.dexAfter;
+    if (typeof after  !== 'number') after  = (typeof before === 'number') ? before + 1 : null;
+    if (typeof before !== 'number') before = (typeof after  === 'number') ? Math.max(0, after - 1) : null;
+    if (typeof after  !== 'number') return;
+
+    // Duplicate catch — no new entry. Show the current tally without a tick.
+    if (after <= before) {
+      elDexCount.textContent = `${after} / ${total}`;
+      elDexProg.hidden = false;
+      return;
+    }
+
+    // New entry: show the pre-catch number, then bump it after a beat.
+    elDexCount.textContent = `${before} / ${total}`;
+    elDexProg.hidden = false;
+    setTimeout(() => {
+      elDexCount.textContent = `${after} / ${total}`;
+      elDexCount.classList.remove('is-tick');
+      void elDexCount.offsetWidth;      // restart the CSS pop animation
+      elDexCount.classList.add('is-tick');
+      SFX.play('dexTick');
+    }, 650);
   }
 
   function saveCaught() {
@@ -1240,6 +1290,15 @@ const EncounterScreen = (() => {
       st.caughtKey = Collection.addCaught(record)
         .then(key => { record._key = key; return key; })
         .catch(() => null);
+      // Re-read the unique-entry count once the record is stored, so the
+      // catch screen can animate dexBefore → dexAfter. Runs in parallel with
+      // the shake/lock frames, so it's ready by the postcatch reveal.
+      if (typeof Collection.getCaughtNames === 'function') {
+        st.caughtKey
+          .then(() => Collection.getCaughtNames())
+          .then(names => { st.dexAfter = names.size; })
+          .catch(() => { st.dexAfter = null; });
+      }
     } else {                         // fallback (IndexedDB unavailable)
       const list = JSON.parse(localStorage.getItem('pm_caught') || '[]');
       list.push(record);
@@ -1286,7 +1345,11 @@ const EncounterScreen = (() => {
       elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
       elMonName   = document.getElementById('encounter-mon-name');
+      elMonNameText = document.getElementById('encounter-mon-name-text');
+      elNameTomato  = document.getElementById('encounter-name-tomato');
       elShareMsg  = document.getElementById('encounter-share-msg');
+      elDexProg   = document.getElementById('encounter-dex-progress');
+      elDexCount  = document.getElementById('encounter-dex-count');
       btnThrow    = document.getElementById('btn-throw');
       btnFlee     = document.getElementById('btn-flee');
       btnCatchNext = document.getElementById('btn-catch-next');
@@ -1334,7 +1397,15 @@ const EncounterScreen = (() => {
 
     // Populate UI
     elMsg.textContent = 'A WILD MON APPEARED!';
-    if (elMonName) { elMonName.textContent = mon.name; elMonName.style.opacity = '0'; }
+    if (elMonName) {
+      if (elMonNameText) elMonNameText.textContent = mon.name;
+      else elMonName.textContent = mon.name;
+      elMonName.style.opacity = '0';
+    }
+    // Tomato marker in front of the name: full icon if this species is already
+    // in the collection, silhouette if not. Default to silhouette until the
+    // async caught-names read below confirms ownership.
+    if (elNameTomato) elNameTomato.classList.add('is-silhouette');
     elSub.textContent = '';
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
@@ -1358,6 +1429,25 @@ const EncounterScreen = (() => {
     btnCatchShare.hidden = true;
     elControls.classList.remove('postcatch');
     if (elShareMsg) { elShareMsg.textContent = ''; elShareMsg.classList.remove('is-shown', 'is-bad'); }
+
+    // Pomodex progress — hidden until this catch is confirmed. Capture how
+    // many unique entries the player has right now so the catch screen can
+    // tick it up afterwards.
+    if (elDexProg) {
+      elDexProg.hidden = true;
+      if (elDexCount) elDexCount.classList.remove('is-tick');
+    }
+    st.dexBefore = null;
+    st.dexAfter  = null;
+    if (typeof Collection !== 'undefined' && typeof Collection.getCaughtNames === 'function') {
+      Collection.getCaughtNames()
+        .then(names => {
+          st.dexBefore = names.size;
+          // Fill in the tomato marker now that we know if this species is owned.
+          if (elNameTomato) elNameTomato.classList.toggle('is-silhouette', !names.has(mon.name));
+        })
+        .catch(() => { st.dexBefore = null; });
+    }
 
     enableButtons(false); // disabled until 'idle' phase
 

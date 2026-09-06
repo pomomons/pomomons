@@ -128,6 +128,14 @@ const SFX = (() => {
       tone(523,  'sawtooth', t + 0.87,  0.42, 0.28);  // C5 final hold
     },
 
+    // Bright ascending three-blip → Pomodex counter ticks up by one
+    dexTick() {
+      const t = getCtx().currentTime;
+      tone(880,  'square',   t,        0.05, 0.18);  // A5
+      tone(1319, 'square',   t + 0.06, 0.06, 0.20);  // E6
+      tone(1760, 'triangle', t + 0.12, 0.14, 0.13);  // A6 sparkle tail
+    },
+
     // Engine rev sound → mon blended into smoothie
     blend() {
       const ac  = getCtx();

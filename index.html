@@ -284,7 +284,7 @@
 
         <div class="encounter-stage">
           <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
-          <p class="encounter-mon-name" id="encounter-mon-name"></p>
+          <p class="encounter-mon-name" id="encounter-mon-name"><img src="assets/sprites/Tomato/Tomato.png" alt="" class="enc-name-tomato" id="encounter-name-tomato"><span class="enc-name-text" id="encounter-mon-name-text"></span></p>
           <div class="encounter-topbar">
             <p class="encounter-level" id="encounter-level">LV 1</p>
             <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
@@ -293,6 +293,13 @@
         </div>
 
         <p class="encounter-sub" id="encounter-sub"></p>
+
+        <!-- Pomodex progress — hidden until a catch is confirmed, then the
+             count ticks up by one (e.g. 1 / 21 → 2 / 21) with a blip. -->
+        <p class="encounter-dex-progress" id="encounter-dex-progress" hidden>
+          <span class="edp-label">POMODEX</span>
+          <span class="edp-count" id="encounter-dex-count">0 / 0</span>
+        </p>
       </div></div></div>
 
       <!-- Same three-layer frame as the arena above and the main screen's
@@ -318,8 +325,8 @@
       <p class="blender-confirm-body">ARE YOU SURE YOU WANT TO BLEND<br><span id="blend-name">???</span><br>INTO A SMOOTHIE ITEM?</p>
       <p class="blender-confirm-warn">THIS CANNOT BE UNDONE!</p>
       <div class="blender-confirm-btns">
-        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-blend-yes">BLEND IT!</button></div>
-        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-no">CANCEL</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-yes">BLEND IT!</button></div>
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-blend-no">CANCEL</button></div>
       </div>
     </div>
   </div>

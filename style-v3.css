@@ -2101,6 +2101,63 @@ html::after {
   background: var(--scanlines), var(--panel-bg-t);
 }
 
+/* Pomodex progress line on the catch screen. Hidden (via [hidden]) until a
+   catch is confirmed, then game.js reveals it and bumps .edp-count, adding
+   .is-tick for one pop of the numerals. */
+.encounter-dex-progress[hidden] { display: none; }
+.encounter-dex-progress {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px 0 0;
+  font-family: var(--font-pixel);
+  text-align: center;
+  animation: edp-fade-in 260ms ease both;
+}
+.encounter-dex-progress .edp-label {
+  font-size: 12px;
+  letter-spacing: .12em;
+  color: var(--text);
+  opacity: .7;
+}
+.encounter-dex-progress .edp-count {
+  font-size: 22px;
+  letter-spacing: .06em;
+  color: var(--gold);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .45);
+  display: inline-block;
+  transition: transform 120ms ease;
+}
+.encounter-dex-progress .edp-count.is-tick {
+  animation: edp-count-pop 420ms cubic-bezier(.3, 1.6, .5, 1);
+}
+@keyframes edp-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes edp-count-pop {
+  0%   { transform: scale(1);    color: var(--gold); }
+  35%  { transform: scale(1.45); color: #fff; }
+  100% { transform: scale(1);    color: var(--gold); }
+}
+
+/* Tomato marker in front of the wild mon's name. Full icon = species already
+   in the collection; .is-silhouette = not yet caught. Sized in em so it rides
+   the name's font-size, which game.js sets per encounter. */
+.encounter-mon-name { white-space: nowrap; }
+.enc-name-tomato {
+  height: 1.05em;
+  width: auto;
+  margin-right: .42em;
+  vertical-align: -0.16em;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, .45));
+}
+.enc-name-tomato.is-silhouette {
+  filter: brightness(0) opacity(.4);
+}
+
 /* THROW! / RUN AWAY row — same fix, same reasoning: was a single opaque
    var(--panel-bg) slab with no rail. Now the fill layer of the same
    pxb-panel > panel-rail frame, added in index.html. */
