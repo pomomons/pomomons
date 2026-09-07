@@ -1,8 +1,13 @@
 # PomoMons — UI Layout Reference
 
 > Read this before working on any screen, animation, or layout feature.
-> Updated Aug 2026 for launch. style.css is the base layer; style-v2.css
-> layers on top (remove its <link> in index.html to revert the V2 polish).
+> Three stylesheets, cascading in load order (later wins at equal
+> specificity): **style.css** (base) → **style-v2.css** (spacing/hero-timer
+> refresh) → **style-v3.css** (the current "field console" skin: forest-photo
+> background, amber-on-green palette, stamped-plate panel frames, CRT
+> scanlines, the settings menu, the mailing-list card). Remove a `<link>` in
+> index.html to peel back a layer. Whole-pixel font sizes only — Press Start
+> 2P blurs at fractional sizes.
 
 ---
 
@@ -25,39 +30,55 @@ spawn-info, blender-confirm.
 
 ## Global Chrome
 
-- **Header**: tomato + POMO MONS wordmark + "FOCUS · CATCH · COLLECT" tagline.
-  Mute button top-right (`.pxb-audio` > `#btn-audio`, pixel-clipped dark square).
-- **Stats strip** (`footer.stats-strip`, fixed bottom, full-width, black):
-  LV badge (gold pill), `x / y XP` text, XP bar, SESSIONS / MINUTES / CATCHES.
-- Body background: teal idle (`#00a888`); red during running focus
-  (`body.run-focus`, also swaps `--panel-bg`).
+- **Header**: tomato + POMO MONS wordmark (an `<h1>`, `.logo`) + "FOCUS ·
+  CATCH · COLLECT" tagline. **Gear button top-right** (`#btn-settings`, class
+  `.btn-audio`, in `.pxb-audio` — pixel-clipped dark square) opens
+  `#settings-menu` (a fixed dropdown, positioned by app.js like
+  `.mode-dropdown`): Sound on/off (`#btn-audio`), Join our Discord
+  (`#btn-discord`), Save (`#btn-signup` — mailing-list card), Auto-start next
+  session (`#toggle-autostart`).
+- **Stats strip** (`footer.stats-strip`, fixed bottom): a single `.stats-row`
+  — LV badge (amber pill) · `x / y XP` text over the XP bar · SESSIONS /
+  MINUTES / CATCHES tiles with a scope toggle. Under v3 it floats as its own
+  framed plate inside the bezel, not a bar welded to the edge.
+- Body background: v3 paints a forest photo — `forest.webp` over `#2b5343`
+  when idle/break, `forest-red.webp` over `#8f3b34` during a running focus
+  session (`body.run-focus`, which also swaps the whole palette). CRT
+  scanlines + vignette overlay on top.
 - Content column: max-width 680px centred (desktop-first per CLAUDE.md).
 
 ---
 
 ## Design Language (buttons & badges)
 
-- **One corner style**: pixel-staircase `clip-path` — `--pixel-clip` (4px
-  blocks, 3 steps) for buttons/panels, `--pixel-clip-sm` (2 steps) for small
-  controls and badges. (`--pixel-clip-1` single-step and `--pixel-clip-round`
-  exist but are currently unused.)
-- **Two button colors only**: gold `var(--gold)` = primary (START, POMODEX,
-  THROW!, GOT IT!, BLEND IT!, active tab); `#222` black with 3-shade inset
-  shading = secondary (FOCUS SESSION, RESET, RUN AWAY, CANCEL, BACK, inactive
-  tab, mute, `?`, ▲▼). No white buttons.
-- Timer-screen action buttons are all `min-height: 60px` (style-v2.css).
-- Badges (LVL pill gold, type badge per-type color): flat (no inset shading),
-  `--pixel-clip-sm` corners, `.6rem` font.
+- **Pixel-staircase `clip-path` corners.** v3 redefines the notch tokens with
+  2px steps (finer): `--pixel-clip` (deep, panels), `--pixel-clip-sm`,
+  `--pixel-clip-xs` (shallow — buttons, LV badges, most chips),
+  `--pixel-clip-2xs` (near-square — stat tiles, type badges, strip).
+- **Two button colours only**: amber `var(--gold)` (`#e5ac35` in v3) = primary
+  (START, POMODEX, THROW!, GOT IT!, BLEND IT!, active tab); a translucent
+  dark-green `var(--btn-dark)` with a thin lit/​shaded edge = secondary (FOCUS
+  SESSION, RESET, RUN AWAY, CANCEL, BACK, inactive tab, gear, `?`, ▲▼). No
+  white buttons. Primary buttons carry a black pixel outline + cast shadow via
+  their `.pxb` (or `.btn-shadow`) wrapper — `clip-path` discards a real
+  box/​drop-shadow, so the wrapper's own padded background draws the edge.
+- Timer-screen action buttons: `min-height: clamp(42px, 6vh, 60px)` (v3),
+  ~60px on a full monitor.
+- Badges (LV pill amber, type badge per-type colour): flat, `--pixel-clip-xs`
+  / `-2xs` corners, 8–12px whole-pixel type.
 - Font: Press Start 2P everywhere.
 
 ---
 
 ## Timer Screen
 
-Companion panel (`.pxb-panel > .companion-area`):
+Companion panel (`.pxb-panel > .panel-rail > .companion-area`):
 - `?` help button top-right → opens the spawn-info modal (catch rarity odds
   NORMAL 94% / DARK 5% / SHINY 1%, blender-confirm-styled).
-- LVL pill + type badge grouped top-left, side by side.
+- `.companion-meta` sits top-left, out over the panel clear of the sprite: the
+  LV pill (a real `<button>`, opens the companion's detail card) over its XP
+  bar. The numeric "x / y XP" line is `display:none` under v3. Its `top` is
+  nudged so the LV pill's top aligns with the `?` button's.
 - `companion-stage` (200px canvas + ground PNG behind): the mon bobs
   `sin(frame/22) * 6` with **no squish** (matches encounter/catch screens).
 - Floating mon name overlays the stage just above the mon's head — positioned
@@ -81,18 +102,23 @@ Full-screen. Layout top→bottom:
    shifts the type. Below: `encounter-stage` (480×380 canvas) with the
    floating bobbing mon name (hidden until the sprite size is known, then
    positioned above the head — no flash).
-3. **Controls panel**: THROW! (gold) / RUN AWAY (black), equal width
-   (`flex: 1 1 0`, max 240px). Post-catch swaps to NEXT + POMODEX (jumps
-   straight to My Mons after resolving the encounter).
+3. **Controls panel** (`.encounter-controls`, same three-layer plate frame):
+   THROW! (amber) / RUN AWAY (dark), equal width (`flex: 1 1 0`, max 240px).
+   Post-catch swaps to **NEXT / INFO / SHARE** (NEXT resolves the encounter,
+   INFO opens the dex entry, SHARE copies/opens a branded catch card). A
+   collapsed `#encounter-share-msg` status line sits below (shown only after
+   SHARE on the mobile share path).
 
 ---
 
 ## Collection Screens
 
-- **Sticky top block on My Mons** (`.mymons-top`, `position: sticky; top: 0`):
-  header row (BACK · MY MONS / POMODEX tabs · count) + the blender toolbar
-  pin together; the grid scrolls beneath. Collection screens use
-  `justify-content: flex-start` (only the timer screen centres).
+- **Fixed top block on My Mons** (`.mymons-top`, non-scrolling): header row
+  (BACK · MY MONS / POMODEX tabs · count) + the blender toolbar. Under v3 the
+  screen itself is `overflow: hidden` and only `.mymons-scroll` (a flex child
+  with a `margin-bottom` clawback to the stats strip) scrolls — a true clip
+  top and bottom, so cards never render behind the header or the translucent
+  footer. RESTORE parks at the foot of that scroll box (`.mymons-restore`).
 - **Blender toolbar** (desktop only; hidden < 480px): two horizontal dashed
   cards — BLEND (drop target) and SMOOTHIES (drag source, count as a lowercase
   `x N` badge on the icon's corner).

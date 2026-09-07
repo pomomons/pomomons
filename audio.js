@@ -63,6 +63,27 @@ const SFX = (() => {
       tone(440, 'square', t + 0.13, 0.18, 0.28);
     },
 
+    // Bright rising sparkle → a SHINY wild mon appears (replaces encounter()).
+    // Ascending arpeggio topped with a shimmering high tail.
+    shinyAppear() {
+      const t = getCtx().currentTime;
+      tone(1047, 'square',   t,        0.06, 0.20);  // C6
+      tone(1319, 'square',   t + 0.07, 0.06, 0.20);  // E6
+      tone(1568, 'square',   t + 0.14, 0.06, 0.20);  // G6
+      tone(2093, 'triangle', t + 0.21, 0.34, 0.15);  // C7 shimmer
+      tone({ start: 2093, end: 3136 }, 'sine', t + 0.24, 0.40, 0.055); // twinkle sweep
+    },
+
+    // Low ominous stab → a DARK wild mon appears (replaces encounter()).
+    // Descending growl with a dissonant tritone layer and a sub rumble.
+    darkAppear() {
+      const t = getCtx().currentTime;
+      tone({ start: 220, end: 104 }, 'square',   t,        0.55, 0.30); // growl down
+      tone({ start: 311, end: 147 }, 'square',   t + 0.02, 0.45, 0.13); // tritone layer
+      tone(55,                       'triangle', t + 0.02, 0.62, 0.22); // sub rumble
+      tone({ start: 1300, end: 880 }, 'sine',    t + 0.16, 0.50, 0.04); // eerie high whine
+    },
+
     // Squish-launch thwack + rising whoosh → tomato thrown
     throw() {
       const t = getCtx().currentTime;
@@ -201,116 +222,6 @@ const SFX = (() => {
     },
   };
 
-  // ── Encounter music loop ─────────────────────────────────────
-  // A looping 2-bar phrase in D minor (square wave melody + bass).
-  // Scheduled ahead via Web Audio API clock for gap-free looping.
-  const music = (() => {
-    let playing = false;
-    let pending = [];   // { osc, env } pairs currently scheduled
-    let timerId = null;
-
-    const BPM = 176;
-    const B   = 60 / BPM;   // quarter note ≈ 0.341 s
-    const e   = B / 2;      // eighth  note ≈ 0.170 s
-    const s   = B / 4;      // sixteenth note ≈ 0.085 s
-
-    // 2-bar phrase in E minor — opens with an upward 4th leap (E5→A5)
-    // then cascades down and climbs again. 12×e + 2×B = 8×B ≈ 2.73 s
-    const MELODY = [
-      [659, e], [880, e], [784, e], [659, e],   // E5 A5 G5 E5
-      [740, e], [659, e], [587, e], [494, e],   // F#5 E5 D5 B4
-      [659, e], [784, e], [880, e], [784, e],   // E5 G5 A5 G5
-      [740, B], [494, B],                        // F#5 B4 (quarter holds)
-    ];
-
-    // Root-fifth driving bass: 8×B ≈ 2.73 s (matches MELODY)
-    const BASS = [
-      [165, B], [123, B], [110, B], [165, B],   // E3 B2 A2 E3
-      [147, B], [110, B], [123, B], [165, B],   // D3 A2 B2 E3
-    ];
-
-    // 16th-note chord arpeggios — 32×s = 8×B — rhythmic urgency layer
-    const ARPEG = [
-      [330, s], [494, s], [659, s], [494, s],   // Em arpeg × 4
-      [330, s], [494, s], [659, s], [494, s],
-      [330, s], [494, s], [659, s], [494, s],
-      [330, s], [494, s], [659, s], [494, s],
-      [220, s], [330, s], [440, s], [330, s],   // Am arpeg × 2
-      [220, s], [330, s], [440, s], [330, s],
-      [165, s], [247, s], [330, s], [247, s],   // Em low arpeg × 2
-      [165, s], [247, s], [330, s], [247, s],
-    ];
-
-    function schedNote(freq, startT, dur, gain, type = 'square') {
-      const ac  = getCtx();
-      const osc = ac.createOscillator();
-      const env = ac.createGain();
-      osc.type            = type;
-      osc.frequency.value = freq;
-      env.gain.setValueAtTime(0, startT);
-      env.gain.linearRampToValueAtTime(gain, startT + 0.01);
-      env.gain.setValueAtTime(gain, startT + Math.max(0.01, dur - 0.04));
-      env.gain.linearRampToValueAtTime(0, startT + dur);
-      osc.connect(env);
-      env.connect(ac.destination);
-      osc.start(startT);
-      osc.stop(startT + dur + 0.02);
-      pending.push({ osc, env });
-    }
-
-    function scheduleLoop() {
-      if (!playing) return;
-      const t = getCtx().currentTime + 0.05;
-
-      let mt = t;
-      for (const [freq, dur] of MELODY) {
-        if (freq) schedNote(freq, mt, dur * 0.88, 0.10);
-        mt += dur;
-      }
-
-      let bt = t;
-      for (const [freq, dur] of BASS) {
-        schedNote(freq, bt, dur * 0.82, 0.13);
-        bt += dur;
-      }
-
-      // 16th-note arpeggios (triangle wave, soft — adds urgency without clashing)
-      let at = t;
-      for (const [freq, dur] of ARPEG) {
-        schedNote(freq, at, dur * 0.65, 0.04, 'triangle');
-        at += dur;
-      }
-
-      // Re-schedule 150 ms before this loop ends to avoid gaps
-      timerId = setTimeout(scheduleLoop, (mt - t - 0.15) * 1000);
-    }
-
-    function start() {
-      if (playing || muted) return;
-      playing = true;
-      scheduleLoop();
-    }
-
-    function stop() {
-      playing = false;
-      clearTimeout(timerId);
-      timerId = null;
-      if (!ctx) { pending = []; return; }
-      const t = ctx.currentTime;
-      for (const { osc, env } of pending) {
-        try {
-          env.gain.cancelScheduledValues(t);
-          env.gain.setValueAtTime(env.gain.value, t);
-          env.gain.linearRampToValueAtTime(0, t + 0.08);
-          osc.stop(t + 0.10);
-        } catch (_) {}
-      }
-      pending = [];
-    }
-
-    return { start, stop };
-  })();
-
   // ── Public API ───────────────────────────────────────────────
   let muted = localStorage.getItem('pm_muted') === '1';
 
@@ -324,11 +235,10 @@ const SFX = (() => {
   function toggle() {
     muted = !muted;
     localStorage.setItem('pm_muted', muted ? '1' : '0');
-    if (muted) music.stop();
     return muted;
   }
 
   function isMuted() { return muted; }
 
-  return { play, toggle, isMuted, music };
+  return { play, toggle, isMuted };
 })();

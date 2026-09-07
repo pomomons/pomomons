@@ -3,24 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PomoMons — Focus · Catch · Collect</title>
+  <title>PomoMons — Gamified Pomodoro Timer (Free, No Sign-Up)</title>
 
   <!-- Link previews / SEO. Absolute URLs point at the custom domain in
        CNAME; the github.io host they used before both leaked the account
        name into the page source and pointed previews at the pre-domain
        address. Keep these in step with CNAME if the domain ever changes. -->
-  <meta name="description" content="A pomodoro timer that's also a creature collector. Finish a focus session, catch a wild Pomomon, build your collection.">
+  <meta name="description" content="A free Pomodoro study timer that doubles as a monster-catching game. Finish a focus session, catch a wild Pomomon, and build your collection — no sign-up, works offline.">
+  <link rel="canonical" href="https://pomomons.io/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#00a888">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="PomoMons — Focus · Catch · Collect">
-  <meta property="og:description" content="A pomodoro timer that's also a creature collector. Finish a focus session, catch a wild Pomomon, build your collection.">
+  <meta property="og:site_name" content="PomoMons">
+  <meta property="og:title" content="PomoMons — a Pomodoro timer where focus sessions catch monsters">
+  <meta property="og:description" content="A free Pomodoro study timer that doubles as a monster-catching game. Finish a focus session, catch a wild Pomomon, and build your collection — no sign-up, works offline.">
   <meta property="og:url" content="https://pomomons.io/">
   <meta property="og:image" content="https://pomomons.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="PomoMons — a pixel-art Pomodoro timer with a wild monster appearing after a focus session.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PomoMons — Focus · Catch · Collect">
-  <meta name="twitter:description" content="A pomodoro timer that's also a creature collector. Finish a focus session, catch a wild Pomomon, build your collection.">
+  <meta name="twitter:title" content="PomoMons — a Pomodoro timer where focus sessions catch monsters">
+  <meta name="twitter:description" content="A free Pomodoro study timer that doubles as a monster-catching game. Finish a focus session, catch a wild Pomomon, and build your collection — no sign-up, works offline.">
+
+  <!-- Structured data: tells Google and AI assistants what this is, in a
+       machine-readable form. FAQ schema is deliberately NOT here yet — Google
+       requires the Q&A to be visible on the page, so it goes in when the
+       on-page FAQ section ships. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "PomoMons",
+    "url": "https://pomomons.io/",
+    "description": "A free, browser-based Pomodoro timer with a creature-collecting game layer. Finish a focus session and a wild food-themed pixel monster appears to catch and add to your collection.",
+    "applicationCategory": "ProductivityApplication",
+    "applicationSubCategory": "Pomodoro Timer",
+    "operatingSystem": "Any (modern web browser)",
+    "browserRequirements": "Requires JavaScript and HTML5.",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "screenshot": "https://pomomons.io/assets/og-image.png",
+    "featureList": [
+      "Customisable focus, short break and long break lengths",
+      "No account required; progress saved locally in the browser",
+      "Works offline as an installable web app (PWA)",
+      "Catch and collect 20 food-themed Pomomon across 12 base species, with evolutions",
+      "Rare shiny and dark monster variants",
+      "Optional email backup code to move a collection between devices",
+      "8-bit sound effects; no ads, no tracking cookies"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "PomoMons",
+      "url": "https://pomomons.io/"
+    }
+  }
+  </script>
   <meta name="twitter:image" content="https://pomomons.io/assets/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +75,14 @@
   <link rel="stylesheet" href="style-v3.css">
   <link rel="preload" as="image" href="assets/backgrounds/forest.webp">
   <link rel="preload" as="image" href="assets/backgrounds/forest-red.webp">
-  <link rel="icon" type="image/png" href="assets/sprites/Tomato/Tomato.png">
+  <!-- Favicons. favicon.ico (16/32/48 in one file) at the repo root is the
+       universal fallback browsers auto-request; the two PNG links are the
+       explicit modern path. All are a tight-cropped tomato on the brand teal
+       so it stays readable at tab size — the old link pointed straight at a
+       32px sprite frame. -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
 
   <!-- Installable web app (PWA). manifest.webmanifest + sw.js at the repo root;
        the "Install" prompt needs both, plus HTTPS (GitHub Pages is). The
@@ -77,9 +127,13 @@
          the reference. The button used to be absolutely positioned to the
          header's top-right corner. -->
     <div class="logo-row">
-    <div class="logo">
-      <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="tomato" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
-    </div>
+    <!-- The wordmark is the page's h1 (its one main heading, for search
+         engines). h1.logo in style.css strips the UA font-size/weight so it
+         renders identically to the old div. The duplicate wordmark in the
+         encounter overlay stays a plain div — one h1 per page. -->
+    <h1 class="logo">
+      <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
+    </h1>
     <!-- Settings: opens the menu at the end of <body> holding sound, Discord,
          email updates and auto-start. Reuses the mute button's old wrapper
          (.audio-shadow / .pxb-audio) so it keeps that button's placement and
@@ -397,7 +451,7 @@
         <div class="spawn-info-row"><span class="swatch dark"></span><span class="spawn-info-label">DARK</span><span class="spawn-info-odds">5%</span></div>
         <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">1%</span></div>
       </div>
-      <button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button>
+      <div class="pxb"><button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button></div>
     </div>
   </div>
 
@@ -497,7 +551,7 @@
     <p class="evolution-msg" id="evolution-msg"></p>
     <canvas id="evolution-canvas" width="200" height="200" aria-label="Evolving Pomomon"></canvas>
     <p class="evolution-sub" id="evolution-sub"></p>
-    <button class="btn btn-primary" id="btn-evo-dismiss" style="opacity:0;pointer-events:none">AWESOME!</button>
+    <div class="pxb"><button class="btn btn-primary" id="btn-evo-dismiss" style="opacity:0;pointer-events:none">AWESOME!</button></div>
   </div>
 
   <!-- ── Stats Strip ────────────────────────────────────── -->

@@ -1204,7 +1204,6 @@ const EncounterScreen = (() => {
         st.frame = 0;
         st.monBob = 0;
 
-        SFX.music.stop();
         SFX.play('fanfare');
 
         // Update encounter overlay to show congratulations
@@ -1451,14 +1450,16 @@ const EncounterScreen = (() => {
 
     enableButtons(false); // disabled until 'idle' phase
 
-    SFX.play('encounter');
+    // Shiny / dark wild mons get their own reveal sting instead of the plain
+    // two-hit announcement — a bright rising sparkle for shiny, a low ominous
+    // stab for dark.
+    SFX.play(isShiny ? 'shinyAppear' : isDark ? 'darkAppear' : 'encounter');
 
-    // Flash transition, then reveal encounter overlay and start music
+    // Flash transition, then reveal the encounter overlay.
     runFlashTransition(() => {
       overlay.classList.add('active');
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(tick);
-      // if (typeof SFX !== 'undefined') SFX.music.start();  // music disabled
     });
   }
 
@@ -1821,7 +1822,6 @@ const EncounterScreen = (() => {
 
   function close() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    if (typeof SFX !== 'undefined') SFX.music.stop();
     // Short delay so the player can read the result text
     setTimeout(() => {
       overlay.classList.remove('active');

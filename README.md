@@ -21,6 +21,8 @@ collection.
 - **Save codes.** Progress lives in your browser, so a save code (emailed
   on request) lets you restore your collection on another device or after
   clearing browser data. No account, no password.
+- **Installable, works offline.** It's a PWA (`manifest.webmanifest` +
+  `sw.js`) — install it from the browser and it runs with no connection.
 
 ## Tech
 
@@ -32,12 +34,13 @@ opening `index.html` or serving the repo root with any static file server.
 - `game.js` — encounter screen, throw/catch animation
 - `monsters.js` — Pomomon roster data
 - `collection.js` — Pokédex screen, My Mons, IndexedDB
-- `audio.js` — sound effects (Web Audio API)
+- `audio.js` — sound effects, fully synthesized (Web Audio API — no audio files)
 - `backup.js` — save-code generation/restore
 - `signup.js` — email capture for save codes / mailing list
 - `style.css`, `style-v2.css`, `style-v3.css` — styles, layered in that
   load order (later files win the cascade at equal specificity)
-- `assets/sprites/`, `assets/audio/` — art and sound
+- `assets/sprites/` — pixel-art sprite sheets; `assets/backgrounds/` — the
+  forest photo (webp); `assets/icons/` — PWA icons
 - `agent_docs/` — reference docs on game mechanics, the mon roster, UI
   layout, and the email-signup pipeline; read these before changing the
   matching feature

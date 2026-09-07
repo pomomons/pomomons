@@ -131,6 +131,32 @@ body.run-focus .encounter-overlay { background: #af4d4d; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 
+/* Respect the OS "reduce motion" setting: collapse every CSS animation and
+   transition to a near-instant snap. Every entrance animation in this sheet
+   uses `forwards` (holds the end state) and every flash/pulse has no
+   `forwards` (returns to its resting style), so at ~0 duration each simply
+   lands on its correct final appearance with no movement. Canvas sprite
+   bobbing is driven by requestAnimationFrame in game.js and is not affected
+   here. Placed at the top of the base sheet so any later rule's shorthand
+   `animation:`/`transition:` is still overridden by these !important longhands. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* The "SMOOTHIE OBTAINED!" toast is the only element whose animation both
+     fades it IN and back OUT (0% and 100% are opacity:0), so zeroing the
+     duration would leave it invisible for its whole 2.7s life. Show it as a
+     plain static toast instead; collection.js still removes it on its timer. */
+  .blend-result-flash {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
 body {
   font-family: var(--font-pixel);
   color: var(--text);
@@ -208,6 +234,16 @@ body::after {
   line-height: var(--lh-snug);
 }
 
+/* The header wordmark is an <h1> for SEO. Strip the UA heading font-size and
+   weight so it renders exactly as the old <div> did — every visible glyph
+   gets its size from .logo-pomo / .logo-mons / .logo-icon, and the pixel font
+   has no bold variant, so this is purely defensive. Margin is already zeroed
+   by the global reset. */
+h1.logo {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
 .logo-icon {
   font-size: 40px;
   filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5));
@@ -280,7 +316,7 @@ body::after {
 
 /* Scrolling list screens flow from the top (so the sticky header/toolbar pins
    flush and doesn't shift). space-evenly is only for the centred timer screen. */
-#screen-mymons, #screen-dex, #screen-progress { justify-content: flex-start; }
+#screen-mymons, #screen-dex { justify-content: flex-start; }
 
 /* ── Companion box ───────────────────────────────────────── */
 .companion-area {
@@ -294,25 +330,6 @@ body::after {
   clip-path: var(--pixel-clip);
   padding: 32px 16px 60px;
 }
-
-.btn-dex {
-  background: rgba(255,255,255,.18);
-  border: none;
-  border-radius: 0;
-  color: var(--text);
-  font-family: var(--font-pixel);
-  font-size: 12px;
-  padding: 8px 12px;
-  cursor: pointer;
-  letter-spacing: .05em;
-  clip-path: var(--pixel-clip-sm);
-  box-shadow:
-    inset 0 10px 0 rgba(255,255,255,.4),
-    inset 0 -10px 0 rgba(0,0,0,.3);
-  backdrop-filter: blur(4px);
-}
-.pxb-dex:hover  { filter: brightness(1.1) var(--pxdrop-sm); }
-.pxb-dex:active { transform: var(--btn-press); filter: none; }
 
 .companion-stage {
   position: relative;
@@ -463,41 +480,6 @@ body::after {
 .type-bitter   { background: var(--type-bitter); }
 .type-sweet    { background: var(--type-sweet); }
 
-/* ── Session tabs ────────────────────────────────────────── */
-.session-tabs {
-  display: flex;
-  gap: 4px;
-  background: rgba(0,0,0,.18);
-  border: var(--border-frame);
-  padding: 4px;
-  width: 100%;
-  border-radius: 0;
-}
-
-.tab {
-  flex: 1;
-  padding: 4px 4px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: var(--text-dim);
-  cursor: pointer;
-  letter-spacing: .05em;
-  transition: background .15s, color .15s;
-  border-radius: 0;
-}
-
-.tab.active {
-  background: rgba(255,255,255,.22);
-  color: var(--text);
-}
-
-.tab:hover:not(.active) {
-  background: rgba(255,255,255,.1);
-  color: var(--text);
-}
-
 /* ── Combined timer + controls box ───────────────────────── */
 .combined-timer-wrap {
   background: var(--panel-bg);
@@ -508,34 +490,7 @@ body::after {
   overflow: hidden;
 }
 
-/* ── Big box: mon + timer + buttons in one panel ─────────── */
-/* TO REVERT: see HTML comment above .big-box in index.html  */
-.big-box {
-  background: var(--panel-bg);
-  clip-path: var(--pixel-clip);
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow: visible;
-}
-.big-box .companion-wrap {
-  background: none;
-  clip-path: none;
-  animation: none;
-}
-.big-box .combined-timer-wrap {
-  background: none;
-  clip-path: none;
-  overflow: visible;
-}
-
 /* Timer display — CSS text */
-/* .timer-display--bare: removes the panel border so timer floats on the backdrop.
-   TO REVERT: remove this class from the <section> in index.html. */
-.timer-display--bare {
-  border-bottom: none;
-}
-
 .timer-display {
   font-family: var(--font-pixel);
   font-size: 64px;
@@ -755,11 +710,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 
 /* Positioned wrappers */
-.pxb-dex {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-}
 .pxb-audio {
   position: absolute;
   top: 14px;
@@ -831,14 +781,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   background: #1a1a1a;
 }
 
-/* Collection buttons row */
-.collection-btns {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  width: 100%;
-}
-
 /* Collection button — yellow/gold */
 .btn-collection {
   background: var(--gold);
@@ -856,14 +798,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 14px 0 rgba(255,255,255,.55),
     inset 0 -14px 0 rgba(0,0,0,.35);
   transition: filter .15s;
-}
-
-/* Items button — same gold as collection */
-.btn-collection-items {
-  background: var(--gold);
-  box-shadow:
-    inset 0 14px 0 rgba(255,255,255,.55),
-    inset 0 -14px 0 rgba(0,0,0,.35);
 }
 
 .btn-collection:hover {
@@ -1070,16 +1004,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 -12px 0 rgba(0,0,0,.35);
 }
 
-.screen-title {
-  font-size: 14px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--text);
-  text-shadow: 1px 1px 4px rgba(0,0,0,.15);
-  flex: 1;
-  text-align: center;
-}
-
 .collection-count {
   font-size: 10px;
   color: var(--text-muted);
@@ -1205,14 +1129,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   z-index: 50;
 }
 
-/* Top row: level badge + XP progress text */
-.stats-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px 4px;
-}
-
 .level-badge {
   background: var(--gold);
   color: #1a0a00;
@@ -1233,56 +1149,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 
-/* Map icon button — fixed just above the stats strip */
-.btn-map-icon {
-  position: fixed;
-  bottom: calc(var(--stats-h) + 10px);
-  left: 14px;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 49;
-  filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5));
-  transition: filter .15s;
-}
-
-.btn-map-icon:hover  { filter: brightness(1.15) drop-shadow(3px 3px 0 rgba(0,0,0,.5)); }
-.btn-map-icon:active { transform: translate(2px,2px); filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5)); }
-
-#map-icon-canvas {
-  display: block;
-  width: 96px;
-  height: 96px;
-  background-image: url('assets/sprites/Map/NewMap.png');
-  background-repeat: no-repeat;
-  background-size: 96px 192px;
-  background-position: 0 -96px; /* bottom frame: normal, nothing to claim */
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
-.btn-map-icon.has-reward #map-icon-canvas {
-  background-position: 0 0; /* top frame: reward available */
-}
-
 .xp-text {
   font-family: var(--font-pixel);
   font-size: var(--text-sm);
   color: rgba(255,255,255,.6);
   letter-spacing: .05em;
-}
-
-/* Bottom row: pill bar + stats inline */
-.stats-bottom {
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  padding: 4px 12px 4px;
-  gap: 12px;
 }
 
 /* Pill track — rounded oval container */
@@ -1473,38 +1344,13 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .encounter-rarity.ultra-rare { color: var(--gold); }
 .encounter-rarity.pitch-black { color: #c7ccd1; text-shadow: 0 0 6px rgba(0,0,0,.9), 2px 2px 0 rgba(0,0,0,.6); }
 
-/* ── Encounter tag badges (SHINY, type labels, etc.) ── */
+/* ── Encounter type badges (holds makeTypeBadges() output) ── */
 .encounter-tags {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
   min-height: 0;
-}
-
-.tag {
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  letter-spacing: .07em;
-  padding: 4px 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border-radius: 0;
-  line-height: 1;
-  clip-path: var(--pixel-clip-sm);
-}
-
-.tag-shiny {
-  background: var(--gold);
-  color: #1a0a00;
-  box-shadow: inset 0 6px 0 rgba(255,255,255,.45), inset 0 -6px 0 rgba(0,0,0,.2);
-}
-
-.tag-dark {
-  background: #1a1a1a;
-  color: #d6d6d6;
-  box-shadow: inset 0 6px 0 rgba(255,255,255,.08), inset 0 -6px 0 rgba(0,0,0,.5);
 }
 
 .encounter-msg {
@@ -1572,12 +1418,6 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 /* ── Animations ──────────────────────────────────────────── */
-@keyframes enc-flash {
-  0%, 100% { opacity: 1; }
-  25%, 75%  { opacity: 0.1; }
-  50%       { opacity: 1; }
-}
-
 @keyframes enc-levelup {
   0%   { transform: translateX(-50%) scale(1); }
   50%  { transform: translateX(-50%) scale(1.14); }
@@ -1603,20 +1443,15 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   white-space: nowrap;
 }
 
-.banner-sub {
-  display: block;
-  font-size: 8px;
-  margin-top: 4px;
-  letter-spacing: .08em;
-  color: rgba(26,10,0,.75);
-}
-
 /* When only NEXT button is shown, centre it */
 .encounter-controls.postcatch { justify-content: center; }
 
 /* Status line for the SHARE button (copied-to-clipboard confirmation, or the
-   rare failure case). Reserves its line height up front so it doesn't nudge
-   the panel taller only once it has something to say. */
+   rare failure case). It sits in the pale rail band below the controls fill,
+   so reserving its line height when empty (the normal state) left ~28px of
+   dead space under the buttons on every encounter. Collapsed when empty
+   instead — it only ever gets text on the mobile navigator.share / clipboard
+   path, and a one-line grow there while the confirmation shows is fine. */
 .encounter-share-msg {
   font-size: 9px;
   line-height: 1.7;
@@ -1628,6 +1463,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   margin: 8px 0 0;
   transition: opacity .2s ease;
 }
+.encounter-share-msg:empty { display: none; }
 .encounter-share-msg.is-shown { opacity: .85; }
 .encounter-share-msg.is-bad   { color: #ffd2cc; opacity: 1; }
 
@@ -1648,7 +1484,10 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   white-space: nowrap;
 }
 
-#btn-flee { min-height: 60px; padding: 16px 24px; }
+/* Same padding as its row-mates (.encounter-controls .btn) — it used to carry
+   an extra 8px of side padding, so RUN AWAY's label sat looser inside an
+   equally-sized button than THROW! / NEXT / INFO / SHARE. */
+#btn-flee { min-height: 60px; padding: 16px 16px; }
 
 /* ── Mon Info Overlay ────────────────────────────────────── */
 .mon-info-overlay                { background: #228674; }
@@ -2187,111 +2026,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   letter-spacing: .06em;
 }
 
-/* ── Progress Screen ─────────────────────────────────────── */
-.progress-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: var(--border-card);
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-
-.progress-row.locked { opacity: 0.38; }
-
-.progress-row.next-goal {
-  border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(255,214,0,.28);
-}
-
-.progress-status {
-  font-size: 10px;
-  min-width: 14px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.progress-status.unlocked { color: var(--green); }
-.progress-status.next     { color: var(--gold); }
-.progress-status.locked   { color: var(--text-muted); }
-
-.progress-lvl {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  min-width: 34px;
-  flex-shrink: 0;
-  letter-spacing: .04em;
-}
-
-.progress-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.progress-name {
-  font-size: 10px;
-  color: var(--text);
-  letter-spacing: .05em;
-}
-
-.progress-desc {
-  font-size: 8px;
-  color: var(--text-muted);
-  letter-spacing: .04em;
-  line-height: var(--lh-loose);
-}
-
-.progress-tag {
-  font-size: var(--text-xs);
-  padding: 2px 4px;
-  border-radius: 4px;
-  letter-spacing: .06em;
-  flex-shrink: 0;
-  background: rgba(0,0,0,.3);
-}
-
-.progress-tag-item    { color: var(--gold); }
-.progress-tag-feature { color: var(--blue); }
-.progress-tag-style   { color: var(--purple); }
-
-.progress-row.claimable {
-  border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(255,214,0,.3);
-}
-
-.btn-claim {
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  background: var(--gold);
-  color: #1a0a00;
-  border: none;
-  border-radius: 0;
-  padding: 4px 8px;
-  cursor: pointer;
-  letter-spacing: .04em;
-  clip-path: var(--pixel-clip-sm);
-  box-shadow:
-    inset 0 8px 0 rgba(255,255,255,.5),
-    inset 0 -8px 0 rgba(0,0,0,.32);
-  filter: var(--pxdrop-sm);
-  flex-shrink: 0;
-  transition: filter .12s;
-}
-
-.btn-claim:hover  { filter: brightness(1.1) var(--pxdrop-sm); }
-.btn-claim:active { transform: translate(3px,3px); filter: none; }
-
 /* ── Responsive ──────────────────────────────────────────── */
 
 /* Mobile (< 480px) — base adjustments for touch devices */
@@ -2326,12 +2060,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
   .collection-count { font-size: 10px; margin: 2px auto 0; }
 
-  /* Map icon: smaller, and its frame position must scale with the size.
-     The timer screen is top-anchored (flex-start) with natural bottom slack,
-     so the icon sits in that empty corner clear of the controls — no reserve needed. */
-  #map-icon-canvas { width: 40px; height: 40px; background-size: 40px 80px; background-position: 0 -40px; }
-  .btn-map-icon.has-reward #map-icon-canvas { background-position: 0 0; }
-
   /* Keep the enlarged encounter headline in bounds on small screens */
   .encounter-msg { font-size: 16px; }
 }
@@ -2346,7 +2074,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .tagline { font-size: 8px; letter-spacing: .06em; }
   .timer-display { font-size: 48px; padding: 8px 8px 8px 12px; }
   .screen { padding: 8px 8px calc(var(--stats-h) + 8px); gap: 4px; }
-  .screen-title { font-size: 10px; }
   .companion-area { padding: 12px 8px 8px; }
   .btn { padding: 8px 12px; font-size: 12px; }
   .btn-collection { padding: 12px 4px; font-size: 12px; }
@@ -2399,11 +2126,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .timer-controls { gap: 4px; }
   .btn { padding: 8px 8px; font-size: 12px; }
   .btn-collection { padding: 8px 4px; font-size: 12px; }
-  .collection-btns { margin-top: 0; }
 
   /* Compact stats strip */
-  .stats-top { padding: 4px 12px 2px; }
-  .stats-bottom { padding: 4px 12px 4px; gap: 8px; }
   .stat-label { display: none; }
   /* 16px tall: the 8px sm-notch would consume the full height and the top and
      bottom steps would meet, so drop to the single 4px step. */
@@ -2436,7 +2160,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .companion-wrap { animation: panel-appear .3s ease-out both; }
-.controls-wrap  { animation: panel-appear .3s ease-out .08s both; }
 
 /* ── Panel pixel-border wrapper (panels, not buttons) ─────── */
 /* TO RESTORE BORDER: uncomment background and padding below */
@@ -2446,7 +2169,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   /* padding: 4px; */
   width: 100%;
 }
-.pxb-panel.timer-panel { flex: 1; width: auto; }
 
 /* ── Blender toolbar — docked at top of My Mons (V1: horizontal cards) ── */
 .blender-zone {

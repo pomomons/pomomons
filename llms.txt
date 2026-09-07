@@ -1,0 +1,27 @@
+# PomoMons
+
+> PomoMons is a free, browser-based Pomodoro timer with a creature-collecting
+> game layer. After each completed focus session a wild food-themed pixel
+> monster ("Pomomon") appears; you throw a tomato to catch it and build a
+> collection. No account, no ads, works offline as an installable web app.
+> All progress is stored locally in the browser.
+
+## Key facts
+
+- Free, no sign-up, no tracking cookies. Live at https://pomomons.io
+- Works on desktop and mobile; installable (PWA) and usable offline
+- Adjustable focus / short break / long break lengths (classic Pomodoro 25/5/15 by default)
+- 20 Pomomon forms across 12 base species, plus evolutions and rare "shiny" and "dark" variants
+- Player level, XP and collection are saved in the browser (localStorage + IndexedDB); an optional emailed backup code moves a collection between devices
+- 8-bit synthesized sound effects (Web Audio API)
+- Built with vanilla HTML, CSS and JavaScript — no framework, no build step — and hosted on GitHub Pages
+
+## Who it's for
+
+Students, and anyone using the Pomodoro Technique for focus, who wants a light
+game reward loop attached to their study sessions rather than a plain timer.
+
+## Links
+
+- App: https://pomomons.io/
+- Discord community: https://discord.gg/bXnKR8FeG

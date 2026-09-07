@@ -860,9 +860,7 @@ html::after {
 .pxb-sm,
 .btn-adjust,
 .btn-help,
-.btn-audio,
-.btn-signup,
-.btn-discord {
+.btn-audio {
   clip-path: var(--pixel-clip-xs);
 }
 
@@ -877,70 +875,6 @@ html::after {
 .pxb-help { position: static; }
 
 .audio-shadow { flex: 0 0 auto; }
-
-/* Envelope + Discord link, pinned to the screen's top-left corner rather
-   than sharing the wordmark's row — that row is the wordmark and the mute
-   button's alone, same as before either of these existed. Fixed to the
-   viewport rather than absolute in .app-header: the header is capped at
-   --col (680px) and centred, so anything anchored to it sits only ~16px
-   left of the wordmark on a wide window — nowhere near a corner. Stacked
-   rather than side by side so the pair stays as narrow as the envelope was
-   on its own. The inset matches the corner rivet's (stats-strip, above) so
-   it sits the same distance off the bezel band instead of tucking under it.
-
-   That clears the wordmark once the window is wide enough for --col to
-   actually leave a margin (≥680px). Under that, .app-header is the full
-   viewport width and the centred wordmark itself runs close to this same
-   corner, so the media query below shrinks the pair back to a row instead —
-   see it for why. */
-.header-left-btns {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  position: fixed;
-  top:  calc(var(--bezel-gap) + var(--bezel-w) + 8px);
-  left: calc(var(--bezel-gap) + var(--bezel-w) + 8px);
-  z-index: 2;
-}
-.header-left-btns .pxb { position: static; width: auto; flex: 0 0 auto; }
-.pxb-discord { position: static; flex: 0 0 auto; }
-.discord-shadow { flex: 0 0 auto; }
-.btn-discord {
-  border: none;
-  border-radius: 0;
-  padding: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  min-width: 44px;
-  text-decoration: none;
-}
-.pxb-discord:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
-.pxb-discord:active { transform: var(--btn-press); filter: none; }
-
-/* --col (680px) is where .app-header stops growing, but the wordmark inside
-   it is centred with its own ~16px lead-in before the tomato, so the margin
-   has to clear the wordmark's start, not just the column's edge — that
-   doesn't happen until ~820px, the same tablet/desktop line style-v3.css
-   already draws elsewhere (--stats-h). Below it the wordmark's own centred
-   row runs close to this corner at every width, all the way down to a
-   phone's tighter wrapped-tagline layout, so one query covers the lot: row
-   instead of stack, and small enough that two fit where the envelope alone
-   used to. */
-@media (max-width: 820px) {
-  .header-left-btns { flex-direction: row; top: 10px; left: 12px; gap: 3px; }
-  .header-left-btns .btn-shadow--sm { padding: 1px; }
-  .header-left-btns .btn-signup,
-  .header-left-btns .btn-discord {
-    min-width: 18px;
-    min-height: 18px;
-    padding: 3px;
-  }
-  .header-left-btns svg { width: 11px; height: 11px; }
-}
 
 /* The press travels on the outer layer now, so the inner one must not also
    shift or the button slides twice as far. */
@@ -959,9 +893,7 @@ html::after {
 .pxb .btn-ghost,
 .btn-adjust,
 .btn-help,
-.btn-audio,
-.btn-signup,
-.btn-discord {
+.btn-audio {
   background: var(--btn-dark);
   color: var(--cream);
   box-shadow:
@@ -972,9 +904,7 @@ html::after {
 /* Small square controls get a 3px edge — 4px on a 36px button is a stripe. */
 .btn-adjust,
 .btn-help,
-.btn-audio,
-.btn-signup,
-.btn-discord {
+.btn-audio {
   box-shadow:
     inset 0 3px 0 rgba(255,255,255,.10),
     inset 0 -3px 0 rgba(0,0,0,.22);
@@ -1040,7 +970,9 @@ html::after {
    fixed sizes — roughly the same share of the screen everywhere (~60px on a
    1080p desktop, ~48px on a 800px laptop, floored at 42, capped at 66). Only
    the height is fluid; the pixel label stays whole-px. POMODEX's vertical
-   padding drops so its min-height governs too and it tracks the row. */
+   padding matches its row-mates (FOCUS SESSION / RESET / START, 12px from
+   style.css) and stays under the 42px floor, so min-height still governs and
+   it tracks the row. */
 .btn-timer-start,
 .btn-timer-pause,
 .btn-timer-mode,
@@ -1049,8 +981,8 @@ html::after {
   min-height: clamp(42px, 6vh, 60px);
 }
 .btn-collection {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 /* The page vignette (body::after) is a fixed z-index:0 overlay that paints
@@ -1390,8 +1322,10 @@ html::after {
    steppers' 24px, so the row ran wider than the steppers above it. Matching
    the inset on both sides keeps the row centred, just narrower — its right
    edge now lines up with the steppers' right edge. */
-/* Trim the dead space under START / POMODEX inside the timer box. */
-.controls-group { padding: 12px 24px 2px; }
+/* Bottom padding matches the 8px gap between the button rows above it, so the
+   space under POMODEX reads as part of the same rhythm rather than the row
+   being crammed against the panel's inner edge (was 2px). */
+.controls-group { padding: 12px 24px 8px; }
 
 /* ── Settings menu ────────────────────────────────────────
    Opened by the gear (#btn-settings), positioned as a fixed panel under it
@@ -1471,7 +1405,12 @@ html::after {
    pair read as one unit rather than a label with a hairline under it. */
 .companion-xp-text { display: none; }
 
-.companion-meta { gap: 6px; }
+/* .companion-meta is pinned to top:0 of .companion-stage, which the two rules
+   above translateY up (~7-12px, to lift the mon + ground clear of the panel
+   clip). That shift drags the LV pill + XP bar up with it, so they sat ~11px
+   above the "?" help button (a sibling of the stage, unaffected by the
+   transform). Push the readout back down so its top lines up with the "?". */
+.companion-meta { gap: 6px; top: 12px; }
 
 .companion-xp-wrap { width: 164px; height: 16px; }
 
@@ -2288,7 +2227,7 @@ html::after,
 
   /* Timer box padding (the numerals step separately, below). */
   .timer-display { padding: clamp(8px, calc(3.33vh - 15px), 16px); }
-  .controls-group { padding: clamp(8px, calc(1.67vh - 3.7px), 12px) 24px 2px; }
+  .controls-group { padding: clamp(8px, calc(1.67vh - 3.7px), 12px) 24px 8px; }
 
   /* Encounter overlay — it has no scroll of its own until a screen this
      short. Let it scroll from the top and pull the arena in so THROW /
@@ -2455,31 +2394,14 @@ html::after,
 
 
 /* ══ Mailing list ═══════════════════════════════════════════
-   Self-contained: every rule for the envelope button, the popup and its
-   backdrop lives in this block, including its own responsive tweaks, so the
-   feature can be lifted out in one piece. */
+   The "Save" row lives in the settings menu now (#btn-signup, styled as a
+   .settings-row); this block is just the popup, its backdrop, and the
+   already-subscribed state. */
 
-/* Envelope button — the mute button's twin, on the other side of the
-   wordmark so the row stays centred. */
-.pxb-signup { position: static; flex: 0 0 auto; }
-.signup-shadow { flex: 0 0 auto; }
-
-.btn-signup {
-  border: none;
-  border-radius: 0;
-  padding: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  min-width: 44px;
-}
-.pxb-signup:hover  { filter: brightness(1.2) var(--pxdrop-sm); }
-.pxb-signup:active { transform: var(--btn-press); filter: none; }
-/* Already on the list — the envelope stays reachable (addresses change, people
-   re-subscribe) but stops competing for attention. */
-.btn-signup.is-joined { color: var(--gold); }
+/* Already on the list — the row stays reachable (addresses change, people
+   re-subscribe) but goes gold so it stops reading as an unfinished task.
+   Keyed on the id, not a .btn-signup class the element no longer carries. */
+#btn-signup.is-joined { color: var(--gold); }
 
 /* Dims and blocks the screen behind the popup. Sits just under the card,
    well above the stats strip and every in-game overlay, but under the
@@ -2614,7 +2536,18 @@ html::after,
 .signup-input::placeholder { color: var(--text-muted); opacity: .7; }
 .signup-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 
-.signup-join { flex: 0 0 auto; padding: 15px 24px; font-size: 14px; }
+.signup-join {
+  flex: 0 0 auto;
+  padding: 15px 24px;
+  font-size: 14px;
+  /* Flat amber slab like every .pxb-wrapped .btn-primary. SEND has no .pxb
+     wrapper (it sits in the .signup-fields flex row, which a wrapper would
+     disturb), so the fill is set directly here — this replaces style.css's
+     old inset 0 0 0 6px #000 ring + 14px gradient bands. */
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
 
 /* Second line: the small print by default, errors and the confirmation when
    there's something to say. One element for both, so the dialog never grows
@@ -2843,6 +2776,12 @@ html::after,
   /* Match .collection-tab's own mobile shrink (style.css) rather than a
      third, smaller size of its own. */
   .btn-save-code { font-size: 10px; padding: 8px 12px; }
+  /* ← BACK shares this row with the tabs and RESTORE; the desktop rule
+     (.pxb-back .btn / .collection-tab / .btn-save-code, one selector) sizes
+     all three the same. The tabs' mobile shrink lives in style.css and skips
+     BACK, so without this it stayed 12px/20px and read chunkier than the
+     tabs beside it. */
+  .pxb-back .btn { font-size: 10px; padding: 8px 12px; }
 
   /* .collection-header-end now holds only the count. If it still wraps to its
      own line at this width (style.css, same breakpoint), center it — same

@@ -125,9 +125,15 @@ const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG 
 // tab title that stays changed until you act, and an optional auto-start.
 
 // Parked on the tab title by onSessionEnd(); renderTime() shows it whenever
-// the timer is stopped, in place of the plain 'PomoMons', until the next
-// timer starts or the player picks a mode by hand.
+// the timer is stopped, in place of the base title, until the next timer
+// starts or the player picks a mode by hand.
 let titleOverride = null;
+
+// The full <title> from index.html — a keyword-rich string that search
+// engines read. renderTime() used to reset the idle tab title to a bare
+// 'PomoMons', which overwrote that for crawlers (they render JS). Restore
+// the real thing instead; the running / break states are unchanged.
+const BASE_TITLE = document.title;
 
 const Notify = {
   supported: 'Notification' in window,
@@ -165,7 +171,7 @@ function renderTime() {
   elSeconds.textContent = ss;
   document.title = running       ? `${mm}:${ss} — PomoMons`
                  : titleOverride ? titleOverride
-                 :                 'PomoMons';
+                 :                 BASE_TITLE;
 }
 
 // ── Stats scope: all-time totals vs. today only ────────────

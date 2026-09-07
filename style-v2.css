@@ -47,7 +47,9 @@
 .btn-adjust {
   min-width: 40px;
   min-height: 40px;
-  padding: 8px 12px;
+  /* Symmetric — it's a square button; min-width/height governs its size
+     either way, but 8px 12px left it nominally wider than tall. */
+  padding: 8px;
 }
 
 /* ── Controls: breathe ──────────────────────────────────────── */
