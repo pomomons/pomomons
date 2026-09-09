@@ -162,6 +162,11 @@ const SFX = (() => {
     },
 
     // Engine rev sound → mon blended into smoothie
+    // Gains are the original mix at 70%. Every level is scaled by the same
+    // factor — engine envelope, LFO depth, both overtones and the exhaust
+    // noise — so the balance between the layers is unchanged; retune them
+    // together rather than moving one. The 0.001 ramp targets are silence,
+    // not levels, and are left alone.
     blend() {
       const ac  = getCtx();
       const t   = ac.currentTime;
@@ -175,8 +180,8 @@ const SFX = (() => {
       osc.frequency.linearRampToValueAtTime(70,  t + dur);
 
       const env = ac.createGain();
-      env.gain.setValueAtTime(0.084, t);
-      env.gain.linearRampToValueAtTime(0.09, t + dur * 0.6);
+      env.gain.setValueAtTime(0.059, t);
+      env.gain.linearRampToValueAtTime(0.063, t + dur * 0.6);
       env.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
       // ── LFO: simulates engine cylinder firing (put-put-put effect)
@@ -187,7 +192,7 @@ const SFX = (() => {
       lfo.frequency.linearRampToValueAtTime(30, t + dur);         // wind down
 
       const lfoDepth      = ac.createGain();
-      lfoDepth.gain.value = 0.066;
+      lfoDepth.gain.value = 0.046;
 
       lfo.connect(lfoDepth);
       lfoDepth.connect(env.gain);
@@ -198,8 +203,8 @@ const SFX = (() => {
       lfo.start(t); lfo.stop(t + dur + 0.05);
 
       // ── Harmonic overtone: one octave up, lower gain
-      tone({ start: 110, end: 480 }, 'square', t,             dur * 0.6,  0.06);
-      tone({ start: 480, end: 140 }, 'square', t + dur * 0.55, dur * 0.5, 0.04);
+      tone({ start: 110, end: 480 }, 'square', t,             dur * 0.6,  0.042);
+      tone({ start: 480, end: 140 }, 'square', t + dur * 0.55, dur * 0.5, 0.028);
 
       // ── Exhaust grit: low-pass filtered noise underneath
       const bufSize = Math.ceil(ac.sampleRate * dur);
@@ -215,7 +220,7 @@ const SFX = (() => {
       lpf.frequency.linearRampToValueAtTime(800, t + dur * 0.6);
       lpf.frequency.linearRampToValueAtTime(200, t + dur);
       const exhaustEnv  = ac.createGain();
-      exhaustEnv.gain.setValueAtTime(0.05, t);
+      exhaustEnv.gain.setValueAtTime(0.035, t);
       exhaustEnv.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
       exhaust.connect(lpf);

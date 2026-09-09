@@ -1374,12 +1374,19 @@ html::after {
 
 .settings-label { flex: 1 1 auto; }
 
-/* Toggle row: label on the left, checkbox pushed to the right edge. */
-.settings-row--toggle { justify-content: space-between; }
+/* Toggle row: checkbox on the left, then the label.
+   The checkbox leads the row, in the slot the other rows fill with a
+   .settings-ico. It stays a 16px square — a native checkbox fills whatever box
+   it is given, so widening it to the icon's 20px would stretch it into a
+   rectangle — and 2px of margin either side makes up the difference instead.
+   The row's own 12px gap then carries it to the label, so every label in the
+   menu starts at the same x. space-between is gone with it: that is what used
+   to throw the checkbox to the far right, past the end of the text. */
 .settings-row--toggle input {
   flex: 0 0 auto;
   width: 16px;
   height: 16px;
+  margin: 0 2px;
   accent-color: var(--gold);
   cursor: pointer;
 }

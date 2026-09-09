@@ -788,13 +788,22 @@ const CompanionCanvas = (() => {
     }
   }
 
-  // Draws one species as a flat silhouette: a drop shadow, then a solid,
-  // fully-opaque black fill traced from the sprite's alpha shape. The
-  // drawImage's own colours don't matter here — 'source-in' repaints only
-  // the pixels it just covered, i.e. exactly the sprite's silhouette, with
-  // SILHOUETTE_COLOR. `alpha` only drives the brief crossfade between one
-  // species and the next; a settled silhouette sits at full opacity.
+  // Draws one species as a flat silhouette traced from the sprite's alpha
+  // shape. The drawImage's own colours don't matter here — 'source-in'
+  // repaints only the pixels it just covered, i.e. exactly the sprite's
+  // outline, with SILHOUETTE_COLOR. `alpha` drives the brief crossfade
+  // between one species and the next.
+  //
+  // Colour and translucency mirror the Pomodex's uncaught tiles, which are
+  // drawn normally and then given `brightness(0) opacity(.18)` in CSS
+  // (buildDexCard, collection.js): pure black, 18% alpha. Keep the two in
+  // step — they are the same idea in two places, and a player sees both.
+  // There used to be a second copy of the sprite behind this one, offset 3px
+  // and filled at 35% black, as a drop shadow. At full opacity that read as
+  // depth; behind an 18% silhouette it would have been twice as dark as the
+  // shape casting it, so it's gone rather than scaled down to nothing.
   const SILHOUETTE_COLOR = '#000';
+  const SILHOUETTE_ALPHA = 0.18;
   function drawSilhouette(mon, bobY, alpha) {
     if (!mon || alpha <= 0) return;
     const img = MonSprite.getImage(mon.sprite);
@@ -824,14 +833,15 @@ const CompanionCanvas = (() => {
     ctx.translate(cx, cy + bobY);
     ctx.imageSmoothingEnabled = false;
 
-    ctx.globalAlpha = alpha * 0.35;
-    ctx.filter = 'brightness(0)';
-    ctx.drawImage(img, srcX, srcY, srcW, srcH, dx + 3, dy + 3, size, size);
-    ctx.filter = 'none';
-
-    ctx.globalAlpha = alpha;
+    // Stamp the shape at full opacity, then let the black fill carry the
+    // alpha. 'source-in' multiplies source alpha by destination alpha, so
+    // fading the fill alone gives exactly `alpha x SILHOUETTE_ALPHA` — fading
+    // both layers (which is what setting globalAlpha before the drawImage
+    // did) would square the crossfade instead.
+    ctx.globalAlpha = 1;
     ctx.drawImage(img, srcX, srcY, srcW, srcH, dx, dy, size, size);
     ctx.globalCompositeOperation = 'source-in';
+    ctx.globalAlpha = alpha * SILHOUETTE_ALPHA;
     ctx.fillStyle = SILHOUETTE_COLOR;
     ctx.fillRect(dx - 4, dy - 4, size + 8, size + 8);
 
@@ -1893,7 +1903,7 @@ const EncounterScreen = (() => {
   async function openMonInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     try {
-      await MonInfoScreen.start(st.mon, onDone);
+      await MonInfoScreen.start(st.mon, onDone, { chooseNext: true });
       await afterCardAppears(document.getElementById('mon-info-overlay'));
     } finally {
       // finally, so a failed lookup can't strand the player on the encounter
@@ -2158,10 +2168,13 @@ const CatchScreen = (() => {
 // Shown after every successful catch. Displays the caught mon's animated
 // sprite and full evolution chain so the player can learn about their new pal.
 const MonInfoScreen = (() => {
+  // The post-catch footer's buttons, by the mode each one selects. app.js
+  // owns NextSession (which mode is suggested, and what the player picked).
+  const NEXT_BTN_IDS   = { focus: 'btn-next-focus', short: 'btn-next-short', long: 'btn-next-long' };
   const CANVAS_SIZE    = 200;   // main sprite canvas logical size
   const EVO_NODE_SIZE  = 64;    // mini evo-chain canvas logical size
 
-  let overlay, canvas, ctx, elName, elRarity, elChain, btnDone;
+  let overlay, canvas, ctx, elName, elRarity, elChain, btnDone, nextWrap;
   let rafId  = null;
   let onDone = null;
 
@@ -2258,7 +2271,7 @@ const MonInfoScreen = (() => {
   }
 
   // ── public API ───────────────────────────────────────────
-  async function start(mon, doneCb) {
+  async function start(mon, doneCb, opts) {
     if (!overlay) {
       overlay  = document.getElementById('mon-info-overlay');
       canvas   = document.getElementById('mon-info-canvas');
@@ -2267,6 +2280,7 @@ const MonInfoScreen = (() => {
       elRarity = document.getElementById('mon-info-rarity');
       elChain  = document.getElementById('mon-info-evo-chain');
       btnDone  = document.getElementById('btn-mon-info-done');
+      nextWrap = document.getElementById('mon-info-next');
 
       st.dpr = window.devicePixelRatio || 1;
       if (st.dpr !== 1) {
@@ -2276,11 +2290,46 @@ const MonInfoScreen = (() => {
       }
 
       btnDone.addEventListener('click', dismiss);
+      // The post-catch footer. Each button records the choice and then closes
+      // the card exactly as GOT IT! does — app.js applies it once the whole
+      // encounter (and any evolution scene) has finished, so nothing here has
+      // to know what still has to play out.
+      for (const mode of Object.keys(NEXT_BTN_IDS)) {
+        const btn = document.getElementById(NEXT_BTN_IDS[mode]);
+        if (!btn) continue;
+        btn.addEventListener('click', () => {
+          if (typeof NextSession !== 'undefined') NextSession.choose(mode);
+          dismiss();
+        });
+      }
     }
 
     onDone   = doneCb;
     st.mon   = mon;
     st.frame = 0;
+
+    // Which footer this card wears. Opened from the Dex it is just a card to
+    // look at, so it keeps GOT IT!; opened after a catch it is the last thing
+    // before the timer, so it asks what to do next instead.
+    const chooseNext = !!(opts && opts.chooseNext) && typeof NextSession !== 'undefined';
+    // Hide the BUTTON, not its .pxb wrapper: .pxb sets display:flex, which
+    // outranks the browser's own [hidden] rule, so a hidden wrapper still
+    // renders. `.pxb:has(button[hidden])` (style.css) collapses the frame once
+    // the button inside it is hidden — the idiom the rest of the app uses.
+    if (btnDone)  btnDone.hidden  = chooseNext;
+    if (nextWrap) nextWrap.hidden = !chooseNext;
+    if (chooseNext) {
+      for (const m of Object.keys(NEXT_BTN_IDS)) {
+        const btn = document.getElementById(NEXT_BTN_IDS[m]);
+        if (!btn) continue;
+        // Swapping the real classes rather than inventing a new one — every V3
+        // rule for the gold slab and the dark slab (fill, ring, clip-path, the
+        // .pxb:has() ring selectors) then applies with nothing to keep in step.
+        const isSuggested = m === NextSession.suggested;
+        btn.classList.toggle('btn-primary',    isSuggested);
+        btn.classList.toggle('btn-timer-dark', !isSuggested);
+      }
+    }
 
     const shiny = mon.shiny || false;
     const dark  = mon.dark  || false;

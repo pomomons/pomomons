@@ -325,6 +325,7 @@ function onSessionEnd() {
     sessionsToday++;
     // Every 4th session → long break; otherwise → short break
     const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
+    NextSession.suggested = nextMode;
     // Signal that survives the alarm: title stays changed until the break is
     // started (or a mode is picked by hand); notification reaches a stepped-
     // away player. setMode(nextMode) below never touches titleOverride.
@@ -342,15 +343,12 @@ function onSessionEnd() {
       const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
       const palResult = activeId ? savePalExp(activeId, 25) : null;
 
-      // The mailing-list card is offered here, once the encounter (and any
-      // evolution) has played out and we're back on the timer screen — not
-      // mid-celebration. Signup decides whether it's earned and whether it
-      // has been asked too often already.
+      // Once the encounter (and any evolution) has played out, apply whatever
+      // the player chose on the info card — or, if they never saw it, the
+      // break that was due.
       const backOnTimer = () => {
         CompanionCanvas.init(document.getElementById('companion-canvas'));
-        setMode(nextMode);
-        if (autoStartEnabled()) startTimer();
-        if (typeof Signup !== 'undefined') Signup.maybePrompt();
+        applyNextSession(nextMode);
       };
 
       if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
@@ -675,6 +673,38 @@ document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
 });
 document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
 spawnInfo?.addEventListener('click', e => { if (e.target === spawnInfo) spawnInfo.classList.remove('active'); });
+
+// ── What the player does after a catch ────────────────────
+// The three choices live on the mon info card (MonInfoScreen in game.js) —
+// the card that already stands between the catch and the timer — rather than
+// in a popup of their own.
+//
+// The 4-session rhythm is still worked out here, but only as `suggested`: it
+// decides which of the three buttons wears the gold slab. The player picks,
+// the card records it in `pending`, and backOnTimer applies it once the
+// encounter (and any evolution scene) is fully done — so the clock never
+// starts under a cinematic.
+const NextSession = {
+  suggested: 'short',  // which button the card highlights
+  pending:   null,     // what the player actually pressed, if anything
+  choose(mode) { NextSession.pending = mode; },
+};
+
+// Apply the choice and start the clock. An explicit pick always starts
+// running whatever the auto-start setting says — the buttons read START, and
+// the player just chose on purpose. With no pick (they ran away from the
+// encounter, so the card never appeared) fall back to the old behaviour: load
+// the due break and honour auto-start.
+function applyNextSession(fallbackMode) {
+  const picked = NextSession.pending;
+  NextSession.pending = null;
+  setMode(picked || fallbackMode);
+  if (picked || autoStartEnabled()) startTimer();
+  // The mailing-list card waits until now — after the celebration, after the
+  // choice — so it never lands mid-flow. Signup decides whether it's earned
+  // and whether it has been asked too often already.
+  if (typeof Signup !== 'undefined') Signup.maybePrompt();
+}
 
 // Audio toggle — lives in the settings menu now; icon swaps waves↔X and the
 // row label reads the current state.

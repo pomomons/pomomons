@@ -471,6 +471,7 @@
     </div>
   </div>
 
+
   <!-- ── Share Preview (desktop only) ──────────────────
        Shown when SHARE is clicked on a browser with no native share sheet
        (most desktops), so the player sees the branded catch card before
@@ -502,7 +503,20 @@
       <p class="mon-info-evo-title">EVOLUTION PATH</p>
       <div class="mon-info-evo-chain" id="mon-info-evo-chain"></div>
     </div>
+    <!-- Two footers, one shown at a time (MonInfoScreen.start picks).
+         GOT IT! is the plain dismiss, used when this card is opened from the
+         Dex just to look at a mon. After a catch the card is the last thing
+         between the player and the timer, so it asks what to do with the time
+         instead — no separate popup, no extra click to reach it.
+         The btn-timer-dark here is a placeholder: MonInfoScreen swaps the
+         suggested mode to btn-primary and the rest back to dark each time the
+         card opens, so the gold slab lands on whichever break is due. -->
     <div class="pxb"><button class="btn btn-primary" id="btn-mon-info-done">GOT IT!</button></div>
+    <div class="next-session-btns" id="mon-info-next" hidden>
+      <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-focus">CONTINUE FOCUSING</button></div>
+      <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-short">START BREAK</button></div>
+      <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-long">START LONG BREAK</button></div>
+    </div>
   </div>
 
   <!-- ── Mon Detail Card (individual caught mon) ───────── -->
@@ -720,9 +734,11 @@
       <span class="settings-label">Save</span>
     </button>
 
+    <!-- Checkbox first, where every other row in this menu puts its icon, so
+         the labels all start on the same line. -->
     <label class="settings-row settings-row--toggle">
-      <span class="settings-label">Auto-start next session</span>
       <input type="checkbox" id="toggle-autostart">
+      <span class="settings-label">Auto-start next session</span>
     </label>
   </div>
 

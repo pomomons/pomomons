@@ -17,7 +17,7 @@
  *     already handled in the app.
  */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const PRECACHE = `pomomons-precache-${CACHE_VERSION}`;
 const RUNTIME  = `pomomons-runtime-${CACHE_VERSION}`;
 

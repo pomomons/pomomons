@@ -1016,9 +1016,20 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 -12px 0 rgba(0,0,0,.35);
 }
 
+/* The caught-so-far tally beside the tabs. Muted white at 10px, it read as a
+   caption rather than a score and disappeared into the panel — it is the one
+   number on this screen a player is actually tracking. Gold at 14px with the
+   same dark cast the other numerals carry, which is the treatment the catch
+   screen's POMODEX tally (.edp-count, style-v3.css) already uses, so the two
+   places that show this number now agree.
+
+   Shared with My Mons' own count in the same header slot — same component,
+   same class, so it gets the same weight there. */
 .collection-count {
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: .06em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .45);
   white-space: nowrap;
 }
 
@@ -2073,7 +2084,7 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .collection-header { gap: 4px; flex-wrap: wrap; }
   .collection-tabs { gap: 4px; }
   .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
-  .collection-count { font-size: 10px; margin: 2px auto 0; }
+  .collection-count { font-size: 12px; margin: 2px auto 0; }
 
   /* Keep the enlarged encounter headline in bounds on small screens */
   .encounter-msg { font-size: 16px; }
@@ -2436,6 +2447,44 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .spawn-info-label { flex: 1; text-align: left; }
 .spawn-info-odds  { color: var(--gold); letter-spacing: .04em; }
+
+/* ── Post-catch footer on the mon info card ──────────────
+   The three "what next" buttons that replace GOT IT! after a catch (see
+   #mon-info-next in index.html). There is no card or scrim of their own —
+   they sit in the info card's own column, which is why this is only a stack. */
+/* Its own [hidden] rule for the same reason .pxb needs one: the display below
+   outranks the browser's, so without this the stack shows on the Dex's copy of
+   this card too, under the GOT IT! that belongs there. */
+.next-session-btns[hidden] { display: none; }
+.next-session-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+.next-session-btns > .pxb { width: 100%; }
+
+/* Full-width stacked slabs, not the usual .btn box. "START LONG BREAK" is 16
+   characters and Press Start 2P advances ~1.02em per char plus .05em of
+   tracking, so the glyph run is ~1.07x the font size per character: 242px at
+   .btn's 14px, which with 28px of padding a side wants 298px — more than the
+   320px stack has once the info card's own padding is taken off. Sized off the
+   viewport instead: 218px of run inside a ~296px box at the 13px ceiling, and
+   168px at the 10px floor, where the card is tightest. Measure the advance
+   before changing a label or these numbers — canvas measureText reports ~0.63em
+   if it silently falls back to Courier New, which is not this font.
+
+   Two class selectors on purpose, not one: style-v3.css's phone tier sets a
+   flat `.btn-timer-dark { font-size: 13px }`, and since these three buttons
+   swap between .btn-timer-dark and .btn-primary, a single-class rule here
+   would lose to it — leaving the two dark buttons at 13px while the gold one
+   obeyed the clamp. */
+.next-session-btns .next-session-btn {
+  width: 100%;
+  font-size: clamp(10px, 3vw, 13px);
+  padding: 12px 10px;
+}
 
 /* ── Blend result flash ──────────────────────────────── */
 .blend-result-flash {
