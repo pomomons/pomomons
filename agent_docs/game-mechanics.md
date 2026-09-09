@@ -30,9 +30,16 @@ Wild mon level = player level ± 2 (clamped 1–100), rolled at encounter start.
 Rolled independently at encounter start, in this priority order:
 
 ```
-shiny = Math.random() < 0.01          // 1%
-dark  = !shiny && Math.random() < 0.05 // 5% (never both)
+shiny = Math.random() < SHINY_RATE          // 1/500  = 0.2%
+dark  = !shiny && Math.random() < DARK_RATE // 1/100  = 1% (never both)
 ```
+
+`SHINY_RATE` / `DARK_RATE` are defined at the top of `game.js`. Because shiny
+is rolled first and wins outright, the dark rate players actually see is
+`DARK_RATE × (1 − SHINY_RATE)` = 0.998%, leaving 98.8% normal. The CATCH
+RARITY table in the "?" popup (`#spawn-info` in index.html) quotes those
+effective figures and is **not** generated from the constants — change both
+together.
 
 - **Shiny** — gold-tinted sprite (hue-rotate filter, or `shinySprite` if set),
   animated sparkles, `SHINY` shown in the encounter's centre rarity slot.

@@ -18,6 +18,15 @@ const DARK_FILTER = 'brightness(0.28) grayscale(0.9) contrast(1.15)';
 const NAME_MIN_PX   = 8;    // default floor: the pixel font's readable limit
 const NAME_TRACKING = 0.1;  // letter-spacing on both name rules, in em
 
+// ── Variant odds ───────────────────────────────────────────
+// Rolled once per wild encounter (EncounterScreen.start). Shiny is rolled
+// first and wins outright; dark is only rolled when shiny missed.
+// If these change, update the CATCH RARITY table in index.html (the "?"
+// popup) and agent_docs/game-mechanics.md — nothing derives that copy from
+// these constants, so it has to be kept in step by hand.
+const SHINY_RATE = 1 / 500;   // 0.2%
+const DARK_RATE  = 1 / 100;   // 1% (0.998% effective, after the shiny roll)
+
 // Measurement only — nothing is ever drawn on this context.
 const _nameMeasureCtx = document.createElement('canvas').getContext('2d');
 
@@ -425,6 +434,61 @@ const CompanionCanvas = (() => {
 
   let canvas, ctx, rafId, nameEl, areaEl;
 
+  // Blank space kept clear above the mon, in canvas units, so the LV badge,
+  // the XP bar and the floating name have somewhere to live. drawSprite() caps
+  // the mon's drawn size against it.
+  //
+  // MEASURED, not tuned per breakpoint. The furniture above the mon is a fixed
+  // pixel height (a badge, a bar, one or two lines of caption) while the canvas
+  // it has to clear is drawn at anything from 148px to 269px, so the same
+  // reserve is worth a different amount of room at every size — and the caption
+  // wraps to a second line at narrow widths, which moves the target again. Hand
+  // numbers held for the viewport they were measured at and failed either side
+  // of it; asking the DOM where the badge and bar actually ended up is right
+  // everywhere by construction.
+  //
+  // The guard rails only count when they genuinely sit over the mon's column.
+  // On desktop the readout is off to the panel's left and the mon has the whole
+  // top of the stage to itself — the overlap test comes back false there, the
+  // measurement contributes nothing, and the reserve stays at the 16 the CSS
+  // sets, which is exactly the sizing this canvas has always had.
+  //
+  // Cached because drawSprite() runs every frame and getBoundingClientRect
+  // forces layout — refreshed only when something that feeds it can change.
+  const GROUND_Y   = 192;  // all mons bottom-anchor here (canvas units)
+  // Floor on the mon's own size (canvas units) so a tall stack of furniture on
+  // a small phone can't shrink it away to nothing. 64 is a quarter of the
+  // canvas height; below that the art stops reading as a creature.
+  const MIN_MON_SIZE = 64;
+  let _topReserve = 16;
+  function readTopReserve() {
+    if (!canvas) return;
+    const v = parseFloat(getComputedStyle(canvas).getPropertyValue('--mon-top-reserve'));
+    let units = Number.isFinite(v) ? v : 16;
+
+    const cRect = canvas.getBoundingClientRect();
+    if (cRect.height > 0 && nameEl) {
+      let lowest = 0;
+      for (const g of [document.getElementById('btn-companion-level'),
+                       document.querySelector('.companion-meta .xp-frame')]) {
+        if (!g) continue;
+        const r = g.getBoundingClientRect();
+        if (r.right > cRect.left + 8 && r.left < cRect.right - 8) lowest = Math.max(lowest, r.bottom);
+      }
+      if (lowest > 0) {
+        // Room for the lowest guard rail, the caption under it, and a little air.
+        const needPx = (lowest - cRect.top) + nameEl.offsetHeight + 12;
+        units = Math.max(units, needPx / cRect.height * CANVAS_SIZE);
+      }
+    }
+    _topReserve = Math.min(units, GROUND_Y - MIN_MON_SIZE);
+    _lastNameH  = nameEl ? nameEl.offsetHeight : 0;
+  }
+  // A longer name wraps to a second line and needs another line's worth of
+  // room, so the caption's own height is an input to the reserve. tick()
+  // watches it rather than re-measuring everything every frame.
+  let _lastNameH = 0;
+
   // Name size relative to the drawn mon. Ratio is the desktop pairing this
   // layout has always used: a 224px canvas captioned at 16px.
   const NAME_PER_CANVAS = 16 / 224;
@@ -444,8 +508,8 @@ const CompanionCanvas = (() => {
   // Origin (0,0) = top-left of canvas.
   function drawSprite(bobY, sqX, sqY) {
     const cx = CANVAS_SIZE / 2;
-    // All mons bottom-anchor to this Y regardless of their display size.
-    const GROUND_Y = 192;
+    // GROUND_Y (module scope) is the line all mons bottom-anchor to, whatever
+    // their display size — readTopReserve() measures against the same line.
 
     if (SPRITE.spriteSrc) {
       const img = MonSprite.getImage(SPRITE.spriteSrc);
@@ -475,8 +539,22 @@ const CompanionCanvas = (() => {
         // MON_BOX is the room for a 64px mon, so 48px -> 132, 36px -> 99 and
         // 32px -> 88. This used to be a flat 160 for every mon, which made
         // a 32px starter exactly as large as a 64px final evolution.
-        const size = MonSprite.displaySize(srcW, MON_BOX);
-        const cy   = Math.max(size / 2 + 16, GROUND_Y - size / 2);
+        // Clamped so the sprite box's top can never rise above the reserved
+        // band at the top of the canvas. Mons bottom-anchor at GROUND_Y, so
+        // the top is GROUND_Y - size, and the largest size that respects a
+        // reserve of R is GROUND_Y - R.
+        //
+        // On desktop R is 16, which yields exactly MON_BOX (176) — the value
+        // the old clamp already implied, so nothing there changes. On a phone
+        // readTopReserve() measures it much higher: the panel there also has to
+        // hold the LV badge, the XP bar and the mon's name, and a 176-unit mon
+        // left no room for any of them — the caption ended up printed across a
+        // big mon's chest and the badge sat over its head. Only the mons that
+        // would actually overrun are affected; everything smaller than the cap
+        // keeps its proportional size.
+        const size = Math.min(MonSprite.displaySize(srcW, MON_BOX),
+                              GROUND_Y - _topReserve);
+        const cy   = GROUND_Y - size / 2;
         state.headY = cy - size / 2; // resting sprite-box top, for the floating name
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
@@ -568,7 +646,16 @@ const CompanionCanvas = (() => {
         // it) so the mon can be bigger without the panel growing — a stage
         // percentage there would put the name somewhere on the mon's face.
         //
-        // The caption sits GAP of the canvas above the sprite-box top. It's
+        // The caption's BOTTOM sits GAP above the sprite-box top, so the space
+        // you actually see between the text and the mon is what GAP says it is.
+        // This used to place the caption's top at a flat 14% of the canvas above
+        // the mon, which quietly assumed the caption was small relative to the
+        // canvas. On a short phone the canvas is 148px, 14% of it is 21px, and
+        // the caption is 15px tall — leaving 6px, then nothing, then a negative
+        // gap as soon as anything shifted. GAP is mostly proportional so the
+        // desktop spacing is unchanged, with a floor for the small canvases.
+        //
+        // It's
         // also floored so it can't ride up into the LV pill / XP bar — but
         // only when those actually sit over the sprite column. On desktop
         // .companion-meta is pushed right out to the panel's left, clear of
@@ -579,11 +666,12 @@ const CompanionCanvas = (() => {
         // Measure the real overlap of the two guard rails — the LV badge and
         // the XP bar — against the canvas, and only floor when they cross it
         // (which they do on a phone, where the row is drawn over the stage).
-        const GAP = 0.14;
         const headFrac = (state.headY || 96) / CANVAS_SIZE;
+        const GAP = Math.max(8, canvas.offsetHeight * 0.06);
         const metaEl    = document.querySelector('.companion-meta');
         const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
-        let topPx = canvas.offsetTop + (headFrac - GAP) * canvas.offsetHeight;
+        let topPx = canvas.offsetTop + headFrac * canvas.offsetHeight
+                    - nameEl.offsetHeight - GAP;
         if (metaShown) {
           const parentTop = nameEl.offsetParent
             ? nameEl.offsetParent.getBoundingClientRect().top : 0;
@@ -597,8 +685,18 @@ const CompanionCanvas = (() => {
             }
           }
         }
-        nameEl.style.top = `${Math.max(2, topPx)}px`;
+        // Upper bound is the canvas's own top edge, not the stage's. On a phone
+        // the canvas is drawn taller than the stage and offset above it, so a
+        // big mon's head genuinely starts above the stage — clamping to the
+        // stage (the old `Math.max(2, ...)`) shoved the caption back down onto
+        // that head. It resolves to 0 wherever canvas and stage coincide, which
+        // is everywhere except the phone tiers. The LV/XP floor below is what
+        // stops the caption riding up into the readout.
+        nameEl.style.top = `${Math.max(canvas.offsetTop, topPx)}px`;
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
+        // Caption changed height (a longer name wrapped, or the font landed):
+        // the mon's size cap is measured off it, so it has to be re-derived.
+        if (nameEl.offsetHeight !== _lastNameH) readTopReserve();
         // Same reason the top is measured off the canvas and not the stage:
         // on a phone the canvas is the box that actually grew. Width cap is
         // the panel, which the 1.7x canvas is wider than.
@@ -780,6 +878,9 @@ const CompanionCanvas = (() => {
     SPRITE.blinkInterval = mon.blinkInterval   || 3000;
     SPRITE.blinkDuration = mon.blinkDuration   || 150;
     if (SPRITE.spriteSrc) MonSprite.preload(mon);
+    // New mon, new caption: "COCOKID" and "GUACAMONGER" don't need the same
+    // amount of room above the sprite, and the reserve is measured off it.
+    readTopReserve();
   }
 
   function init(canvasEl) {
@@ -800,6 +901,13 @@ const CompanionCanvas = (() => {
 
     // Kick off blink timer
     state.blinkTimer = 120 + Math.floor(Math.random() * 120);
+
+    readTopReserve();
+    // The reserve comes from a media query, so it changes on rotate/resize.
+    window.addEventListener('resize', readTopReserve);
+    // ...and the pixel font landing re-flows the badge and bar the reserve is
+    // sized around, same reason sizeMonName has a font epoch.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(readTopReserve);
 
     tick();
   }
@@ -1374,10 +1482,13 @@ const EncounterScreen = (() => {
 
     // Pick a random mon — clone it so shiny/dark rolls never mutate the shared MONS roster
     const mon   = { ...getRandomMon() };
-    mon.shiny   = Math.random() < 0.01;               // shiny rate = 1%
+    mon.shiny   = Math.random() < SHINY_RATE;
     // Dark variant — rare darkened version of any mon. Shiny takes priority:
-    // dark only applies when the mon did NOT roll shiny.
-    mon.dark    = !mon.shiny && Math.random() < 0.05; // dark rate = 5%
+    // dark only applies when the mon did NOT roll shiny, so the dark rate you
+    // actually see is DARK_RATE x (1 - SHINY_RATE) — 0.998% rather than a flat
+    // 1%. The difference is a rounding artifact at these odds; the ? popup
+    // quotes the effective numbers.
+    mon.dark    = !mon.shiny && Math.random() < DARK_RATE;
     st.mon      = mon;
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';

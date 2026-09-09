@@ -1405,11 +1405,10 @@ html::after {
    pair read as one unit rather than a label with a hairline under it. */
 .companion-xp-text { display: none; }
 
-/* .companion-meta is pinned to top:0 of .companion-stage, which the two rules
-   above translateY up (~7-12px, to lift the mon + ground clear of the panel
-   clip). That shift drags the LV pill + XP bar up with it, so they sat ~11px
-   above the "?" help button (a sibling of the stage, unaffected by the
-   transform). Push the readout back down so its top lines up with the "?". */
+/* Same 12px the "?" button uses (.help-shadow above). Both are now offset from
+   .companion-area, so this is a real alignment rather than a number tuned to
+   cancel out the sprite stage's translateY — which is what it used to be, and
+   which stopped holding the moment the panel's height changed. */
 .companion-meta { gap: 6px; top: 12px; }
 
 .companion-xp-wrap { width: 164px; height: 16px; }
@@ -1503,6 +1502,23 @@ html::after {
 @media (min-width: 480px) and (max-width: 499px) {
   .logo-pomo, .logo-mons { font-size: 36px; }
   .logo-tomato-img { height: 1.9rem; }
+}
+
+/* ── Timer digits, 480–659px wide ─────────────────────────
+   Above 479px the phone tier stops applying and the digits fall back to the
+   desktop 88px — but the panel does not stay desktop-width, so from about
+   640px down "30:00" ran straight under the ▲▼ steppers, and by 480px it was
+   overlapping them by 78px AND starting 7px outside the plate's left edge.
+   Measured clearances at 88px, glyph-run right edge vs stepper left edge:
+     640px: +9px    600px: -9px    540px: -44px    480px: -78px
+   Press Start 2P advances ~1.02em per character, so "30:00" is ~5.1x the
+   font size, and the run has to fit (window width - 203px) to keep the +8px
+   of clearance the 640px case has. That solves to about 19.6vw - 44px, capped
+   at the desktop 88px; the band ends at 659px, where this gives 85px against
+   the 88px the next window up keeps, so the handoff is a 3px step. Verified
+   clearance across the band afterwards: +13 to +22px, none negative. */
+@media (min-width: 480px) and (max-width: 659px) {
+  .timer-display { font-size: min(88px, calc(19.6vw - 44px)); }
 }
 
 /* ── Mobile ────────────────────────────────────────────────
@@ -1602,8 +1618,16 @@ html::after {
      (flex-shrink 0, basis auto): on a short phone the timer box would
      otherwise collapse under its content and — being overflow:hidden —
      clip the START / POMODEX row rather than let the screen scroll. */
-  #screen-timer .companion-wrap,
-  #screen-timer .combined-timer-wrap { flex: 1 0 auto; }
+  /* Only the companion panel takes the slack. Both used to (flex: 1 0 auto),
+     which is what made the timer box balloon on a tall phone: the panel grew,
+     .panel-plate's justify-content:center split the extra evenly above and
+     below, and the result was a very tall box with a small clock marooned in
+     the middle of it. The timer panel has a fixed amount of content — digits,
+     mode row, START/POMODEX — and no reason to be taller than that, so it now
+     holds its content height and the mon (which genuinely reads better bigger)
+     gets every spare pixel. */
+  #screen-timer .companion-wrap { flex: 1 0 auto; }
+  #screen-timer .combined-timer-wrap { flex: 0 0 auto; }
   /* flex-grow only resizes the outermost wrap — .panel-rail is a plain
      block child, so its height still comes from its own content and the
      grown space opens up as blank room below the visibly-bordered box
@@ -1700,8 +1724,17 @@ html::after {
      is re-pinned to match. */
   :root { --stats-h: 134px; }
 
+  /* Height-aware, not a flat 234px. The short-portrait tier below drops the
+     stage to 110px at exactly 700px of viewport height, and a flat value here
+     meant crossing that line changed the stage by 124px in a single pixel of
+     window height. Just above the line the screen no longer fit, so
+     fitTimerScreen() zoomed the WHOLE timer screen to ~0.92 — every phone
+     between about 701px and 760px tall got a visibly shrunken UI. 30vh gives
+     way smoothly through that band instead (213px at 710px tall) and pins to
+     the original 234px from ~780px up, which is where every current iPhone
+     sits in a desktop browser's device emulator. */
   #companion-canvas,
-  .companion-stage { width: 234px; height: 234px; }
+  .companion-stage { width: clamp(150px, 30vh, 234px); height: clamp(150px, 30vh, 234px); }
   .companion-area { padding: 14px 12px 40px; }
 
   /* ── Mon + ground at 1.7x, phone only ──────────────────
@@ -1722,32 +1755,45 @@ html::after {
      gains headroom at the top of the panel instead of running straight into
      the LV pill — 96% + 6% = the 102% both layers are anchored to. */
 
-  /* 170% tall, positioned so its 96% line lands on 102% of the stage:
-     102 - (0.96 x 170) = -61.2. Absolute, so the bigger box doesn't take
+  /* 115% tall, positioned so its 96% line lands on 102% of the stage:
+     102 - (0.96 x 115) = -8.4. Absolute, so the bigger box doesn't take
      part in layout. game.js floats the mon's name off this box, not the
-     stage, so the caption follows the head up. */
+     stage, so the caption follows the head up.
+
+     Was 170%, which on a 390px phone made this box 398px wide — wider than
+     the whole viewport — with its top edge 24px ABOVE the top of the screen.
+     The mon read as cropped rather than large. 115% keeps the box (269px)
+     inside the 346px panel on every phone width. */
   #companion-canvas {
     position: absolute;
-    width: 170%;
-    height: 170%;
+    width: 115%;
+    height: 115%;
     left: 50%;
-    margin-left: -85%;
-    top: -61.2%;
+    margin-left: -57.5%;
+    top: -8.4%;
   }
 
-  /* 138% x 78% x 1.7. The grass surface sits 64.1% down the PNG's box, so
-     it lands at 102% - (0.641 x 132.6) = 17% from the stage top, putting the
-     box's bottom edge at 149.6% — hence bottom: -49.6%. The image carries
-     ~19% transparent padding under the grass, so the front rim stays inside
-     the panel; its left and right edges do run past the panel and are
-     trimmed by .panel-plate's clip, which is what turns the oval platform
-     into a full-width strip of ground at this size. */
-  .companion-ground { width: 234.6%; height: 132.6%; bottom: -49.6%; }
-  /* .companion-meta is offset off the (now wider) stage's left edge; ease
-     the offsets in so the LV pill + XP bar stay on the panel. */
-  .companion-meta { left: -34px; right: -20px; }
+  /* 138% x 78% x 1.15 — same multiplier as the canvas above, so mon and
+     ground stay in proportion. The grass surface sits 64.1% down the PNG's
+     box, so it lands at 102% - (0.641 x 89.7) = 44.5% from the stage top,
+     putting the box's bottom edge at 134.2% — hence bottom: -34.2%.
+     (General form for a multiplier M: width 138M, height 78M,
+     bottom -(2 + 28M).)
+
+     At the old 1.7 this box was 549px wide on a 390px phone — 80px of dirt
+     hanging off each side, clipped by .panel-plate, so the oval platform
+     read as a solid full-width slab of ground filling the panel. At 1.15
+     it is 371px: still wider than the 346px panel, so it still reads as a
+     strip rather than a floating oval, but only just, and the grass keeps
+     air above and below it. */
+  .companion-ground { width: 158.7%; height: 89.7%; bottom: -34.2%; }
+  /* The readout is offset from the panel now, not from the stage, so it needs
+     no per-breakpoint nudging — the base 24px inset already lands it on the
+     panel at every phone width. Only the side inset comes in, to match the
+     tighter 16px gutter the panels use down here. */
+  .companion-meta { left: 12px; right: 12px; }
   /* The caption's box, not its position: game.js sizes the name off the mon,
-     which is 1.7x the stage here, and it wraps at its own box's edge. Left at
+     which is larger than the stage here, and it wraps at its own box's edge. Left at
      the stage's width a long name ("SCORCHPEPPER") would be shrunk to fit a
      box far narrower than the art it labels. Symmetric so the text stays
      centred on the mon; the panel is still the hard limit (sizeMonName caps
@@ -1755,7 +1801,27 @@ html::after {
   .companion-name { left: -40px; right: -40px; }
   .companion-name.is-prompt { font-size: 15px; top: 2%; }
 
-  .timer-display { font-size: 52px; padding: 8px 30px 8px 10px; letter-spacing: 0; }
+  /* The clock is the one thing on this screen you read from across a desk, so
+     it is sized fluidly off the viewport rather than at stepped breakpoints —
+     the old flat 46/52px steps are what made it scale badly between sizes.
+
+     MEASURE THE ADVANCE, DON'T ASSUME IT. Press Start 2P advances almost
+     exactly 1.02em per character with letter-spacing:0, so "30:00" is ~5.1x
+     the font size. (A previous pass here used 0.63em — the figure canvas
+     measureText returns when it silently falls back to Courier New — and set
+     19vw on that basis. At 390px wide that resolved to 74px, a 379px glyph
+     run in a 306px content box: the leading digit was clipped by the plate
+     and the trailing one ran under the steppers.)
+
+     14.5vw puts the run at ~74% of the viewport — big, with real air either
+     side — and stays inside the content box at every phone width:
+       320px: 46.4px font, 237px run, 244px box
+       390px: 56.6px font, 289px run, 314px box
+       430px: 62.0px font (ceiling), 317px run, 354px box
+     The 8vh arm caps the digits by height as well as width, so an unusually
+     short-but-wide window shrinks only the clock instead of overflowing and
+     making fitTimerScreen() zoom the entire screen down. */
+  .timer-display { font-size: clamp(44px, min(14.5vw, 8vh), 62px); padding: 2px 28px 2px 4px; letter-spacing: 0; }
   /* Steppers pared back — frame layers and all — so the bigger digits have
      room to sit centred without running into them. */
   .btn-adjust { min-width: 18px; min-height: 18px; font-size: 8px; padding: 2px; }
@@ -1763,10 +1829,23 @@ html::after {
   .time-adjust .btn-shadow--sm { padding: 1px 2px 2px 1px; }
   .time-adjust .pxb-sm { padding: 1px; }
 
-  #screen-timer .controls-group { margin-top: 18px; }
-  .controls-group { padding: 16px 20px 20px; }
+  /* Vertical only — the box is no longer allowed to grow (see the flex rules
+     above), so every pixel of padding here is now real height rather than
+     slack being absorbed. Pared back so the taller digits above don't make the
+     panel any deeper than it already was, and so the whole screen still fits
+     without fitTimerScreen() having to zoom it down. */
+  #screen-timer .controls-group { margin-top: 8px; }
+  .controls-group { padding: 8px 20px 12px; }
 
   .mymons-scroll { margin-bottom: calc(var(--stats-h) - 20px); }
+  /* My Mons zeroes the line above and carries the clearance on its RESTORE
+     row instead (see .mymons-restore) — so that row needs this tier's value
+     too. Tighter padding here: the row is fixed height now, and on a small
+     phone every pixel it takes comes straight out of the grid. */
+  .mymons-restore {
+    padding: 10px 0 6px;
+    margin-bottom: calc(var(--stats-h) - 20px);
+  }
 }
 
 /* Short portrait phones (≤700px tall — iPhone SE/8, small Android, or any
@@ -1801,9 +1880,16 @@ html::after {
      it clears the "?" placeholder graphic even wrapped at this width. */
   .companion-name.is-prompt { font-size: 9px; top: 3%; }
 
-  /* A step smaller than the general 36px above — short *and* narrow phones
-     (e.g. 320×568) need the extra margin on top of the reserved column. */
-  .timer-display { font-size: 32px; padding: 8px 60px 8px 12px; }
+  /* A step down from the tier above, since height is what's scarce here — but
+     only a step. This used to be a flat 32px with 60px reserved on the right,
+     which left the clock at barely a quarter of the screen's width with ~190px
+     of empty box beside it: it was paying for vertical room with horizontal
+     room it didn't need to spend. 13vw puts the run at ~66% of the viewport —
+     a touch tighter than the 74% the full-height tier gets, which is the step
+     down — and the right-hand reserve drops to what the (already shrunken)
+     steppers actually occupy. See the advance note in the tier above before
+     changing this number. */
+  .timer-display { font-size: clamp(36px, 13vw, 54px); padding: 2px 28px 2px 4px; }
   .controls-group { padding: 8px 16px; gap: 4px; }
   .timer-controls { gap: 4px; }
 }
@@ -1825,6 +1911,31 @@ html::after {
      its bottom edge at 102 + (28 x 1.35). */
   #companion-canvas { width: 135%; height: 135%; margin-left: -67.5%; top: -27.6%; }
   .companion-ground { width: 186.3%; height: 105.3%; bottom: -39.8%; }
+
+  /* The tier above widens the caption's box by 40px a side, which is generous
+     against its 234px stage but not against the 110px one here — the box came
+     out 190px, and "GUACAMONGER" wrapped onto a second line. That second line
+     is expensive twice over: the caption is taller, and the mon has to shrink
+     by the same amount again to stay clear of it (see readTopReserve). 85px a
+     side gives a 280px box, which holds every name in the roster on one line;
+     sizeMonName still caps the text against the panel, so it can't overflow. */
+  .companion-name { left: -85px; right: -85px; }
+
+}
+
+/* ── LV badge + XP bar on one row where height is scarce ───
+   Stacked they are ~62px tall. On the shortest phones the whole mon panel is
+   about 163px, and with the caption under them that is 93px of furniture over
+   barely 70px of mon and grass — not enough for both, and the caption ended up
+   on the mon whatever else was tuned. Side by side the row is just the badge's
+   own height, ~36px, and everything fits; the bar keeps its width by flexing
+   into what the badge leaves. Landscape phones are in the same bind for the
+   same reason, hence the second query. */
+@media (max-width: 479px) and (max-height: 700px) and (orientation: portrait),
+       (max-height: 560px) and (orientation: landscape) {
+  .companion-meta { flex-direction: row; align-items: center; gap: 8px; }
+  .companion-meta .xp-frame { flex: 1; min-width: 0; }
+  .companion-meta .companion-xp-wrap { width: auto; }
 }
 
 /* Compact phones (360px-wide Android is the common case; iPhone SE is 375).
@@ -1930,24 +2041,35 @@ html::after {
   margin-bottom: calc(var(--stats-h) - 32px);
 }
 
-/* RESTORE lives at the foot of the scroll box now, not the header. Making the
-   scroll box a flex column lets margin-top:auto on .mymons-restore park the
-   button against the bottom while the grid is short, then let it trail the
-   last mon once the grid is tall enough to scroll (auto margins only eat
-   free space — with none left they collapse to 0). Scoped to My Mons; Dex
-   reuses .mymons-scroll but has no such row. */
-#screen-mymons .mymons-scroll {
-  display: flex;
-  flex-direction: column;
-}
-#screen-mymons .mymons-scroll > .collection-grid { flex: 0 0 auto; }
+/* RESTORE is a fixed row between the scroll box and the stats strip — always
+   visible, never scrolls. It used to sit inside .mymons-scroll, which meant it
+   scrolled out of view as soon as the collection was big enough to scroll.
+
+   Because it's now a sibling flex item, IT carries the stats-strip clearance
+   instead of .mymons-scroll: the margin-bottom below shrinks this row's outer
+   box so the strip can't cover it, and the scroll box (flex: 1) simply takes
+   what's left. The three `.mymons-scroll { margin-bottom }` rules — the base
+   one above and the two in media queries — still serve Dex, which has no
+   RESTORE row; the zeroing rule here outranks all three on specificity
+   (0,1,1 vs 0,1,0), so it wins no matter where they sit in the cascade.
+   Keep the claw-back values in sync across both if they're ever retuned. */
+#screen-mymons .mymons-scroll { margin-bottom: 0; }
 
 .mymons-restore {
   flex: 0 0 auto;
-  margin-top: auto;
+  width: 100%;
   display: flex;
   justify-content: center;
-  padding: 18px 0 6px;
+  /* Asymmetric on purpose — the two sides start from different places, and
+     the goal is an even ~14px above / ~10px below the button as rendered:
+       · above: .screen already contributes an 8px flex gap, so padding-top
+         only tops that up (6 + 8 = 14).
+       · below: the claw-back margin puts the row's edge ~2px under the
+         strip's visible plate, so padding-bottom has to buy the gap back
+         (12 − 2 = 10).
+     Measure, don't eyeball, if these are ever retuned. */
+  padding: 6px 0 12px;
+  margin-bottom: calc(var(--stats-h) - 32px);
 }
 
 .collection-tab {
@@ -2282,6 +2404,12 @@ html::after,
 
   .stats-strip .stats-row { padding: 8px 12px; }
   .mymons-scroll { margin-bottom: calc(var(--stats-h) - 2px); }
+  /* Same transfer as the ≤479px tier — landscape is the shortest viewport of
+     all, so the row is pared back further still. */
+  .mymons-restore {
+    padding: 8px 0 4px;
+    margin-bottom: calc(var(--stats-h) - 2px);
+  }
 
   /* Encounter overlay — one step smaller than the block above. */
   .encounter-overlay { padding-top: 10px; }

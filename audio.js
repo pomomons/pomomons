@@ -119,11 +119,15 @@ const SFX = (() => {
     },
 
     // Heavy impact thud → ball rocks during shake
+    // Gains are the original mix at 70% — it plays up to three times in a row
+    // during a catch and was the loudest thing on the screen. All three layers
+    // are scaled by the same factor so the balance between them is unchanged;
+    // to retune, scale them together rather than moving one.
     shake() {
       const t = getCtx().currentTime;
-      tone({ start: 160, end: 40  }, 'square',   t,        0.18, 0.35); // heavy low thud
-      tone({ start: 320, end: 100 }, 'square',   t,        0.10, 0.225); // mid punch layer
-      tone(95,                       'triangle', t + 0.03, 0.16, 0.175); // deep sub rumble
+      tone({ start: 160, end: 40  }, 'square',   t,        0.18, 0.245); // heavy low thud
+      tone({ start: 320, end: 100 }, 'square',   t,        0.10, 0.158); // mid punch layer
+      tone(95,                       'triangle', t + 0.03, 0.16, 0.123); // deep sub rumble
     },
 
     // Satisfying low mechanical click → ball locks shut

@@ -331,6 +331,16 @@ h1.logo {
   padding: 32px 16px 60px;
 }
 
+/* Minimum blank band kept clear at the top of the companion canvas, in the
+   canvas's own 200-unit coordinate space. game.js (CompanionCanvas) caps the
+   mon's drawn size against it so a tall mon can't grow up into the LV badge,
+   the XP bar and its own floating name. 16 works out to exactly MON_BOX, i.e.
+   the sizing this canvas has always had. It is a floor, not the whole story —
+   readTopReserve() measures where the badge and bar actually landed and raises
+   it where they sit over the mon (which is the phone layout, not this one).
+   Raise this only to hold space that nothing on the panel occupies. */
+:root { --mon-top-reserve: 16; }
+
 .companion-stage {
   position: relative;
   width: 200px;
@@ -404,10 +414,12 @@ h1.logo {
 .companion-meta {
   position: absolute;
   top: 0;
-  /* Extend beyond the narrow sprite stage (overflow: visible) so the readout can
-     sit out toward the panel's left side, clear of the mon. */
-  left: -190px;
-  right: -110px;
+  /* Offsets are the PANEL's, not the sprite stage's — see the comment on this
+     element in index.html for why it is a sibling of .companion-stage. 24px
+     mirrors .help-shadow's `right: 24px` (style-v3.css) so the badge and the
+     "?" are inset by the same amount from opposite edges. */
+  left: 24px;
+  right: 24px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2044,8 +2056,11 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
      (see sizeMonName). Only the line box is set here. */
   .companion-name { line-height: var(--lh-normal); }
 
-  /* Narrower panel on mobile — keep the left-grouped pills on-panel */
-  .companion-meta { left: -85px; right: -55px; }
+  /* No longer needed: the readout is offset from the panel now, not from the
+     sprite stage, so it is already on-panel at every width. (This used to pull
+     it back in from left:-190px; at 480-560px wide it undershot and the LV
+     badge hung ~84px off the panel's left edge, where the panel's clip-path
+     cut it in half.) */
 
   /* Collection tabs: BACK + tabs + count try to stay on one row, but on the
      Dex screen "X / Y" is wide enough that at narrow widths there's no room

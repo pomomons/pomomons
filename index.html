@@ -189,24 +189,33 @@
          light frame, .companion-area = fill. -->
     <div class="pxb-panel companion-wrap"><div class="panel-rail"><div class="companion-area">
       <div class="btn-shadow btn-shadow--sm help-shadow"><div class="pxb pxb-sm pxb-help"><button class="btn-help" id="btn-spawn-help" aria-label="How catching works">?</button></div></div>
+      <!-- Deliberately a SIBLING of .companion-stage, not a child, so it
+           anchors to the panel exactly the way the "?" button beside it does.
+           As a child its offsets resolved against the sprite stage, which is
+           centred in the panel and shifted up by a transform — so how far the
+           LV badge sat from the top of the panel depended on how tall the mon
+           art happened to be. On a phone, where the panel grows to fill the
+           screen, that pushed the badge ~36px below the "?" it is supposed to
+           line up with. Out here both are `top: 12px` of .companion-area and
+           they simply agree. -->
+      <div class="companion-meta">
+        <div class="companion-meta-row">
+          <!-- .lv-frame draws the badge's dark outline (its background
+               showing through its padding), as the panels and tiles do.
+               A real <button> so it's clickable/keyboard-reachable —
+               opens the companion's own mon detail card. -->
+          <button type="button" class="lv-frame companion-lv-btn" id="btn-companion-level" aria-label="View companion details"><span class="companion-lvl">LV <span id="companion-level">1</span></span></button>
+          <span class="companion-xp-text"><span id="companion-xp-cur">0</span> / <span id="companion-xp-max">30</span> XP</span>
+        </div>
+        <!-- .xp-frame draws the bar's black outline, as .lv-frame does for
+             the badge above it. -->
+        <div class="xp-frame"><div class="companion-xp-wrap">
+          <div class="companion-xp-bar" id="companion-xp-bar" style="width:0%"></div>
+        </div></div>
+      </div>
       <div class="companion-stage">
         <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">
         <canvas id="companion-canvas" width="200" height="200" aria-label="Your Pomomon companion"></canvas>
-        <div class="companion-meta">
-          <div class="companion-meta-row">
-            <!-- .lv-frame draws the badge's dark outline (its background
-                 showing through its padding), as the panels and tiles do.
-                 A real <button> so it's clickable/keyboard-reachable —
-                 opens the companion's own mon detail card. -->
-            <button type="button" class="lv-frame companion-lv-btn" id="btn-companion-level" aria-label="View companion details"><span class="companion-lvl">LV <span id="companion-level">1</span></span></button>
-            <span class="companion-xp-text"><span id="companion-xp-cur">0</span> / <span id="companion-xp-max">30</span> XP</span>
-          </div>
-          <!-- .xp-frame draws the bar's black outline, as .lv-frame does for
-               the badge above it. -->
-          <div class="xp-frame"><div class="companion-xp-wrap">
-            <div class="companion-xp-bar" id="companion-xp-bar" style="width:0%"></div>
-          </div></div>
-        </div>
         <p class="companion-name" id="companion-name">???</p>
       </div>
     </div></div></div>
@@ -291,17 +300,21 @@
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
     </div>
+    </div>
+
     <!-- RESTORE opens #save-code in restore-only mode (see backup.js) — it can
          paste a code in, but never builds or shows one, so it can't be used to
          get a save code without going through Save in the settings menu
-         (#btn-signup), which requires an email address. margin-top:auto (see
-         style-v3.css) parks this row against the bottom of the scroll box when
-         the grid is short, and lets it follow the last mon once the grid is
-         tall enough to scroll. -->
+         (#btn-signup), which requires an email address.
+
+         Deliberately a SIBLING of .mymons-scroll, not a child: as a child it
+         scrolled away the moment the grid was tall enough to scroll, so the
+         button vanished exactly when a player with a big collection might want
+         it. Out here it's a fixed row that always sits between the bottom of
+         the scroll box and the stats strip. -->
     <div class="mymons-restore">
       <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
               aria-label="Restore your collection from a save code">RESTORE</button>
-    </div>
     </div>
   </main>
 
@@ -446,9 +459,13 @@
       <p class="spawn-info-intro" id="spawn-info-intro"></p>
       <p class="spawn-info-title">CATCH RARITY</p>
       <div class="spawn-info-list">
-        <div class="spawn-info-row"><span class="swatch normal"></span><span class="spawn-info-label">NORMAL</span><span class="spawn-info-odds">94%</span></div>
-        <div class="spawn-info-row"><span class="swatch dark"></span><span class="spawn-info-label">DARK</span><span class="spawn-info-odds">5%</span></div>
-        <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">1%</span></div>
+        <!-- Kept in step by hand with SHINY_RATE / DARK_RATE in game.js.
+             Shiny is rolled first and wins outright, so the dark figure here
+             is the effective one (1% x the 99.8% of rolls that missed shiny),
+             and NORMAL is whatever is left. -->
+        <div class="spawn-info-row"><span class="swatch normal"></span><span class="spawn-info-label">NORMAL</span><span class="spawn-info-odds">98.8%</span></div>
+        <div class="spawn-info-row"><span class="swatch dark"></span><span class="spawn-info-label">DARK</span><span class="spawn-info-odds">1%</span></div>
+        <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">0.2%</span></div>
       </div>
       <div class="pxb"><button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button></div>
     </div>
