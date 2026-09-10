@@ -68,6 +68,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- Timer face, self-hosted (see the @font-face at the top of style.css).
+       Preloaded because the timer is the first thing on screen; crossorigin is
+       required even same-origin or the preload is fetched twice. -->
+  <link rel="preload" as="font" type="font/ttf" href="assets/fonts/PressStart2P-SMBTLL.ttf" crossorigin>
   <link rel="stylesheet" href="style.css">
   <!-- UI V2 refresh — remove this line to revert to previous UI -->
   <link rel="stylesheet" href="style-v2.css">
@@ -207,11 +211,6 @@
           <button type="button" class="lv-frame companion-lv-btn" id="btn-companion-level" aria-label="View companion details"><span class="companion-lvl">LV <span id="companion-level">1</span></span></button>
           <span class="companion-xp-text"><span id="companion-xp-cur">0</span> / <span id="companion-xp-max">30</span> XP</span>
         </div>
-        <!-- .xp-frame draws the bar's black outline, as .lv-frame does for
-             the badge above it. -->
-        <div class="xp-frame"><div class="companion-xp-wrap">
-          <div class="companion-xp-bar" id="companion-xp-bar" style="width:0%"></div>
-        </div></div>
       </div>
       <div class="companion-stage">
         <img class="companion-ground" src="assets/sprites/Ground/Ground1.png" alt="" aria-hidden="true">

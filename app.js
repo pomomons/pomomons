@@ -564,15 +564,13 @@ function updateCompanionDisplay() {
   if (lvlEl)  lvlEl.textContent  = level;
 
   // XP toward the next pal level — mirrors the player's readout in the stats
-  // strip. savePalExp() calls back here, so the bar updates on every gain.
+  // strip. savePalExp() calls back here, so the numbers update on every gain.
   const exp    = parseInt(localStorage.getItem('pm_active_pal_exp') || '0', 10);
   const needed = palExpThreshold(level);
   const curEl  = document.getElementById('companion-xp-cur');
   const maxEl  = document.getElementById('companion-xp-max');
-  const barEl  = document.getElementById('companion-xp-bar');
   if (curEl) curEl.textContent = exp;
   if (maxEl) maxEl.textContent = needed;
-  if (barEl) barEl.style.width = Math.max(0, Math.min(100, (exp / needed) * 100)) + '%';
 
   if (typeof CompanionCanvas !== 'undefined') CompanionCanvas.setMon({ ...stage, shiny, dark });
 }

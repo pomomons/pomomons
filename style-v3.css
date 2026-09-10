@@ -1261,14 +1261,12 @@ html::after {
 
 .stats-inline { margin-left: auto; }
 
-.exp-bar-wrap,
-.companion-xp-wrap {
+.exp-bar-wrap {
   background: #0a1710;
   clip-path: var(--pixel-clip-xs);
 }
 
-.exp-bar,
-.companion-xp-bar {
+.exp-bar {
   background: var(--gold);
   box-shadow:
     inset 0 3px 0 rgba(255,255,255,.42),
@@ -1418,8 +1416,6 @@ html::after {
    which stopped holding the moment the panel's height changed. */
 .companion-meta { gap: 6px; top: 12px; }
 
-.companion-xp-wrap { width: 164px; height: 16px; }
-
 .stat-val   { color: var(--cream); }
 .stat-label { color: rgba(255,255,255,.62); }
 
@@ -1526,6 +1522,16 @@ html::after {
    clearance across the band afterwards: +13 to +22px, none negative. */
 @media (min-width: 480px) and (max-width: 659px) {
   .timer-display { font-size: min(88px, calc(19.6vw - 44px)); }
+}
+
+/* Below 660px the timer is width-bound, not height-bound: the sizes above and
+   on the phone tiers were solved against the window and verified at +13 to
+   +22px of clearance, so the --timer-scale nudge would spend more than the
+   whole margin and bleed "88:88" out either side of centre. Those tiers opt
+   out and stay exactly as they were measured; the roomier windows above keep
+   the bump. */
+@media (max-width: 659px) {
+  .timer-display { --timer-scale: 1; }
 }
 
 /* ── Mobile ────────────────────────────────────────────────
@@ -1928,21 +1934,6 @@ html::after {
      sizeMonName still caps the text against the panel, so it can't overflow. */
   .companion-name { left: -85px; right: -85px; }
 
-}
-
-/* ── LV badge + XP bar on one row where height is scarce ───
-   Stacked they are ~62px tall. On the shortest phones the whole mon panel is
-   about 163px, and with the caption under them that is 93px of furniture over
-   barely 70px of mon and grass — not enough for both, and the caption ended up
-   on the mon whatever else was tuned. Side by side the row is just the badge's
-   own height, ~36px, and everything fits; the bar keeps its width by flexing
-   into what the badge leaves. Landscape phones are in the same bind for the
-   same reason, hence the second query. */
-@media (max-width: 479px) and (max-height: 700px) and (orientation: portrait),
-       (max-height: 560px) and (orientation: landscape) {
-  .companion-meta { flex-direction: row; align-items: center; gap: 8px; }
-  .companion-meta .xp-frame { flex: 1; min-width: 0; }
-  .companion-meta .companion-xp-wrap { width: auto; }
 }
 
 /* Compact phones (360px-wide Android is the common case; iPhone SE is 375).

@@ -1,6 +1,31 @@
+/* The timer face. A community variant of Press Start 2P that squares off the
+   corners the original rounds — most visibly on the zero, which stops reading
+   as a letter O. Same author's OFL licence and the same metrics as the
+   original, so it drops in at every existing font-size unchanged.
+   Self-hosted because it isn't on Google Fonts; licence text sits beside it
+   in assets/fonts/. */
+@font-face {
+  font-family: 'Press Start 2P SMBTLL';
+  src: url('assets/fonts/PressStart2P-SMBTLL.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  /* Plain Press Start 2P is the fallback and is metrically identical, so a
+     late swap moves nothing on screen. */
+  font-display: swap;
+}
+
 /* ── Design Tokens ───────────────────────────────────────── */
 :root {
   --font-pixel:  'Press Start 2P', 'Courier New', monospace;
+  /* Timer only. Metrically identical to --font-pixel, so every breakpoint
+     keeps the font-size it always had. The one visible difference is the
+     squared-off zero, which is the whole reason for the swap. */
+  --font-timer:  'Press Start 2P SMBTLL', 'Press Start 2P', 'Courier New', monospace;
+  /* One knob for the timer's size. Every breakpoint still states the
+     font-size it always did on .timer-display; this nudges only the digits
+     inside it, so the whole ladder moves together and nothing had to be
+     re-tuned tier by tier. */
+  --timer-scale: 1.07;
   /* Teal dulled from 100% to 60% saturation (hue and lightness unchanged) so the
      pure accents — gold, type badges, the sprite — read as figure against it.
      Also puts idle in the same saturation register as focus red's 39%. */
@@ -441,22 +466,6 @@ h1.logo {
   white-space: nowrap;
 }
 
-/* Deliberately shorter and thinner than the player's full-width bar */
-.companion-xp-wrap {
-  width: 180px;
-  max-width: 100%;
-  height: 10px;
-  background: rgba(0,0,0,.30);
-  clip-path: var(--pixel-clip-1);
-  overflow: hidden;
-}
-
-.companion-xp-bar {
-  height: 100%;
-  background: var(--gold);
-  transition: width .4s ease;
-}
-
 .companion-lvl {
   font-size: 10px;
   font-family: var(--font-pixel);
@@ -504,7 +513,7 @@ h1.logo {
 
 /* Timer display — CSS text */
 .timer-display {
-  font-family: var(--font-pixel);
+  font-family: var(--font-timer);
   font-size: 64px;
   color: var(--text);
   text-shadow: none;
@@ -519,7 +528,7 @@ h1.logo {
 }
 
 .timer-edit-input {
-  font-family: var(--font-pixel);
+  font-family: var(--font-timer);
   font-size: 1em;
   color: var(--text);
   background: none;
@@ -541,6 +550,9 @@ h1.logo {
   flex: 1;
   text-align: center;
   white-space: nowrap;
+  /* See --timer-scale. Applied here rather than on .timer-display so the
+     px sizes set at each breakpoint stay readable as the sizes they are. */
+  font-size: calc(1em * var(--timer-scale));
 }
 
 .timer-colon {

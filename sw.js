@@ -17,7 +17,7 @@
  *     already handled in the app.
  */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v9';
 const PRECACHE = `pomomons-precache-${CACHE_VERSION}`;
 const RUNTIME  = `pomomons-runtime-${CACHE_VERSION}`;
 
@@ -44,6 +44,9 @@ const PRECACHE_URLS = [
   'assets/sprites/Tomato/Tomato.png',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png',
+  // Self-hosted, so it needs listing here — the FONT_HOSTS rule below only
+  // covers the Google-hosted faces.
+  'assets/fonts/PressStart2P-SMBTLL.ttf',
 ];
 
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
