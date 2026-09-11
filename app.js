@@ -189,20 +189,83 @@ function todayStamp() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+// ── Day-by-day history ─────────────────────────────────────
+// pm_total_* is a running lifetime figure and pm_today_* is wiped every
+// midnight, so neither can answer "how did last Tuesday go?". This third
+// store keeps one small record per day that a session was actually finished:
+//   { "2026-09-11": { s: 4, m: 100, c: 3 }, ... }
+// Short field names because the whole object rides inside the save code.
+// Days with nothing on them are never written, so a player who takes a week
+// off costs nothing, and the store is pruned to the last HISTORY_DAYS days.
+const HISTORY_KEY  = 'pm_history';
+const HISTORY_DAYS = 400;
+const HISTORY_FIELD = { sessions: 's', minutes: 'm', catches: 'c' };
+
+function readHistory() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+    return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  } catch (e) {
+    // A corrupt blob must never take the timer down with it — start fresh.
+    return {};
+  }
+}
+
+function writeHistory(hist) {
+  // Keys are YYYY-MM-DD, so a plain string sort is a date sort.
+  const days = Object.keys(hist).sort();
+  if (days.length > HISTORY_DAYS) {
+    for (const d of days.slice(0, days.length - HISTORY_DAYS)) delete hist[d];
+  }
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch (e) {}
+}
+
+function addHistory(stamp, kind, delta) {
+  const field = HISTORY_FIELD[kind];
+  if (!field || !delta) return;
+  const hist = readHistory();
+  const day = hist[stamp] || (hist[stamp] = { s: 0, m: 0, c: 0 });
+  day[field] = (parseInt(day[field], 10) || 0) + delta;
+  writeHistory(hist);
+}
+
+// Called just before the daily bucket is zeroed. Anyone who was already
+// playing before history existed has a part-finished day sitting in
+// pm_today_*, and history only saw whatever happened after the update landed.
+// pm_today_* is the complete figure for that day, so keep whichever is
+// larger per field — that recovers the earlier part of the day without ever
+// counting the later part twice.
+function archiveDayIntoHistory(stamp) {
+  if (!stamp) return;
+  const read = k => parseInt(localStorage.getItem('pm_today_' + k) || '0', 10) || 0;
+  const s = read('sessions'), m = read('minutes'), c = read('catches');
+  if (!s && !m && !c) return;
+  const hist = readHistory();
+  const prev = hist[stamp] || { s: 0, m: 0, c: 0 };
+  hist[stamp] = {
+    s: Math.max(s, parseInt(prev.s, 10) || 0),
+    m: Math.max(m, parseInt(prev.m, 10) || 0),
+    c: Math.max(c, parseInt(prev.c, 10) || 0),
+  };
+  writeHistory(hist);
+}
+
 function rollDayIfNeeded() {
   const stamp = todayStamp();
   if (localStorage.getItem('pm_today_date') === stamp) return;
+  archiveDayIntoHistory(localStorage.getItem('pm_today_date'));
   localStorage.setItem('pm_today_date', stamp);
   STAT_KINDS.forEach(k => localStorage.setItem('pm_today_' + k, '0'));
 }
 
-// The single entry point for changing a stat, so the lifetime total and
-// today's bucket can never drift apart.
+// The single entry point for changing a stat, so the lifetime total, today's
+// bucket and the day-by-day history can never drift apart.
 function addStat(kind, delta) {
   rollDayIfNeeded();
   for (const key of ['pm_total_' + kind, 'pm_today_' + kind]) {
     localStorage.setItem(key, parseInt(localStorage.getItem(key) || '0', 10) + delta);
   }
+  addHistory(todayStamp(), kind, delta);
 }
 
 // Which set the strip is showing. Defaults to 'total' — the behaviour the
@@ -429,13 +492,124 @@ if (btnSettings && settingsMenu) {
   // Clicks inside the menu (sound toggle, Discord link) keep it open; the
   // signup button opens its own modal, so let that one close the menu.
   settingsMenu.addEventListener('click', e => {
-    if (e.target.closest('#btn-signup')) closeSettingsMenu();
+    // Rows that open a modal of their own get out of the way first; the rest
+    // (sound toggle, auto-start, the Discord link) leave the menu up.
+    if (e.target.closest('#btn-signup, #btn-history')) closeSettingsMenu();
     else e.stopPropagation();
   });
   window.addEventListener('resize', () => { if (!settingsMenu.hidden) positionSettingsMenu(); });
   document.addEventListener('click', closeSettingsMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettingsMenu(); });
 }
+
+// ── Day-by-day history modal ──────────────────────────────
+// Lists one row per day that had a finished session on it, newest first,
+// from the pm_history store above. Rows carry a bar scaled to the busiest
+// day's minutes, so the shape of a week reads at a glance without a chart.
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN',
+                    'JUL','AUG','SEP','OCT','NOV','DEC'];
+const DAY_ABBR   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+// "2026-09-11" -> a local Date. Passing the string to new Date() would read it
+// as UTC and land on the wrong day for anyone west of Greenwich.
+function stampToDate(stamp) {
+  const [y, m, d] = stamp.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function dayLabel(stamp) {
+  const today = todayStamp();
+  if (stamp === today) return 'TODAY';
+  const yest = new Date(stampToDate(today).getTime() - 86400000);
+  const p = n => String(n).padStart(2, '0');
+  const yestStamp =
+    `${yest.getFullYear()}-${p(yest.getMonth() + 1)}-${p(yest.getDate())}`;
+  if (stamp === yestStamp) return 'YESTERDAY';
+  const d = stampToDate(stamp);
+  return `${DAY_ABBR[d.getDay()]} ${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
+}
+
+function renderHistory() {
+  rollDayIfNeeded();
+  const list  = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const foot  = document.getElementById('history-foot');
+  if (!list) return;
+
+  const hist = readHistory();
+  // Today is live in pm_today_* and only reaches pm_history once a session
+  // lands, so overlay it here — otherwise today is missing from its own list.
+  const num = v => parseInt(v, 10) || 0;
+  const today = todayStamp();
+  const liveToday = {
+    s: num(localStorage.getItem('pm_today_sessions')),
+    m: num(localStorage.getItem('pm_today_minutes')),
+    c: num(localStorage.getItem('pm_today_catches')),
+  };
+  if (liveToday.s || liveToday.m || liveToday.c) hist[today] = liveToday;
+
+  const stamps = Object.keys(hist).sort().reverse();
+  list.innerHTML = '';
+  empty.hidden = stamps.length > 0;
+  foot.hidden  = stamps.length === 0;
+  if (!stamps.length) return;
+
+  const maxMins = Math.max(1, ...stamps.map(d => num(hist[d].m)));
+  let tS = 0, tM = 0, tC = 0;
+
+  for (const stamp of stamps) {
+    const s = num(hist[stamp].s), m = num(hist[stamp].m), c = num(hist[stamp].c);
+    tS += s; tM += m; tC += c;
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    if (stamp === today) row.classList.add('is-today');
+    row.setAttribute('role', 'row');
+    row.style.setProperty('--bar', (m / maxMins * 100) + '%');
+    const cell = (text, cls) => {
+      const el = document.createElement('span');
+      if (cls) el.className = cls;
+      el.setAttribute('role', 'cell');
+      el.textContent = text;
+      return el;
+    };
+    row.append(cell(dayLabel(stamp), 'history-day'), cell(s), cell(m), cell(c));
+    list.appendChild(row);
+  }
+
+  document.getElementById('history-total-sessions').textContent = tS;
+  document.getElementById('history-total-minutes').textContent  = tM;
+  document.getElementById('history-total-catches').textContent  = tC;
+}
+
+const historyModal = document.getElementById('history-modal');
+
+function openHistory() {
+  if (!historyModal) return;
+  renderHistory();
+  historyModal.classList.add('active');
+  historyModal.setAttribute('aria-hidden', 'false');
+  document.getElementById('btn-history-close')?.focus();
+}
+
+function closeHistory() {
+  if (!historyModal) return;
+  historyModal.classList.remove('active');
+  historyModal.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('btn-history')?.addEventListener('click', () => {
+  SFX.play('click');
+  openHistory();
+});
+document.getElementById('btn-history-close')?.addEventListener('click', () => {
+  SFX.play('click');
+  closeHistory();
+});
+// Click the scrim to dismiss, same as tapping CLOSE.
+historyModal?.addEventListener('click', e => { if (e.target === historyModal) closeHistory(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && historyModal?.classList.contains('active')) closeHistory();
+});
 
 // ── Controls ──────────────────────────────────────────────
 btnStart.addEventListener('click', () => running ? pauseTimer() : startTimer());

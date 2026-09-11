@@ -461,6 +461,43 @@
     </div>
   </div>
 
+  <!-- ── Day-by-day history ────────────────────────────
+       Opened from the gear (#btn-history). Reads pm_history, the per-day
+       record app.js writes alongside the lifetime and today counters, and
+       lists one row per day that had a finished session on it. Rows are
+       built by renderHistory() in app.js; everything below is the shell. -->
+  <div id="history-modal" class="blender-confirm history-modal" role="dialog"
+       aria-modal="true" aria-labelledby="history-title" aria-hidden="true">
+    <div class="blender-confirm-box history-box">
+      <p class="blender-confirm-title" id="history-title">DAY BY DAY</p>
+
+      <div class="history-head" aria-hidden="true">
+        <span class="history-day">DAY</span>
+        <span>SESS</span>
+        <span>MINS</span>
+        <span>CAUGHT</span>
+      </div>
+
+      <div class="history-list" id="history-list" role="table"
+           aria-label="Sessions, minutes and catches per day"></div>
+
+      <p class="history-empty" id="history-empty" hidden>
+        NOTHING HERE YET.<br>FINISH A FOCUS SESSION AND THE DAY SHOWS UP.
+      </p>
+
+      <div class="history-foot" id="history-foot" hidden>
+        <span class="history-day">TOTAL</span>
+        <span id="history-total-sessions">0</span>
+        <span id="history-total-minutes">0</span>
+        <span id="history-total-catches">0</span>
+      </div>
+
+      <div class="save-code-row">
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-history-close">CLOSE</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Spawn Rates Info Modal ───────────────────────── -->
   <div id="spawn-info" class="spawn-info">
     <div class="spawn-info-box">
@@ -677,6 +714,21 @@
         </g>
       </svg>
       <span class="settings-label" id="audio-label">Sound on</span>
+    </button>
+
+    <!-- Opens the day-by-day breakdown. The stats strip only ever shows two
+         numbers (today, or all time); this is where the days in between live. -->
+    <button class="settings-row" id="btn-history" role="menuitem"
+            aria-label="See your day-by-day history">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <rect x="0" y="2" width="2" height="7" fill="currentColor"/>
+        <rect x="4" y="4" width="2" height="5" fill="currentColor"/>
+        <rect x="8" y="0" width="2" height="9" fill="currentColor"/>
+        <rect x="0" y="9" width="10" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">History</span>
     </button>
 
     <a class="settings-row" id="btn-discord" href="https://discord.gg/bXnKR8FeG"

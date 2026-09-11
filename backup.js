@@ -27,6 +27,7 @@ const Backup = (() => {
     'pm_active_pal_exp', 'pm_active_shiny', 'pm_active_dark',
     'pm_total_sessions', 'pm_total_minutes', 'pm_total_catches',
     'pm_today_sessions', 'pm_today_minutes', 'pm_today_catches', 'pm_today_date',
+    'pm_history',
     'pm_focus_mins', 'pm_short_mins', 'pm_long_mins',
     'pm_items', 'pm_muted', 'pm_stats_scope',
   ];

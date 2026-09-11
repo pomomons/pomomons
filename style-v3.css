@@ -3077,3 +3077,105 @@ html::after,
   #btn-flee { min-height: 48px; font-size: 11px; padding: 10px 6px; letter-spacing: .02em; white-space: nowrap; }
   .encounter-controls .btn-arrow { font-size: 1.2em; }
 }
+
+/* ── Day-by-day history modal ──────────────────────────────
+   Opened from the gear's HISTORY row. Reuses the .blender-confirm shell (dark
+   scrim + clipped panel) and only changes what this content needs: a wider
+   box, because four columns will not sit in the confirm card's 320px, and a
+   scrolling list so a long streak stays inside the viewport instead of
+   pushing CLOSE off the bottom of the screen. */
+.history-box {
+  max-width: 400px;
+  text-align: left;
+  gap: 8px;
+}
+
+/* One grid track set, declared once and shared by the header, every row and
+   the total line, so the four columns stay locked together as the list
+   scrolls under the header. */
+.history-head,
+.history-row,
+.history-foot {
+  display: grid;
+  grid-template-columns: 1fr 42px 42px 52px;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-pixel);
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
+}
+
+/* The three number columns are right-aligned so digits line up down the
+   list; only the day name stays left. */
+.history-head > span,
+.history-row > span,
+.history-foot > span { text-align: right; }
+.history-head .history-day,
+.history-row .history-day,
+.history-foot .history-day { text-align: left; }
+
+.history-head {
+  color: rgba(255,255,255,.5);
+  padding: 0 6px 6px;
+  border-bottom: var(--border-hair);
+}
+
+.history-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Each row carries --bar, set by renderHistory() to that day's minutes as a
+   share of the busiest day's. The ::before paints it as a dim fill behind the
+   numbers — the shape of a week reads at a glance, with no chart to draw and
+   nothing for the digits to fight. */
+.history-row {
+  position: relative;
+  padding: 7px 6px;
+  color: rgba(255,255,255,.82);
+  border-bottom: var(--border-hair);
+}
+.history-row:last-child { border-bottom: none; }
+
+.history-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: var(--bar, 0%);
+  background: rgba(229,172,53,.16);
+  pointer-events: none;
+}
+
+.history-row > span { position: relative; }
+
+.history-row.is-today { color: var(--text); }
+.history-row.is-today .history-day { color: var(--gold); }
+.history-row.is-today::before { background: rgba(229,172,53,.28); }
+
+.history-foot {
+  padding: 8px 6px 0;
+  border-top: var(--border-hair);
+  color: var(--gold);
+}
+
+.history-empty {
+  font-size: var(--text-xs);
+  line-height: var(--lh-loose);
+  color: rgba(255,255,255,.6);
+  text-align: center;
+  padding: 18px 6px;
+}
+
+/* CLOSE sits on its own line, centred, rather than inheriting the two-button
+   row layout .save-code-row is normally used for. */
+.history-box .save-code-row { justify-content: center; padding-top: 4px; }
+
+@media (max-width: 480px) {
+  .history-head,
+  .history-row,
+  .history-foot { grid-template-columns: 1fr 36px 40px 46px; }
+  .history-list { max-height: 40vh; }
+}
