@@ -494,6 +494,104 @@ const CompanionCanvas = (() => {
   const NAME_PER_CANVAS = 16 / 224;
   const nameFit = {};
 
+  // ── Caption placement ──────────────────────────────────
+  // Where the floating name sits, and how big it is, depends on the canvas
+  // box, the LV badge and XP bar boxes, the caption's own height and the
+  // sprite's head position. All of that is measured off the DOM — and none
+  // of it changes from one frame to the next.
+  //
+  // tick() used to re-derive the lot 60 times a second: eight-odd layout
+  // reads, a write to .top, then another read straight after it. Reading a
+  // geometry property after writing a layout-affecting one forces the browser
+  // to recompute layout synchronously, so the whole measure-move-measure
+  // sequence ran, uninterruptible, on every frame for the length of a
+  // session. Now it runs when an input actually changes and tick() is left
+  // with the transform, which the compositor handles without layout at all.
+  //
+  // Invalidated by: init, setMon, clearMon, a resize, the pixel font landing,
+  // and — caught by the cheap comparisons in tick(), none of which touch
+  // layout — a new caption string, a new head position, or app.js showing or
+  // hiding .companion-meta.
+  let _nameDirty      = true;
+  let _namePlaceholder = false;
+  let _lastNameText   = null;
+  let _lastHeadY      = null;
+  let _lastMetaVis    = null;
+  let metaEl          = null;
+
+  function invalidateName() { _nameDirty = true; }
+
+  function layoutName() {
+    _nameDirty = false;
+    if (!nameEl || !canvas) return;
+
+    // Measured against the canvas's own box rather than the stage's.
+    // The two coincide everywhere except on a phone, where style-v3.css
+    // draws the canvas larger than the stage it sits in (and offset above
+    // it) so the mon can be bigger without the panel growing — a stage
+    // percentage there would put the name somewhere on the mon's face.
+    //
+    // The caption's BOTTOM sits GAP above the sprite-box top, so the space
+    // you actually see between the text and the mon is what GAP says it is.
+    // This used to place the caption's top at a flat 14% of the canvas above
+    // the mon, which quietly assumed the caption was small relative to the
+    // canvas. On a short phone the canvas is 148px, 14% of it is 21px, and
+    // the caption is 15px tall — leaving 6px, then nothing, then a negative
+    // gap as soon as anything shifted. GAP is mostly proportional so the
+    // desktop spacing is unchanged, with a floor for the small canvases.
+    //
+    // It's also floored so it can't ride up into the LV pill / XP bar — but
+    // only when those actually sit over the sprite column. On desktop
+    // .companion-meta is pushed right out to the panel's left, clear of
+    // the mon, so a big mon's head has the whole top of the stage free
+    // and the caption should use it instead of being pinned onto the
+    // mon's forehead. Reserving the row's full height unconditionally
+    // (the old rule) is what made medium/large companions look cramped.
+    // Measure the real overlap of the two guard rails — the LV badge and
+    // the XP bar — against the canvas, and only floor when they cross it
+    // (which they do on a phone, where the row is drawn over the stage).
+    const headFrac = (state.headY || 96) / CANVAS_SIZE;
+    const GAP = Math.max(8, canvas.offsetHeight * 0.06);
+    if (!metaEl) metaEl = document.querySelector('.companion-meta');
+    const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
+    let topPx = canvas.offsetTop + headFrac * canvas.offsetHeight
+                - nameEl.offsetHeight - GAP;
+    if (metaShown) {
+      const parentTop = nameEl.offsetParent
+        ? nameEl.offsetParent.getBoundingClientRect().top : 0;
+      const cRect = canvas.getBoundingClientRect();
+      for (const g of [document.getElementById('btn-companion-level'),
+                       metaEl.querySelector('.xp-frame')]) {
+        if (!g) continue;
+        const r = g.getBoundingClientRect();
+        if (r.right > cRect.left + 8 && r.left < cRect.right - 8) {
+          topPx = Math.max(topPx, r.bottom - parentTop + 4);
+        }
+      }
+    }
+    // Upper bound is the canvas's own top edge, not the stage's. On a phone
+    // the canvas is drawn taller than the stage and offset above it, so a
+    // big mon's head genuinely starts above the stage — clamping to the
+    // stage (the old `Math.max(2, ...)`) shoved the caption back down onto
+    // that head. It resolves to 0 wherever canvas and stage coincide, which
+    // is everywhere except the phone tiers. The LV/XP floor below is what
+    // stops the caption riding up into the readout.
+    nameEl.style.top = `${Math.max(canvas.offsetTop, topPx)}px`;
+    // Same reason the top is measured off the canvas and not the stage:
+    // on a phone the canvas is the box that actually grew. Width cap is
+    // the panel, which the 1.7x canvas is wider than.
+    sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
+    // Caption changed height (a longer name wrapped, or the font landed):
+    // the mon's size cap is measured off it, so it has to be re-derived.
+    // Read last, after both writes above, so this is the only forced reflow
+    // in the function rather than one per frame.
+    if (nameEl.offsetHeight !== _lastNameH) readTopReserve();
+
+    _lastNameText = nameEl.textContent;
+    _lastHeadY    = state.headY;
+    _lastMetaVis  = metaEl ? metaEl.style.visibility : null;
+  }
+
   // ── pixel helpers ──────────────────────────────────────
   function px(n) { return Math.round(n); }
 
@@ -629,98 +727,36 @@ const CompanionCanvas = (() => {
     state.squishY = 1;
     state.squishX = 1;
 
-    // Name floats just above the mon's head (tracks sprite size) and bobs in sync
+    // Name floats just above the mon's head (tracks sprite size) and bobs in
+    // sync. Only the bob is per-frame work now — see layoutName().
     if (nameEl) {
       if (SPRITE.noMon) {
         // Empty state: there is no head to track, and state.headY holds a stale
         // fallback that lands the text on top of the "?" placeholder. Clear the
         // inline styles so the stylesheet (.companion-name.is-prompt) places it.
-        nameEl.style.top = '';
-        nameEl.style.transform = '';
-        nameEl.style.fontSize = '';
-        nameFit.key = null;
-      } else {
-        // Measured against the canvas's own box rather than the stage's.
-        // The two coincide everywhere except on a phone, where style-v3.css
-        // draws the canvas larger than the stage it sits in (and offset above
-        // it) so the mon can be bigger without the panel growing — a stage
-        // percentage there would put the name somewhere on the mon's face.
-        //
-        // The caption's BOTTOM sits GAP above the sprite-box top, so the space
-        // you actually see between the text and the mon is what GAP says it is.
-        // This used to place the caption's top at a flat 14% of the canvas above
-        // the mon, which quietly assumed the caption was small relative to the
-        // canvas. On a short phone the canvas is 148px, 14% of it is 21px, and
-        // the caption is 15px tall — leaving 6px, then nothing, then a negative
-        // gap as soon as anything shifted. GAP is mostly proportional so the
-        // desktop spacing is unchanged, with a floor for the small canvases.
-        //
-        // It's
-        // also floored so it can't ride up into the LV pill / XP bar — but
-        // only when those actually sit over the sprite column. On desktop
-        // .companion-meta is pushed right out to the panel's left, clear of
-        // the mon, so a big mon's head has the whole top of the stage free
-        // and the caption should use it instead of being pinned onto the
-        // mon's forehead. Reserving the row's full height unconditionally
-        // (the old rule) is what made medium/large companions look cramped.
-        // Measure the real overlap of the two guard rails — the LV badge and
-        // the XP bar — against the canvas, and only floor when they cross it
-        // (which they do on a phone, where the row is drawn over the stage).
-        const headFrac = (state.headY || 96) / CANVAS_SIZE;
-        const GAP = Math.max(8, canvas.offsetHeight * 0.06);
-        const metaEl    = document.querySelector('.companion-meta');
-        const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
-        let topPx = canvas.offsetTop + headFrac * canvas.offsetHeight
-                    - nameEl.offsetHeight - GAP;
-        if (metaShown) {
-          const parentTop = nameEl.offsetParent
-            ? nameEl.offsetParent.getBoundingClientRect().top : 0;
-          const cRect = canvas.getBoundingClientRect();
-          for (const g of [document.getElementById('btn-companion-level'),
-                           metaEl.querySelector('.xp-frame')]) {
-            if (!g) continue;
-            const r = g.getBoundingClientRect();
-            if (r.right > cRect.left + 8 && r.left < cRect.right - 8) {
-              topPx = Math.max(topPx, r.bottom - parentTop + 4);
-            }
-          }
+        // Once, not every frame: these are writes, and a write to .top dirties
+        // layout even when it sets the same empty string back.
+        if (!_namePlaceholder) {
+          nameEl.style.top = '';
+          nameEl.style.transform = '';
+          nameEl.style.fontSize = '';
+          nameFit.key = null;
+          _namePlaceholder = true;
+          _lastNameText = null;
         }
-        // Upper bound is the canvas's own top edge, not the stage's. On a phone
-        // the canvas is drawn taller than the stage and offset above it, so a
-        // big mon's head genuinely starts above the stage — clamping to the
-        // stage (the old `Math.max(2, ...)`) shoved the caption back down onto
-        // that head. It resolves to 0 wherever canvas and stage coincide, which
-        // is everywhere except the phone tiers. The LV/XP floor below is what
-        // stops the caption riding up into the readout.
-        nameEl.style.top = `${Math.max(canvas.offsetTop, topPx)}px`;
+      } else {
+        _namePlaceholder = false;
+        if (_nameDirty
+            || nameEl.textContent !== _lastNameText
+            || state.headY !== _lastHeadY
+            || (metaEl && metaEl.style.visibility !== _lastMetaVis)) {
+          layoutName();
+        }
+        // The one thing that genuinely changes every frame. transform is
+        // composited, so this does not invalidate layout.
         nameEl.style.transform = `translateY(${state.y.toFixed(1)}px)`;
-        // Caption changed height (a longer name wrapped, or the font landed):
-        // the mon's size cap is measured off it, so it has to be re-derived.
-        if (nameEl.offsetHeight !== _lastNameH) readTopReserve();
-        // Same reason the top is measured off the canvas and not the stage:
-        // on a phone the canvas is the box that actually grew. Width cap is
-        // the panel, which the 1.7x canvas is wider than.
-        sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
       }
     }
-
-    // --- Blink ---
-    if (!state.blinking) {
-      state.blinkTimer--;
-      if (state.blinkTimer <= 0) {
-        state.blinking  = true;
-        state.blinkFrame = 0;
-        // Next blink in 3-6 seconds (180-360 frames)
-        state.blinkTimer = 180 + Math.floor(Math.random() * 180);
-      }
-    } else {
-      state.blinkFrame++;
-      if (state.blinkFrame > 8) state.blinking = false;
-    }
-
-    // --- Eye wander ---
-    state.eyeOffset += state.eyeDir * 0.04;
-    if (Math.abs(state.eyeOffset) > 2) state.eyeDir *= -1;
 
     // --- Draw ---
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -891,6 +927,7 @@ const CompanionCanvas = (() => {
     // New mon, new caption: "COCOKID" and "GUACAMONGER" don't need the same
     // amount of room above the sprite, and the reserve is measured off it.
     readTopReserve();
+    invalidateName();
   }
 
   function init(canvasEl) {
@@ -912,12 +949,17 @@ const CompanionCanvas = (() => {
     // Kick off blink timer
     state.blinkTimer = 120 + Math.floor(Math.random() * 120);
 
+    metaEl = document.querySelector('.companion-meta');
+
     readTopReserve();
-    // The reserve comes from a media query, so it changes on rotate/resize.
-    window.addEventListener('resize', readTopReserve);
+    // The reserve comes from a media query, so it changes on rotate/resize —
+    // and so does every box the caption is positioned against.
+    window.addEventListener('resize', () => { readTopReserve(); invalidateName(); });
     // ...and the pixel font landing re-flows the badge and bar the reserve is
     // sized around, same reason sizeMonName has a font epoch.
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(readTopReserve);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { readTopReserve(); invalidateName(); });
+    }
 
     tick();
   }
@@ -931,6 +973,7 @@ const CompanionCanvas = (() => {
   function clearMon() {
     SPRITE.noMon     = true;
     SPRITE.spriteSrc = null;
+    invalidateName();
   }
 
   return { init, stop, setMon, clearMon };
