@@ -260,12 +260,42 @@
    loads (and so body.run-focus's plain-colour override, below, still fully
    replaces this shorthand and hides the image during a focus session — the
    red palette swap stays a full-bleed colour change, not a tinted photo).
-   cover/center scales to fill any viewport without distorting the image,
-   at the cost of cropping its edges on aspect ratios far from square — this
-   image's busy detail sits in the vertical middle band (the sunset horizon),
-   with plain sky and repetitive treeline as safe margins top and bottom, so
-   the crop only ever eats into forgiving areas. */
-body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") center/cover no-repeat; }
+
+   ── Horizon anchoring ──
+   This used to be a plain center/cover. cover scales the photo to just fill
+   the window, which pins the sunset band wherever the crop happens to put
+   it — around 40% down the window, i.e. UNDER the companion box, so the mon
+   stood with its head in the dark treeline and only its feet against tan.
+   The companion panel is translucent (see the --panel-bg-t note above), so
+   whatever band of the photo sits behind it IS the mon's backdrop.
+
+   Measured off the source image (1038x1024): the tan sunset band runs from
+   0.332 to 0.483 of its height, centred at 0.407. The two knobs below place
+   that band behind the companion box instead of below it.
+
+     --bg-size  auto max(125vh, 99vw)
+                125vh zooms past cover so the band is ~19% of the window tall
+                (~150px on a 807px-high one) instead of ~15% — enough to span
+                the mon rather than just its feet. The 99vw arm is the safety
+                floor: the photo is 1.0137:1, so a window wider than it is
+                tall would otherwise leave bare --mode-bg down both sides.
+                Raise 125vh to zoom further in; 100vh is roughly plain cover.
+
+     --bg-pos   center calc(50% - 7vh)
+                The 50% keeps it self-centring at any window size; the -7vh
+                lifts the band the rest of the way onto the companion box.
+                More negative = horizon higher up the screen.
+
+   Together they land the band at roughly 22%-41% of the window height, which
+   is where the companion box sits on a laptop. Both are single knobs — change
+   the number, not the formula, and every screen that uses the photo follows,
+   because all four background declarations below read the same two tokens. */
+:root {
+  --bg-size: auto max(125vh, 99vw);
+  --bg-pos:  center calc(50% - 7vh);
+}
+
+body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg-pos) / var(--bg-size) no-repeat; }
 
 /* Full-screen overlays get the same photo as the body — they were still on
    the base sheet's hardcoded teal/red (#228674/#af4d4d), disconnected from
@@ -285,7 +315,7 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") center/c
 .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest.webp") center/cover no-repeat;
+    var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 
 /* Running a focus session stays red, re-tuned to the new deeper register
@@ -302,14 +332,14 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") center/c
    and horizon as the default photo, painted red rather than approximated
    with a multiply-blend tint over the green one. */
 body.run-focus {
-  background: var(--mode-bg) url("assets/backgrounds/forest-red.webp") center/cover no-repeat;
+  background: var(--mode-bg) url("assets/backgrounds/forest-red.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 body.run-focus .encounter-overlay,
 body.run-focus .mon-info-overlay,
 body.run-focus .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest-red.webp") center/cover no-repeat;
+    var(--mode-bg) url("assets/backgrounds/forest-red.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 body.run-focus {
   --mode-bg:    #8f3b34;
@@ -798,6 +828,17 @@ html::after {
   padding: 2px 5px 5px 2px;
 }
 
+/* The evolution overlay is deliberately pure black — it sits outside the
+   palette the way the catch flash does, so the drama isn't tinted. --outline
+   is a near-black with green in it (near-black with red in it while a focus
+   session runs), which is right on the forest photo and wrong here: on #000
+   it was the only coloured thing on screen, reading as a green rim around
+   AWESOME!. A true black keeps the ring's geometry — so the button doesn't
+   change size — and simply lets it disappear into the backdrop, which is what
+   a cast shadow should do on black. ID selector so it outranks the
+   .pxb:has(.btn-primary) rule above. */
+#evolution-overlay .pxb { --btn-ring: #000; }
+
 /* FOCUS SESSION, RESET, START and POMODEX get the LV badge's shallower
    corner cut (--pixel-clip-xs) instead of the panels' deep 12px staircase —
    the smaller notch is what reads as "rounded" rather than diagonally cut.
@@ -1282,6 +1323,35 @@ html::after {
 .logo-pomo { color: var(--cream); }
 .logo-mons { -webkit-text-stroke-color: var(--gold); }
 
+/* ── One shadow for the whole screen ──────────────────
+   The buttons are the reference: .btn-shadow reveals 5px of --outline-t
+   down and to the right of every button on the screen. The wordmark and the
+   timer were casting their own thing instead — 2px and 3x4px respectively,
+   both pure black at .4 — so the screen carried four different shadows.
+
+   Deliberately NOT scaled to each element's size. The skin is pretending to
+   be pixel art, and that only holds while every shadow is the same one cell
+   of the same grid; a wordmark-sized shadow beside a button-sized one reads
+   as two resolutions in one view. The buttons already hold 5px at every
+   breakpoint, so this needs no ladder of its own.
+
+   Using the token rather than its value buys the mode swap for free: it
+   flips to the red of body.run-focus with everything else, where the old
+   flat black stayed black through a focus session. */
+.logo-pomo,
+.logo-mons,
+.timer-display {
+  text-shadow: 5px 5px 0 var(--outline-t);
+}
+
+/* The tomato is part of the same lockup as POMOMONS, so it moves with the
+   word rather than keeping the 3px black of the base sheet — leaving it
+   behind would split the logo's own shadow in two. drop-shadow, not
+   text-shadow, because it is an image; the offset and colour are the same. */
+.logo-icon {
+  filter: drop-shadow(5px 5px 0 var(--outline-t));
+}
+
 /* ── F1/F2 — header ────────────────────────────────────────
    Wordmark and mute button share a row, as in the reference, instead of the
    button being pinned to the header's top-right corner. */
@@ -1474,6 +1544,54 @@ html::after {
   padding: 9px 14px;
   color: #2a1a02;
 }
+
+/* ── Wild-mon LV + type badges ─────────────────────────────
+   Both now sit inside a real .lv-frame — the same two-layer build as the
+   companion's LV button, not an imitation of it. index.html wraps the LV
+   badge; makeTypeBadges({ frame: true }) wraps each type chip.
+
+   The first attempt gave the badges a border instead, to avoid touching the
+   shared badge builder. It looked right along the straight edges and wrong at
+   the corners, and that is inherent rather than a tuning problem: a border
+   belongs to the same box the clip-path cuts, so the notched corners take the
+   border away with them. The outline has to be a SEPARATE element behind the
+   badge, clipped to the same staircase, so its own steps show through where
+   the badge's steps cut away. That is the whole reason .lv-frame exists.
+
+   Both badges also carried a shadow that had never rendered, for the same
+   underlying reason — .encounter-level a filter: var(--pxdrop-sm),
+   .type-badge a 2px box-shadow ring — each discarded by its own clip-path.
+   Those are cleared here; the frame does that job now. */
+.encounter-topbar .lv-frame > .encounter-level,
+.encounter-topbar .lv-frame > .type-badge {
+  display: block;
+  border: none;
+  filter: none;
+  clip-path: var(--pixel-clip-xs);
+}
+
+/* The lit top edge and shaded bottom edge belong to the LV badge only. They
+   are pitched for gold, which is light enough to carry a 45% white band as a
+   bevel. The type chips are mid-dark saturated fills, and the same two bands
+   read on them as a pale stripe and a dark stripe rather than as light — the
+   chip stops looking like its own colour. So the chips take the frame's shape
+   and keep their fills exactly as they were. */
+.encounter-topbar .lv-frame > .encounter-level {
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.encounter-topbar .lv-frame > .type-badge { box-shadow: none; }
+
+/* The grid placement moves out to the wrapper, since that is the grid item
+   now. The nudge has to be cancelled on the badge too, or it would shift
+   inside its own frame. */
+.encounter-topbar .encounter-level-frame {
+  grid-column: 1;
+  justify-self: start;
+  transform: translateX(14px);
+}
+.encounter-topbar .encounter-level { transform: none; }
 
 /* ── Wordmark size by WIDTH, 480–675px ────────────────────
    The 60px cluster needs a ~676px run. Below that, step the wordmark down
@@ -2217,6 +2335,24 @@ html::after {
   filter: brightness(0) opacity(.4);
 }
 
+/* The marker fills the instant the Pomodex count ticks over (game.js,
+   showDexProgress) — one beat, not two, so "caught" reads as a single event.
+   .is-silhouette coming off does the fill; .is-pop only adds the blip, and it
+   borrows edp-count-pop's timing and curve so the tomato and the numerals
+   snap together. transform-only, because the silhouette lives in `filter`
+   and an animation on that property would fight it. */
+.enc-name-tomato {
+  transform-origin: 50% 60%;
+}
+.enc-name-tomato.is-pop {
+  animation: enc-tomato-pop 420ms cubic-bezier(.3, 1.6, .5, 1);
+}
+@keyframes enc-tomato-pop {
+  0%   { transform: scale(1);    }
+  35%  { transform: scale(1.45); }
+  100% { transform: scale(1);    }
+}
+
 /* THROW! / RUN AWAY row — same fix, same reasoning: was a single opaque
    var(--panel-bg) slab with no rail. Now the fill layer of the same
    pxb-panel > panel-rail frame, added in index.html. */
@@ -2781,6 +2917,17 @@ html::after,
    font, and the fallback glyph the browser substitutes for it carries taller
    metrics than the font's own digits and letters, so BACK was rendering 4px
    taller than the plain-text tabs even with identical padding. */
+/* ← BACK drops the ring every other .pxb button wears. --btn-edge is a
+   translucent green (translucent red mid-session), which is right on the
+   timer screen where buttons sit on a panel, and wrong here: on the Pomodex
+   and My Mons Back sits on the open forest photo with nothing behind it, so
+   the ring read as a green halo around the button instead of an edge.
+
+   Transparent rather than dropping the wrapper's 2px padding, so the button
+   stays exactly where it is and the row's spacing doesn't shift. Covers the
+   mon detail card's Back as well — same button, same treatment. */
+.pxb-back { --btn-ring: transparent; }
+
 .pxb-back .btn,
 .collection-tab,
 .btn-save-code {

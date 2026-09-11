@@ -14,6 +14,9 @@ const Collection = (() => {
   let detailReady = false;          // detail overlay listeners attached once
   let detailMon   = null;           // base mon of the record being viewed
   let detailRec   = null;           // the IDB record ({ _key, ... }) being viewed
+  // Optional one-shot handler for this card's BACK button, set per open().
+  // Post-catch, BACK belongs to the encounter flow rather than the timer.
+  let detailOnClose = null;
 
   // ── IndexedDB setup ─────────────────────────────────────────
   function openDB() {
@@ -316,8 +319,17 @@ const Collection = (() => {
 
     if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
 
-    const fromMon = typeof getMonStage === 'function' ? getMonStage(mon, oldLevel) : mon;
-    const toMon   = typeof getMonStage === 'function' ? getMonStage(mon, newLevel) : mon;
+    // Same reasoning as savePalExp in app.js: getMonStage returns the species
+    // stage, which carries no shiny/dark flag. Take those from the record
+    // being levelled so the evolution animation draws this mon, not a plain
+    // one of its kind.
+    const variant = { shiny: !!rec.shiny, dark: !!rec.dark };
+    const stageAt = (lv) => ({
+      ...(typeof getMonStage === 'function' ? getMonStage(mon, lv) : mon),
+      ...variant,
+    });
+    const fromMon = stageAt(oldLevel);
+    const toMon   = stageAt(newLevel);
     const evolved = fromMon.name !== toMon.name;
 
     if (evolved && typeof EvolutionScreen !== 'undefined') {
@@ -385,9 +397,36 @@ const Collection = (() => {
     }
   }
 
+  // Find the record a My Mons card stands for. Those cards are per-SPECIES —
+  // one tile however many of that mon you own — so they have no single record
+  // to hand over. Pick the one the tile is actually drawing: its rare variant
+  // if you own one (the tile draws the shiny sprite whenever hasShiny is set),
+  // then the highest pal level within that group.
+  async function bestRecordFor(monId) {
+    let all;
+    if (db) {
+      all = await getAllCaughtWithKeys();
+    } else {
+      all = JSON.parse(localStorage.getItem('pm_caught') || '[]')
+        .map((r, i) => ({ _key: i, ...r }));
+    }
+    const mine = all.filter(r => r.id === monId);
+    if (!mine.length) return null;
+    const rare = r => (r.shiny || r.dark ? 1 : 0);
+    mine.sort((a, b) => (rare(b) - rare(a)) || ((b.palLevel || 1) - (a.palLevel || 1)));
+    return mine[0];
+  }
+
   // ── Internal: setActiveCompanion ────────────────────────────
   async function setActiveCompanion(mon, rec = null) {
     SFX.play('select');
+
+    // A My Mons card click arrives with no record. Resolving one here is not
+    // optional: the block below only writes pm_active_shiny / pm_active_dark /
+    // the pal level when it HAS a record, so without this the new companion
+    // silently inherited the previous one's flags. That is what left a shiny
+    // pal drawn — and evolving — as a plain one.
+    if (!rec) rec = await bestRecordFor(mon.id).catch(() => null);
 
     // Persist the current active companion's level+exp back to its IDB record before switching
     const oldKeyStr = localStorage.getItem('pm_active_rec_key');
@@ -406,6 +445,11 @@ const Collection = (() => {
       localStorage.setItem('pm_active_pal_exp',   rec.palExp   || 0);
       localStorage.setItem('pm_active_shiny',     rec.shiny ? '1' : '0');
       localStorage.setItem('pm_active_dark',      rec.dark  ? '1' : '0');
+    } else {
+      // Lookup failed (no record, or the store threw). Clear the variant
+      // rather than let the outgoing companion's flags stick to this one.
+      localStorage.setItem('pm_active_shiny', '0');
+      localStorage.setItem('pm_active_dark',  '0');
     }
 
     // updateCompanionDisplay is defined in app.js (loads after collection.js)
@@ -665,9 +709,14 @@ const Collection = (() => {
   }
 
   // ── Internal: openMonDetail — the individual mon's detail card ─
-  async function openMonDetail(mon, rec) {
+  // opts.onClose: called when BACK is pressed, and awaited BEFORE this card
+  // is taken down, so whatever replaces it is already up. Cleared on every
+  // open, so a card opened from My Mons never inherits the catch flow's.
+  async function openMonDetail(mon, rec, opts) {
     const overlay = document.getElementById('mon-detail-overlay');
     if (!overlay) return;
+
+    detailOnClose = opts && typeof opts.onClose === 'function' ? opts.onClose : null;
 
     // Backfill traits for records caught before these fields existed, then
     // persist so a mon's gender/nature never changes between views.
@@ -701,9 +750,19 @@ const Collection = (() => {
         renderMyMons();
       };
 
-      document.getElementById('btn-mon-detail-back').addEventListener('click', () => {
+      document.getElementById('btn-mon-detail-back').addEventListener('click', async () => {
         MonDetailCanvas.stop();
-        overlay.classList.remove('active');
+        // Read and clear first: a second click while the next card is still
+        // opening must not run it twice.
+        const after = detailOnClose;
+        detailOnClose = null;
+        try {
+          if (after) await after();
+        } finally {
+          // finally, so a failed handoff can't strand the player on a card
+          // whose BACK button now does nothing.
+          overlay.classList.remove('active');
+        }
       });
       document.getElementById('btn-mon-detail-rename').addEventListener('click', () => {
         input.value = detailRec.nickname || '';

@@ -362,7 +362,11 @@
           <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
           <p class="encounter-mon-name" id="encounter-mon-name"><img src="assets/sprites/Tomato/Tomato.png" alt="" class="enc-name-tomato" id="encounter-name-tomato"><span class="enc-name-text" id="encounter-mon-name-text"></span></p>
           <div class="encounter-topbar">
-            <p class="encounter-level" id="encounter-level">LV 1</p>
+            <!-- .lv-frame is the outline: its own background showing through
+                 its padding, with the same clip-path as the badge inside, which
+                 is what traces the notched corners. Identical to the companion
+                 LV button on the timer screen. -->
+            <div class="lv-frame encounter-level-frame"><p class="encounter-level" id="encounter-level">LV 1</p></div>
             <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
             <div class="encounter-tags" id="encounter-tags"></div>
           </div>
@@ -401,7 +405,12 @@
       <p class="blender-confirm-body">ARE YOU SURE YOU WANT TO BLEND<br><span id="blend-name">???</span><br>INTO A SMOOTHIE ITEM?</p>
       <p class="blender-confirm-warn">THIS CANNOT BE UNDONE!</p>
       <div class="blender-confirm-btns">
-        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-yes">BLEND IT!</button></div>
+        <!-- data-sfx="none" suppresses the general button tick (see audio.js).
+             This is the one handler in the app that plays its sound after an
+             await — the record has to be deleted first — so the tick's "did
+             anything play?" check runs too early to see the blender rev
+             coming, and the button would make two noises. -->
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-blend-yes" data-sfx="none">BLEND IT!</button></div>
         <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-blend-no">CANCEL</button></div>
       </div>
     </div>
@@ -507,12 +516,12 @@
          Dex just to look at a mon. After a catch the card is the last thing
          between the player and the timer, so it asks what to do with the time
          instead — no separate popup, no extra click to reach it.
-         The btn-timer-dark here is a placeholder: MonInfoScreen swaps the
-         suggested mode to btn-primary and the rest back to dark each time the
-         card opens, so the gold slab lands on whichever break is due. -->
+         These classes are placeholders: MonInfoScreen re-applies them each
+         time the card opens, giving the gold slab to CONTINUE FOCUSING and to
+         whichever break is due, and the dark slab to the remaining one. -->
     <div class="pxb"><button class="btn btn-primary" id="btn-mon-info-done">GOT IT!</button></div>
     <div class="next-session-btns" id="mon-info-next" hidden>
-      <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-focus">CONTINUE FOCUSING</button></div>
+      <div class="pxb"><button class="btn btn-primary next-session-btn" id="btn-next-focus">CONTINUE FOCUSING</button></div>
       <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-short">START BREAK</button></div>
       <div class="pxb"><button class="btn btn-timer-dark next-session-btn" id="btn-next-long">START LONG BREAK</button></div>
     </div>
@@ -543,14 +552,16 @@
         <div class="mds-row"><span class="mds-k">SPECIES</span><span class="mds-v" id="mds-species">—</span></div>
         <div class="mds-row"><span class="mds-k">LEVEL</span><span class="mds-v" id="mds-level">—</span></div>
         <!-- Pokémon-style "how close to the next level" readout: cur/max XP
-             text above a fill bar, same visual language as the companion's
-             XP bar on the timer screen (gold fill, dark track). -->
+             text above a fill bar. Built like the player's own level bar in
+             the stats strip — .xp-frame is the outline, .mds-xp-wrap the dark
+             track, the fill sits inside — so the two read as the same object
+             at two scales. -->
         <div class="mds-row mds-row-xp">
           <span class="mds-k">NEXT LEVEL</span>
           <span class="mds-v" id="mds-xp-text">—</span>
         </div>
         <div class="mds-row mds-row-xpbar">
-          <div class="mds-xp-wrap"><div class="mds-xp-bar" id="mds-xp-bar" style="width:0%"></div></div>
+          <div class="xp-frame"><div class="mds-xp-wrap"><div class="mds-xp-bar" id="mds-xp-bar" style="width:0%"></div></div></div>
         </div>
         <div class="mds-row mds-row-type"><span class="mds-k">TYPE</span><span class="mds-v" id="mds-type">—</span></div>
         <div class="mds-row"><span class="mds-k">GENDER</span><span class="mds-v" id="mds-gender">—</span></div>

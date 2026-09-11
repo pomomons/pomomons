@@ -131,15 +131,31 @@ function randomNature() { return NATURES[Math.floor(Math.random() * NATURES.leng
 
 // Builds one or two type badge <span> elements wrapped in a container.
 // type can be a string ('Fire') or array (['Fire','Ghost']).
-function makeTypeBadges(type) {
+// opts.frame — wrap each badge in .lv-frame, the outline the LV badges wear.
+// Off by default: My Mons, the Pomodex, the mon-detail card and the evolution
+// chain all want the plain chip. It has to be a real wrapper element and not a
+// border on the badge — the outline is the wrapper's own background showing
+// through its padding, and BOTH layers carry the same clip-path, which is what
+// traces the notched corners. A border belongs to the single clipped box, so
+// the clip cuts it away at exactly those corners and the badge ends up framed
+// on its sides but bare on its steps.
+function makeTypeBadges(type, opts) {
   const types = Array.isArray(type) ? type : (type ? [type] : []);
+  const frame = !!(opts && opts.frame);
   const wrap = document.createElement('span');
   wrap.className = 'type-badges';
   for (const t of types) {
     const badge = document.createElement('span');
     badge.className = `type-badge type-${t.toLowerCase()}`;
     badge.textContent = t.toUpperCase();
-    wrap.appendChild(badge);
+    if (frame) {
+      const outline = document.createElement('span');
+      outline.className = 'lv-frame';
+      outline.appendChild(badge);
+      wrap.appendChild(outline);
+    } else {
+      wrap.appendChild(badge);
+    }
   }
   return wrap;
 }

@@ -1356,25 +1356,47 @@ const EncounterScreen = (() => {
     elControls.style.opacity = on ? '1' : '0.4';
   }
 
+  // Fill in the tomato marker beside the mon's name. It starts as a blacked-
+  // out silhouette for a species the player doesn't own yet (see start()), so
+  // filling it is the marker's whole job: this one is yours now. Called on the
+  // same beat as the Pomodex tick below, never on catch itself, so the two
+  // read as one event instead of two.
+  function fillNameTomato() {
+    if (!elNameTomato) return;
+    elNameTomato.classList.remove('is-silhouette');
+    elNameTomato.classList.remove('is-pop');
+    void elNameTomato.offsetWidth;      // restart the CSS pop animation
+    elNameTomato.classList.add('is-pop');
+  }
+
   // Reveal the Pomodex progress line on the catch screen and, when this was
   // a brand-new entry, tick the count up by one (N / TOTAL → N+1 / TOTAL)
   // with a blip. dexBefore/dexAfter are filled in asynchronously by start()
   // and saveCaught(); fall back to a +1 estimate if either didn't land.
   function showDexProgress() {
-    if (!elDexProg || !elDexCount) return;
-    const total = dexEntryTotal();
-    if (!total) return;
-
     let before = st.dexBefore;
     let after  = st.dexAfter;
     if (typeof after  !== 'number') after  = (typeof before === 'number') ? before + 1 : null;
     if (typeof before !== 'number') before = (typeof after  === 'number') ? Math.max(0, after - 1) : null;
-    if (typeof after  !== 'number') return;
+
+    const total = (elDexProg && elDexCount) ? dexEntryTotal() : 0;
+
+    // Nothing to tick: the line is missing from the page, the roster size is
+    // unknown, or the before/after numbers never landed. Fill the tomato on
+    // its own rather than bailing — a mon the player just caught must never
+    // be left sitting behind a silhouette.
+    if (!total || typeof after !== 'number') {
+      fillNameTomato();
+      return;
+    }
 
     // Duplicate catch — no new entry. Show the current tally without a tick.
+    // The marker was already full from the start of the encounter, so this
+    // only replays the pop.
     if (after <= before) {
       elDexCount.textContent = `${after} / ${total}`;
       elDexProg.hidden = false;
+      fillNameTomato();
       return;
     }
 
@@ -1386,6 +1408,7 @@ const EncounterScreen = (() => {
       elDexCount.classList.remove('is-tick');
       void elDexCount.offsetWidth;      // restart the CSS pop animation
       elDexCount.classList.add('is-tick');
+      fillNameTomato();
       SFX.play('dexTick');
     }, 650);
   }
@@ -1524,8 +1547,12 @@ const EncounterScreen = (() => {
     }
     // Tomato marker in front of the name: full icon if this species is already
     // in the collection, silhouette if not. Default to silhouette until the
-    // async caught-names read below confirms ownership.
-    if (elNameTomato) elNameTomato.classList.add('is-silhouette');
+    // async caught-names read below confirms ownership. .is-pop is last
+    // encounter's fill blip — clear it here so it can be replayed.
+    if (elNameTomato) {
+      elNameTomato.classList.add('is-silhouette');
+      elNameTomato.classList.remove('is-pop');
+    }
     elSub.textContent = '';
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
@@ -1535,8 +1562,10 @@ const EncounterScreen = (() => {
     if (elTags) {
       elTags.innerHTML = '';
       // Show only the mon's normal type badge(s) — shiny/dark status is shown in the rarity slot.
+      // { frame: true } gives each one the LV badge's outline, to match the
+      // LV badge sitting opposite it in the same topbar.
       if (typeof makeTypeBadges === 'function' && mon.type) {
-        elTags.appendChild(makeTypeBadges(mon.type));
+        elTags.appendChild(makeTypeBadges(mon.type, { frame: true }));
       }
     }
     if (elLevel) { elLevel.textContent = `LV ${st.monLevel}`; elLevel.style.display = ''; }
@@ -1574,7 +1603,15 @@ const EncounterScreen = (() => {
     // Shiny / dark wild mons get their own reveal sting instead of the plain
     // two-hit announcement — a bright rising sparkle for shiny, a low ominous
     // stab for dark.
-    SFX.play(isShiny ? 'shinyAppear' : isDark ? 'darkAppear' : 'encounter');
+    //
+    // Those two wait for the session-end chime to ring out first ({ after }).
+    // An encounter always follows a finished focus session, so the chime's
+    // four drawn-out notes are still sounding when this fires, and the sting —
+    // the whole point of a rare spawn — was buried underneath them. The plain
+    // announcement is a short blunt double-blip that cuts through fine, so it
+    // stays immediate and keeps the encounter feeling instant.
+    if (isShiny || isDark) SFX.play(isShiny ? 'shinyAppear' : 'darkAppear', { after: true });
+    else                   SFX.play('encounter');
 
     // Flash transition, then reveal the encounter overlay.
     runFlashTransition(() => {
@@ -1915,6 +1952,13 @@ const EncounterScreen = (() => {
   // Skip the mon-info card and open the caught mon's own detail card —
   // the same card My Mons opens. Falls back to the collection screen if the
   // record couldn't be resolved.
+  //
+  // Its BACK button leads to the post-catch card, not the timer: INFO is a
+  // detour off the same flow NEXT runs, so the player still gets the evolution
+  // chain and the choice of what to do next. That also means onDone is handed
+  // over rather than fired here — it awards the pal's XP and starts the next
+  // session, so it has to run exactly once, and the post-catch card owns it
+  // from the moment the detail card opens.
   async function openCaughtInfo() {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
 
@@ -1927,8 +1971,18 @@ const EncounterScreen = (() => {
     const rec  = st.caughtRec;
     const base = rec && typeof MONS !== 'undefined' ? MONS.find(m => m.id === rec.id) : null;
 
-    if (base && typeof Collection !== 'undefined' && Collection.openMonDetail) {
-      Collection.openMonDetail(base, rec);
+    const toDetail = !!(base && typeof Collection !== 'undefined' && Collection.openMonDetail);
+
+    if (toDetail) {
+      Collection.openMonDetail(base, rec, {
+        // Raised while the detail card is still up (both overlays are z-index
+        // 170, and this one is earlier in the DOM, so it sits behind until the
+        // detail card comes down) — the player never sees the timer flash past.
+        onClose: async () => {
+          await MonInfoScreen.start(st.mon, onDone, { chooseNext: true });
+          await afterCardAppears(document.getElementById('mon-info-overlay'));
+        },
+      });
       // Same 0.3s opacity-0 entry as the info card — hold this overlay behind
       // it until it lands. The My Mons fallback below is a screen, not an
       // overlay, and has no entry animation to wait on.
@@ -1938,7 +1992,8 @@ const EncounterScreen = (() => {
     }
 
     overlay.classList.remove('active');
-    if (typeof onDone === 'function') onDone();
+    // Only the fallback ends the encounter here; see the note above.
+    if (!toDetail && typeof onDone === 'function') onDone();
   }
 
   function close() {
@@ -1971,16 +2026,31 @@ const EvolutionScreen = (() => {
     dpr:      1,
   };
 
+  // Shiny and dark are recoloured with a canvas filter over the same PNG, and
+  // that filter is only applied when drawOnCtx is told about it. Neither draw
+  // below used to pass the flags, so a shiny or dark mon evolved as its plain
+  // self — both the before and the after. The flags ride on the mon object
+  // here, the way CatchScreen, MonInfoScreen and the companion canvas all read
+  // them, so a caller only has to hand over a mon that knows what it is.
+  //
+  // During the fade-in the shiny sparkle comes up at full strength, because
+  // drawOnCtx paints it outside the alpha it gives the sprite. Left as is: it
+  // lasts a second and reads as part of the build-up.
+  function variantOf(mon) {
+    return { shiny: !!(mon && mon.shiny), dark: !!(mon && mon.dark) };
+  }
+
   // Draw mon as a pure-white silhouette
   function drawSilhouette(mon, alpha, scale, bobY) {
     const white = { ...mon, color: '#ffffff', accent: '#ffffff' };
     MonSprite.drawOnCtx(ctx, white, SIZE / 2, SIZE / 2 + (bobY || 0),
-      { scale: scale || 1, alpha: alpha !== undefined ? alpha : 1 });
+      { scale: scale || 1, alpha: alpha !== undefined ? alpha : 1, ...variantOf(mon) });
   }
 
   // Draw mon in full colour
   function drawColored(mon, bobY) {
-    MonSprite.drawOnCtx(ctx, mon, SIZE / 2, SIZE / 2 + (bobY || 0), { scale: 1 });
+    MonSprite.drawOnCtx(ctx, mon, SIZE / 2, SIZE / 2 + (bobY || 0),
+      { scale: 1, ...variantOf(mon) });
   }
 
   function tick() {
@@ -2325,9 +2395,14 @@ const MonInfoScreen = (() => {
         // Swapping the real classes rather than inventing a new one — every V3
         // rule for the gold slab and the dark slab (fill, ring, clip-path, the
         // .pxb:has() ring selectors) then applies with nothing to keep in step.
-        const isSuggested = m === NextSession.suggested;
-        btn.classList.toggle('btn-primary',    isSuggested);
-        btn.classList.toggle('btn-timer-dark', !isSuggested);
+        //
+        // CONTINUE FOCUSING wears the gold slab whether or not it is the
+        // suggested mode. It and the due break are the two answers the player
+        // is actually weighing; the third is the odd one out, and leaving the
+        // "keep working" option in dark grey read as the discouraged choice.
+        const gold = m === NextSession.suggested || m === 'focus';
+        btn.classList.toggle('btn-primary',    gold);
+        btn.classList.toggle('btn-timer-dark', !gold);
       }
     }
 

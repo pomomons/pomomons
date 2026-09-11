@@ -506,7 +506,21 @@ function savePalExp(speciesId, delta) {
   const PAL_MAX = 100;
   let { level, exp } = getPalState();
 
-  const fromMon = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+  // MONS holds the species, which knows nothing about this particular pal
+  // being shiny or dark — those flags live on the caught record and are
+  // mirrored into localStorage when a companion is set. Stamp them onto both
+  // stages so the evolution animation draws the right variant; without this a
+  // shiny pal evolves on screen as its plain self.
+  const variant = {
+    shiny: localStorage.getItem('pm_active_shiny') === '1',
+    dark:  localStorage.getItem('pm_active_dark')  === '1',
+  };
+  const stageAt = (lv) => ({
+    ...(typeof getMonStage === 'function' ? getMonStage(mon, lv) : mon),
+    ...variant,
+  });
+
+  const fromMon = stageAt(level);
 
   exp += delta;
   let leveled = false;
@@ -525,7 +539,7 @@ function savePalExp(speciesId, delta) {
     Collection.updateActivePalLevel(level);
   }
 
-  const toMon  = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+  const toMon  = stageAt(level);
   const evolved = fromMon.name !== toMon.name;
 
   updateCompanionDisplay();

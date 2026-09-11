@@ -11,6 +11,13 @@ const SFX = (() => {
     return ctx;
   }
 
+  // How far into the future, on the AudioContext clock, the sounds scheduled
+  // so far ring out. tone() pushes it forward; play(name, { after: true })
+  // reads it back so a sound can wait its turn instead of landing on top of
+  // one that is still sounding. Measured rather than tabulated, so no
+  // hand-written length can drift out of step when a sound is retuned.
+  let scheduledUntil = 0;
+
   // Schedule a single tone.
   // freq  — Hz number, or { start, end } for a linear frequency sweep
   // type  — OscillatorNode type ('square' | 'triangle' | 'sine')
@@ -35,8 +42,10 @@ const SFX = (() => {
     env.gain.setValueAtTime(gain, t);
     env.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
+    const end = t + dur + 0.02;
     osc.start(t);
-    osc.stop(t + dur + 0.02);
+    osc.stop(end);
+    if (end > scheduledUntil) scheduledUntil = end;
   }
 
   // ── Sound definitions ────────────────────────────────────────
@@ -137,6 +146,17 @@ const SFX = (() => {
       tone(900,                     'triangle', t,        0.03, 0.50); // brief mid snap on attack
     },
 
+    // Soft mechanical tick → any button that makes no sound of its own.
+    // Deliberately slight next to click() above: about a tenth of its level
+    // and a third of its length. This one fires on a lot of taps, so it has
+    // to register as feedback without competing with the sounds that mark
+    // something actually happening.
+    uiClick() {
+      const t = getCtx().currentTime;
+      tone({ start: 420, end: 190 }, 'square',   t, 0.030, 0.075); // body
+      tone(1400,                     'triangle', t, 0.016, 0.040); // attack snap
+    },
+
     // Triumphant brass trumpet fanfare → catch confirmed
     fanfare() {
       const t = getCtx().currentTime;
@@ -234,10 +254,35 @@ const SFX = (() => {
   // ── Public API ───────────────────────────────────────────────
   let muted = localStorage.getItem('pm_muted') === '1';
 
-  function play(name) {
+  // performance.now() of the last sound that actually started. The general
+  // button tick at the bottom of this file reads it to work out whether a
+  // button already made a noise of its own.
+  let lastPlayAt = -Infinity;
+
+  // opts.after — hold this sound back until everything already scheduled has
+  // finished, instead of layering it over the tail. A wall-clock timer rather
+  // than an audio-clock offset, so it works for the sounds built from raw
+  // nodes (blend) as well as the tone() ones. Mute is re-checked when it
+  // actually fires, so muting during the wait still silences it.
+  function play(name, opts) {
     if (muted) return;
+    if (!sounds[name]) return;
+
+    if (opts && opts.after) {
+      let wait = 0;
+      try { wait = Math.max(0, scheduledUntil - getCtx().currentTime); } catch (_) { wait = 0; }
+      if (wait > 0) {
+        // Counts as played now. The caller has made a noise happen, even
+        // though it lands later, so the button tick shouldn't double up on it.
+        lastPlayAt = performance.now();
+        setTimeout(() => play(name), wait * 1000);
+        return;
+      }
+    }
+
     try {
-      if (sounds[name]) sounds[name]();
+      sounds[name]();
+      lastPlayAt = performance.now();
     } catch (_) { /* fail silently if Web Audio is unavailable */ }
   }
 
@@ -248,6 +293,40 @@ const SFX = (() => {
   }
 
   function isMuted() { return muted; }
+
+  // ── General button feedback ──────────────────────────────────
+  // Every button that doesn't already make a sound gets the soft tick, so the
+  // whole app answers back on tap instead of only the few places with bespoke
+  // audio.
+  //
+  // Which buttons those are is decided at click time rather than listed. This
+  // runs in the capture phase, notes the clock, and looks again on the next
+  // task — by which point the button's own handlers have run. If one of them
+  // played something, the click is already covered and this stays quiet. So
+  // there is no list to keep in step when a sound is added or taken away
+  // later, and no way for a button to end up making two noises at once.
+  //
+  // A handler that plays its sound asynchronously (after an await, or on a
+  // delay) would slip past the check and get a tick as well. Nothing in the
+  // app does that today; data-sfx="none" is the opt-out if one ever needs it.
+  const TICK_TARGETS = 'button, [role="button"], .mon-card, .mode-option';
+
+  document.addEventListener('click', (e) => {
+    if (muted) return;
+    const el = e.target && e.target.closest && e.target.closest(TICK_TARGETS);
+    if (!el) return;
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    if (el.dataset && el.dataset.sfx === 'none') return;
+
+    // Unlock the AudioContext inside the gesture itself. The tick is scheduled
+    // from a timer, which is no longer a user gesture as far as the browser is
+    // concerned — so if the very first sound of the session were a deferred
+    // tick, Safari and mobile Chrome would refuse to start audio at all.
+    try { getCtx(); } catch (_) { return; }
+
+    const at = performance.now();
+    setTimeout(() => { if (lastPlayAt < at) play('uiClick'); }, 0);
+  }, true);
 
   return { play, toggle, isMuted };
 })();
