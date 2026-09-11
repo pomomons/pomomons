@@ -1,12 +1,36 @@
+/* Both faces are self-hosted. The UI face used to come from Google Fonts,
+   which cost a render-blocking stylesheet plus DNS and TLS to two outside
+   hosts before the font could even be requested — all on the critical path,
+   for a file we can serve from the same connection as everything else. The
+   bytes are identical: this is Google's own latin subset, fetched once and
+   committed. Both are OFL, same author; the licence text sits beside them in
+   assets/fonts/.
+
+   Keep the family name 'Press Start 2P' exactly as it was — 41 rules name it
+   through --font-pixel, and it is also the metric-compatible fallback for the
+   timer face below. */
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('assets/fonts/PressStart2P-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* The timer face. A community variant of Press Start 2P that squares off the
    corners the original rounds — most visibly on the zero, which stops reading
-   as a letter O. Same author's OFL licence and the same metrics as the
-   original, so it drops in at every existing font-size unchanged.
-   Self-hosted because it isn't on Google Fonts; licence text sits beside it
-   in assets/fonts/. */
+   as a letter O. Same metrics as the original, so it drops in at every
+   existing font-size unchanged.
+
+   Subsetted to the 14 characters the timer can draw (see
+   tools/subset-fonts.js). The full face carries 568 glyphs and these two
+   selectors use eleven of them, which was 22KB over the wire to reshape a
+   zero; the subset is 0.7KB. Font fallback is per-glyph, so anything outside
+   the subset — should the editable field ever receive it — resolves through
+   the stack to plain Press Start 2P rather than rendering blank. */
 @font-face {
   font-family: 'Press Start 2P SMBTLL';
-  src: url('assets/fonts/PressStart2P-SMBTLL.ttf') format('truetype');
+  src: url('assets/fonts/PressStart2P-SMBTLL-digits.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   /* Plain Press Start 2P is the fallback and is metrically identical, so a

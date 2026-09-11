@@ -65,20 +65,26 @@
   }
   </script>
   <meta name="twitter:image" content="https://pomomons.io/assets/og-image.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <!-- Timer face, self-hosted (see the @font-face at the top of style.css).
-       Preloaded because the timer is the first thing on screen; crossorigin is
+  <!-- Both pixel faces are self-hosted (see the @font-face rules at the top of
+       style.css). The UI face used to come from Google Fonts: a render-blocking
+       stylesheet, and DNS + TLS to two outside hosts before the font could be
+       requested at all. Same bytes, now on the same connection as the rest of
+       the page, so the two preconnects that used to sit here are gone with it.
+       Preloaded because text is the first thing on screen; crossorigin is
        required even same-origin or the preload is fetched twice. -->
-  <link rel="preload" as="font" type="font/ttf" href="assets/fonts/PressStart2P-SMBTLL.ttf" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/PressStart2P-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/PressStart2P-SMBTLL-digits.woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <!-- UI V2 refresh — remove this line to revert to previous UI -->
   <link rel="stylesheet" href="style-v2.css">
   <!-- UI V3 skin (colours, plate frames, CRT texture) — remove this line to revert to V2 -->
   <link rel="stylesheet" href="style-v3.css">
   <link rel="preload" as="image" href="assets/backgrounds/forest.webp">
-  <link rel="preload" as="image" href="assets/backgrounds/forest-red.webp">
+  <!-- forest-red is the running-session background (body.run-focus), which
+       nobody sees until they press START. Fetched at low priority so it is
+       warm by then without competing with first paint; it used to preload at
+       the same priority as the default photo. -->
+  <link rel="preload" as="image" href="assets/backgrounds/forest-red.webp" fetchpriority="low">
   <!-- Favicons. favicon.ico (16/32/48 in one file) at the repo root is the
        universal fallback browsers auto-request; the two PNG links are the
        explicit modern path. All are a tight-cropped tomato on a transparent

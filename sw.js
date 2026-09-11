@@ -17,7 +17,7 @@
  *     already handled in the app.
  */
 
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v12';
 const PRECACHE = `pomomons-precache-${CACHE_VERSION}`;
 const RUNTIME  = `pomomons-runtime-${CACHE_VERSION}`;
 
@@ -44,12 +44,11 @@ const PRECACHE_URLS = [
   'assets/sprites/Tomato/Tomato.png',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png',
-  // Self-hosted, so it needs listing here — the FONT_HOSTS rule below only
-  // covers the Google-hosted faces.
-  'assets/fonts/PressStart2P-SMBTLL.ttf',
+  // Both faces are self-hosted now, so both belong in the shell.
+  'assets/fonts/PressStart2P-latin.woff2',
+  'assets/fonts/PressStart2P-SMBTLL-digits.woff2',
 ];
 
-const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -82,14 +81,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Cross-origin.
-  if (url.origin !== self.location.origin) {
-    if (FONT_HOSTS.includes(url.hostname)) {
-      event.respondWith(cacheFirst(request));
-    }
-    // else: GoatCounter etc. — don't intercept, default network fetch.
-    return;
-  }
+  // Cross-origin: nothing left to cache here. Both fonts are same-origin now,
+  // and GoatCounter must always hit the network, so don't intercept at all.
+  if (url.origin !== self.location.origin) return;
 
   // Same-origin navigation (the HTML document): network-first.
   if (request.mode === 'navigate') {
@@ -130,17 +124,4 @@ async function staleWhileRevalidate(request) {
     .catch(() => undefined);
 
   return cached || (await network) || fetch(request);
-}
-
-async function cacheFirst(request) {
-  const cache = await caches.open(RUNTIME);
-  const cached = await cache.match(request);
-  if (cached) return cached;
-  try {
-    const resp = await fetch(request);
-    if (resp && (resp.ok || resp.type === 'opaque')) cache.put(request, resp.clone());
-    return resp;
-  } catch (err) {
-    return cached || Response.error();
-  }
 }
