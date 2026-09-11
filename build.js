@@ -17,9 +17,10 @@
  *   node build.js --check  build, then run the verification pass only
  */
 
-const fs   = require('fs');
-const path = require('path');
-const zlib = require('zlib');
+const fs     = require('fs');
+const path   = require('path');
+const zlib   = require('zlib');
+const crypto = require('crypto');
 
 const { minify: minifyJS }   = require('terser');
 const CleanCSS               = require('clean-css');
@@ -85,6 +86,52 @@ const HTML_OPTS = {
   sortClassName: false,
 };
 
+// ── Cache busting ──────────────────────────────────────────
+// Every stylesheet and script reference gets ?v=<content hash>, stamped into
+// index.html and sw.js at build time.
+//
+// The service worker serves the page network-first but static assets
+// stale-while-revalidate, so the first load after a deploy used to pair the
+// NEW index.html with the PREVIOUS stylesheet out of the cache. Usually
+// survivable. Not survivable the day the new HTML dropped its Google Fonts
+// link because the new CSS self-hosts the face: the cached CSS knew nothing
+// about that, no font loaded, and every screen fell back to Courier New.
+//
+// With a hash in the URL the pairing cannot happen. The page is always fresh,
+// so it always names the current hashes; a cached entry under last deploy's
+// hash never matches and is simply refetched. It also means CACHE_VERSION
+// stops being something a human has to remember to bump.
+//
+// Fonts are deliberately NOT stamped: index.html preloads them and style.css
+// requests them, and the two URLs have to agree or the browser downloads each
+// face twice. Their filenames already change when their content does.
+const hashable = (rel) => /^[^/]+\.(css|js)$/.test(rel) && rel !== 'sw.js';
+const STAMPED  = ['index.html', 'sw.js'];
+
+function contentHash(buf) {
+  return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8);
+}
+
+function stampRefs(code, rel, hashes, version) {
+  let out = code;
+  for (const [asset, h] of Object.entries(hashes)) {
+    const esc = asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (rel === 'index.html') {
+      // Anchored on the attribute and the closing quote, so a bare mention of
+      // the filename in prose or a comment is never rewritten.
+      out = out.replace(new RegExp(`((?:href|src)=")${esc}(")`, 'g'), `$1${asset}?v=${h}$2`);
+    } else {
+      // sw.js: the quoted entries of PRECACHE_URLS.
+      out = out.replace(new RegExp(`(['"])${esc}\\1`, 'g'), `$1${asset}?v=${h}$1`);
+    }
+  }
+  if (rel === 'sw.js') {
+    out = out.replace(/const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = '${version}';`);
+  }
+  return out;
+}
+
 const gz = (s) => zlib.gzipSync(Buffer.from(s), { level: 9 }).length;
 const kb = (n) => (n / 1024).toFixed(1).padStart(6) + ' KB';
 
@@ -99,15 +146,19 @@ function record(rel, before, after) {
   rows.push([rel, b.gz, a.gz]);
 }
 
-async function processFile(rel) {
+async function processFile(rel, stamp) {
   const src  = path.join(ROOT, rel);
   const dest = path.join(OUT, rel);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
 
   const ext = path.extname(rel).toLowerCase();
+  const read = () => {
+    const raw = fs.readFileSync(src, 'utf8');
+    return stamp ? stampRefs(raw, rel, stamp.hashes, stamp.version) : raw;
+  };
 
   if (ext === '.js') {
-    const code = fs.readFileSync(src, 'utf8');
+    const code = read();
     const res  = await minifyJS(code, JS_OPTS);
     if (res.error) throw new Error(`${rel}: ${res.error}`);
     fs.writeFileSync(dest, res.code);
@@ -116,7 +167,7 @@ async function processFile(rel) {
   }
 
   if (ext === '.css') {
-    const code = fs.readFileSync(src, 'utf8');
+    const code = read();
     const res  = new CleanCSS(CSS_OPTS).minify(code);
     if (res.errors.length) throw new Error(`${rel}: ${res.errors.join('; ')}`);
     for (const w of res.warnings) console.warn(`  ! ${rel}: ${w}`);
@@ -126,7 +177,7 @@ async function processFile(rel) {
   }
 
   if (ext === '.html') {
-    const code = fs.readFileSync(src, 'utf8');
+    const code = read();
     const res  = await minifyHTML(code, HTML_OPTS);
     fs.writeFileSync(dest, res);
     record(rel, code, res);
@@ -184,6 +235,40 @@ function verify() {
     if (!cssOut.includes(cls)) problems.push(`.${cls} missing from the built CSS`);
   }
 
+  // ── Cache busting actually applied ──
+  // A missed stamp is invisible until the NEXT deploy, when a returning
+  // visitor pairs the fresh page with that asset's stale cached copy. That is
+  // the bug this whole mechanism exists to prevent, so assert it landed:
+  // every reference carries a hash, and every hash is the current one.
+  const assets = walk(ROOT).filter(hashable);
+  for (const asset of assets) {
+    const real = contentHash(fs.readFileSync(path.join(OUT, asset)));
+    const bare = new RegExp('(?:href|src)="' + asset.replace(/[.]/g, '[.]') + '"');
+    if (bare.test(outHTML)) {
+      problems.push(`${asset} is referenced without a ?v= hash in index.html`);
+    }
+    if (!outHTML.includes(`${asset}?v=${real}`)) {
+      problems.push(`${asset} is not referenced at its current hash (${real}) in index.html`);
+    }
+  }
+
+  const swOut = fs.readFileSync(path.join(OUT, 'sw.js'), 'utf8');
+  const swSrc = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
+  const srcVersion = (swSrc.match(/CACHE_VERSION = '([^']*)'/) || [])[1];
+  const outVersion = (swOut.match(/CACHE_VERSION=["']([^"']*)["']/) || [])[1];
+  if (!outVersion) problems.push('CACHE_VERSION missing from the built sw.js');
+  else if (outVersion === srcVersion) problems.push('CACHE_VERSION was not stamped by the build');
+
+  // Every precached URL must resolve to a real file, query stripped, and any
+  // hashable one must carry its hash or the precache defeats its own purpose.
+  const swRefs = swOut.matchAll(/["']([^"']+[.](?:css|js|png|webp|html|webmanifest))(\?v=[a-f0-9]+)?["']/g);
+  for (const m of swRefs) {
+    if (!fs.existsSync(path.join(OUT, m[1]))) {
+      problems.push(`sw.js precaches ${m[1]}, which is not in _site/`);
+    }
+    if (hashable(m[1]) && !m[2]) problems.push(`sw.js precaches ${m[1]} without a ?v= hash`);
+  }
+
   return problems;
 }
 
@@ -192,7 +277,25 @@ function verify() {
   fs.mkdirSync(OUT, { recursive: true });
 
   const files = walk(ROOT);
-  for (const rel of files) await processFile(rel);
+
+  // Pass 1: everything whose own content is not affected by the stamping.
+  for (const rel of files) {
+    if (!STAMPED.includes(rel)) await processFile(rel);
+  }
+
+  // Hash the built output, not the source — the bytes visitors receive are
+  // what the URL has to identify.
+  const hashes = {};
+  for (const rel of files.filter(hashable)) {
+    hashes[rel] = contentHash(fs.readFileSync(path.join(OUT, rel)));
+  }
+  const version = 'b' + contentHash(
+    Object.keys(hashes).sort().map((k) => k + hashes[k]).join('|'));
+
+  // Pass 2: the two files that carry the references.
+  for (const rel of files.filter((r) => STAMPED.includes(r))) {
+    await processFile(rel, { hashes, version });
+  }
 
   rows.sort((a, b) => (b[1] - b[2]) - (a[1] - a[2]));
   console.log('\n  file                      gzipped before   after    saved');

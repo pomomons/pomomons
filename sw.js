@@ -3,8 +3,17 @@
  * Goal: the app opens instantly and still works with no connection, without
  * ever trapping someone on a stale version.
  *
- *   - Bump CACHE_VERSION on every deploy that changes a precached file. The
- *     old caches are deleted on activate.
+ *   - CACHE_VERSION is stamped by build.js from the hashes of the built
+ *     assets, so it changes exactly when their content does and never needs
+ *     bumping by hand. Old caches are deleted on activate. The literal below
+ *     is only what a directly-served source tree falls back to.
+ *   - Asset URLs in the precache list carry the same ?v= content hash that
+ *     build.js stamps into index.html. That is what makes an upgrade safe:
+ *     the page is always fetched fresh, so it always names the current
+ *     hashes, and a stale cached entry under an old hash simply never
+ *     matches. Before this, a returning visitor's first load paired the new
+ *     index.html with the previous stylesheet out of the cache — which broke
+ *     fonts outright the day the stylesheet started self-hosting them.
  *   - Navigations (the HTML page) are network-first, so an online visitor
  *     always gets the freshest index.html and only falls back to the cached
  *     copy when offline.
@@ -113,7 +122,13 @@ async function networkFirstPage(request) {
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME);
-  const cached = await cache.match(request);
+  // Check the precache too. Install fills PRECACHE, but every static request
+  // was being looked up in RUNTIME alone, so the whole app shell was stored
+  // on install and then never served from — downloaded twice on a first
+  // visit, and kept twice. Same-URL lookup, so the ?v= hash still decides
+  // whether an entry is current.
+  const cached = (await cache.match(request))
+    || (await (await caches.open(PRECACHE)).match(request));
 
   const network = fetch(request)
     .then((resp) => {

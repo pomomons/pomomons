@@ -50,6 +50,19 @@ of CSS).
 
 - Never edit `_site/` — it is regenerated and gitignored.
 - Never minify a source file in place.
+- build.js stamps `?v=<content hash>` onto every stylesheet and script
+  reference in index.html and sw.js, and stamps CACHE_VERSION from those
+  hashes. Do NOT bump CACHE_VERSION by hand and do not add query strings
+  yourself. This exists because the service worker serves the page
+  network-first but assets stale-while-revalidate, so a returning visitor's
+  first load used to pair the new index.html with the previous stylesheet —
+  which shipped a broken font once. Fonts are deliberately unstamped: the
+  preload URL and the @font-face url() must match or each face downloads
+  twice.
+- `node tools/check-sw-upgrade.js [ref]` is the regression test for that:
+  it serves a previous deploy, lets the service worker cache it, swaps in the
+  new build, reloads once, and asserts the fonts survived. Run it after any
+  change to sw.js, the @font-face rules, or how index.html references assets.
 - `node tools/check-build.js` loads the source and built trees side by side in
   Playwright and diffs every element's geometry and computed styles across
   eight screen states (three with a companion seeded, since an empty
