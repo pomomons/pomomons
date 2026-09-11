@@ -1,0 +1,63 @@
+# Build and publish PomoMons to GitHub Pages.
+#
+# The repo root stays exactly as it is written — heavily commented source. This
+# workflow runs build.js, which strips those comments into _site/, and publishes
+# only that. Nothing to remember locally, and agent_docs/ and CLAUDE.md stop
+# being served to the public as a side effect.
+#
+# Requires the repo's Pages source to be set to "GitHub Actions"
+# (Settings -> Pages -> Build and deployment -> Source).
+#
+# If the build or its verification fails, no deployment happens and the
+# previously published version keeps serving.
+
+name: Deploy to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. A queued run waits rather than cancelling, so a
+# push is never silently dropped.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Minify into _site/
+        run: node build.js
+
+      - name: Confirm the custom domain survived
+        run: test -f _site/CNAME && cat _site/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
