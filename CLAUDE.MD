@@ -59,6 +59,13 @@ of CSS).
   which shipped a broken font once. Fonts are deliberately unstamped: the
   preload URL and the @font-face url() must match or each face downloads
   twice.
+- `node tools/check-cross-screen.js [_site]` drives each screen's controls and
+  asserts the other screens' state is untouched. The app is one page with a
+  pile of global `querySelectorAll` calls, so a class reused for its looks
+  silently becomes a shared behaviour — scope any selector that binds
+  behaviour to the container that owns it (`#mode-dropdown .mode-option`, not
+  `.mode-option`). Run it whenever you add a control that borrows another
+  component's classes.
 - `node tools/check-mymons-sort.js [_site]` seeds an awkward collection
   through Collection.importRecords and drives the real sort control, asserting
   each order, that the choice persists, and that ties are stable. It also

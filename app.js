@@ -309,6 +309,15 @@ function updateButtonStates() {
 }
 
 function setMode(mode) {
+  // Guard, not decoration. Everything downstream trusts `mode` to be one of
+  // the three keys: MODES[undefined] is undefined, timeLeft becomes NaN, and
+  // the clock reads "NaN:NaN" until the page is reloaded. That happened for
+  // real — the My Mons sort menu reuses .mode-option for its styling, and the
+  // global listener below bound itself to those buttons too, so choosing a
+  // sort order called setMode(undefined) and broke the timer on the screen
+  // behind it. The listener is scoped now; this makes the failure
+  // unreachable by any future caller as well.
+  if (!(mode in MODES)) return;
   currentMode = mode;
   timeLeft    = MODES[mode];
   running     = false;
@@ -321,7 +330,10 @@ function setMode(mode) {
   // constant, so there is nothing user-supplied going through innerHTML here.
   btnMode.innerHTML =
     `<span class="mode-label">${MODE_LABELS[mode]}</span><span class="mode-caret">▼</span>`;
-  document.querySelectorAll('.mode-option').forEach(o => {
+  // Scoped to the timer's dropdown: .mode-option is also the My Mons sort
+  // menu's styling, and an unscoped query would clear that menu's own
+  // highlight every time the timer mode changed.
+  document.querySelectorAll('#mode-dropdown .mode-option').forEach(o => {
     o.classList.toggle('active', o.dataset.mode === mode);
   });
   updateBackground();
@@ -451,7 +463,10 @@ btnMode.addEventListener('click', e => {
   modeDropdown.hidden = !opening;
 });
 
-document.querySelectorAll('.mode-option').forEach(opt => {
+// Scoped to #mode-dropdown. Unscoped, this bound the timer's mode change to
+// every .mode-option on the page, including the four in the My Mons sort
+// menu, which carry data-sort and no data-mode.
+document.querySelectorAll('#mode-dropdown .mode-option').forEach(opt => {
   opt.addEventListener('click', () => {
     titleOverride = null;
     setMode(opt.dataset.mode);
