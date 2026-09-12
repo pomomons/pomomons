@@ -1970,13 +1970,11 @@ html::after {
 
   .mymons-scroll { margin-bottom: calc(var(--stats-h) - 20px); }
   /* My Mons zeroes the line above and carries the clearance on its RESTORE
-     row instead (see .mymons-restore) — so that row needs this tier's value
-     too. Tighter padding here: the row is fixed height now, and on a small
-     phone every pixel it takes comes straight out of the grid. */
-  .mymons-restore {
-    padding: 10px 0 6px;
-    margin-bottom: calc(var(--stats-h) - 20px);
-  }
+     row instead (see .mymons-restore), which now derives it from the strip's
+     measured position and so needs no per-tier value. Only the space ABOVE
+     the row is tuned here: on a small phone every pixel it takes comes
+     straight out of the grid. */
+  .mymons-restore { padding: 10px 0 0; }
 }
 
 /* Short portrait phones (≤700px tall — iPhone SE/8, small Android, or any
@@ -2176,16 +2174,29 @@ html::after {
   width: 100%;
   display: flex;
   justify-content: center;
-  /* Asymmetric on purpose — the two sides start from different places, and
-     the goal is an even ~14px above / ~10px below the button as rendered:
-       · above: .screen already contributes an 8px flex gap, so padding-top
-         only tops that up (6 + 8 = 14).
-       · below: the claw-back margin puts the row's edge ~2px under the
-         strip's visible plate, so padding-bottom has to buy the gap back
-         (12 − 2 = 10).
-     Measure, don't eyeball, if these are ever retuned. */
-  padding: 6px 0 12px;
-  margin-bottom: calc(var(--stats-h) - 32px);
+  /* Above: .screen already contributes an 8px flex gap, so padding-top only
+     tops that up (6 + 8 = 14).
+
+     Below: the gap to the strip is the SAME 16px the header leaves between
+     BACK and the blender panel, and it comes out of the margin alone —
+     padding-bottom is 0 so there is one number to reason about.
+
+     That margin is based on --stats-reserve (app.js, updateStatsReserve),
+     not --stats-h, because --stats-h is a worst-case reserve sized to cover
+     the strip wrapped to two rows: against the strip's real height it ran
+     21px long on a desktop window and 17px short on a short landscape one,
+     so the gap swung from 21px to the button sitting BEHIND the strip
+     depending on the viewport. --stats-reserve is the strip measured where
+     it actually sits — height + the gap it floats above the bezel + 8 — so
+     the strip's top edge is (reserve − 8) off the viewport bottom. With
+     #screen-mymons's own 12px padding-bottom below this row:
+       margin = (reserve − 8) − 12 + 16 = reserve − 4
+     A ResizeObserver on the strip keeps the var current on every screen, so
+     this needs no per-breakpoint retuning. The var() fallback holds the old
+     behaviour if app.js hasn't run yet.
+     Measure, don't eyeball, if this is ever retuned. */
+  padding: 6px 0 0;
+  margin-bottom: calc(var(--stats-reserve, var(--stats-h)) - 4px);
 }
 
 .collection-tab {
@@ -2538,12 +2549,10 @@ html::after,
 
   .stats-strip .stats-row { padding: 8px 12px; }
   .mymons-scroll { margin-bottom: calc(var(--stats-h) - 2px); }
-  /* Same transfer as the ≤479px tier — landscape is the shortest viewport of
-     all, so the row is pared back further still. */
-  .mymons-restore {
-    padding: 8px 0 4px;
-    margin-bottom: calc(var(--stats-h) - 2px);
-  }
+  /* Same as the ≤479px tier, and for the same reason — landscape is the
+     shortest viewport of all, so the space above the row is pared back
+     further still. The gap below it comes from the base rule. */
+  .mymons-restore { padding: 8px 0 0; }
 
   /* Encounter overlay — one step smaller than the block above. */
   .encounter-overlay { padding-top: 10px; }

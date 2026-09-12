@@ -119,6 +119,17 @@ Full-screen. Layout top→bottom:
   with a `margin-bottom` clawback to the stats strip) scrolls — a true clip
   top and bottom, so cards never render behind the header or the translucent
   footer. RESTORE parks at the foot of that scroll box (`.mymons-restore`).
+- **The gap under RESTORE is 16px, the same gap the header leaves between
+  BACK and the blender panel**, and it is derived, not tuned: `.mymons-restore`
+  takes `margin-bottom: calc(var(--stats-reserve) - 4px)`, where
+  `--stats-reserve` is the strip measured where it actually sits (app.js
+  `updateStatsReserve`, kept current by a ResizeObserver on the strip). It used
+  to claw back from `--stats-h`, which is a worst-case reserve sized for the
+  strip wrapped to two rows — against the strip's real height that ran 21px
+  long on a desktop window and 17px short on a short landscape one, so the gap
+  swung from 21px down to the button sitting behind the strip depending on the
+  viewport. `node tools/measure-mymons-gaps.js` prints both gaps across
+  viewports; they now read 16px everywhere.
 - **Blender toolbar** (desktop only; hidden < 480px): two horizontal dashed
   cards — BLEND (drop target) and SMOOTHIES (drag source, count as a lowercase
   `x N` badge on the icon's corner).
