@@ -48,6 +48,13 @@ CLAUDE.md and README.md are no longer served publicly. The comments were 64% of
 the download before this existed (style-v3.css alone shipped 42KB to deliver 8KB
 of CSS).
 
+- `TEST_FOCUS_SECS` / `TEST_BREAK_SECS` in app.js short-circuit session
+  durations for local testing. build.js REFUSES to build while either is
+  non-null, because every push to main deploys automatically and a 3-second
+  focus session still credits a full focusMins to sessions, minutes and the
+  day-by-day history. Set them, test, set them back to null before committing
+  app.js. If a push slips through, the build fails and the previous deploy
+  keeps serving.
 - Never edit `_site/` — it is regenerated and gitignored.
 - Never minify a source file in place.
 - build.js stamps `?v=<content hash>` onto every stylesheet and script

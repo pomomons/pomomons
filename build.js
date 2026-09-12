@@ -206,6 +206,24 @@ function walk(dir, base = '') {
 function verify() {
   const problems = [];
 
+  // ── The testing override must never ship ──
+  // app.js can short-circuit session durations to a few seconds for local
+  // testing. Every push to main deploys automatically, so leaving it on is
+  // one forgotten `git push` away from real visitors finishing a "focus
+  // session" in three seconds — and each one still credits a full focusMins
+  // to their sessions, minutes and day-by-day history. That is exactly how
+  // this project's own stats reached 680 minutes across 35 sessions in an
+  // afternoon. A failed build publishes nothing and leaves the previous
+  // deploy serving, which is the right outcome here.
+  const appSrc = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+  for (const name of ['TEST_FOCUS_SECS', 'TEST_BREAK_SECS']) {
+    const m = appSrc.match(new RegExp('const ' + name + '\\s*=\\s*([^;]+);'));
+    if (m && m[1].trim() !== 'null') {
+      problems.push(`${name} is ${m[1].trim()}, not null — `
+        + 'the testing override is on and must not be deployed');
+    }
+  }
+
   for (const rel of walk(OUT)) {
     if (!rel.endsWith('.js')) continue;
     const code = fs.readFileSync(path.join(OUT, rel), 'utf8');
