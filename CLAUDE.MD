@@ -59,6 +59,12 @@ of CSS).
   which shipped a broken font once. Fonts are deliberately unstamped: the
   preload URL and the @font-face url() must match or each face downloads
   twice.
+- `node tools/check-mymons-sort.js [_site]` seeds an awkward collection
+  through Collection.importRecords and drives the real sort control, asserting
+  each order, that the choice persists, and that ties are stable. It also
+  checks the rendered card count still matches the seed — renderMyMons drops
+  any record whose species id is missing from MONS, silently, and the roster
+  skips id 2.
 - `node tools/check-sw-upgrade.js [ref]` is the regression test for that:
   it serves a previous deploy, lets the service worker cache it, swaps in the
   new build, reloads once, and asserts the fonts survived. Run it after any

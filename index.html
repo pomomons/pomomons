@@ -271,6 +271,15 @@
            button that used to live here now sits centered at the bottom of
            the scroll area (.mymons-restore, below). -->
       <div class="collection-header-end">
+        <!-- Sort control. Same button-plus-fixed-dropdown pattern as the
+             timer's mode picker (#btn-mode / .mode-dropdown), so it reuses
+             those styles wholesale. Lives in the header rather than a row of
+             its own because .mymons-top is pinned — a new row there would
+             cost the grid that height permanently. -->
+        <div class="pxb"><button class="btn btn-ghost btn-sm" id="btn-mymons-sort"
+                aria-haspopup="true" aria-expanded="false"
+                aria-label="Sort your mons"><span class="sort-label"
+                id="mymons-sort-label">NEWEST</span><span class="mode-caret">▼</span></button></div>
         <span class="collection-count" id="mymons-count">0</span>
       </div>
     </div>
@@ -690,6 +699,16 @@
     <button class="mode-option active" data-mode="focus">FOCUS SESSION</button>
     <button class="mode-option" data-mode="short">SHORT BREAK</button>
     <button class="mode-option" data-mode="long">LONG BREAK</button>
+  </div>
+
+  <!-- My Mons sort menu. Anchored under #btn-mymons-sort by collection.js,
+       same mechanism as .mode-dropdown above and styled by the same rules. -->
+  <div class="mode-dropdown" id="mymons-sort-menu" hidden role="menu"
+       aria-label="Sort your mons">
+    <button class="mode-option active" data-sort="newest" role="menuitemradio">NEWEST</button>
+    <button class="mode-option" data-sort="species" role="menuitemradio">SPECIES</button>
+    <button class="mode-option" data-sort="level" role="menuitemradio">LEVEL</button>
+    <button class="mode-option" data-sort="rarity" role="menuitemradio">RARITY</button>
   </div>
 
   <!-- Settings menu — anchored under the gear (#btn-settings) by app.js,

@@ -3179,3 +3179,40 @@ html::after,
   .history-foot { grid-template-columns: 1fr 36px 40px 46px; }
   .history-list { max-height: 40vh; }
 }
+
+/* ── My Mons sort control ──────────────────────────────────
+   Button plus fixed dropdown, reusing .mode-dropdown / .mode-option from the
+   timer's mode picker. Only the bits that differ live here: the caret is
+   inline rather than pinned to the button's right edge (that absolute rule is
+   scoped to .btn-timer-mode), and the menu sizes to its own content because
+   it is right-aligned to a button narrower than the words inside it. */
+#btn-mymons-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+#btn-mymons-sort .mode-caret {
+  font-size: .8em;
+  opacity: .75;
+}
+
+#mymons-sort-menu {
+  min-width: 132px;
+}
+
+#mymons-sort-menu .mode-option {
+  text-align: left;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+/* The header row runs BACK | tabs | sort + count. On a phone that is too much
+   for one line, and .collection-header-end already re-centres itself there
+   (see the tier above); keep the two children on one line inside it rather
+   than letting the count drop under the button. */
+@media (max-width: 560px) {
+  .collection-header-end { flex-wrap: nowrap; }
+  #btn-mymons-sort { font-size: 9px; padding: 8px 10px; gap: 6px; }
+}

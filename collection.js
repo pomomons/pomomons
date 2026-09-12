@@ -928,12 +928,128 @@ const Collection = (() => {
     btn.classList.toggle('is-equipped', isActive);
   }
 
+  // ── My Mons sort order ────────────────────────────────────────
+  // Four orders over the same list of individual records. Every comparator
+  // ends in the same tie-break chain so the grid is fully deterministic —
+  // two mons that match on the chosen key never swap places between renders,
+  // which they would under an unstable sort and would read as the grid
+  // shuffling itself.
+  //
+  // _key is IndexedDB's autoIncrement, handed out in catch order, so it is
+  // the last-resort age stand-in for records saved before caughtAt existed.
+  const SORT_KEY = 'pm_mymons_sort';
+
+  const caughtOrder = (r) => r.caughtAt || 0;
+
+  // Shiny outranks dark outranks plain. Shiny wins outright at catch time
+  // (see the roll in game.js), so a record flagged both is shiny.
+  const rarityRank = (r) => (r.shiny ? 2 : r.dark ? 1 : 0);
+
+  // The base species, not the evolved stage on the card. Sorting by species
+  // should gather every Tomotot together whether or not it has evolved, and
+  // stages carry their own dexNum which would scatter them.
+  function speciesRank(r) {
+    const mon = MONS.find((m) => m.id === r.id);
+    return (mon && (mon.dexNum || mon.id)) || 9999;
+  }
+
+  const SORTS = {
+    newest: {
+      label: 'NEWEST',
+      cmp: (a, b) => caughtOrder(b) - caughtOrder(a),
+    },
+    species: {
+      label: 'SPECIES',
+      cmp: (a, b) => speciesRank(a) - speciesRank(b)
+                  || (b.palLevel || 1) - (a.palLevel || 1),
+    },
+    level: {
+      label: 'LEVEL',
+      cmp: (a, b) => (b.palLevel || 1) - (a.palLevel || 1)
+                  || speciesRank(a) - speciesRank(b),
+    },
+    rarity: {
+      label: 'RARITY',
+      cmp: (a, b) => rarityRank(b) - rarityRank(a)
+                  || (b.palLevel || 1) - (a.palLevel || 1)
+                  || speciesRank(a) - speciesRank(b),
+    },
+  };
+
+  let sortMode = SORTS[localStorage.getItem(SORT_KEY)] ? localStorage.getItem(SORT_KEY) : 'newest';
+
+  function sortRecords(records) {
+    const { cmp } = SORTS[sortMode] || SORTS.newest;
+    return [...records].sort((a, b) =>
+      cmp(a, b)
+      || caughtOrder(b) - caughtOrder(a)
+      || (b._key || 0) - (a._key || 0));
+  }
+
+  // Anchored under its button exactly like the timer's mode picker. Fixed
+  // position, so it is measured at open time rather than laid out in the
+  // header, where it would have widened the pinned top strip.
+  function setupSortMenu() {
+    const btn  = document.getElementById('btn-mymons-sort');
+    const menu = document.getElementById('mymons-sort-menu');
+    if (!btn || !menu || btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+
+    const label = document.getElementById('mymons-sort-label');
+    const paint = () => {
+      if (label) label.textContent = (SORTS[sortMode] || SORTS.newest).label;
+      menu.querySelectorAll('.mode-option').forEach((o) => {
+        const on = o.dataset.sort === sortMode;
+        o.classList.toggle('active', on);
+        o.setAttribute('aria-checked', String(on));
+      });
+    };
+    const close = () => {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const opening = menu.hidden;
+      if (opening) {
+        const r = btn.getBoundingClientRect();
+        menu.style.top = `${r.bottom + 6}px`;
+        // Right-aligned: the button sits at the header's right edge, so a
+        // left-anchored menu wider than it would hang off the viewport.
+        menu.style.left = 'auto';
+        menu.style.right = `${Math.max(8, window.innerWidth - r.right)}px`;
+        menu.style.width = '';
+      }
+      menu.hidden = !opening;
+      btn.setAttribute('aria-expanded', String(opening));
+    });
+
+    menu.addEventListener('click', (e) => {
+      const opt = e.target.closest('.mode-option');
+      if (!opt) return;
+      e.stopPropagation();
+      sortMode = SORTS[opt.dataset.sort] ? opt.dataset.sort : 'newest';
+      localStorage.setItem(SORT_KEY, sortMode);
+      if (typeof SFX !== 'undefined') SFX.play('click');
+      paint();
+      close();
+      renderMyMons();
+    });
+
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    window.addEventListener('resize', close);
+    paint();
+  }
+
   // ── Public: renderMyMons — every individual caught record ─────
   async function renderMyMons() {
     const grid  = document.getElementById('mymons-grid');
     const count = document.getElementById('mymons-count');
 
     setupBlender();
+    setupSortMenu();
 
     if (!db) {
       if (count) count.textContent = '0';
@@ -957,7 +1073,7 @@ const Collection = (() => {
     }
 
     const activeRecKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
-    const sorted       = [...allCaught].sort((a, b) => (b.caughtAt || 0) - (a.caughtAt || 0));
+    const sorted       = sortRecords(allCaught);
 
     grid.innerHTML = '';
     const fragment = document.createDocumentFragment();
