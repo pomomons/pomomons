@@ -132,6 +132,99 @@ const MonSprite = (() => {
     return mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
   }
 
+  // ── Where the art actually starts inside its frame ─────────
+  // Sprite frames are not tightly cropped: most creatures sit low in their
+  // frame with transparent rows above them, and how many varies per sprite.
+  //
+  // Both screens used to hang the floating caption off the sprite BOX top —
+  // the top edge of the square the frame is drawn into — which silently
+  // assumes every head touches that edge. It does not, so the gap you saw
+  // was the intended gap PLUS that sprite's own padding, and ranged from
+  // 6.6px on Guacamonger (16 transparent rows) to 43.9px on Marinaro (104).
+  // Same code, same intent, wildly different result per mon.
+  //
+  // This measures the first row of frame 0 that has any opaque pixel and
+  // returns it as a fraction of the frame's height, which is also its
+  // fraction of the drawn square. Callers add `fraction * size` to the box
+  // top to get the real top of the creature.
+  //
+  // Measured across every frame, taking the HIGHEST art of any of them, so the
+  // caption can never be crossed by the art whichever frame is showing.
+  //
+  // 18 of the 20 sprites have their two frames vertically aligned, so the
+  // frame choice changes nothing for them. Marinaro is the exception: its
+  // blink frame adds steam wisps 9 source rows above the pot lid, and the
+  // blink is drawn for 450ms out of every 3450ms. Measuring only the resting
+  // frame gave it the same 10px gap as everything else and then let the steam
+  // cross the caption by 12px during each flash — a 13px caption with the
+  // steam straight through it. Clearing the tallest frame is the only option
+  // that never collides; the cost is that Marinaro's gap to its lid reads
+  // wider than the rest while the steam is not drawn.
+  //
+  // The real fix for that one mon is in its art: if frame 0's steam were
+  // dropped, or added to frame 1 as well, its caption would line up with the
+  // rest of the roster automatically and nothing here would need changing.
+  const _artTop = {};
+
+  // Takes an already-resolved src plus its sheet layout. CompanionCanvas holds
+  // a flattened SPRITE descriptor rather than a mon object, so it calls this
+  // one directly; artTopFraction() below is the wrapper for callers that do
+  // have a mon.
+  function artTopFractionFor(src, frames = 1, axis = 'x', blinkMode = false) {
+    if (!src) return 0;
+    if (src in _artTop) return _artTop[src] || 0;
+
+    const img = getImage(src);
+    if (!img.complete || img.naturalWidth === 0) return 0;  // measure once loaded
+
+    const srcW = axis === 'y' ? img.naturalWidth  : img.naturalWidth / frames;
+    const srcH = axis === 'y' ? img.naturalHeight / frames : img.naturalHeight;
+    if (!(srcW > 0) || !(srcH > 0)) return 0;
+
+    let frac = 0;
+    try {
+      const probe = document.createElement('canvas');
+      probe.width = srcW; probe.height = srcH;
+      const pctx = probe.getContext('2d', { willReadFrequently: true });
+      pctx.imageSmoothingEnabled = false;
+
+      let best = srcH;
+      for (let f = 0; f < frames; f++) {
+        pctx.clearRect(0, 0, srcW, srcH);
+        const sx = axis === 'y' ? 0 : f * srcW;
+        const sy = axis === 'y' ? f * srcH : 0;
+        pctx.drawImage(img, sx, sy, srcW, srcH, 0, 0, srcW, srcH);
+        const data = pctx.getImageData(0, 0, srcW, srcH).data;
+        let row = -1;
+        for (let y = 0; y < srcH && row < 0; y++) {
+          for (let x = 0; x < srcW; x++) {
+            // 16, not 0: a few sprites carry faint anti-aliased fringe rows
+            // that are invisible on screen but would read as the art's top.
+            if (data[(y * srcW + x) * 4 + 3] > 16) { row = y; break; }
+          }
+        }
+        if (row >= 0 && row < best) best = row;
+      }
+      if (best > 0 && best < srcH) frac = best / srcH;
+    } catch (e) {
+      // getImageData throws on a tainted canvas, which is what happens if the
+      // app is opened over file:// rather than served. Cache the failure and
+      // fall back to the old box-top behaviour rather than retrying per frame.
+      frac = 0;
+    }
+    _artTop[src] = frac;
+    return frac;
+  }
+
+  function artTopFraction(mon, shiny = false) {
+    if (!mon) return 0;
+    return artTopFractionFor(
+      shiny ? (mon.shinySprite || mon.sprite) : mon.sprite,
+      mon.spriteFrames || 1,
+      mon.spriteAxis || 'x',
+      mon.spriteBlinkMode || false);
+  }
+
   // Draw scale that lands a mon at its proportional display size within a
   // box sized for the largest mon. Falls back to desiredScale pre-load.
   function sizeScale(mon, boxPx, desiredScale = 1, shiny = false) {
@@ -389,6 +482,7 @@ const MonSprite = (() => {
   }
 
   return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle,
+           artTopFraction, artTopFractionFor,
            displaySize, nativeFrameW, sizeScale };
 })();
 
@@ -468,6 +562,17 @@ const CompanionCanvas = (() => {
 
     const cRect = canvas.getBoundingClientRect();
     if (cRect.height > 0 && nameEl) {
+      // Room for the caption, unconditionally — not only when the LV badge
+      // and XP bar sit over the stage. Without this the largest mons hit the
+      // size cap (GROUND_Y - 16 = 176) with their heads so close to the top
+      // of the canvas that the caption's computed position went ABOVE it and
+      // was clamped to the canvas top, collapsing the gap to ~7px while
+      // every smaller mon got ~11px. Mirrors the GAP formula in layoutName().
+      // Only mons that would actually overrun are affected; everything under
+      // the cap keeps its proportional size.
+      const capPx = nameEl.offsetHeight + Math.max(8, cRect.height * 0.06);
+      units = Math.max(units, capPx / cRect.height * CANVAS_SIZE);
+
       let lowest = 0;
       for (const g of [document.getElementById('btn-companion-level'),
                        document.querySelector('.companion-meta .xp-frame')]) {
@@ -653,7 +758,15 @@ const CompanionCanvas = (() => {
         const size = Math.min(MonSprite.displaySize(srcW, MON_BOX),
                               GROUND_Y - _topReserve);
         const cy   = GROUND_Y - size / 2;
-        state.headY = cy - size / 2; // resting sprite-box top, for the floating name
+        // The real top of the creature, not the top of its frame: sprites are
+        // not tightly cropped, so the box top is the art top PLUS however
+        // many transparent rows that particular sprite happens to carry. That
+        // padding was being added to the caption's gap, which is why the gap
+        // ranged from 7px to 44px across the roster instead of being one
+        // distance. artTopFraction() measures it; see its own note.
+        const artTop = MonSprite.artTopFractionFor(
+          SPRITE.spriteSrc, SPRITE.frames, SPRITE.frameAxis, SPRITE.blinkMode);
+        state.headY = cy - size / 2 + artTop * size;
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
         ctx.translate(cx, cy + bobY);
@@ -1111,7 +1224,12 @@ const EncounterScreen = (() => {
   function positionMonName() {
     if (!elMonName) return;
     if (!st.monSize) { elMonName.style.opacity = '0'; return; }
-    const boxTop = (MON_CY - st.monSize / 2) / H * 100; // sprite-box top, % of canvas
+    // Top of the art, not of the frame — see MonSprite.artTopFraction. The
+    // encounter screen carried the identical bug: a mon with a lot of
+    // transparent rows above it got its name parked well clear of its head.
+    const artTop = st.mon
+      ? MonSprite.artTopFraction(st.mon, st.mon.shiny && !st.mon.dark) : 0;
+    const boxTop = (MON_CY - st.monSize / 2 + artTop * st.monSize) / H * 100;
     // 9% of the canvas above that box, up from 7, so a big mon's head keeps a
     // bit of air between it and the caption.
     elMonName.style.top = (boxTop - 9) + '%';

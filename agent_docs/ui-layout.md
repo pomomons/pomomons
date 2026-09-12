@@ -147,3 +147,37 @@ seeds a full collection via `Collection.addCaught`, forces short sessions
 in-page (`MODES.focus = 2`), and captures every screen at 1440px + 375px into
 `tools/shots/`. Run: `node tools/shoot.js`. This is how UI changes are
 visually verified.
+
+## Floating mon caption placement
+
+Both the timer screen's companion and the encounter screen hang the mon's
+name off the top of its art, measured by `MonSprite.artTopFraction` /
+`artTopFractionFor` in game.js.
+
+They used to hang it off the sprite BOX top — the top edge of the square the
+frame is drawn into — which assumes every creature's head touches that edge.
+None of them do: sprite frames carry transparent rows above the art, and how
+many varies per sprite. The gap you saw was the intended gap plus that
+sprite's own padding, so it ranged from 6.6px (Guacamonger, 16 rows) to
+43.9px (Marinaro, 104) across the roster. 18 of the 20 forms now land within
+9.7-11.4px of each other.
+
+Two things to know before changing it:
+
+- The measurement takes the HIGHEST art across all frames, not the resting
+  frame. Frames are vertically aligned on 18 of 20 sprites so it usually
+  makes no difference. Marinaro's blink frame adds steam wisps 9 source rows
+  above its lid; measuring the resting frame gave it a normal 10px gap and
+  then let the steam cross the caption by 12px during each 450ms flash.
+  Marinaro (31px) and Donot (15px, frames differ by 2 rows) therefore still
+  read wider than the rest. Both close on their own if their frames are
+  aligned in the art.
+- `readTopReserve` reserves the caption's own height unconditionally, not
+  only when the LV badge and XP bar sit over the stage. Without it the
+  largest mons hit the size cap with their heads so near the canvas top that
+  the caption's position went above it and was clamped, collapsing their gap
+  to ~7px. This shrinks the two 64px sprites slightly on desktop; everything
+  under the cap is unaffected.
+
+`node tools/measure-name-gap.js` prints the real gap per form, measured from
+the caption's bottom edge to the first pixel the canvas actually painted.
