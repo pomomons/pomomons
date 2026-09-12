@@ -3186,6 +3186,15 @@ html::after,
    inline rather than pinned to the button's right edge (that absolute rule is
    scoped to .btn-timer-mode), and the menu sizes to its own content because
    it is right-aligned to a button narrower than the words inside it. */
+/* No edge ring. .pxb paints --btn-ring through its own 2px of padding, which
+   is right where a button sits on a panel and wrong here: this button shares
+   the header row with BACK, out on the open forest photo, where the ring
+   reads as a green halo rather than an edge. Exactly why .pxb-back is
+   transparent too — see that rule for the full reasoning. Transparent rather
+   than removing the padding, so the button keeps its size and the row's
+   spacing does not shift. */
+.pxb-sort { --btn-ring: transparent; }
+
 #btn-mymons-sort {
   display: inline-flex;
   align-items: center;
