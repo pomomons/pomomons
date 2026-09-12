@@ -169,9 +169,9 @@ Two things to know before changing it:
   makes no difference. Marinaro's blink frame adds steam wisps 9 source rows
   above its lid; measuring the resting frame gave it a normal 10px gap and
   then let the steam cross the caption by 12px during each 450ms flash.
-  Marinaro (31px) and Donot (15px, frames differ by 2 rows) therefore still
-  read wider than the rest. Both close on their own if their frames are
-  aligned in the art.
+  Marinaro (31px) therefore still reads wider than the rest; it closes on its
+  own if that sprite's frames are aligned in the art. Donot's 2-row
+  difference is not visible in the gap.
 - `readTopReserve` reserves the caption's own height unconditionally, not
   only when the LV badge and XP bar sit over the stage. Without it the
   largest mons hit the size cap with their heads so near the canvas top that
@@ -179,5 +179,28 @@ Two things to know before changing it:
   to ~7px. This shrinks the two 64px sprites slightly on desktop; everything
   under the cap is unaffected.
 
+Two invariants `layoutName()` depends on, both of which were broken and are
+now covered by `node tools/check-name-stable.js`:
+
+- **Never compute against a hidden screen.** `display:none` makes every box
+  measure 0, so the position resolves to `top:0` — and caching that while
+  clearing the dirty flag meant it was never recomputed, because nothing
+  tick() watches changes on the way back. Equipping happens FROM My Mons, so
+  the timer screen is hidden at exactly the moment setMon() invalidates the
+  caption. The guard returns early WITHOUT clearing `_nameDirty`.
+- **Size the caption before measuring it.** `sizeMonName` sets the font size,
+  which decides the caption's height, and the height is an input to its own
+  position. Sizing afterwards used the previous caption's height and landed
+  3px out, correcting only if a later invalidation happened to fire — which
+  made it depend on how you got to the screen.
+
+Both were introduced by caching this work instead of running it every frame.
+Anything that reads a measurement here has to ask whether it is reading it
+before or after something else changes it, and whether the screen is even
+visible.
+
 `node tools/measure-name-gap.js` prints the real gap per form, measured from
 the caption's bottom edge to the first pixel the canvas actually painted.
+`node tools/check-name-stable.js` re-reads the same mons across reloads,
+switches, waits, a hidden screen, and the real equip-through-the-UI flow, and
+fails if any of them disagree.

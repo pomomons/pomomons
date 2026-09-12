@@ -627,8 +627,43 @@ const CompanionCanvas = (() => {
   function invalidateName() { _nameDirty = true; }
 
   function layoutName() {
-    _nameDirty = false;
     if (!nameEl || !canvas) return;
+
+    // A display:none screen has no layout: every box measures 0, every rect
+    // is zeroes. Computing here would derive a position from nothing — it
+    // lands at top:0 — and then cache it, and because none of the inputs
+    // tick() watches change on the way back, it would never be recomputed.
+    //
+    // That is exactly what happened: equipping a companion happens FROM the
+    // My Mons screen, so the timer screen is hidden at the moment setMon()
+    // invalidates the caption. Returning to the timer showed the name pinned
+    // to the top of the stage. Before this function existed the same work ran
+    // every frame, so it healed itself on the first visible frame and the bug
+    // could not exist.
+    //
+    // Deliberately does NOT clear _nameDirty: staying dirty is what makes
+    // tick() retry on a frame where the canvas actually has a box.
+    if (!(canvas.offsetHeight > 0) || !(canvas.offsetWidth > 0)) return;
+
+    _nameDirty = false;
+
+    // ── Size the caption BEFORE measuring it ──
+    // sizeMonName sets the font size, which decides the caption's height —
+    // and that height is an input to its own position, since the caption's
+    // BOTTOM is what sits GAP above the mon. Sizing afterwards, as this used
+    // to, computed the position from the PREVIOUS caption's height and landed
+    // 3px out. It corrected only if some later invalidation happened to fire,
+    // and whether one did depended on how you got here: switching mons with
+    // the timer on screen got a second pass and looked right, equipping from
+    // My Mons got a single pass and stayed wrong. Sizing first makes it
+    // single-pass and identical on every path.
+    //
+    // No feedback loop: sizeMonName's inputs are the canvas and panel widths
+    // and the text, none of which this function touches.
+    sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
+    const capH = nameEl.offsetHeight;
+    // A caption that changed height changes the room left for the mon.
+    if (capH !== _lastNameH) readTopReserve();
 
     // Measured against the canvas's own box rather than the stage's.
     // The two coincide everywhere except on a phone, where style-v3.css
@@ -660,7 +695,7 @@ const CompanionCanvas = (() => {
     if (!metaEl) metaEl = document.querySelector('.companion-meta');
     const metaShown = metaEl && getComputedStyle(metaEl).visibility !== 'hidden';
     let topPx = canvas.offsetTop + headFrac * canvas.offsetHeight
-                - nameEl.offsetHeight - GAP;
+                - capH - GAP;
     if (metaShown) {
       const parentTop = nameEl.offsetParent
         ? nameEl.offsetParent.getBoundingClientRect().top : 0;
@@ -682,15 +717,6 @@ const CompanionCanvas = (() => {
     // is everywhere except the phone tiers. The LV/XP floor below is what
     // stops the caption riding up into the readout.
     nameEl.style.top = `${Math.max(canvas.offsetTop, topPx)}px`;
-    // Same reason the top is measured off the canvas and not the stage:
-    // on a phone the canvas is the box that actually grew. Width cap is
-    // the panel, which the 1.7x canvas is wider than.
-    sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
-    // Caption changed height (a longer name wrapped, or the font landed):
-    // the mon's size cap is measured off it, so it has to be re-derived.
-    // Read last, after both writes above, so this is the only forced reflow
-    // in the function rather than one per frame.
-    if (nameEl.offsetHeight !== _lastNameH) readTopReserve();
 
     _lastNameText = nameEl.textContent;
     _lastHeadY    = state.headY;
