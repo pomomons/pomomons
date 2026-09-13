@@ -278,7 +278,9 @@ function renderStats() {
   const prefix = statsScope === 'today' ? 'pm_today_' : 'pm_total_';
   const read = kind => parseInt(localStorage.getItem(prefix + kind) || '0', 10);
   const el = id => document.getElementById(id);
-  if (el('stat-sessions')) el('stat-sessions').textContent = read('sessions');
+  // No SESSIONS tile any more — it tracked almost exactly with CATCHES, since
+  // all but a missed throw ends in a catch. The number is still recorded: the
+  // History modal breaks it out per day, and the long-break cadence counts it.
   if (el('stat-minutes'))  el('stat-minutes').textContent  = read('minutes');
   if (el('stat-catches'))  el('stat-catches').textContent  = read('catches');
   const scopeBtn = el('btn-stats-scope');

@@ -662,7 +662,7 @@
       <!-- .stat-frame draws each tile's outline via its own background showing
            through its padding — same two-layer trick as the panels. -->
       <div class="stats-inline">
-        <!-- Scope toggle: swaps the three tiles between all-time totals and
+        <!-- Scope toggle: swaps the two tiles between all-time totals and
              today only. Its own label IS the readout of which set is showing,
              so the tiles don't need a caption of their own. Text and title are
              filled in by renderStats(). -->
@@ -677,10 +677,6 @@
             <span class="stat-scope-ghost" aria-hidden="true">ALL TIME</span>
           </button>
         </div>
-        <div class="stat-frame"><div class="stat-item">
-          <span class="stat-val" id="stat-sessions">0</span>
-          <span class="stat-label">SESSIONS</span>
-        </div></div>
         <div class="stat-frame"><div class="stat-item">
           <span class="stat-val" id="stat-minutes">0</span>
           <span class="stat-label">MINUTES</span>
