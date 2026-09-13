@@ -190,6 +190,33 @@ const Collection = (() => {
     });
   }
 
+  // ── Internal: countCaught — how many records, without reading them ──
+  // renderDex needs the My Mons tally for the tab label but has no reason to
+  // pull every record across to get it, so it asks the store to count.
+  function countCaught() {
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req   = store.count();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror   = () => reject(req.error);
+    });
+  }
+
+  // ── Internal: setMyMonsTabCount — the tally inside the MY MONS tab ──
+  // The number used to sit in the header's end slot beside the sort control,
+  // where it read as a caption for the row rather than a count of the thing
+  // the tab opens. It now rides inside the tab label itself — "MY MONS (14)"
+  // — which means there are two of them: the tab appears on both collection
+  // screens and both have to agree, so every caller goes through here.
+  function setMyMonsTabCount(n) {
+    const txt = `(${n})`;
+    for (const id of ['mymons-tab-count', 'mymons-tab-count-dex']) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = txt;
+    }
+  }
+
   // ── Internal: getAllCaughtWithKeys — records include their IDB primary key
   function getAllCaughtWithKeys() {
     return new Promise((resolve, reject) => {
@@ -597,6 +624,7 @@ const Collection = (() => {
     const count = document.getElementById('dex-count');
 
     if (!db) {
+      setMyMonsTabCount(0);
       if (count) count.textContent = `0 / ${TOTAL_DEX}`;
       if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable (storage not supported).</p>';
       return;
@@ -611,6 +639,11 @@ const Collection = (() => {
     }
 
     if (count) count.textContent = `${ownedNames.size} / ${TOTAL_DEX}`;
+
+    // This screen carries a MY MONS tab too, and a player can reach it without
+    // ever opening My Mons this session, so its tally is filled in from here
+    // rather than left reading whatever renderMyMons last wrote.
+    try { setMyMonsTabCount(await countCaught()); } catch (_) { /* leave as-is */ }
 
     grid.innerHTML = '';
     const fragment = document.createDocumentFragment();
@@ -1045,15 +1078,14 @@ const Collection = (() => {
 
   // ── Public: renderMyMons — every individual caught record ─────
   async function renderMyMons() {
-    const grid  = document.getElementById('mymons-grid');
-    const count = document.getElementById('mymons-count');
+    const grid = document.getElementById('mymons-grid');
 
     setupBlender();
     setupSortMenu();
 
     if (!db) {
-      if (count) count.textContent = '0';
-      if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable.</p>';
+      setMyMonsTabCount(0);
+      if (grid) grid.innerHTML = '<p class="empty-state">Collection unavailable.</p>';
       return;
     }
 
@@ -1065,7 +1097,7 @@ const Collection = (() => {
       return;
     }
 
-    if (count) count.textContent = allCaught.length;
+    setMyMonsTabCount(allCaught.length);
 
     if (allCaught.length === 0) {
       grid.innerHTML = '<p class="empty-state">Catch your first Pomomon to see it here!</p>';

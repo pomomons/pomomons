@@ -1044,6 +1044,24 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   filter: brightness(1.15);
 }
 
+/* MY MONS carries the collection tally in its own label ("MY MONS (14)"),
+   so it holds five or six more characters than POMODEX beside it. Extra side
+   padding keeps the count off the pixel-clipped corner and gives the longer
+   label room to read as one phrase rather than a cramped one. */
+.collection-tab--count {
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+/* Subordinate to the label it follows: same colour, same size, just stepped
+   back so "MY MONS" still reads first on both tab states — cream on dark
+   when inactive, near-black on gold when active. A fixed colour would have
+   needed a second rule for the active tab. */
+.tab-count {
+  opacity: .72;
+  margin-left: .7em;
+}
+
 .collection-tab--active {
   background: var(--gold);
   color: #1a0a00;
@@ -1052,15 +1070,16 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
     inset 0 -12px 0 rgba(0,0,0,.35);
 }
 
-/* The caught-so-far tally beside the tabs. Muted white at 10px, it read as a
-   caption rather than a score and disappeared into the panel — it is the one
-   number on this screen a player is actually tracking. Gold at 14px with the
-   same dark cast the other numerals carry, which is the treatment the catch
-   screen's POMODEX tally (.edp-count, style-v3.css) already uses, so the two
-   places that show this number now agree.
+/* The Pomodex's "X / Y" tally beside the tabs. Muted white at 10px, it read
+   as a caption rather than a score and disappeared into the panel — it is the
+   one number on this screen a player is actually tracking. Gold at 14px with
+   the same dark cast the other numerals carry, which is the treatment the
+   catch screen's POMODEX tally (.edp-count, style-v3.css) already uses, so
+   the two places that show this number now agree.
 
-   Shared with My Mons' own count in the same header slot — same component,
-   same class, so it gets the same weight there. */
+   My Mons used to share this slot and this class. Its count moved inside the
+   MY MONS tab label (.tab-count, above), where it sits next to the thing it
+   counts, so this is the Dex's alone now. */
 .collection-count {
   font-size: 14px;
   color: var(--gold);
@@ -2132,13 +2151,21 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
      Dex screen "X / Y" is wide enough that at narrow widths there's no room
      left for it next to BACK + both tabs. Rather than clip it, let it wrap
      to its own centered line below — happens automatically only when it
-     doesn't fit (My Mons' shorter count never triggers it).
+     doesn't fit. My Mons has no count in this slot any more, so on that
+     screen it is BACK + tabs + the sort button competing for the row.
      .collection-header-end's own centering override for when RESTORE joins
      it and it wraps too lives in style-v3.css, which loads after this file
      and would otherwise cascade-win over anything set here. */
   .collection-header { gap: 4px; flex-wrap: wrap; }
   .collection-tabs { gap: 4px; }
   .collection-tab { padding: 8px 12px; font-size: 10px; white-space: nowrap; }
+  /* The desktop rule buys MY MONS breathing room for its tally. On a phone
+     that room costs a header row: BACK + both tabs only just fit across 390px
+     once the tab carries "(142)", and the extra padding is what tips it over
+     into wrapping — a permanent 30px off a pinned header, taken from the grid.
+     So drop back to the plain tab padding here and tighten the count's gap. */
+  .collection-tab--count { padding-left: 12px; padding-right: 12px; }
+  .tab-count { margin-left: .45em; }
   .collection-count { font-size: 12px; margin: 2px auto 0; }
 
   /* Keep the enlarged encounter headline in bounds on small screens */

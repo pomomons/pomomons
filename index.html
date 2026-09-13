@@ -263,7 +263,7 @@
     <div class="collection-header">
       <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-mymons">← BACK</button></div>
       <div class="collection-tabs">
-        <button class="btn collection-tab collection-tab--active" id="btn-tab-mymons" aria-current="page">MY MONS</button>
+        <button class="btn collection-tab collection-tab--count collection-tab--active" id="btn-tab-mymons" aria-current="page">MY MONS <span class="tab-count" id="mymons-tab-count"></span></button>
         <button class="btn collection-tab" id="btn-to-dex">POMODEX</button>
       </div>
       <!-- Kept as a wrapper so .collection-header still has exactly three flex
@@ -280,7 +280,6 @@
                 aria-haspopup="true" aria-expanded="false"
                 aria-label="Sort your mons"><span class="sort-label"
                 id="mymons-sort-label">NEWEST</span><span class="mode-caret">▼</span></button></div>
-        <span class="collection-count" id="mymons-count">0</span>
       </div>
     </div>
 
@@ -339,7 +338,7 @@
     <div class="collection-header">
       <div class="pxb pxb-back"><button class="btn btn-ghost btn-sm" id="btn-back-dex">← BACK</button></div>
       <div class="collection-tabs">
-        <button class="btn collection-tab" id="btn-to-mymons">MY MONS</button>
+        <button class="btn collection-tab collection-tab--count" id="btn-to-mymons">MY MONS <span class="tab-count" id="mymons-tab-count-dex"></span></button>
         <button class="btn collection-tab collection-tab--active" id="btn-tab-dex" aria-current="page">POMODEX</button>
       </div>
       <span class="collection-count" id="dex-count">0 / 11</span>

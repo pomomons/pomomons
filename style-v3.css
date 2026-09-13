@@ -2199,8 +2199,21 @@ html::after {
   margin-bottom: calc(var(--stats-reserve, var(--stats-h)) - 4px);
 }
 
+/* The unselected tab used --btn-dark, the .32 fill the other secondary
+   buttons carry. It works for them because BACK and the sort control sit in
+   .pxb wrappers whose ring gives them a hard edge against the photo. The tabs
+   have no wrapper, so at .32 the forest came through strongly enough that the
+   button's own top and bottom edges all but vanished — next to the solid gold
+   active tab it read as the shorter, smaller button of the pair, even though
+   the two boxes are the same 36px and sit on the same pixel rows.
+
+   --panel-bg-strong-t is the token this skin already keeps for exactly that
+   problem (see its note up top: the same green at a low alpha reads as
+   "barely there" on something small, and needs roughly double the alpha to
+   look like the same colour by eye). It is defined in red mode too, so the
+   tab follows the session the way every other surface does. */
 .collection-tab {
-  background: var(--btn-dark);
+  background: var(--panel-bg-strong-t);
   color: var(--cream);
   clip-path: var(--pixel-clip-xs);
   box-shadow:
@@ -3063,12 +3076,24 @@ html::after,
      all three the same. The tabs' mobile shrink lives in style.css and skips
      BACK, so without this it stayed 12px/20px and read chunkier than the
      tabs beside it. */
-  .pxb-back .btn { font-size: 10px; padding: 8px 12px; }
+  /* MY MONS carries its tally in its own label now ("MY MONS (142)"), six
+     characters the row did not have to find before. At a phone's width that
+     is the difference between BACK + both tabs sharing one line and the tabs
+     dropping to a line of their own — 30px off a header that is pinned, taken
+     straight out of the scrolling grid. One size step down across all three
+     buys it back and holds even at a four-digit count. They move together
+     because this row sizes them identically on purpose: leaving BACK a step
+     larger than the tabs beside it reads as a mistake. */
+  .pxb-back .btn,
+  .collection-tab { font-size: 9px; padding: 8px 10px; }
+  .collection-tab--count { padding-left: 8px; padding-right: 8px; }
 
-  /* .collection-header-end now holds only the count. If it still wraps to its
-     own line at this width (style.css, same breakpoint), center it — same
-     treatment the Dex "X / Y" count gets. Has to live here (loaded after
-     style.css) to beat the unconditional margin-right:10px above. */
+  /* .collection-header-end now holds only the sort button — the My Mons count
+     that used to sit beside it moved inside the MY MONS tab label. If the
+     wrapper still drops to its own line at this width (style.css, same
+     breakpoint), center it — same treatment the Dex "X / Y" count gets. Has
+     to live here (loaded after style.css) to beat the unconditional
+     margin-right:10px above. */
   .collection-header-end { margin: 2px auto 0; }
 
   /* Catch screen's postcatch row (NEXT/INFO/SHARE) and the throw/flee row
@@ -3226,10 +3251,9 @@ html::after,
   padding-right: 14px;
 }
 
-/* The header row runs BACK | tabs | sort + count. On a phone that is too much
-   for one line, and .collection-header-end already re-centres itself there
-   (see the tier above); keep the two children on one line inside it rather
-   than letting the count drop under the button. */
+/* The header row runs BACK | tabs | sort. On a phone that is too much for one
+   line, and .collection-header-end already re-centres itself there (see the
+   tier above); nowrap keeps whatever it holds on a single line inside it. */
 @media (max-width: 560px) {
   .collection-header-end { flex-wrap: nowrap; }
   #btn-mymons-sort { font-size: 9px; padding: 8px 10px; gap: 6px; }
