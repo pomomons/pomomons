@@ -14,6 +14,9 @@ function showScreen(name) {
   // Blender is only visible on My Mons
   const blenderZone = document.getElementById('blender-zone');
   if (blenderZone && name !== 'mymons') blenderZone.classList.remove('active');
+  // ...and a half-finished tap-to-blend doesn't outlive the screen it started
+  // on, or it would fire on whatever card is tapped next time.
+  if (name !== 'mymons' && Collection.cancelBlendTap) Collection.cancelBlendTap();
   // The timer screen can only be measured while it's the visible one — a
   // display:none screen has no height to fit against. (See fitTimerScreen.)
   if (name === 'timer') fitTimerScreen();
@@ -117,6 +120,29 @@ const btnMode      = document.getElementById('btn-mode');
 const modeDropdown = document.getElementById('mode-dropdown');
 
 const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG BREAK' };
+
+// On a phone the mode button shares a row with RESET and START, and
+// "FOCUS SESSION" is by far the longest of the three labels — it crowds that
+// row for no gain, since the mode is already obvious from the screen. Below
+// the 479px breakpoint the rest of the phone layout uses, focus goes by its
+// short name. The breaks are short enough already and keep their full names.
+const MODE_LABELS_NARROW = { ...MODE_LABELS, focus: 'FOCUS' };
+const narrowLabels = window.matchMedia('(max-width: 479px)');
+const modeLabel = mode => (narrowLabels.matches ? MODE_LABELS_NARROW : MODE_LABELS)[mode];
+
+// Rotating a phone or resizing a desktop window across the breakpoint has to
+// move the label without going through setMode(), which would reset a running
+// clock. Touches text only: the button keeps its two-span markup and the
+// dropdown keeps its ticked row.
+function syncModeLabels() {
+  const label = btnMode.querySelector('.mode-label');
+  if (label) label.textContent = modeLabel(currentMode);
+  document.querySelectorAll('#mode-dropdown .mode-option').forEach(o => {
+    const m = o.dataset.mode;
+    if (m in MODES) o.textContent = modeLabel(m);
+  });
+}
+narrowLabels.addEventListener('change', syncModeLabels);
 
 // ── Session-end signal that outlasts the alarm ────────────
 // SFX.play('sessionEnd') is gone the instant it finishes, so someone who
@@ -328,10 +354,10 @@ function setMode(mode) {
   elColon.style.opacity = '1';
   document.body.dataset.mode = mode;
   // Label and caret are separate spans so the caret can be pinned to the
-  // button's right edge while the label stays centred. MODE_LABELS is a fixed
-  // constant, so there is nothing user-supplied going through innerHTML here.
+  // button's right edge while the label stays centred. modeLabel() only ever
+  // returns a fixed constant, so nothing user-supplied goes through innerHTML.
   btnMode.innerHTML =
-    `<span class="mode-label">${MODE_LABELS[mode]}</span><span class="mode-caret">▼</span>`;
+    `<span class="mode-label">${modeLabel(mode)}</span><span class="mode-caret">▼</span>`;
   // Scoped to the timer's dropdown: .mode-option is also the My Mons sort
   // menu's styling, and an unscoped query would clear that menu's own
   // highlight every time the timer mode changed.
@@ -1035,3 +1061,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimerSc
 if (window.ResizeObserver && statsStrip) new ResizeObserver(fitTimerScreen).observe(statsStrip);
 
 fitTimerScreen();
+
+// The markup ships the desktop labels; correct them once on load in case the
+// page opened on a phone.
+syncModeLabels();

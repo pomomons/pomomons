@@ -10,6 +10,23 @@ const Collection = (() => {
   let pendingBlend       = null;    // { key, monId, displayName, rarity }
   let isDraggingSmoothie = false;   // flag readable by card dragover handlers
 
+  // ── Tap-to-blend (touch) ────────────────────────────────────
+  // Blending is built on HTML5 drag-and-drop, which phones don't fire for
+  // touch, so the toolbar used to be hidden outright below 480px. The same
+  // two moves work as two taps instead: arm BLEND (or SMOOTHIES), then tap
+  // the mon. `tapArmed` is null when nothing is waiting, otherwise the mode
+  // the next card tap should be read as.
+  //
+  // Module state, not a DOM class, because renderMyMons() rebuilds every card
+  // (MonSprite.preloadAll re-renders once sprites land) and anything parked on
+  // a card would be thrown away mid-flow.
+  let tapArmed = null;              // null | 'blend' | 'smoothie'
+  let tapHints = null;              // the pointer-device hint strings, saved on first use
+  // Matches the breakpoint style.css uses to switch the toolbar to its tap
+  // layout, so the wiring and the wording can never disagree about which
+  // input a given width is getting.
+  const tapMQ = window.matchMedia('(max-width: 479px)');
+
   // Mon-detail card state (individual caught mon)
   let detailReady = false;          // detail overlay listeners attached once
   let detailMon   = null;           // base mon of the record being viewed
@@ -304,15 +321,73 @@ const Collection = (() => {
     setTimeout(() => msg.remove(), 2700);
   }
 
+  // ── Internal: smoothieCount — how many smoothies are in the bag
+  function smoothieCount() {
+    try {
+      return JSON.parse(localStorage.getItem('pm_items') || '[]')
+        .filter(i => i.type === 'smoothie').length;
+    } catch { return 0; }
+  }
+
+  // ── Internal: setTapArmed — arm/disarm the two-tap blend flow ─
+  // Ignores requests to arm on a pointer device: there the toolbar is a drop
+  // target, and arming would quietly change what a card click does.
+  function setTapArmed(mode) {
+    if (mode && !tapMQ.matches) return;
+    tapArmed = mode || null;
+    applyTapUI();
+  }
+
+  // ── Internal: applyTapUI — reflect tapArmed into the DOM ─────
+  // Called after every arm/disarm AND from setupBlender, since renderMyMons
+  // runs more than once per visit and the armed state has to survive that.
+  function applyTapUI() {
+    const drop = document.getElementById('blender-drop');
+    const box  = document.getElementById('smoothie-box');
+    const grid = document.getElementById('mymons-grid');
+    if (!drop || !box) return;
+
+    if (!tapHints) {
+      tapHints = {
+        blend:    drop.querySelector('.blender-hint').textContent,
+        smoothie: box.querySelector('.smoothie-hint').textContent,
+      };
+    }
+
+    drop.classList.toggle('armed', tapArmed === 'blend');
+    box.classList.toggle('armed',  tapArmed === 'smoothie');
+    // Cards read as pickable only while something is armed.
+    if (grid) grid.classList.toggle('picking', !!tapArmed);
+
+    // The instructions have to match the input the player actually has. On a
+    // pointer device they go back to the drag wording verbatim.
+    // Kept short on purpose: the text column beside the icon is ~110px wide
+    // on a 390px phone, and a long string wraps to five lines and doubles the
+    // height of a bar that sits in a sticky header.
+    const ARMED = 'PICK A MON · TAP TO CANCEL';
+    drop.querySelector('.blender-hint').textContent =
+      !tapMQ.matches ? tapHints.blend
+      : tapArmed === 'blend' ? ARMED : 'TAP, THEN PICK A MON';
+    box.querySelector('.smoothie-hint').textContent =
+      !tapMQ.matches ? tapHints.smoothie
+      : tapArmed === 'smoothie' ? ARMED : 'TAP, THEN PICK A MON';
+  }
+
+  // ── Public: cancelBlendTap — drop any armed state ────────────
+  // app.js calls this when the player leaves My Mons, so the flow can't be
+  // left half-finished and fire on a card tapped minutes later.
+  function cancelBlendTap() { setTapArmed(null); }
+
   // ── Internal: renderSmoothieCount — updates the smoothie tally box
   function renderSmoothieCount() {
     const countEl = document.getElementById('smoothie-count');
     const box     = document.getElementById('smoothie-box');
     if (!countEl) return;
-    const items = JSON.parse(localStorage.getItem('pm_items') || '[]');
-    const count = items.filter(i => i.type === 'smoothie').length;
+    const count = smoothieCount();
     countEl.textContent = count;
     if (box) box.setAttribute('draggable', count > 0 ? 'true' : 'false');
+    // Spending the last one leaves nothing to give, so it can't stay armed.
+    if (count === 0 && tapArmed === 'smoothie') setTapArmed(null);
   }
 
   // ── Internal: applySmootie — consumes 1 smoothie, grants +1 pal level to a specific record
@@ -374,6 +449,10 @@ const Collection = (() => {
 
     zone.classList.add('active');
 
+    // Re-assert the armed state and the wording: renderMyMons() calls through
+    // here on every pass, including the re-render once sprites finish loading.
+    applyTapUI();
+
     // Pin the top of the zone to just below the app header; bottom is fixed in CSS
     const appHeader = document.querySelector('.app-header');
     if (appHeader) {
@@ -422,6 +501,30 @@ const Collection = (() => {
         isDraggingSmoothie = false;
       });
     }
+
+    // ── Tap-to-blend, the touch path ──
+    // A second tap on the armed card cancels, so the flow is always escapable
+    // without a dedicated cancel button competing for room on a phone.
+    drop.addEventListener('click', () => {
+      if (!tapMQ.matches) return;
+      setTapArmed(tapArmed === 'blend' ? null : 'blend');
+      SFX.play('select');
+    });
+
+    if (smoothieBox) {
+      smoothieBox.addEventListener('click', () => {
+        if (!tapMQ.matches) return;
+        // Nothing to spend: arming would promise something the next tap
+        // couldn't deliver.
+        if (smoothieCount() === 0 && tapArmed !== 'smoothie') return;
+        setTapArmed(tapArmed === 'smoothie' ? null : 'smoothie');
+        SFX.play('select');
+      });
+    }
+
+    // Rotating a phone into landscape crosses the breakpoint and puts the
+    // toolbar back on the drag path, where an armed state means nothing.
+    tapMQ.addEventListener('change', () => setTapArmed(null));
   }
 
   // Find the record a My Mons card stands for. Those cards are per-SPECIES —
@@ -737,7 +840,29 @@ const Collection = (() => {
       } catch { /* ignore */ }
     });
 
-    card.addEventListener('click', () => openMonDetail(mon, rec));
+    card.addEventListener('click', () => {
+      // An armed toolbar claims this tap; the detail card is what a plain tap
+      // still does. Disarm FIRST either way, so a mis-tap can't leave the
+      // flow live behind the confirm dialog.
+      if (tapArmed === 'blend') {
+        setTapArmed(null);
+        // Same payload the dragstart handler above puts on the dataTransfer,
+        // so both routes hand showBlendConfirm an identical object.
+        showBlendConfirm({
+          key: rec._key,
+          monId: mon.id,
+          displayName: stageMon.name,
+          rarity: mon.rarity,
+        });
+        return;
+      }
+      if (tapArmed === 'smoothie') {
+        setTapArmed(null);
+        applySmootie(mon, rec);
+        return;
+      }
+      openMonDetail(mon, rec);
+    });
     return card;
   }
 
@@ -1197,5 +1322,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail };
+  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail, cancelBlendTap };
 })();

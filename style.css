@@ -390,6 +390,11 @@ h1.logo {
    Raise this only to hold space that nothing on the panel occupies. */
 :root { --mon-top-reserve: 16; }
 
+/* Caption size relative to the mon. sizeMonName() multiplies its canvas-derived
+   target by this, so the phone tier can take the name down a step without
+   touching the ratio the desktop layout has always used. */
+:root { --mon-name-scale: 1; }
+
 .companion-stage {
   position: relative;
   width: 200px;
@@ -1624,6 +1629,12 @@ body.run-focus .mon-info-overlay { background: #af4d4d; }
   image-rendering: crisp-edges;
   border: var(--border-frame);
   border-radius: 8px;
+  /* Same pin as #mon-detail-canvas — see the note there. The HiDPI buffer in
+     game.js is the layout size unless a CSS size overrides it, and content-box
+     keeps the 200 as the DRAWING area against the global border-box reset. */
+  box-sizing: content-box;
+  width: 200px;
+  height: 200px;
 }
 
 .mon-info-evo-section {
@@ -1787,6 +1798,19 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   border: var(--border-frame);
   border-radius: 8px;
   margin-top: 12px;    /* group break: header -> sprite */
+  /* MUST stay pinned. MonDetailCanvas.start() (game.js) enlarges the canvas's
+     backing buffer for HiDPI screens — canvas.width = 200 * devicePixelRatio —
+     and a canvas with no CSS size takes its buffer as its layout size. With
+     nothing here, a phone at dpr 3 laid this element out at 600px inside a
+     358px card: the sprite covered the whole screen and the card scrolled.
+     Desktop never showed it because dpr is 1 there and 200 x 1 is 200. */
+  /* content-box against the global border-box reset: the 200 here is the
+     DRAWING area, so it matches the 200-unit buffer 1:1 and the pixel art
+     stays unresampled. Under border-box the 3px frame would eat into it and
+     render 200 logical px into a 194px box. */
+  box-sizing: content-box;
+  width: 200px;
+  height: 200px;
 }
 
 .mon-detail-namerow {
@@ -2029,6 +2053,19 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* This canvas had no rule at all, so nothing capped the HiDPI buffer game.js
+   builds for it and the sprite laid out at 600px on a dpr-3 phone. */
+#catch-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* Same pin as #mon-detail-canvas — see the note there. The HiDPI buffer in
+     game.js is the layout size unless a CSS size overrides it, and content-box
+     keeps the 200 as the DRAWING area against the global border-box reset. */
+  box-sizing: content-box;
+  width: 200px;
+  height: 200px;
+}
+
 .catch-gotcha {
   font-family: var(--font-pixel);
   font-size: 24px;
@@ -2114,6 +2151,12 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   image-rendering: crisp-edges;
   border: var(--border-frame);
   box-shadow: 0 0 40px rgba(255,255,255,.08);
+  /* Same pin as #mon-detail-canvas — see the note there. The HiDPI buffer in
+     game.js is the layout size unless a CSS size overrides it, and content-box
+     keeps the 200 as the DRAWING area against the global border-box reset. */
+  box-sizing: content-box;
+  width: 200px;
+  height: 200px;
 }
 
 /* Pal level badge on collection cards */
@@ -2131,8 +2174,15 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .logo-pomo, .logo-mons { font-size: 32px; }
   .logo-tomato-img { height: 2.1rem; }
   .logo-icon { font-size: 32px; }
-  /* Touch drag-and-drop unsupported; hide blender zone */
-  .blender-zone { display: none !important; }
+  /* The blender used to be `display: none !important` here: it is built on
+     HTML5 drag-and-drop, which phones don't fire for touch, so the toolbar
+     was visible-but-dead and got hidden instead. Blending and feeding are
+     two taps now (see the tap-to-blend note in collection.js), so the zone
+     comes back — sized down, since it sits in a sticky header above the grid
+     and every pixel it takes is a pixel off the scrolling collection.
+     The phone sizing and the armed/pickable styling are in style-v3.css, not
+     here: this media query sits ABOVE the toolbar's own rules in this file, so
+     anything set here loses the cascade to them at equal specificity. */
   /* Level-up banner: prevent off-screen overflow */
   .level-up-banner { max-width: calc(100vw - 32px); white-space: normal; text-align: center; }
 
@@ -2355,10 +2405,13 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 
 .zone-icon-img {
+  /* Layout box stays 58px so the toolbar cards keep their height/width;
+     the scale only grows the rendered sprite inside that box. */
   width: 58px;
   height: 58px;
   flex-shrink: 0;
   image-rendering: pixelated;
+  transform: scale(1.16);
 }
 
 /* Smoothie count as a badge on the top-right corner of the icon (e.g. "x3") */
@@ -2370,8 +2423,8 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 
 .smoothie-badge {
   position: absolute;
-  top: -1px;
-  right: -8px;
+  top: -5px;
+  right: -12px;
   font-family: var(--font-pixel);
   font-size: 10px;
   text-transform: lowercase;

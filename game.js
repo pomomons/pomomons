@@ -660,7 +660,14 @@ const CompanionCanvas = (() => {
     //
     // No feedback loop: sizeMonName's inputs are the canvas and panel widths
     // and the text, none of which this function touches.
-    sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS, areaEl, nameFit);
+    // --mon-name-scale lets the phone tier take the caption down a step
+    // without changing the desktop ratio. Read here rather than in the render
+    // loop: this function only runs when something already invalidated the
+    // caption, so it costs one style read per change, not one per frame.
+    const nameScale = parseFloat(
+      getComputedStyle(areaEl).getPropertyValue('--mon-name-scale')) || 1;
+    sizeMonName(nameEl, canvas.offsetWidth * NAME_PER_CANVAS * nameScale,
+                areaEl, nameFit);
     const capH = nameEl.offsetHeight;
     // A caption that changed height changes the room left for the mon.
     if (capH !== _lastNameH) readTopReserve();
@@ -2327,6 +2334,11 @@ const EvolutionScreen = (() => {
       if (st.dpr !== 1) {
         canvas.width  = SIZE * st.dpr;
         canvas.height = SIZE * st.dpr;
+        // Buffer size IS layout size without a CSS size — see the note on
+        // MonDetailCanvas.start(). The stylesheet pins this too; both are here
+        // so editing one can't silently undo the other.
+        canvas.style.width  = SIZE + 'px';
+        canvas.style.height = SIZE + 'px';
         ctx.scale(st.dpr, st.dpr);
       }
 
@@ -2397,6 +2409,11 @@ const CatchScreen = (() => {
       if (st.dpr !== 1) {
         canvas.width  = SIZE * st.dpr;
         canvas.height = SIZE * st.dpr;
+        // Buffer size IS layout size without a CSS size — see the note on
+        // MonDetailCanvas.start(). The stylesheet pins this too; both are here
+        // so editing one can't silently undo the other.
+        canvas.style.width  = SIZE + 'px';
+        canvas.style.height = SIZE + 'px';
         ctx.scale(st.dpr, st.dpr);
       }
 
@@ -2543,6 +2560,11 @@ const MonInfoScreen = (() => {
       if (st.dpr !== 1) {
         canvas.width  = CANVAS_SIZE * st.dpr;
         canvas.height = CANVAS_SIZE * st.dpr;
+        // Buffer size IS layout size without a CSS size — see the note on
+        // MonDetailCanvas.start(). The stylesheet pins this too; both are here
+        // so editing one can't silently undo the other.
+        canvas.style.width  = CANVAS_SIZE + 'px';
+        canvas.style.height = CANVAS_SIZE + 'px';
         ctx.scale(st.dpr, st.dpr);
       }
 
@@ -2645,7 +2667,17 @@ const MonDetailCanvas = (() => {
     ctx    = canvas.getContext('2d');
     if (!scaled) {
       const dpr = window.devicePixelRatio || 1;
-      if (dpr !== 1) { canvas.width = SIZE * dpr; canvas.height = SIZE * dpr; ctx.scale(dpr, dpr); }
+      if (dpr !== 1) {
+        canvas.width  = SIZE * dpr;
+        canvas.height = SIZE * dpr;
+        // The buffer is the LAYOUT size unless a CSS size says otherwise, so
+        // this half is not optional — without it the card on a dpr-3 phone
+        // laid the canvas out at 600px. style.css pins it too; both are here
+        // because either one alone silently breaks if the other is edited.
+        canvas.style.width  = SIZE + 'px';
+        canvas.style.height = SIZE + 'px';
+        ctx.scale(dpr, dpr);
+      }
       scaled = true;
     }
     mon   = monData;
