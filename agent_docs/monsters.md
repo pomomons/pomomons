@@ -38,7 +38,7 @@ unlocked evolution's fields.
 
 ---
 
-## Current Roster (12 lines, 20 dex entries)
+## Current Roster (16 lines, 24 dex entries)
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
@@ -46,7 +46,7 @@ line's type only shifts across evolution when the prep genuinely changes the
 flavour (avocado pit is bitter/inedible before the guac: Savory → Bitter →
 Savory). Otherwise it holds steady, even through a name change (tomato →
 marinara → spaghetti stays Savory throughout, and Bluble → Mufman stays Sweet).
-Sour is a supported type with no mon currently using it.
+Sour is used by Soursquad (grapes) and Citrano (orange).
 
 | id | Dex | Name       | Type    | Evolutions (atLevel → dex)                         |
 |----|-----|------------|---------|-----------------------------------------------------|
@@ -61,6 +61,10 @@ Sour is a supported type with no mon currently using it.
 | 10 | 18  | Purrplant  | Savory  | —                                                    |
 | 11 | 19  | Chillcone  | Sweet   | —                                                    |
 | 12 | 20  | Cocokid    | Sweet   | —                                                    |
+| 13 | 21  | Pitagon    | Sweet   | —                                                    |
+| 14 | 22  | Soursquad  | Sour    | —                                                    |
+| 15 | 23  | Mushkin    | Savory  | —                                                    |
+| 16 | 24  | Citrano    | Sour    | —                                                    |
 
 Spawning is **uniform** across base mons (no rarity weighting). Shiny (1%) and
 dark (5%) variant rolls are independent of species — see game-mechanics.md.

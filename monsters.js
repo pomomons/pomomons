@@ -122,6 +122,19 @@ const MONS = [
   { id: 15, dexNum: 23, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
     sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // Orange. Basic mon, no evolution line. Sour for the citrus — the second mon
+  // to use the type after Soursquad. Colours sampled from the sprite: the
+  // peel's orange and the red-orange it is shaded with.
+  //
+  // 32px frames, the basic-mon size tier (same as Tomotot and Pitagon), so it
+  // draws small next to the 48px and 64px mons. That is the intended rule —
+  // see agent_docs/monsters.md.
+  //
+  // catchRate 1.00 is cosmetic: the field is inert legacy, every catch already
+  // succeeds. Kept explicit so the roster reads consistently.
+  { id: 16, dexNum: 24, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
+    sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // ── TESTING ONLY — force every encounter to one mon ───────
