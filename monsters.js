@@ -91,9 +91,54 @@ const MONS = [
   { id: 12, dexNum: 20, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
     sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // Dragon fruit. Basic mon, no evolution line. id 13 rather than the free 2,
+  // which an old evolution used to hold — caught records store the id, so a
+  // number that has ever meant something else is not worth reusing.
+  // Colours sampled from the sprite: the skin's magenta and its shadow.
+  { id: 13, dexNum: 21, name: 'Pitagon',   type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
+    sprite: 'assets/sprites/Pitagon/Pitagon.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // A bunch of grapes, so the first mon to use the Sour type — the palette has
+  // carried --type-sour since the types were defined and nothing had claimed
+  // it. Basic, no evolution line.
+  //
+  // Its frames are 64px, which is NATIVE_MAX: displaySize() reads a sprite's
+  // native resolution as its intended size, so this draws at full box size,
+  // the tier that until now held only final evolutions (Guacamonger,
+  // Strangletti, Ghostpepper). Deliberate — it is meant to read as a big mon —
+  // but it is why a basic mon out-sizes several evolved ones on screen.
+  { id: 14, dexNum: 22, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
+    sprite: 'assets/sprites/Soursquad/Soursquad.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // Toadstool. Basic mon, no evolution line. Savory for the mushroom's umami,
+  // which is also the type the art reads as — nothing about the red cap says
+  // sweet or sour. Colours sampled from the sprite: the cap's red and the
+  // darker red it is shaded with (the cream stem is the third colour, but
+  // accent is used as a shadow everywhere else, so the shade wins).
+  //
+  // 48px frames, the middle size tier — same as Donot, Purrplant and
+  // Chillcone, which are basics too, so this sits in the roster at a normal
+  // size rather than towering the way Soursquad does.
+  { id: 15, dexNum: 23, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
+    sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
+// ── TESTING ONLY — force every encounter to one mon ───────
+// Set to a mon's name (e.g. 'Pitagon') to make it spawn 100% of the time;
+// null uses the normal even roll across the roster. Mirrors the session-length
+// switches in app.js. ALWAYS return this to null before shipping — with it
+// set there is no way to encounter anything else.
+const TEST_FORCE_MON = null;
+
 function getRandomMon() {
+  if (TEST_FORCE_MON) {
+    const forced = MONS.find(m => m.name === TEST_FORCE_MON);
+    // Falls through to the normal roll if the name is a typo, rather than
+    // returning undefined and breaking every encounter.
+    if (forced) return forced;
+    console.warn('TEST_FORCE_MON: no mon named ' + TEST_FORCE_MON);
+  }
   // Rarity tiers removed — every first-stage mon spawns at an equal rate.
   return MONS[Math.floor(Math.random() * MONS.length)];
 }

@@ -215,12 +215,24 @@ function verify() {
   // this project's own stats reached 680 minutes across 35 sessions in an
   // afternoon. A failed build publishes nothing and leaves the previous
   // deploy serving, which is the right outcome here.
-  const appSrc = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
-  for (const name of ['TEST_FOCUS_SECS', 'TEST_BREAK_SECS']) {
-    const m = appSrc.match(new RegExp('const ' + name + '\\s*=\\s*([^;]+);'));
-    if (m && m[1].trim() !== 'null') {
-      problems.push(`${name} is ${m[1].trim()}, not null — `
-        + 'the testing override is on and must not be deployed');
+  //
+  // monsters.js carries the same kind of switch for encounters: TEST_FORCE_MON
+  // pins every spawn to one mon, which would leave the roster looking like it
+  // has a single creature in it. Same rule, same check.
+  const TEST_SWITCHES = [
+    ['app.js',      ['TEST_FOCUS_SECS', 'TEST_BREAK_SECS']],
+    ['monsters.js', ['TEST_FORCE_MON']],
+  ];
+  for (const [file, names] of TEST_SWITCHES) {
+    const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    for (const name of names) {
+      // String.raw: in a plain quoted string '\s' is just 's', which compiled to
+      // a regex that matched nothing and silently switched this check off.
+      const m = src.match(new RegExp(String.raw`const ${name}\s*=\s*([^;]+);`));
+      if (m && m[1].trim() !== 'null') {
+        problems.push(`${name} (${file}) is ${m[1].trim()}, not null — `
+          + 'the testing override is on and must not be deployed');
+      }
     }
   }
 

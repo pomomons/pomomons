@@ -161,16 +161,40 @@ let titleOverride = null;
 // the real thing instead; the running / break states are unchanged.
 const BASE_TITLE = document.title;
 
+// Three answers here, not two: '1' wants notifications, '0' has turned them
+// off by hand, and no key at all means the player has never been asked. That
+// third state is what lets START raise the browser's permission prompt — and
+// only then. Collapsing it into "on unless turned off" made an unticked box
+// mean two different things, since the box also reads unticked whenever the
+// permission is simply missing: a player who had never touched the row, or
+// who had deliberately unticked it, would still get the prompt on the next
+// START and notifications back on behind their back. Once an answer is on
+// record the checkbox is the only thing that can change it.
+const NOTIFY_KEY = 'pm_notify';
+function notifyChoice()    { return localStorage.getItem(NOTIFY_KEY); }
+function notifyEnabled()   { return notifyChoice() !== '0'; }
+function notifyUndecided() { return notifyChoice() === null; }
+
 const Notify = {
   supported: 'Notification' in window,
   icon: 'assets/sprites/Tomato/Tomato.png',
-  // Permission is never requested on page load — only the first time a
-  // session actually ends, which is the moment it's obviously wanted.
-  async fire(title, body) {
-    if (!this.supported) return;
-    if (Notification.permission === 'default') {
-      try { await Notification.requestPermission(); } catch (_) { /* legacy callback API */ }
-    }
+  get permission() { return this.supported ? Notification.permission : 'denied'; },
+
+  // Permission used to be requested here, the first time a session ended.
+  // That request never landed: Chrome only shows the prompt during a genuine
+  // click and never for a backgrounded tab, which is exactly where a
+  // finishing timer leaves the player — so the permission sat unanswered and
+  // fire() bailed out, silently, every session. The ask now hangs off START
+  // and the settings toggle, both of which are real clicks on a focused tab,
+  // and fire() only ever acts on an answer that already exists.
+  async request() {
+    if (!this.supported || Notification.permission !== 'default') return this.permission;
+    try { await Notification.requestPermission(); } catch (_) { /* legacy callback API */ }
+    return this.permission;
+  },
+
+  fire(title, body) {
+    if (!this.supported || !notifyEnabled()) return;
     if (Notification.permission !== 'granted') return;
     try {
       const n = new Notification(title, { body, icon: this.icon, tag: 'pomomons-session' });
@@ -528,7 +552,7 @@ if (btnSettings && settingsMenu) {
     e.stopPropagation();
     modeDropdown.hidden = true;
     const opening = settingsMenu.hidden;
-    if (opening) positionSettingsMenu();
+    if (opening) { positionSettingsMenu(); syncNotifyUI(); }
     settingsMenu.hidden = !opening;
     btnSettings.setAttribute('aria-expanded', String(opening));
   });
@@ -655,7 +679,20 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Controls ──────────────────────────────────────────────
-btnStart.addEventListener('click', () => running ? pauseTimer() : startTimer());
+btnStart.addEventListener('click', () => {
+  // The one dependable moment to ask for notification permission: a real
+  // click, on a focused tab, before the player has walked away. Asked once
+  // and once only — whatever the browser answers is recorded as the player's
+  // choice, so START never raises it again and the checkbox takes over from
+  // here. Nothing waits on the answer; the timer starts either way.
+  if (notifyUndecided()) {
+    Notify.request().then(result => {
+      localStorage.setItem(NOTIFY_KEY, result === 'granted' ? '1' : '0');
+      syncNotifyUI();
+    });
+  }
+  running ? pauseTimer() : startTimer();
+});
 btnReset.addEventListener('click', resetTimer);
 
 // Auto-start toggle: remembered across visits, off until the player asks.
@@ -667,6 +704,98 @@ if (autostartToggle) {
     SFX.play('click');
   });
 }
+
+// ── Notifications toggle ──────────────────────────────────
+// The checkbox is a mirror of the browser, not a setting of our own: ticked
+// means a notification will genuinely appear when a timer ends. Only the
+// browser can grant that, and once a player has blocked it nothing on the
+// page may ask again — so a tick that fails to take opens the help card
+// naming the switch to reach for, and the box goes back to unticked rather
+// than sitting there claiming something untrue. Turning it off is the one
+// direction that is ours to honour: the browser keeps its permission and
+// pm_notify remembers that we should stop using it.
+const notifyToggle = document.getElementById('toggle-notify');
+const notifyModal  = document.getElementById('notify-modal');
+const notifyIntro  = document.getElementById('notify-intro');
+const notifySteps  = document.getElementById('notify-steps');
+
+function syncNotifyUI() {
+  if (!notifyToggle) return;
+  notifyToggle.disabled = !Notify.supported;
+  notifyToggle.checked  = Notify.supported && notifyEnabled() && Notify.permission === 'granted';
+  // Permission arriving while the card is up means the player has just fixed
+  // it in the browser and does not need telling how any more.
+  if (Notify.permission === 'granted') closeNotifyHelp();
+}
+
+// Two ways a tick fails, and they need different instructions. 'denied' is a
+// decision already made, undoable only in the browser's own site settings.
+// Anything else means the browser never put the question on screen — Chrome
+// parks unprompted requests behind a small address-bar icon — so the answer
+// is still available, just hidden.
+function openNotifyHelp(state) {
+  if (!notifyModal) return;
+  const denied = state === 'denied';
+
+  // Nothing to say in the blocked case — the title and the steps carry it.
+  // The quiet-prompt case still needs a word, because the steps alone do not
+  // explain why no prompt ever appeared.
+  notifyIntro.textContent = denied ? '' : 'Your browser hid the request.';
+  notifyIntro.hidden = denied;
+
+  const steps = denied
+    ? ['Click the icon left of the web address.',
+       'Set Notifications to Allow.',
+       'Reload the page.']
+    : ['Click the bell in the address bar.',
+       'Choose Allow.'];
+
+  notifySteps.replaceChildren(...steps.map(text => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    return li;
+  }));
+
+  closeSettingsMenu();
+  notifyModal.classList.add('active');
+  notifyModal.setAttribute('aria-hidden', 'false');
+  document.getElementById('btn-notify-close')?.focus();
+}
+
+function closeNotifyHelp() {
+  if (!notifyModal || !notifyModal.classList.contains('active')) return;
+  notifyModal.classList.remove('active');
+  notifyModal.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('btn-notify-close')?.addEventListener('click', closeNotifyHelp);
+notifyModal?.addEventListener('click', e => { if (e.target === notifyModal) closeNotifyHelp(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && notifyModal?.classList.contains('active')) closeNotifyHelp();
+});
+
+if (notifyToggle) {
+  notifyToggle.addEventListener('change', async () => {
+    SFX.play('click');
+    localStorage.setItem(NOTIFY_KEY, notifyToggle.checked ? '1' : '0');
+    if (notifyToggle.checked) {
+      const result = await Notify.request();
+      if (result !== 'granted') openNotifyHelp(result);
+    }
+    syncNotifyUI();
+  });
+  syncNotifyUI();
+}
+
+// Fires when the permission is changed in the browser's own site settings,
+// which is the only place a blocked one can be undone. Without it the box
+// would go on showing the old answer until the next reload — and the help
+// card would stay up after the player had already done what it asked.
+try {
+  navigator.permissions?.query({ name: 'notifications' })
+    .then(status => { status.onchange = syncNotifyUI; })
+    .catch(() => { /* Safari rejects rather than answering for this one */ });
+} catch (_) { /* older browsers throw on an unknown permission name */ }
 
 // ── Player state (localStorage) ───────────────────────────
 function expThreshold(level) {

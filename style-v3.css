@@ -3302,6 +3302,41 @@ html::after,
    row layout .save-code-row is normally used for. */
 .history-box .save-code-row { justify-content: center; padding-top: 4px; }
 
+/* ── Notification help card ───────────────────────────────
+   Opened from the gear's notify checkbox when the browser, not the player,
+   is what is standing in the way. Reuses the .blender-confirm shell and, like
+   .history-box, only widens the panel and switches to left alignment: this is
+   a numbered list to follow with one hand on the address bar, not a sentence
+   to read, and centred steps are much harder to work down. */
+.notify-box {
+  max-width: 380px;
+  text-align: left;
+  gap: 10px;
+}
+
+.notify-box .blender-confirm-title { letter-spacing: .08em; }
+
+.notify-steps {
+  margin: 0;
+  padding: 2px 0 2px 20px;
+  /* Deliberately a plain block list, not a flex column: flex items are
+     blockified, and marker rendering on them is inconsistent across browsers.
+     The numbers are the whole point here, so the spacing comes from a margin
+     between items instead of a flex gap. */
+  font-family: var(--font-pixel);
+  font-size: var(--text-xs);
+  line-height: 1.8;
+  letter-spacing: .03em;
+  color: var(--text);
+}
+
+.notify-steps li + li { margin-top: 10px; }
+
+/* Gold numerals, matching the title and every other accent in these cards. */
+.notify-steps li::marker { color: var(--gold); }
+
+.notify-box .blender-confirm-btns { justify-content: center; padding-top: 4px; }
+
 @media (max-width: 480px) {
   .history-head,
   .history-row,

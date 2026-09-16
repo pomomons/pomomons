@@ -512,6 +512,24 @@
     </div>
   </div>
 
+  <!-- ── Notification help ─────────────────────────────
+       Only ever opened when ticking "Notify when timer ends" failed to
+       actually turn them on: the browser has them blocked, or it answered
+       with its quiet address-bar icon instead of a prompt. Neither is
+       something the page can undo, so the card names the switch to reach for
+       and closes itself the moment the permission comes through. -->
+  <div id="notify-modal" class="blender-confirm notify-modal" role="dialog"
+       aria-modal="true" aria-labelledby="notify-title" aria-hidden="true">
+    <div class="blender-confirm-box notify-box">
+      <p class="blender-confirm-title" id="notify-title">TURN ON NOTIFICATIONS</p>
+      <p class="blender-confirm-body" id="notify-intro"></p>
+      <ol class="notify-steps" id="notify-steps"></ol>
+      <div class="blender-confirm-btns">
+        <div class="blend-confirm-frame"><button class="blend-confirm-btn is-ghost" id="btn-notify-close">GOT IT</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Spawn Rates Info Modal ───────────────────────── -->
   <div id="spawn-info" class="spawn-info">
     <div class="spawn-info-box">
@@ -821,6 +839,16 @@
     <label class="settings-row settings-row--toggle">
       <input type="checkbox" id="toggle-autostart">
       <span class="settings-label">Auto-start next session</span>
+    </label>
+
+    <!-- Ticking this box is what asks the browser for permission: browsers
+         only show that prompt during a real click, so a timer running out can
+         never ask for itself. The box is a mirror of the browser's answer,
+         kept in step by app.js; when a tick fails to take, #notify-modal
+         explains where the real switch is. -->
+    <label class="settings-row settings-row--toggle">
+      <input type="checkbox" id="toggle-notify">
+      <span class="settings-label">Notify when timer ends</span>
     </label>
   </div>
 

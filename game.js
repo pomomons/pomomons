@@ -96,6 +96,40 @@ const MonSprite = (() => {
     return _imgCache[src];
   }
 
+  // ── One canvas per sprite frame ─────────────────────────
+  // Sprite sheets stack their frames edge to edge with no gutter, and a frame
+  // drawn straight out of the sheet can pick up the row just outside its
+  // source rect. imageSmoothingEnabled = false stops the blending, not the
+  // sampling, and these sprites are almost never on a whole-number scale:
+  // displaySize() rounds to a pixel that is rarely an exact multiple of the
+  // frame, and drawSprite's squish multiplies it again every tick.
+  //
+  // Pitagon is where it shows. It is the only mon whose art fills the last
+  // row of frame 1 — the two black feet — so frame 2, the eyes-open frame on
+  // screen ~95% of the time, borrows those pixels as faint dark lines across
+  // its top edge.
+  //
+  // Slicing each frame into a canvas of its own removes the possibility
+  // rather than compensating for it: a canvas exactly one frame tall has no
+  // neighbouring rows to sample. Cached per frame, so it costs one draw per
+  // frame per sprite for the life of the page. Keyed by source rect, so
+  // sheets laid out on either axis share the cache.
+  const _frameCache = new Map();
+  function frameCanvas(img, src, sx, sy, sw, sh) {
+    const key = `${src}|${sx},${sy},${sw},${sh}`;
+    let slice = _frameCache.get(key);
+    if (!slice) {
+      slice = document.createElement('canvas');
+      slice.width  = sw;
+      slice.height = sh;
+      const sctx = slice.getContext('2d');
+      sctx.imageSmoothingEnabled = false;
+      sctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      _frameCache.set(key, slice);
+    }
+    return slice;
+  }
+
   // ── Display size from native sprite resolution ─────────────
   // The roster is drawn at 32, 36, 48 and 64 px per frame, and that native
   // resolution IS how each creature's size is encoded — a 32px Bluble is
@@ -332,8 +366,7 @@ const MonSprite = (() => {
     if (dark)       ctx.filter = DARK_FILTER;
     else if (shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
     ctx.drawImage(
-      img,
-      srcX, srcY, srcW, srcH,                                    // source: this frame
+      frameCanvas(img, src, srcX, srcY, srcW, srcH),             // source: this frame alone
       Math.round(cx - size / 2 + xOffset), Math.round(cy - size / 2), // dest position
       Math.round(size), Math.round(size)                          // dest size
     );
@@ -481,7 +514,7 @@ const MonSprite = (() => {
     drawOnCtx(ctx, mon, canvas.width / 2, canvas.height / 2, { scale: drawScale, shiny, dark });
   }
 
-  return { drawOnCtx, draw, getImage, preload, preloadAll, fitScale, drawSparkle,
+  return { drawOnCtx, draw, getImage, frameCanvas, preload, preloadAll, fitScale, drawSparkle,
            artTopFraction, artTopFractionFor,
            displaySize, nativeFrameW, sizeScale };
 })();
@@ -807,7 +840,8 @@ const CompanionCanvas = (() => {
         ctx.imageSmoothingEnabled = false;
         if (SPRITE.dark)       ctx.filter = DARK_FILTER;
         else if (SPRITE.shiny) ctx.filter = 'hue-rotate(120deg) saturate(1.6) brightness(1.08)';
-        ctx.drawImage(img, srcX, srcY, srcW, srcH, Math.round(-size / 2), Math.round(-size / 2), size, size);
+        ctx.drawImage(MonSprite.frameCanvas(img, SPRITE.spriteSrc, srcX, srcY, srcW, srcH),
+                      Math.round(-size / 2), Math.round(-size / 2), size, size);
         ctx.restore();
         if (SPRITE.shiny && !SPRITE.dark) MonSprite.drawSparkle(ctx, cx, cy + bobY, 1, size);
         return;
@@ -1021,7 +1055,7 @@ const CompanionCanvas = (() => {
     // both layers (which is what setting globalAlpha before the drawImage
     // did) would square the crossfade instead.
     ctx.globalAlpha = 1;
-    ctx.drawImage(img, srcX, srcY, srcW, srcH, dx, dy, size, size);
+    ctx.drawImage(MonSprite.frameCanvas(img, mon.sprite, srcX, srcY, srcW, srcH), dx, dy, size, size);
     ctx.globalCompositeOperation = 'source-in';
     ctx.globalAlpha = alpha * SILHOUETTE_ALPHA;
     ctx.fillStyle = SILHOUETTE_COLOR;
