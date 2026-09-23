@@ -1407,7 +1407,7 @@ html::after {
 /* ── Settings menu ────────────────────────────────────────
    Opened by the gear (#btn-settings), positioned as a fixed panel under it
    by app.js — same mechanism as .mode-dropdown. Holds sound, Discord, email
-   updates and the auto-start toggle, which used to be scattered around the
+   updates and the notifications toggle, which used to be scattered around the
    header corners and the timer box. */
 .settings-menu {
   position: fixed;

@@ -144,7 +144,7 @@
       <span class="logo-icon"><img src="assets/sprites/Tomato/Tomato.png" alt="" class="logo-tomato-img"></span><span class="logo-pomo">POMO</span><span class="logo-mons">MONS</span>
     </h1>
     <!-- Settings: opens the menu at the end of <body> holding sound, Discord,
-         email updates and auto-start. Reuses the mute button's old wrapper
+         email updates and notifications. Reuses the mute button's old wrapper
          (.audio-shadow / .pxb-audio) so it keeps that button's placement and
          its mobile top-right pin for free. -->
     <div class="btn-shadow btn-shadow--sm audio-shadow"><div class="pxb pxb-sm pxb-audio"><button class="btn-audio" id="btn-settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false">
@@ -835,13 +835,8 @@
     </button>
 
     <!-- Checkbox first, where every other row in this menu puts its icon, so
-         the labels all start on the same line. -->
-    <label class="settings-row settings-row--toggle">
-      <input type="checkbox" id="toggle-autostart">
-      <span class="settings-label">Auto-start next session</span>
-    </label>
-
-    <!-- Ticking this box is what asks the browser for permission: browsers
+         the labels all start on the same line.
+         Ticking this box is what asks the browser for permission: browsers
          only show that prompt during a real click, so a timer running out can
          never ask for itself. The box is a mirror of the browser's answer,
          kept in step by app.js; when a tick fails to take, #notify-modal

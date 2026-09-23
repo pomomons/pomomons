@@ -148,7 +148,7 @@ narrowLabels.addEventListener('change', syncModeLabels);
 // SFX.play('sessionEnd') is gone the instant it finishes, so someone who
 // stepped away, muted the tab, or had the volume down comes back to no sign
 // anything happened. These three things fix that: a desktop notification, a
-// tab title that stays changed until you act, and an optional auto-start.
+// tab title that stays changed until you act.
 
 // Parked on the tab title by onSessionEnd(); renderTime() shows it whenever
 // the timer is stopped, in place of the base title, until the next timer
@@ -202,9 +202,6 @@ const Notify = {
     } catch (_) { /* some browsers require a service worker and throw here */ }
   },
 };
-
-const AUTOSTART_KEY = 'pm_autostart';
-function autoStartEnabled() { return localStorage.getItem(AUTOSTART_KEY) === '1'; }
 
 // ── Background state ──────────────────────────────────────
 // Only two visual states: red (running focus) or teal (everything else)
@@ -492,12 +489,11 @@ function onSessionEnd() {
   // and the mode left where it was, so the next thing the player saw was
   // another break: they had to reach for the mode dropdown every cycle to get
   // back to work. setMode() moves the label, the dropdown's ticked row, the
-  // clock and the buttons together, and leaves it stopped unless the player
-  // opted into auto-start.
+  // clock and the buttons together, and leaves it stopped: the player starts
+  // the next focus session themselves.
   titleOverride = 'Back to work! — PomoMons';
   Notify.fire('Break over', 'Back to it — start your next focus session.');
   setMode('focus');
-  if (autoStartEnabled()) startTimer();
 }
 
 // ── Mode dropdown ─────────────────────────────────────────
@@ -560,7 +556,7 @@ if (btnSettings && settingsMenu) {
   // signup button opens its own modal, so let that one close the menu.
   settingsMenu.addEventListener('click', e => {
     // Rows that open a modal of their own get out of the way first; the rest
-    // (sound toggle, auto-start, the Discord link) leave the menu up.
+    // (sound toggle, notifications, the Discord link) leave the menu up.
     if (e.target.closest('#btn-signup, #btn-history')) closeSettingsMenu();
     else e.stopPropagation();
   });
@@ -694,16 +690,6 @@ btnStart.addEventListener('click', () => {
   running ? pauseTimer() : startTimer();
 });
 btnReset.addEventListener('click', resetTimer);
-
-// Auto-start toggle: remembered across visits, off until the player asks.
-const autostartToggle = document.getElementById('toggle-autostart');
-if (autostartToggle) {
-  autostartToggle.checked = autoStartEnabled();
-  autostartToggle.addEventListener('change', () => {
-    localStorage.setItem(AUTOSTART_KEY, autostartToggle.checked ? '1' : '0');
-    SFX.play('click');
-  });
-}
 
 // ── Notifications toggle ──────────────────────────────────
 // The checkbox is a mirror of the browser, not a setting of our own: ticked
@@ -1049,15 +1035,14 @@ const NextSession = {
 };
 
 // Apply the choice and start the clock. An explicit pick always starts
-// running whatever the auto-start setting says — the buttons read START, and
-// the player just chose on purpose. With no pick (they ran away from the
-// encounter, so the card never appeared) fall back to the old behaviour: load
-// the due break and honour auto-start.
+// running — the buttons read START, and the player just chose on purpose.
+// With no pick (they ran away from the encounter, so the card never appeared)
+// load the due break and leave it stopped for the player to start.
 function applyNextSession(fallbackMode) {
   const picked = NextSession.pending;
   NextSession.pending = null;
   setMode(picked || fallbackMode);
-  if (picked || autoStartEnabled()) startTimer();
+  if (picked) startTimer();
   // The mailing-list card waits until now — after the celebration, after the
   // choice — so it never lands mid-flow. Signup decides whether it's earned
   // and whether it has been asked too often already.

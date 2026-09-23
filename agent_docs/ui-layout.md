@@ -35,8 +35,7 @@ spawn-info, blender-confirm.
   `.btn-audio`, in `.pxb-audio` — pixel-clipped dark square) opens
   `#settings-menu` (a fixed dropdown, positioned by app.js like
   `.mode-dropdown`): Sound on/off (`#btn-audio`), Join our Discord
-  (`#btn-discord`), Save (`#btn-signup` — mailing-list card), Auto-start next
-  session (`#toggle-autostart`).
+  (`#btn-discord`), Save (`#btn-signup` — mailing-list card).
 - **Stats strip** (`footer.stats-strip`, fixed bottom): a single `.stats-row`
   — LV badge (amber pill) · `x / y XP` text over the XP bar · SESSIONS /
   MINUTES / CATCHES tiles with a scope toggle. Under v3 it floats as its own
