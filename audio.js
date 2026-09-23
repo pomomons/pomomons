@@ -181,7 +181,7 @@ const SFX = (() => {
       tone(1760, 'triangle', t + 0.12, 0.14, 0.13);  // A6 sparkle tail
     },
 
-    // Engine rev sound → mon blended into smoothie
+    // Engine rev + an 8-bit scream → mon blended into smoothie
     // Gains are the original mix at 70%. Every level is scaled by the same
     // factor — engine envelope, LFO depth, both overtones and the exhaust
     // noise — so the balance between the layers is unchanged; retune them
@@ -190,26 +190,41 @@ const SFX = (() => {
     blend() {
       const ac  = getCtx();
       const t   = ac.currentTime;
-      const dur = 1.8;
+
+      // ── Running order ──────────────────────────────────────
+      // The two overlap: the blender starts, and the scream happens DURING
+      // it. The 0.18s offset lets the motor catch before the mon reacts, and
+      // 0.18 + 1.30 = 1.48s leaves the scream finishing comfortably inside
+      // the blender's 1.8s, so the rev outlasts it rather than cutting off
+      // underneath it.
+      //
+      // Both halves below are timed off their own start constant rather than
+      // off t, so re-ordering them is these two lines and nothing else: give
+      // scT a later time than engT + dur to put the scream after the blender,
+      // or engT a later time than scT + scDur to put it before.
+      const dur   = 1.8;    // how long the blender runs
+      const scDur = 0.85;   // how long the scream lasts
+      const engT  = t;
+      const scT   = t + 0.18;
 
       // ── Main engine oscillator: low square wave revving up then winding down
       const osc      = ac.createOscillator();
       osc.type       = 'square';
-      osc.frequency.setValueAtTime(55, t);
-      osc.frequency.linearRampToValueAtTime(240, t + dur * 0.6);
-      osc.frequency.linearRampToValueAtTime(70,  t + dur);
+      osc.frequency.setValueAtTime(55, engT);
+      osc.frequency.linearRampToValueAtTime(240, engT + dur * 0.6);
+      osc.frequency.linearRampToValueAtTime(70,  engT + dur);
 
       const env = ac.createGain();
-      env.gain.setValueAtTime(0.059, t);
-      env.gain.linearRampToValueAtTime(0.063, t + dur * 0.6);
-      env.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      env.gain.setValueAtTime(0.059, engT);
+      env.gain.linearRampToValueAtTime(0.063, engT + dur * 0.6);
+      env.gain.exponentialRampToValueAtTime(0.001, engT + dur);
 
       // ── LFO: simulates engine cylinder firing (put-put-put effect)
       const lfo      = ac.createOscillator();
       lfo.type       = 'sine';
-      lfo.frequency.setValueAtTime(22, t);           // low RPM at start
-      lfo.frequency.linearRampToValueAtTime(95, t + dur * 0.6);  // rev up
-      lfo.frequency.linearRampToValueAtTime(30, t + dur);         // wind down
+      lfo.frequency.setValueAtTime(22, engT);           // low RPM at start
+      lfo.frequency.linearRampToValueAtTime(95, engT + dur * 0.6);  // rev up
+      lfo.frequency.linearRampToValueAtTime(30, engT + dur);         // wind down
 
       const lfoDepth      = ac.createGain();
       lfoDepth.gain.value = 0.046;
@@ -219,12 +234,12 @@ const SFX = (() => {
       osc.connect(env);
       env.connect(ac.destination);
 
-      osc.start(t); osc.stop(t + dur + 0.05);
-      lfo.start(t); lfo.stop(t + dur + 0.05);
+      osc.start(engT); osc.stop(engT + dur + 0.05);
+      lfo.start(engT); lfo.stop(engT + dur + 0.05);
 
       // ── Harmonic overtone: one octave up, lower gain
-      tone({ start: 110, end: 480 }, 'square', t,             dur * 0.6,  0.042);
-      tone({ start: 480, end: 140 }, 'square', t + dur * 0.55, dur * 0.5, 0.028);
+      tone({ start: 110, end: 480 }, 'square', engT,          dur * 0.6,  0.042);
+      tone({ start: 480, end: 140 }, 'square', engT + dur * 0.55, dur * 0.5, 0.028);
 
       // ── Exhaust grit: low-pass filtered noise underneath
       const bufSize = Math.ceil(ac.sampleRate * dur);
@@ -236,18 +251,164 @@ const SFX = (() => {
       exhaust.buffer    = buf;
       const lpf         = ac.createBiquadFilter();
       lpf.type          = 'lowpass';
-      lpf.frequency.setValueAtTime(300, t);
-      lpf.frequency.linearRampToValueAtTime(800, t + dur * 0.6);
-      lpf.frequency.linearRampToValueAtTime(200, t + dur);
+      lpf.frequency.setValueAtTime(300, engT);
+      lpf.frequency.linearRampToValueAtTime(800, engT + dur * 0.6);
+      lpf.frequency.linearRampToValueAtTime(200, engT + dur);
       const exhaustEnv  = ac.createGain();
-      exhaustEnv.gain.setValueAtTime(0.035, t);
-      exhaustEnv.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      exhaustEnv.gain.setValueAtTime(0.035, engT);
+      exhaustEnv.gain.exponentialRampToValueAtTime(0.001, engT + dur);
 
       exhaust.connect(lpf);
       lpf.connect(exhaustEnv);
       exhaustEnv.connect(ac.destination);
-      exhaust.start(t);
-      exhaust.stop(t + dur + 0.05);
+      exhaust.start(engT);
+      exhaust.stop(engT + dur + 0.05);
+
+      // ── The mon's last word ────────────────────────────────
+      // A scream is not a loud "ahh". What separates a scream from a calm
+      // vocalisation is ROUGHNESS: fast amplitude modulation in the 30-150Hz
+      // band (Arnal et al. 2015). Speech modulates at 4-5Hz; a scream carries
+      // a much faster flutter on top, too fast for the ear to resolve into
+      // pulses, so it is heard as harshness instead. Several earlier passes
+      // here were smooth tones with the right vowel and the right pitch and
+      // still sounded gentle, because a smooth tone has no energy in that
+      // band at all. Three things build the scream, in order of how much they
+      // matter:
+      //
+      //   1. roughGate   — the 30-150Hz roughness. The whole effect.
+      //   2. shaper      — waveshaper distortion, standing in for the chaotic
+      //                    vocal-fold vibration of a real shout. Smudges the
+      //                    harmonics and fills the spectrum.
+      //   3. scSub       — a subharmonic an octave down, the other classic
+      //                    nonlinear vocal phenomenon. Adds weight, and its
+      //                    harmonics halve the spacing feeding the formants.
+      //
+      // Then formant filters shape it into the /ae/ of "apple" (see the
+      // formant table below). Turning roughGate off (depth 0) returns this
+      // to the gentle version.
+
+      // Pitch contour, shared by the fundamental and the subharmonic so the
+      // two can never drift apart. It barely moves: a rising onset glide is
+      // the consonant "w", and a large fall through fixed formants is the
+      // "ow" diphthong, so an earlier pass with both read as "wow".
+      const scPitch = (param, mult) => {
+        param.setValueAtTime(520 * mult, scT);
+        param.linearRampToValueAtTime(470 * mult, scT + 0.6);        // sustain
+        param.exponentialRampToValueAtTime(300 * mult, scT + scDur); // running out
+      };
+
+      const scSrc = ac.createOscillator();
+      scSrc.type  = 'sawtooth';   // rich in harmonics; a square starves the formants
+      scPitch(scSrc.frequency, 1);
+
+      const scSub = ac.createOscillator();
+      scSub.type  = 'sawtooth';
+      scPitch(scSub.frequency, 0.5);
+
+      // Vibrato, on the fundamental only — leaving the subharmonic steady
+      // decouples the two slightly, which is itself a source of roughness.
+      // Depth is 1-2% on purpose: a few Hz of wobble per second is speech's
+      // syllable rate, and at ~7% this read as "AH-AH-AH" rather than one
+      // held note.
+      const wob      = ac.createOscillator();
+      wob.type       = 'sine';
+      wob.frequency.value = 5.5;
+      const wobDepth = ac.createGain();
+      wobDepth.gain.setValueAtTime(5, scT);
+      wobDepth.gain.linearRampToValueAtTime(10, scT + scDur);
+      wob.connect(wobDepth);
+      wobDepth.connect(scSrc.frequency);
+
+      // Breath rasp. Reuses the exhaust's noise buffer; one AudioBuffer can
+      // feed any number of sources.
+      const rasp      = ac.createBufferSource();
+      rasp.buffer     = buf;
+      const raspGain  = ac.createGain();
+      raspGain.gain.value = 0.16;
+
+      const subGain = ac.createGain();
+      subGain.gain.value = 0.5;
+
+      const voice = ac.createGain();
+      voice.gain.value = 0.5;
+      scSrc.connect(voice);
+      scSub.connect(subGain);  subGain.connect(voice);
+      rasp.connect(raspGain);  raspGain.connect(voice);
+
+      // (2) Chaos. tanh clipping: harmonics multiply and the peaks flatten,
+      // which is what an over-driven larynx does. DRIVE is the harshness
+      // dial — 1 is clean, 8 is a shriek.
+      const DRIVE  = 5;
+      const curve  = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) curve[i] = Math.tanh((i * 2 / 1024 - 1) * DRIVE);
+      const shaper = ac.createWaveShaper();
+      shaper.curve = curve;
+      shaper.oversample = '4x';
+
+      // (1) Roughness. Gain swings between 0.15 and 1.0 at 60-110Hz — inside
+      // the 30-150Hz window, and well clear of the 4-5Hz speech rate below
+      // it. Rate climbs as the scream strains. Drop roughDepth toward 0 to
+      // soften; raising the rate past ~150 turns harsh into buzzy.
+      const roughGate  = ac.createGain();
+      roughGate.gain.value = 0.575;
+      const rough      = ac.createOscillator();
+      rough.type       = 'sine';
+      rough.frequency.setValueAtTime(62, scT);
+      rough.frequency.linearRampToValueAtTime(110, scT + scDur);
+      const roughDepth = ac.createGain();
+      roughDepth.gain.value = 0.425;
+      rough.connect(roughDepth);
+      roughDepth.connect(roughGate.gain);
+
+      voice.connect(shaper);
+      shaper.connect(roughGate);
+
+      // Output envelope: sharp attack, hold, then gone. 0.17 puts the scream
+      // well over the engine (0.063) and exhaust (0.035) it plays against —
+      // it leads the sound rather than sitting inside it. All three together
+      // peak around 0.27, so there is plenty of headroom before clipping if
+      // this needs to go louder still.
+      const scEnv = ac.createGain();
+      scEnv.gain.setValueAtTime(0.0001, scT);
+      scEnv.gain.linearRampToValueAtTime(0.17, scT + 0.02);
+      scEnv.gain.setValueAtTime(0.17, scT + 0.55);
+      scEnv.gain.exponentialRampToValueAtTime(0.001, scT + scDur);
+
+      // The vowel: [centre Hz, Q, level]. This is /ae/ — the A in "apple",
+      // "cat", "trap". NOT the /ah/ of "say ahh" at the doctor, which is a
+      // different vowel and which this used to be: 730/1090/2440. The two
+      // are told apart almost entirely by the MIDDLE number. F2 is the
+      // front-back axis: /ae/ is a front vowel and puts it high, around
+      // 2100; /ah/ is a back vowel and puts it near 1090. With F2 down there
+      // the scream came out soft and rounded no matter how rough or loud it
+      // got, because it was the wrong vowel, not a wrong scream.
+      //
+      // Reference (adult male; ours run higher, scaled for a small creature):
+      //   /ae/ apple  660 / 1720 / 2410      /ah/ father  730 / 1090 / 2440
+      //   /ee/ heed   270 / 2290 / 3010      /oo/ boot    300 /  870 / 2240
+      //
+      // Q is bandwidth, centre over Q: keep it low enough that each window
+      // stays wider than the gaps between the source's harmonics, or the
+      // sound thins out to nothing. F2 carries the vowel's identity here, so
+      // it is mixed loud — front vowels lean on it.
+      for (const [freq, q, level] of [[900, 3, 1.0], [2100, 3.5, 0.85], [2900, 4, 0.35]]) {
+        const bp  = ac.createBiquadFilter();
+        bp.type   = 'bandpass';
+        bp.frequency.value = freq;
+        bp.Q.value         = q;
+        const fg  = ac.createGain();
+        fg.gain.value = level;
+        roughGate.connect(bp);
+        bp.connect(fg);
+        fg.connect(scEnv);
+      }
+
+      scEnv.connect(ac.destination);
+      scSrc.start(scT);  scSrc.stop(scT + scDur + 0.05);
+      scSub.start(scT);  scSub.stop(scT + scDur + 0.05);
+      wob.start(scT);    wob.stop(scT + scDur + 0.05);
+      rough.start(scT);  rough.stop(scT + scDur + 0.05);
+      rasp.start(scT);   rasp.stop(scT + scDur + 0.05);
     },
   };
 
