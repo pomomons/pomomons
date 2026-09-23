@@ -90,14 +90,36 @@ const MONS = [
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   { id: 12, dexNum: 20, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
     sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  // Dragon fruit. Basic mon, no evolution line. id 13 rather than the free 2,
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames — the final-evolution size tier, so it draws at full box
+      // size next to Cocokid's 32px basic. Colours sampled from the sprite:
+      // the husk's brown and the shadow it is shaded with.
+      { atLevel: 20, dexNum: 21, name: 'Cocokong', type: 'Sweet', color: '#783d1e', accent: '#4f1e0f',
+        sprite: 'assets/sprites/Cocokong/Cocokong.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 4500, blinkDuration: 150 },
+    ]
+  },
+  // Dragon fruit. Renamed from Pitagon, which is now the name of its
+  // evolution — the id is what caught records store, so existing saves follow
+  // the rename and keep their place in the line.
+  // id 13 rather than the free 2,
   // which an old evolution used to hold — caught records store the id, so a
   // number that has ever meant something else is not worth reusing.
   // Colours sampled from the sprite: the skin's magenta and its shadow.
-  { id: 13, dexNum: 21, name: 'Pitagon',   type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
-    sprite: 'assets/sprites/Pitagon/Pitagon.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  { id: 13, dexNum: 22, name: 'Pita Pal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
+    sprite: 'assets/sprites/Pitapal/Pitapal.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames against Pita Pal's 32px — the full jump from the basic
+      // tier to the final-evolution tier, so it doubles in size on screen.
+      // Colours sampled from the sprite: the skin's red and its shadow, both
+      // brighter than the basic's.
+      { atLevel: 20, dexNum: 23, name: 'Pitagon', type: 'Sweet', color: '#e20239', accent: '#931a39',
+        sprite: 'assets/sprites/Pitagon/Pitagon.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 4500, blinkDuration: 150 },
+    ]
+  },
   // A bunch of grapes, so the first mon to use the Sour type — the palette has
   // carried --type-sour since the types were defined and nothing had claimed
   // it. Basic, no evolution line.
@@ -107,7 +129,7 @@ const MONS = [
   // the tier that until now held only final evolutions (Guacamonger,
   // Strangletti, Ghostpepper). Deliberate — it is meant to read as a big mon —
   // but it is why a basic mon out-sizes several evolved ones on screen.
-  { id: 14, dexNum: 22, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
+  { id: 14, dexNum: 24, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Soursquad/Soursquad.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Toadstool. Basic mon, no evolution line. Savory for the mushroom's umami,
@@ -119,26 +141,26 @@ const MONS = [
   // 48px frames, the middle size tier — same as Donot, Purrplant and
   // Chillcone, which are basics too, so this sits in the roster at a normal
   // size rather than towering the way Soursquad does.
-  { id: 15, dexNum: 23, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
+  { id: 15, dexNum: 25, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
     sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Orange. Basic mon, no evolution line. Sour for the citrus — the second mon
   // to use the type after Soursquad. Colours sampled from the sprite: the
   // peel's orange and the red-orange it is shaded with.
   //
-  // 32px frames, the basic-mon size tier (same as Tomotot and Pitagon), so it
+  // 32px frames, the basic-mon size tier (same as Tomotot and Pita Pal), so it
   // draws small next to the 48px and 64px mons. That is the intended rule —
   // see agent_docs/monsters.md.
   //
   // catchRate 1.00 is cosmetic: the field is inert legacy, every catch already
   // succeeds. Kept explicit so the roster reads consistently.
-  { id: 16, dexNum: 24, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
+  { id: 16, dexNum: 26, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // ── TESTING ONLY — force every encounter to one mon ───────
-// Set to a mon's name (e.g. 'Pitagon') to make it spawn 100% of the time;
+// Set to a mon's name (e.g. 'Pita Pal') to make it spawn 100% of the time;
 // null uses the normal even roll across the roster. Mirrors the session-length
 // switches in app.js. ALWAYS return this to null before shipping — with it
 // set there is no way to encounter anything else.

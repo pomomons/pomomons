@@ -9,7 +9,7 @@ appears. Players throw a tomato to catch it and build a collection.
 - Vanilla HTML5, CSS3, JavaScript — no frameworks, no runtime dependencies
 - HTML5 Canvas for Pomomon sprite animations
 - localStorage for player state (level, EXP, settings)
-- IndexedDB for collection data (20 mon forms across 12 base species; shiny/dark variants)
+- IndexedDB for collection data (26 mon forms across 16 base species; shiny/dark variants)
 - Installable PWA (manifest.webmanifest + sw.js) — works offline
 - Deployed on GitHub Pages by .github/workflows/deploy.yml on every push to main
   (custom domain pomomons.io via CNAME)

@@ -104,7 +104,7 @@ const MonSprite = (() => {
   // displaySize() rounds to a pixel that is rarely an exact multiple of the
   // frame, and drawSprite's squish multiplies it again every tick.
   //
-  // Pitagon is where it shows. It is the only mon whose art fills the last
+  // Pita Pal is where it shows. It is the only mon whose art fills the last
   // row of frame 1 — the two black feet — so frame 2, the eyes-open frame on
   // screen ~95% of the time, borrows those pixels as faint dark lines across
   // its top edge.
