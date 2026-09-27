@@ -132,18 +132,31 @@ const MONS = [
   { id: 14, dexNum: 24, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Soursquad/Soursquad.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  // Toadstool. Basic mon, no evolution line. Savory for the mushroom's umami,
-  // which is also the type the art reads as — nothing about the red cap says
-  // sweet or sour. Colours sampled from the sprite: the cap's red and the
-  // darker red it is shaded with (the cream stem is the third colour, but
-  // accent is used as a shadow everywhere else, so the shade wins).
+  // Toadstool. Savory for the mushroom's umami, which is also the type the art
+  // reads as — nothing about the red cap says sweet or sour. Colours sampled
+  // from the sprite: the cap's red and the darker red it is shaded with (the
+  // cream stem is the third colour, but accent is used as a shadow everywhere
+  // else, so the shade wins).
   //
   // 48px frames, the middle size tier — same as Donot, Purrplant and
   // Chillcone, which are basics too, so this sits in the roster at a normal
   // size rather than towering the way Soursquad does.
+  //
+  // Evolves once, at 20, the level every other two-stage line uses (Marshpuff,
+  // Pumplet, Bluble); the three-stage lines are the only ones that go to 36.
+  // Portobellord keeps Savory and steps up to 64px frames, the final-evolution
+  // tier, so it reads as a proper growth from Mushkin's 48. Its colours are
+  // sampled the same way: the portobello cap's brown and its shade, which is
+  // where the line leaves the red toadstool palette behind.
   { id: 15, dexNum: 25, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
     sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      { atLevel: 20, dexNum: 26, name: 'Portobellord', type: 'Savory', color: '#803b33', accent: '#632d2d',
+        sprite: 'assets/sprites/Portobellord/Portobellord.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
   // Orange. Basic mon, no evolution line. Sour for the citrus — the second mon
   // to use the type after Soursquad. Colours sampled from the sprite: the
   // peel's orange and the red-orange it is shaded with.
@@ -154,7 +167,7 @@ const MONS = [
   //
   // catchRate 1.00 is cosmetic: the field is inert legacy, every catch already
   // succeeds. Kept explicit so the roster reads consistently.
-  { id: 16, dexNum: 26, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
+  { id: 16, dexNum: 27, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
@@ -168,7 +181,19 @@ const TEST_FORCE_MON = null;
 
 function getRandomMon() {
   if (TEST_FORCE_MON) {
-    const forced = MONS.find(m => m.name === TEST_FORCE_MON);
+    // Evolution stages are reachable here too, not just the base roster: a
+    // stage only ever appears on screen after a player levels one, so pinning
+    // spawns to it is the only quick way to look at a new evolution's art in
+    // an encounter. The stage is merged onto its base the way getMonStage
+    // does it, so the spawn carries the evolved name, sprite and colours.
+    //
+    // It also carries the BASE's id, which is the right call for the roster
+    // but worth knowing while testing: catching a forced evolution files the
+    // record under its base species at level 1, so it lands in My Mons as the
+    // first-stage mon, not as the thing that was on the encounter screen.
+    const forced = MONS.find(m => m.name === TEST_FORCE_MON)
+      || MONS.flatMap(m => (m.evolutions || []).map(evo => ({ ...m, ...evo })))
+             .find(stage => stage.name === TEST_FORCE_MON);
     // Falls through to the normal roll if the name is a typo, rather than
     // returning undefined and breaking every encounter.
     if (forced) return forced;

@@ -216,7 +216,10 @@ function renderTime() {
   const ss = String(s).padStart(2, '0');
   elMinutes.textContent = mm;
   elSeconds.textContent = ss;
-  document.title = running       ? `${mm}:${ss} — PomoMons`
+  // A running clock names the mode it is counting down, so a glance at the
+  // tab strip says whether the player is meant to be working or resting.
+  const runningName = currentMode === 'focus' ? 'PomoMons' : 'Break Time';
+  document.title = running       ? `${mm}:${ss} — ${runningName}`
                  : titleOverride ? titleOverride
                  :                 BASE_TITLE;
 }

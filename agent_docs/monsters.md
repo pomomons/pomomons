@@ -38,7 +38,7 @@ unlocked evolution's fields.
 
 ---
 
-## Current Roster (16 lines, 26 dex entries)
+## Current Roster (16 lines, 27 dex entries)
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
@@ -63,8 +63,8 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 12 | 20  | Cocokid    | Sweet   | 20 → Cocokong #21 (Sweet)                            |
 | 13 | 22  | Pita Pal   | Sweet   | 20 → Pitagon #23 (Sweet)                             |
 | 14 | 24  | Soursquad  | Sour    | —                                                    |
-| 15 | 25  | Mushkin    | Savory  | —                                                    |
-| 16 | 26  | Citrano    | Sour    | —                                                    |
+| 15 | 25  | Mushkin    | Savory  | 20 → Portobellord #26 (Savory)                       |
+| 16 | 27  | Citrano    | Sour    | —                                                    |
 
 Spawning is **uniform** across base mons (no rarity weighting). Shiny (1%) and
 dark (5%) variant rolls are independent of species — see game-mechanics.md.

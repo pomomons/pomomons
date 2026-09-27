@@ -528,6 +528,20 @@ const CompanionCanvas = (() => {
   // anything larger stops touching the ground and starts sinking through it.
   const MON_BOX = 176;
 
+  // Height of the idle bob, in canvas units. Named because the bob and the
+  // squash riding on it both have to key off the same number, or the two drift
+  // out of phase and the mon flattens somewhere other than the bottom of its
+  // travel.
+  const BOB_PX = 6;
+
+  // How much the mon squashes at the bottom of the bob and stretches at the
+  // top, as a fraction. Deliberately small: enough that the mon reads as
+  // something soft that settles, not so much that a 32px sprite visibly
+  // shears. The original version of this effect was several times stronger
+  // and read as the mon being inflated; 0.025 was still a touch much, so it
+  // is halved again from there.
+  const SQUISH = 0.0125;
+
   const SPRITE = {
     noMon:      true,    // true until setMon() is called; suppresses all drawing
     bodyColor:  '#e74c3c',   // tomato red (block-art fallback)
@@ -857,7 +871,6 @@ const CompanionCanvas = (() => {
     const x0 = cx - drawW / 2;
     const y0 = cy - drawH / 2 + bobY;
 
-
     // Body
     block(SPRITE.bodyColor, x0, y0, drawW, drawH);
 
@@ -902,10 +915,15 @@ const CompanionCanvas = (() => {
   function tick() {
     state.frame++;
 
-    // --- Sinusoidal bob (matches the encounter/catch screen: sin(frame/22)*6, no squish) ---
-    state.y = Math.sin(state.frame / 22) * 6;
-    state.squishY = 1;
-    state.squishX = 1;
+    // --- Sinusoidal bob (matches the encounter/catch screen), with a light
+    // squash and stretch riding on it: widest and flattest at the bottom of
+    // the travel, tallest and narrowest at the top. b runs +1 (low) to -1
+    // (high), so both scales key off the same number the bob does and can
+    // never drift out of phase with it. ---
+    const b = Math.sin(state.frame / 22);
+    state.y = b * BOB_PX;
+    state.squishY = 1 - SQUISH * b;
+    state.squishX = 1 + SQUISH * b;
 
     // Name floats just above the mon's head (tracks sprite size) and bobs in
     // sync. Only the bob is per-frame work now — see layoutName().
@@ -1173,6 +1191,8 @@ const EncounterScreen = (() => {
   // being pinned to one size.
   const MON_BOX   = 245;
   const MON_CY    = H * 0.5;      // mon centre-Y resting position (50% — vertical centre)
+  const BOB_PX    = 6;            // idle bob height — as on the companion canvas
+  const SQUISH    = 0.0125;       // squash at the bottom of the bob, stretch at the top
   const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
   const GROUND_Y  = Math.min(H - 50, MON_CY + 110 + THROW_Y_SHIFT); // where tomato lands
 
@@ -1284,6 +1304,25 @@ const EncounterScreen = (() => {
       const srcW = st.mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / (st.mon.spriteFrames || 1);
       st.monSize = srcW * 3 * s;
     }
+  }
+
+  // The bobbing wild mon. Shares its numbers with the companion canvas so a
+  // mon behaves the same on the two screens it idles on: a very slight squash
+  // and stretch about its own centre, keyed off the bob.
+  function drawIdleMon(cx, bobY) {
+    // drawOnCtx only takes one uniform scale, so the squash is applied as a
+    // transform about the mon's centre around the call rather than passed in.
+    // Clamped because the entrance slide reuses this with an offset far larger
+    // than a bob — the mon should read as stretched on the way down, not drawn
+    // as a sliver.
+    const b  = Math.max(-1, Math.min(1, bobY / BOB_PX));
+    const cy = MON_CY + bobY;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1 + SQUISH * b, 1 - SQUISH * b);
+    ctx.translate(-cx, -cy);
+    drawMon(cx, cy);
+    ctx.restore();
   }
 
   // Place the floating name just above the mon's head, tracking its drawn size + bob.
@@ -1400,17 +1439,17 @@ const EncounterScreen = (() => {
       // Slide in from above; cubic ease-out over 30 frames
       const t    = Math.min(1, f / 30);
       const ease = 1 - Math.pow(1 - t, 3);
-      drawMon(cx, MON_CY * ease);
+      drawIdleMon(cx, MON_CY * (ease - 1));
 
     } else if (st.phase === 'idle') {
       st.monBob++;
-      st.monY = Math.sin(st.monBob / 22) * 6;
-      drawMon(cx, MON_CY + st.monY);
+      st.monY = Math.sin(st.monBob / 22) * BOB_PX;
+      drawIdleMon(cx, st.monY);
       positionMonName();
 
     } else if (st.phase === 'throwing') {
       // Mon stays fully visible throughout the throw arc
-      drawMon(cx, MON_CY + st.monY);
+      drawIdleMon(cx, st.monY);
       if (f / 90 < 1) drawTomato(f / 90);
 
     } else if (st.phase === 'absorbing') {
@@ -1497,8 +1536,8 @@ const EncounterScreen = (() => {
     } else if (st.phase === 'postcatch') {
       // Mon bobs happily on the encounter canvas while the congrats text is shown
       st.monBob++;
-      st.monY = Math.sin(st.monBob / 22) * 6;
-      drawMon(cx, MON_CY + st.monY);
+      st.monY = Math.sin(st.monBob / 22) * BOB_PX;
+      drawIdleMon(cx, st.monY);
       positionMonName();
     }
     // 'done' phase: canvas is blank
