@@ -74,9 +74,21 @@ const MONS = [
     sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 20, dexNum: 12, name: 'Mufman', type: 'Sweet', color: '#a67c52', accent: '#6b4423',
-        sprite: 'assets/sprites/Mufman/Mufman.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+      // Bluebeary replaced Mufman as this line's one evolution — Mufman is
+      // gone from the roster entirely, and its sprite is unreferenced. It took
+      // Mufman's dexNum 12 as well, which keeps the dex contiguous; nothing
+      // persists dexNum (saves store the base id, 5), so the reuse is free.
+      //
+      // 64px frames against Bluble's 32px — the full jump from the basic tier
+      // to the final-evolution tier, the same shape as Cocokid → Cocokong and
+      // Pita Pal → Pitagon. Mufman's 48px middle step is what dropped out.
+      //
+      // Colours sampled from the sprite: the fur's blue and the darker blue it
+      // is shaded with (the near-black #160d3d is the outline, which no other
+      // mon uses as accent).
+      { atLevel: 20, dexNum: 12, name: 'Bluebeary', type: 'Sweet', color: '#52a4fd', accent: '#1a6be6',
+        sprite: 'assets/sprites/Bluebeary/Bluebeary.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
   { id: 9, dexNum: 17, name: 'Wedgling',   type: 'Savory', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
