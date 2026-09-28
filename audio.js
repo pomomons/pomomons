@@ -272,29 +272,63 @@ const SFX = (() => {
       // pulses, so it is heard as harshness instead. Several earlier passes
       // here were smooth tones with the right vowel and the right pitch and
       // still sounded gentle, because a smooth tone has no energy in that
-      // band at all. Three things build the scream, in order of how much they
+      // band at all. Four things build the scream, in order of how much they
       // matter:
       //
       //   1. roughGate   — the 30-150Hz roughness. The whole effect.
-      //   2. shaper      — waveshaper distortion, standing in for the chaotic
+      //   2. SC_ARC      — MOVEMENT. Roughness alone still reads as a held
+      //                    note: an earlier pass drifted 520→470Hz across the
+      //                    sustain under a dead-flat level, and was reported as
+      //                    "too monotone for a scream". See below.
+      //   3. shaper      — waveshaper distortion, standing in for the chaotic
       //                    vocal-fold vibration of a real shout. Smudges the
       //                    harmonics and fills the spectrum.
-      //   3. scSub       — a subharmonic an octave down, the other classic
+      //   4. scSub       — a subharmonic an octave down, the other classic
       //                    nonlinear vocal phenomenon. Adds weight, and its
       //                    harmonics halve the spacing feeding the formants.
       //
       // Then formant filters shape it into the /ae/ of "apple" (see the
-      // formant table below). Turning roughGate off (depth 0) returns this
-      // to the gentle version.
+      // formant table below), riding the pitch as it goes. Turning roughGate
+      // off (depth 0) returns this to the gentle version.
+      //
+      // One thing that did NOT survive testing: driving the roughness from a
+      // per-cycle randomised buffer instead of a sine, to imitate real vocal
+      // jitter. It was inaudible in an A/B against this version, and no
+      // measurement could separate the two either — the 62→110Hz sweep already
+      // spreads that energy across the band. Not worth two buffer generators.
 
-      // Pitch contour, shared by the fundamental and the subharmonic so the
-      // two can never drift apart. It barely moves: a rising onset glide is
-      // the consonant "w", and a large fall through fixed formants is the
-      // "ow" diphthong, so an earlier pass with both read as "wow".
+      // Pitch contour, shared by the fundamental, the subharmonic and the
+      // formants, so none of them can drift apart.
+      //
+      // A scream MOVES. The version this replaced drifted 520→470Hz over the
+      // sustain — 1.7 semitones, one held note. This arc travels about 7.6
+      // semitones while the sound is still loud: a panic spike up, a strained
+      // sag, then the collapse.
+      //
+      // Why earlier attempts at a moving pitch were abandoned, because it is
+      // not obvious: they moved the pitch while the formants below stayed
+      // FIXED, and that is what produced the "wow"/"ow" diphthong they were
+      // rejected for. A vowel is defined by where the formants sit RELATIVE to
+      // the pitch, so sliding one past the other changes the vowel. Real
+      // voices raise their formants as they strain; FORMANT_TRACK further down
+      // does the same, which is what lets this arc exist without the vowel
+      // breaking. Do not add pitch movement here without it.
+      //
+      // Last leg is exponential (the voice giving out); the rest are linear.
+      const SC_ARC = [      // [seconds after scT, Hz]
+        [0,     460],
+        [0.10,  905],       // panic spike
+        [0.30,  850],
+        [0.52,  770],       // straining
+        [scDur, 300],       // gives out
+      ];
       const scPitch = (param, mult) => {
-        param.setValueAtTime(520 * mult, scT);
-        param.linearRampToValueAtTime(470 * mult, scT + 0.6);        // sustain
-        param.exponentialRampToValueAtTime(300 * mult, scT + scDur); // running out
+        param.setValueAtTime(SC_ARC[0][1] * mult, scT);
+        for (let i = 1; i < SC_ARC.length; i++) {
+          const [dt, hz] = SC_ARC[i];
+          if (i === SC_ARC.length - 1) param.exponentialRampToValueAtTime(hz * mult, scT + dt);
+          else                         param.linearRampToValueAtTime(hz * mult, scT + dt);
+        }
       };
 
       const scSrc = ac.createOscillator();
@@ -363,15 +397,24 @@ const SFX = (() => {
       voice.connect(shaper);
       shaper.connect(roughGate);
 
-      // Output envelope: sharp attack, hold, then gone. 0.17 puts the scream
-      // well over the engine (0.063) and exhaust (0.035) it plays against —
-      // it leads the sound rather than sitting inside it. All three together
-      // peak around 0.27, so there is plenty of headroom before clipping if
-      // this needs to go louder still.
+      // Output envelope. This used to ramp up and then hold at EXACTLY 0.17 for
+      // half a second, which is the other half of why it read as monotone — a
+      // flat pitch under a flat level. Rendering the envelope on its own put
+      // numbers on it: 82% of the loud stretch was frozen and the level never
+      // once changed direction. It now swells, breaks, and swells again before
+      // giving out, which is what a voice running out of air does.
+      //
+      // 0.20 peak puts the scream well over the engine (0.063) and exhaust
+      // (0.035) it plays against — it leads the sound rather than sitting
+      // inside it. All three together peak around 0.30, so there is still
+      // plenty of headroom before clipping.
       const scEnv = ac.createGain();
       scEnv.gain.setValueAtTime(0.0001, scT);
-      scEnv.gain.linearRampToValueAtTime(0.17, scT + 0.02);
-      scEnv.gain.setValueAtTime(0.17, scT + 0.55);
+      scEnv.gain.linearRampToValueAtTime(0.130, scT + 0.03);
+      scEnv.gain.linearRampToValueAtTime(0.195, scT + 0.14);
+      scEnv.gain.linearRampToValueAtTime(0.140, scT + 0.28);  // strain break
+      scEnv.gain.linearRampToValueAtTime(0.200, scT + 0.44);
+      scEnv.gain.linearRampToValueAtTime(0.170, scT + 0.60);
       scEnv.gain.exponentialRampToValueAtTime(0.001, scT + scDur);
 
       // The vowel: [centre Hz, Q, level]. This is /ae/ — the A in "apple",
@@ -391,11 +434,24 @@ const SFX = (() => {
       // stays wider than the gaps between the source's harmonics, or the
       // sound thins out to nothing. F2 carries the vowel's identity here, so
       // it is mixed loud — front vowels lean on it.
+      // How far the formants follow the pitch. 0 pins them where they are,
+      // which is what broke every earlier attempt at a moving pitch (see
+      // SC_ARC); 1 would move them in lockstep, holding the vowel perfectly
+      // but sounding mechanical, since a real tract does not scale that
+      // cleanly. 0.5 was picked by A/B against 0 and 0.45. The vowel opens up
+      // as the pitch climbs — intended: that is what straining sounds like.
+      //
+      // The numbers below stay the RESTING values, at the arc's opening pitch.
+      const FORMANT_TRACK = 0.5;
       for (const [freq, q, level] of [[900, 3, 1.0], [2100, 3.5, 0.85], [2900, 4, 0.35]]) {
         const bp  = ac.createBiquadFilter();
         bp.type   = 'bandpass';
-        bp.frequency.value = freq;
         bp.Q.value         = q;
+        const track = (hz) => freq * (1 + FORMANT_TRACK * (hz / SC_ARC[0][1] - 1));
+        bp.frequency.setValueAtTime(track(SC_ARC[0][1]), scT);
+        for (let i = 1; i < SC_ARC.length; i++) {
+          bp.frequency.linearRampToValueAtTime(track(SC_ARC[i][1]), scT + SC_ARC[i][0]);
+        }
         const fg  = ac.createGain();
         fg.gain.value = level;
         roughGate.connect(bp);
