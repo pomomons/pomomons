@@ -170,6 +170,34 @@ const MONS = [
   { id: 16, dexNum: 27, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // Potato. Basic mon, no evolution line. Savory — a potato is the plainest
+  // case the type has. Colours sampled from the sprite: the skin's tan and the
+  // brown it is shaded with.
+  //
+  // 32px frames (the file is 32×64, two stacked frames), the basic-mon size
+  // tier alongside Tomotot, Pita Pal and Citrano.
+  //
+  // id 17 — the next unused number. 2 stays skipped: an old evolution held it
+  // and caught records store the id.
+  { id: 17, dexNum: 28, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',   catchRate: 1.00,
+    sprite: 'assets/sprites/Spud/Spud.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // Pineapple. Basic mon, no evolution line. Sweet rather than Sour, following
+  // Pita Pal (dragon fruit): a tropical fruit reads Sweet here, and Sour is
+  // held by the sharply acidic pair, Soursquad (grapes) and Citrano (orange).
+  // Colours sampled from the sprite: the flesh's yellow and the orange it is
+  // shaded with. The crown's greens are the third colour, but accent is a
+  // shadow everywhere else in this roster, so the shade wins.
+  //
+  // 32px frames (32×64 file, two stacked), the basic-mon size tier.
+  //
+  // The two white pixels in frame 1 are the eye highlights, and they are the
+  // ONLY white left in the sheet — worth knowing before running any "remove the
+  // background" pass over this sprite again, because the first export had the
+  // background baked in as opaque near-white and clearing it took the eyes too.
+  { id: 18, dexNum: 29, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
+    sprite: 'assets/sprites/Pinapip/Pinapip.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
 
 // ── TESTING ONLY — force every encounter to one mon ───────
