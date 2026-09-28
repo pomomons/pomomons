@@ -38,7 +38,10 @@ unlocked evolution's fields.
 
 ---
 
-## Current Roster (17 lines, 29 dex entries)
+## Current Roster (16 lines, 28 dex entries)
+
+Dex #17 is a hole: Wedgling was removed and its number retired, the same
+way id 2 stays skipped.
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
@@ -57,7 +60,6 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 5  | 11  | Bluble     | Sweet   | 20 → Bluebeary #12 (Sweet)                           |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
 | 8  | 15  | Marshpuff  | Sweet   | 20 → Marshmelt #16 (Sweet)                           |
-| 9  | 17  | Wedgling   | Savory  | —                                                    |
 | 10 | 18  | Purrplant  | Savory  | —                                                    |
 | 11 | 19  | Chillcone  | Sweet   | —                                                    |
 | 12 | 20  | Cocokid    | Sweet   | 20 → Cocokong #21 (Sweet)                            |
@@ -79,7 +81,7 @@ dark (5%) variant rolls are independent of species — see game-mechanics.md.
 - **2-frame vertical blink sheet**: frame 0 (top) = blink, frame 1 (bottom) = open.
   File height = 2× frame height.
 - **Frame size scales with evolution stage — intentional** (bigger = more evolved):
-  - Basic mons: 32×32 (some 48; Wedgling is a 36×36 outlier)
+  - Basic mons: 32×32 (some 48)
   - Middle evolutions: 48×48 (mostly)
   - Final evolutions: 64×64
   Do NOT "fix" a 32px basic to match larger mons.

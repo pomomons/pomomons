@@ -91,9 +91,12 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  { id: 9, dexNum: 17, name: 'Wedgling',   type: 'Savory', color: '#f5c842', accent: '#c89a10', rarity: 'common',   catchRate: 0.70,
-    sprite: 'assets/sprites/Wedgling/Wedgling.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+  // id 9 and dexNum 17 were Wedgling, removed from the roster. Both stay
+  // retired rather than reused: caught records store the species id, so a
+  // number that has meant something else is not worth handing to a new mon —
+  // the same reason 2 has stayed skipped. That leaves a hole at #17 in the
+  // dex; renumbering everything after it would be safe (nothing persists
+  // dexNum) but would move twelve mons, so the gap stands instead.
   { id: 10, dexNum: 18, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon', catchRate: 0.45,
     sprite: 'assets/sprites/Purrplant/Purrplant.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
