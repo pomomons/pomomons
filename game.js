@@ -198,56 +198,73 @@ const MonSprite = (() => {
   // The real fix for that one mon is in its art: if frame 0's steam were
   // dropped, or added to frame 1 as well, its caption would line up with the
   // rest of the roster automatically and nothing here would need changing.
-  const _artTop = {};
+  // Both edges come off one scan, cached per sprite: the caption needs the top
+  // and the two stages need the bottom, and neither wants to walk a sprite
+  // sheet twice. `bottom` is the row AFTER the lowest opaque one, so it reads
+  // as a fraction of the frame the same way `top` does — 1 means the art runs
+  // to the bottom edge, 0.9 means a tenth of the frame below it is empty.
+  const _artRows = {};
+  const FULL_ROWS = { top: 0, bottom: 1 };  // art fills the frame: the pre-measurement default
 
-  // Takes an already-resolved src plus its sheet layout. CompanionCanvas holds
-  // a flattened SPRITE descriptor rather than a mon object, so it calls this
-  // one directly; artTopFraction() below is the wrapper for callers that do
-  // have a mon.
-  function artTopFractionFor(src, frames = 1, axis = 'x', blinkMode = false) {
-    if (!src) return 0;
-    if (src in _artTop) return _artTop[src] || 0;
+  function artRowsFor(src, frames = 1, axis = 'x') {
+    if (!src) return FULL_ROWS;
+    if (src in _artRows) return _artRows[src];
 
     const img = getImage(src);
-    if (!img.complete || img.naturalWidth === 0) return 0;  // measure once loaded
+    if (!img.complete || img.naturalWidth === 0) return FULL_ROWS;  // measure once loaded
 
     const srcW = axis === 'y' ? img.naturalWidth  : img.naturalWidth / frames;
     const srcH = axis === 'y' ? img.naturalHeight / frames : img.naturalHeight;
-    if (!(srcW > 0) || !(srcH > 0)) return 0;
+    if (!(srcW > 0) || !(srcH > 0)) return FULL_ROWS;
 
-    let frac = 0;
+    let rows = FULL_ROWS;
     try {
       const probe = document.createElement('canvas');
       probe.width = srcW; probe.height = srcH;
       const pctx = probe.getContext('2d', { willReadFrequently: true });
       pctx.imageSmoothingEnabled = false;
 
-      let best = srcH;
+      let first = srcH, last = -1;
       for (let f = 0; f < frames; f++) {
         pctx.clearRect(0, 0, srcW, srcH);
         const sx = axis === 'y' ? 0 : f * srcW;
         const sy = axis === 'y' ? f * srcH : 0;
         pctx.drawImage(img, sx, sy, srcW, srcH, 0, 0, srcW, srcH);
         const data = pctx.getImageData(0, 0, srcW, srcH).data;
-        let row = -1;
-        for (let y = 0; y < srcH && row < 0; y++) {
+        for (let y = 0; y < srcH; y++) {
+          let opaque = false;
           for (let x = 0; x < srcW; x++) {
             // 16, not 0: a few sprites carry faint anti-aliased fringe rows
-            // that are invisible on screen but would read as the art's top.
-            if (data[(y * srcW + x) * 4 + 3] > 16) { row = y; break; }
+            // that are invisible on screen but would read as the art's edge.
+            if (data[(y * srcW + x) * 4 + 3] > 16) { opaque = true; break; }
           }
+          if (opaque) { if (y < first) first = y; if (y > last) last = y; }
         }
-        if (row >= 0 && row < best) best = row;
       }
-      if (best > 0 && best < srcH) frac = best / srcH;
+      if (last >= first) rows = { top: first / srcH, bottom: (last + 1) / srcH };
     } catch (e) {
       // getImageData throws on a tainted canvas, which is what happens if the
       // app is opened over file:// rather than served. Cache the failure and
-      // fall back to the old box-top behaviour rather than retrying per frame.
-      frac = 0;
+      // fall back to frame-edge behaviour rather than retrying per frame.
+      rows = FULL_ROWS;
     }
-    _artTop[src] = frac;
-    return frac;
+    _artRows[src] = rows;
+    return rows;
+  }
+
+  // Takes an already-resolved src plus its sheet layout. CompanionCanvas holds
+  // a flattened SPRITE descriptor rather than a mon object, so it calls these
+  // directly; the artTopFraction/artBottomFraction wrappers below are for
+  // callers that do have a mon.
+  function artTopFractionFor(src, frames = 1, axis = 'x') {
+    const t = artRowsFor(src, frames, axis).top;
+    // 0 for art that already touches the frame top, and for anything that
+    // could not be measured — both mean "no padding to correct for".
+    return t > 0 && t < 1 ? t : 0;
+  }
+
+  function artBottomFractionFor(src, frames = 1, axis = 'x') {
+    return artRowsFor(src, frames, axis).bottom;
   }
 
   function artTopFraction(mon, shiny = false) {
@@ -255,8 +272,15 @@ const MonSprite = (() => {
     return artTopFractionFor(
       shiny ? (mon.shinySprite || mon.sprite) : mon.sprite,
       mon.spriteFrames || 1,
-      mon.spriteAxis || 'x',
-      mon.spriteBlinkMode || false);
+      mon.spriteAxis || 'x');
+  }
+
+  function artBottomFraction(mon, shiny = false) {
+    if (!mon) return 1;
+    return artBottomFractionFor(
+      shiny ? (mon.shinySprite || mon.sprite) : mon.sprite,
+      mon.spriteFrames || 1,
+      mon.spriteAxis || 'x');
   }
 
   // Draw scale that lands a mon at its proportional display size within a
@@ -516,6 +540,7 @@ const MonSprite = (() => {
 
   return { drawOnCtx, draw, getImage, frameCanvas, preload, preloadAll, fitScale, drawSparkle,
            artTopFraction, artTopFractionFor,
+           artBottomFraction, artBottomFractionFor,
            displaySize, nativeFrameW, sizeScale };
 })();
 
@@ -837,7 +862,16 @@ const CompanionCanvas = (() => {
         // keeps its proportional size.
         const size = Math.min(MonSprite.displaySize(srcW, MON_BOX),
                               GROUND_Y - _topReserve);
-        const cy   = GROUND_Y - size / 2;
+        // GROUND_Y is where the mon's FEET go, not where its frame ends. The
+        // frame used to be what was bottom-anchored, which quietly handed each
+        // mon a different standing height: a sprite with empty rows under the
+        // art floated by exactly that much, from 0 units for Pita Pal (art to
+        // the frame edge) to 22 for Chillcone. Anchoring the measured art
+        // bottom puts every mon's feet on one line, and leaves the sprites
+        // that already fill their frame exactly where they were.
+        const artBottom = MonSprite.artBottomFractionFor(
+          SPRITE.spriteSrc, SPRITE.frames, SPRITE.frameAxis);
+        const cy   = GROUND_Y + size / 2 - artBottom * size;
         // The real top of the creature, not the top of its frame: sprites are
         // not tightly cropped, so the box top is the art top PLUS however
         // many transparent rows that particular sprite happens to carry. That
@@ -845,7 +879,7 @@ const CompanionCanvas = (() => {
         // ranged from 7px to 44px across the roster instead of being one
         // distance. artTopFraction() measures it; see its own note.
         const artTop = MonSprite.artTopFractionFor(
-          SPRITE.spriteSrc, SPRITE.frames, SPRITE.frameAxis, SPRITE.blinkMode);
+          SPRITE.spriteSrc, SPRITE.frames, SPRITE.frameAxis);
         state.headY = cy - size / 2 + artTop * size;
         // Sprite with bob + squish, slicing the correct frame
         ctx.save();
@@ -1190,7 +1224,17 @@ const EncounterScreen = (() => {
   // move, and they move down to where they belong rather than everything
   // being pinned to one size.
   const MON_BOX   = 245;
-  const MON_CY    = H * 0.5;      // mon centre-Y resting position (50% — vertical centre)
+  const MON_CY    = H * 0.5;      // fallback centre-Y, used until the sprite has loaded
+  // Where a mon's FEET stand on the platform. Measured off the platform art
+  // rather than picked: Ground1.png is drawn into y 153-383 here, its dirt
+  // spans rows 230-304 of that, and 263 is the oval's widest row — the depth
+  // that reads as the middle of the ground rather than its back lip or the
+  // front edge. Mons used to be centred on MON_CY instead, which is not a
+  // standing line at all: the frame is centred there, so where the feet ended
+  // up depended on how big the mon was. A 32px mon stood at 248 and a 64px one
+  // at 305, 42 units further down and half off the front of the platform,
+  // which is why the big mons read as sitting lower than everything else.
+  const ENC_GROUND_Y = 263;
   const BOB_PX    = 6;            // idle bob height — as on the companion canvas
   const SQUISH    = 0.0125;       // squash at the bottom of the bob, stretch at the top
   const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
@@ -1316,13 +1360,34 @@ const EncounterScreen = (() => {
     // than a bob — the mon should read as stretched on the way down, not drawn
     // as a sliver.
     const b  = Math.max(-1, Math.min(1, bobY / BOB_PX));
-    const cy = MON_CY + bobY;
+    const cy = monRestY() + bobY;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(1 + SQUISH * b, 1 - SQUISH * b);
     ctx.translate(-cx, -cy);
     drawMon(cx, cy);
     ctx.restore();
+  }
+
+  // Drawn size of the wild mon at its resting scale — the same number drawMon
+  // arrives at, but available before it draws. null until the sprite has
+  // loaded and its native frame width is known.
+  function monDrawSize(shiny) {
+    const srcW = MonSprite.nativeFrameW(st.mon, shiny);
+    return srcW === null ? null : MonSprite.displaySize(srcW, MON_BOX);
+  }
+
+  // Centre-Y that lands the current mon's feet on ENC_GROUND_Y. This is the
+  // encounter screen's half of the fix that also went into the companion
+  // canvas: both screens now place a mon by the bottom of its ART, so the same
+  // creature stands the same way relative to the ground on both. Falls back to
+  // the old fixed centre while the sprite is still loading, which is the one
+  // moment no size is known.
+  function monRestY() {
+    const shiny = (st.mon && st.mon.shiny && !st.mon.dark) || false;
+    const size  = st.mon ? monDrawSize(shiny) : null;
+    if (!size) return MON_CY;
+    return ENC_GROUND_Y + size / 2 - MonSprite.artBottomFraction(st.mon, shiny) * size;
   }
 
   // Place the floating name just above the mon's head, tracking its drawn size + bob.
@@ -1335,7 +1400,7 @@ const EncounterScreen = (() => {
     // transparent rows above it got its name parked well clear of its head.
     const artTop = st.mon
       ? MonSprite.artTopFraction(st.mon, st.mon.shiny && !st.mon.dark) : 0;
-    const boxTop = (MON_CY - st.monSize / 2 + artTop * st.monSize) / H * 100;
+    const boxTop = (monRestY() - st.monSize / 2 + artTop * st.monSize) / H * 100;
     // 9% of the canvas above that box, up from 7, so a big mon's head keeps a
     // bit of air between it and the caption.
     elMonName.style.top = (boxTop - 9) + '%';
@@ -1371,7 +1436,7 @@ const EncounterScreen = (() => {
     const startX = st.throwStartX;
     const startY = st.throwStartY;  // button position in canvas coords
     const endX   = SIZE / 2;
-    const endY   = MON_CY + THROW_Y_SHIFT;
+    const endY   = monRestY() + THROW_Y_SHIFT;
     // Arc height: peak sits at y=44 so the calyx (34px above centre) stays inside the canvas.
     const arcH   = (startY + endY) / 2 - 44;
 
@@ -1439,7 +1504,7 @@ const EncounterScreen = (() => {
       // Slide in from above; cubic ease-out over 30 frames
       const t    = Math.min(1, f / 30);
       const ease = 1 - Math.pow(1 - t, 3);
-      drawIdleMon(cx, MON_CY * (ease - 1));
+      drawIdleMon(cx, -monRestY() * (1 - ease));
 
     } else if (st.phase === 'idle') {
       st.monBob++;
@@ -1456,19 +1521,20 @@ const EncounterScreen = (() => {
       // Expanding white impact ring — a burst of square pixels, not a smooth stroke
       if (f < 12) {
         const rt = f / 12;
-        blockRing('#fff', cx, MON_CY, 8 + rt * 50, 6, 12, (1 - rt) * 0.85);
+        blockRing('#fff', cx, monRestY(), 8 + rt * 50, 6, 12, (1 - rt) * 0.85);
       }
       // Mon shrinks rapidly into the tomato (easeIn scale-down)
       const absT  = Math.min(1, f / 35);
       const monSc = MON_SCALE * Math.max(0, 1 - absT * absT);
-      if (monSc > 0.05) drawMon(cx, MON_CY, { scale: monSc });
+      if (monSc > 0.05) drawMon(cx, monRestY(), { scale: monSc });
       // Tomato sits at impact point on top
-      drawTomatoBall(cx, MON_CY, 0);
+      drawTomatoBall(cx, monRestY(), 0);
 
     } else if (st.phase === 'falling') {
-      // Tomato drops with gravity ease-in from MON_CY to GROUND_Y
+      // Tomato drops with gravity ease-in from the mon's height to GROUND_Y
       const fallT = Math.min(1, f / 12);
-      const y     = MON_CY + (GROUND_Y - MON_CY) * fallT * fallT;
+      const restY = monRestY();
+      const y     = restY + (GROUND_Y - restY) * fallT * fallT;
       drawTomatoBall(cx, y, 0);
 
     } else if (st.phase === 'landing') {
@@ -1529,7 +1595,7 @@ const EncounterScreen = (() => {
     } else if (st.phase === 'result') {
       // Escape path only (catch always succeeds currently)
       const t   = Math.min(1, f / 40);
-      const cy2 = MON_CY - t * SIZE * 0.55;
+      const cy2 = monRestY() - t * SIZE * 0.55;
       const cx2 = cx + t * SIZE * 0.4;
       drawMon(cx2, cy2, { alpha: 1 - t * t });
 

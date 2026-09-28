@@ -308,9 +308,18 @@ h1.logo {
   image-rendering: pixelated;
 }
 
+/* The same squash and stretch the mons carry on their idle bob (SQUISH in
+   game.js): widest and flattest at the bottom of the travel, tallest and
+   narrowest at the top, 1.25% either way. Scaled about the centre, as the
+   mons are, so the tomato reads as the same kind of soft thing rather than a
+   decal being slid up and down.
+
+   Under prefers-reduced-motion the global rule collapses this to one 0.01ms
+   pass, which lands on 100% — the squashed end. At 1.25% of a 2.6rem image
+   that is well under a pixel, so it holds as a still tomato either way. */
 @keyframes logo-float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
+  0%, 100% { transform: translateY(0)     scale(1.0125, 0.9875); }
+  50%      { transform: translateY(-6px)  scale(0.9875, 1.0125); }
 }
 
 .logo-pomo {
