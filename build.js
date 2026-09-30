@@ -37,7 +37,7 @@ const OUT  = path.join(ROOT, '_site');
 // otherwise publish it.
 const EXCLUDE = new Set([
   '_site', 'node_modules', '.git', '.claude', '.github', 'tools',
-  'agent_docs', 'build.js', 'package.json', 'package-lock.json',
+  'agent_docs', 'art-source', 'build.js', 'package.json', 'package-lock.json',
   'claude.md', 'readme.md', '.gitignore',
 ].map((s) => s.toLowerCase()));
 
