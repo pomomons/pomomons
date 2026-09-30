@@ -5,7 +5,7 @@ rather than only on one laptop. Treat this file as the source of truth from
 now on and update it here as items land.
 
 Working toward a Product Hunt launch for PomoMons (gamified Pomodoro timer,
-repo: C:\Users\HP\Documents\pomomons). Plan is tracked as a P0 (must-fix
+repo: C:\Users\HP\OneDrive\Documents\pomomons). Plan is tracked as a P0 (must-fix
 before launch) / P1 (nice-to-have after) task list, worked through over
 several sessions.
 
