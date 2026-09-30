@@ -1960,7 +1960,14 @@ html::after {
      read as a solid full-width slab of ground filling the panel. At 1.035
      it is 334px: now just inside the 346px panel, so the platform reads as
      a strip that stops short of the frame rather than running under it. */
-  .companion-ground { width: 142.83%; height: 80.73%; bottom: -33.54%; }
+  /* Height is width/2, because Ground2.png is 120×60 — any other ratio
+     stretches its blocks out of square, which the old 142.83/80.73 pair did
+     once the art went from 176×96 to 120×60. Width is left alone: matching the
+     mon's block size exactly would want 170.77% here, and that overflows the
+     panel the ground is meant to stop short of. Bottom keeps the standing line
+     (45% down the file) at 10.86% above the stage bottom: 71.415 × 0.55 −
+     28.42 = 10.86, the same as the old pair gave. */
+  .companion-ground { width: 142.83%; height: 71.415%; bottom: -28.42%; }
   /* The readout is offset from the panel now, not from the stage, so it needs
      no per-breakpoint nudging — the base 24px inset already lands it on the
      panel at every phone width. Only the side inset comes in, to match the
@@ -2086,7 +2093,11 @@ html::after {
      the ground's grass line (50% of its box) at 102 - (50 x 1.215), putting
      its bottom edge at 102 + (28 x 1.215). */
   #companion-canvas { width: 121.5%; height: 121.5%; margin-left: -60.75%; top: -14.64%; }
-  .companion-ground { width: 167.67%; height: 94.77%; bottom: -38.58%; }
+  /* Same rule as the tier above: height is width/2 so the 120×60 art keeps
+     square blocks, width stays put (an exact block match wants 200.47%, which
+     runs well past the panel), and bottom holds the standing line at 13.54%
+     above the stage bottom — 83.835 × 0.55 − 32.57. */
+  .companion-ground { width: 167.67%; height: 83.835%; bottom: -32.57%; }
 
   /* The tier above widens the caption's box by 40px a side, which is generous
      against its 234px stage but not against the 110px one here — the box came

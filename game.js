@@ -1226,15 +1226,19 @@ const EncounterScreen = (() => {
   const MON_BOX   = 245;
   const MON_CY    = H * 0.5;      // fallback centre-Y, used until the sprite has loaded
   // Where a mon's FEET stand on the platform. Measured off the platform art
-  // rather than picked: Ground1.png is drawn into y 153-383 here, its dirt
-  // spans rows 230-304 of that, and 263 is the oval's widest row — the depth
-  // that reads as the middle of the ground rather than its back lip or the
-  // front edge. Mons used to be centred on MON_CY instead, which is not a
-  // standing line at all: the frame is centred there, so where the feet ended
-  // up depended on how big the mon was. A 32px mon stood at 248 and a 64px one
-  // at 305, 42 units further down and half off the front of the platform,
-  // which is why the big mons read as sitting lower than everything else.
-  const ENC_GROUND_Y = 263;
+  // rather than picked: Ground2.png is drawn into y 153-383 here, and row 27
+  // of its 60 — 45% down the file — is the oval's widest row, the depth that
+  // reads as the middle of the ground rather than its back lip or the front
+  // edge. 153 + 0.45 x 230 = 256.5, rounded to 257. Re-derive this the same
+  // way if the ground art's standing line ever moves; it was 263 for
+  // Ground1.png, whose widest row sat 48% down a 96-row file.
+  //
+  // Mons used to be centred on MON_CY instead, which is not a standing line at
+  // all: the frame is centred there, so where the feet ended up depended on
+  // how big the mon was. A 32px mon stood at 248 and a 64px one at 305, 42
+  // units further down and half off the front of the platform, which is why
+  // the big mons read as sitting lower than everything else.
+  const ENC_GROUND_Y = 257;
   const BOB_PX    = 6;            // idle bob height — as on the companion canvas
   const SQUISH    = 0.0125;       // squash at the bottom of the bob, stretch at the top
   const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
@@ -1244,7 +1248,7 @@ const EncounterScreen = (() => {
   _tomatoImg.src = 'assets/sprites/Tomato/Tomato.png';
 
   const _groundImg = new Image();
-  _groundImg.src = 'assets/sprites/Ground/Ground1.png';
+  _groundImg.src = 'assets/sprites/Ground/Ground2.png';
 
   // Warmed for the SHARE card's backdrop (buildShareCanvas, below) — same
   // forest art as the page background, red variant to match a focus-session

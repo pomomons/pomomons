@@ -419,15 +419,23 @@ h1.logo {
 
 /* Ground is sized relative to the mon/canvas (not the panel), reproducing the
    encounter screen's ratio: there the ground (460px) is ~1.5× the mon's canvas
-   box. Aspect 2:1 matches the encounter's flatter draw (460×230). Bottom is
-   tuned so the grass surface meets the mon's feet (canvas GROUND_Y = 96%). */
+   box. Aspect 2:1 matches the encounter's flatter draw (460×230) AND the
+   ground art's own 120×60 shape, so its blocks stay square.
+   Width is not eyeballed: Ground2.png is 120 blocks across and a mon's block
+   is (176/64) × canvas/200 = 0.01375 × canvas, so the ground has to be
+   120 × that = 1.65 × the canvas to put both on the same block size. The
+   canvas is 100% of the stage here, hence 165%, and height is half of that.
+   Bottom lands the art's standing line — 45% down the file, the oval's widest
+   row — where it sat before: 82.5 × 0.55 − 35.48 = 9.9% above the stage
+   bottom, the same as the old 78/−33 pair gave. Re-derive it that way if any
+   of these move. */
 .companion-ground {
   position: absolute;
   z-index: 0;
-  width: 156%;
-  height: 78%;
+  width: 165%;
+  height: 82.5%;
   left: 50%;
-  bottom: -33%;
+  bottom: -35.48%;
   transform: translateX(-50%);
   image-rendering: pixelated;
   image-rendering: crisp-edges;
