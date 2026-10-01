@@ -53,7 +53,10 @@ being private means there is no public copy to fall back on.
 
 ## 2. Spaceship — the domain and DNS *(the one that actually kills the project)*
 
-- Registrar **and** DNS host for `pomomons.io`
+- Registrar **and** DNS host for `pomomons.io` — "Spaceship, Inc."
+- **Registered 20 Aug 2026; paid through 20 Aug 2027.** Auto-renew was turned
+  on 2026-10-01. Verified via RDAP, not from memory — re-check with
+  `https://rdap.identitydigital.services/rdap/domain/pomomons.io` if in doubt.
 - Nameservers: `launch1.spaceship.net`, `launch2.spaceship.net`
 - Mail: `mx1/mx2.efwd.spaceship.net` — `efwd` is Spaceship's **email
   forwarding**, so `hello@pomomons.io` is a *forwarder*, not a mailbox. Mail to
@@ -65,14 +68,14 @@ every link ever shared is dead, `hello@pomomons.io` belongs to a stranger, and
 Brevo's domain verification (§4) breaks. Unlike every other failure here, this
 one is **not undoable** — you cannot force a sale back.
 
-**Do, in priority order:**
-1. **Turn on auto-renew.** Spaceship → Domains → `pomomons.io` → enable
-   auto-renew.
-2. **Check the card on file hasn't expired.** Auto-renew with a dead card fails
-   silently, which is the usual way domains are lost.
-3. Confirm the renewal reminders go to an address you actually read — and *not*
-   to `hello@pomomons.io`, because a lapsed domain takes that address down with
-   it. Use the Gmail directly.
+**Done 2026-10-01:** auto-renew is on, the card on file was checked, and
+renewal notices go to the Gmail rather than `hello@pomomons.io`.
+
+**The one thing to re-check, once a year, before 20 Aug 2027:** that the card
+on file is still valid. Auto-renew with an expired card fails *silently* — it
+is the usual way domains are lost, and the notice would arrive in a year when
+none of this is fresh. If the card is ever replaced or reissued, update it here
+too.
 
 ---
 
@@ -89,12 +92,16 @@ one is **not undoable** — you cannot force a sale back.
 
 **If this account is lost:** signups stop being recorded, and the subscriber
 list goes with it. Those addresses are real people who cannot be recreated —
-this is the only genuinely irreplaceable data in the project.
+once there are any, this is the only genuinely irreplaceable data in the
+project.
 
 **Do:**
-- 2FA on, recovery codes off-laptop.
-- **Export the sheet to CSV and keep a copy somewhere else.** This is step 4 of
-  the backup plan and is still outstanding.
+- 2FA on, recovery codes off-laptop — **done 2026-10-01.**
+- **Export the sheet to CSV whenever there are subscribers to lose.** As of
+  2026-10-01 the list is empty, so there is nothing at risk yet and no export
+  to make. The risk starts at the *first* signup, which in practice means the
+  Product Hunt launch — so fold the export into the launch checklist rather
+  than treating it as done. An empty sheet is not the same as a safe one.
 - If the endpoint URL ever changes, it has to be updated in `signup.js` and
   pushed.
 
@@ -151,10 +158,12 @@ on the server before the launch, so one lost login doesn't orphan it.
 
 ## Recovery-code checklist
 
-2FA protects an account right up until it locks you out of it. For **GitHub**,
-**Spaceship**, **Google** and **Brevo**, the recovery codes need to exist
-somewhere that is not this laptop and not the account they unlock. Printed on
-paper, or in a password manager you can reach from a phone, both work.
+**Done 2026-10-01** for GitHub, Spaceship, Google and Brevo.
+
+2FA protects an account right up until it locks you out of it, so the recovery
+codes have to exist somewhere that is not this laptop and not the account they
+unlock. Printed on paper, or in a password manager reachable from a phone, both
+work. Re-do this for any new service the project comes to depend on.
 
 The failure to avoid: codes saved in a file on the laptop that died, or mailed
 to `hello@pomomons.io`, which depends on the domain you are trying to recover.
