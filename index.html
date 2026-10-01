@@ -326,6 +326,22 @@
          it. Out here it's a fixed row that always sits between the bottom of
          the scroll box and the stats strip. -->
     <div class="mymons-restore">
+      <!-- Save-code reminder. Lives inside this row rather than getting one of
+           its own because .mymons-restore's bottom margin is measured against
+           the stats strip (see the long comment on it in style-v3.css) and a
+           second row would have to repeat that maths. As a flex column with
+           only RESTORE visible this renders exactly as the old single
+           centered button did.
+
+           Shown/hidden and worded by Backup.refreshNudge(), which My Mons
+           calls with the collection size. -->
+      <div class="save-nudge" id="save-nudge" hidden>
+        <p class="save-nudge-text" id="save-nudge-text"></p>
+        <div class="save-nudge-btns">
+          <button class="btn btn-sm save-nudge-go" id="btn-save-nudge">GET A SAVE CODE</button>
+          <button class="btn btn-ghost btn-sm" id="btn-save-nudge-later">LATER</button>
+        </div>
+      </div>
       <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
               aria-label="Restore your collection from a save code">RESTORE</button>
     </div>
