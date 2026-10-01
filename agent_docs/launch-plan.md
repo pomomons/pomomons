@@ -1,5 +1,16 @@
 # PomoMons launch plan
 
+**CORRECTION 2026-10-01 — the autostart feature is NOT in the code.** A
+verification pass found no `pm_autostart`, `#toggle-autostart` or any
+`autostart` string anywhere in the JS or HTML. The settings menu ships a
+`#toggle-notify` checkbox ("Notify when timer ends", backed by `pm_notify`)
+where this plan describes an Auto-start checkbox. The rest of the Leak #2 work
+IS present and verified: `Notify`, `titleOverride`, `BASE_TITLE`,
+`getBgTicker`/`startTicker`. Treat every autostart mention below as describing
+work that was replaced rather than shipped — it was presumably swapped for the
+notification toggle in a later session without this file being updated.
+
+
 Copied out of Claude Code's local memory store on 2026-09-30 so it lives in the repo
 rather than only on one laptop. Treat this file as the source of truth from
 now on and update it here as items land.
