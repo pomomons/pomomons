@@ -416,6 +416,16 @@ migration off Apps Script.
 (transparent favicon). `f16356f` before it. A "mon level appended to the name"
 feature was built and then removed at the user's request — don't re-suggest it.
 
+**Launch-day checklist (added 2026-10-01):**
+- **Export the Signups sheet to CSV once signups start arriving.** The list is
+  empty today, so there is nothing to lose yet — which is exactly why this is
+  easy to forget. Those addresses are the only data in the project that cannot
+  be recreated from git, and they will exist in one Google account only. See
+  `agent_docs/accounts.md` §3.
+- Watch the Brevo cap on launch day: free tier is **300 emails/day**. Past it
+  the send fails, the signup is still recorded, and that person never gets a
+  backup code. A Product Hunt spike is the one realistic way to hit that.
+
 **Open (P1):**
 - Streaks / completion count.
 - More mons past 21.
