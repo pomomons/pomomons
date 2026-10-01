@@ -32,9 +32,16 @@ const Backup = (() => {
     'pm_items', 'pm_muted', 'pm_stats_scope',
   ];
 
-  // app.js runs a one-time cleanup that wipes the collection unless this is
-  // set (see the pm_seed_purged block there). A restore must set it, or the
-  // very next page load erases everything we just put back.
+  // app.js USED to run a one-time cleanup that wiped the collection unless this
+  // was set; that was removed 2026-10-01 because losing localStorage alone
+  // escalated to losing the whole collection.
+  //
+  // Still set on restore, deliberately. The service worker serves assets
+  // stale-while-revalidate, so a returning visitor can briefly pair a fresh
+  // restore with a previously cached app.js that still contains the old
+  // cleanup. Setting this costs one key and stops that build erasing what we
+  // just put back. Safe to delete once no cached copy from before 2026-10-01
+  // can still be in circulation.
   const PURGE_FLAG = 'pm_seed_purged';
 
   // ── Code format ─────────────────────────────────────────────
