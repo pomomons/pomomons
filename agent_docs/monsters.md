@@ -67,11 +67,14 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 14 | 24  | Soursquad  | Sour    | —                                                    |
 | 15 | 25  | Mushkin    | Savory  | 20 → Portobellord #26 (Savory)                       |
 | 16 | 27  | Citrano    | Sour    | —                                                    |
-| 17 | 28  | Spud       | Savory  | —                                                    |
-| 18 | 29  | Pinapip    | Sweet   | —                                                    |
+| 17 | 28  | Spud       | Savory  | 20 → Idabro #29 (Savory)                             |
+| 18 | 30  | Pinapip    | Sweet   | —                                                    |
 
-Spawning is **uniform** across base mons (no rarity weighting). Shiny (1%) and
-dark (5%) variant rolls are independent of species — see game-mechanics.md.
+Spawning is **uniform** across base mons (no rarity weighting). Shiny (1/500,
+0.2%) and dark (1/100, 1% — 0.998% effective, since the dark roll only happens
+if the shiny roll failed) variant rolls are independent of species — see
+game-mechanics.md. These were documented here as 1% and 5%, which never matched
+`SHINY_RATE`/`DARK_RATE` in game.js; corrected 2026-10-01 against the code.
 
 ---
 

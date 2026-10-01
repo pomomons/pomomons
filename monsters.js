@@ -196,7 +196,30 @@ const MONS = [
   // and caught records store the id.
   { id: 17, dexNum: 28, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Spud/Spud.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames (64×128 file, two stacked) — the final-evolution tier, so
+      // Idabro draws at full box size against Spud's 32px basic. One jump with
+      // no 48px middle step, the same shape as Cocokid → Cocokong and
+      // Bluble → Bluebeary.
+      //
+      // Colours sampled from the sprite: the potato flesh (#f5b057, 39% of the
+      // opaque pixels) and the darker tone it is shaded with (#c3712e, 14%).
+      // The cap's red (#fb1e2d) is the louder colour and still loses — accent
+      // is a shadow everywhere else in this roster, the same call the comment
+      // on Pinapip's crown records.
+      //
+      // The two frames differ by exactly 14 pixels and all of them are the
+      // highlights on the sunglasses: white in frame 0, black in frame 1.
+      // blinkMode rests on frame 1 and flashes frame 0, so this reads as a
+      // glint crossing the lenses rather than a blink. Timed slower and longer
+      // than the roster's 3000/150 default on purpose — a sparkle firing as
+      // often as an eye-blink reads as a flicker.
+      { atLevel: 20, dexNum: 29, name: 'Idabro', type: 'Savory', color: '#f5b057', accent: '#c3712e',
+        sprite: 'assets/sprites/Idabro/Idabro.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 4000, blinkDuration: 200 },
+    ]
+  },
   // Pineapple. Basic mon, no evolution line. Sweet rather than Sour, following
   // Pita Pal (dragon fruit): a tropical fruit reads Sweet here, and Sour is
   // held by the sharply acidic pair, Soursquad (grapes) and Citrano (orange).
@@ -210,7 +233,10 @@ const MONS = [
   // ONLY white left in the sheet — worth knowing before running any "remove the
   // background" pass over this sprite again, because the first export had the
   // background baked in as opaque near-white and clearing it took the eyes too.
-  { id: 18, dexNum: 29, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
+  // dexNum 30, not 29: Idabro took 29 as Spud's evolution, and an evolution
+  // sits directly after its base (see the convention note at the top). Nothing
+  // persists dexNum, so pushing Pinapip up one costs nothing.
+  { id: 18, dexNum: 30, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Pinapip/Pinapip.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
 ];
