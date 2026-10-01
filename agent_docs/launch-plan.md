@@ -1,15 +1,12 @@
 # PomoMons launch plan
 
-**CORRECTION 2026-10-01 — the autostart feature is NOT in the code.** A
-verification pass found no `pm_autostart`, `#toggle-autostart` or any
-`autostart` string anywhere in the JS or HTML. The settings menu ships a
-`#toggle-notify` checkbox ("Notify when timer ends", backed by `pm_notify`)
-where this plan describes an Auto-start checkbox. The rest of the Leak #2 work
-IS present and verified: `Notify`, `titleOverride`, `BASE_TITLE`,
-`getBgTicker`/`startTicker`. Treat every autostart mention below as describing
-work that was replaced rather than shipped — it was presumably swapped for the
-notification toggle in a later session without this file being updated.
-
+**Autostart: DROPPED 2026-10-01 at the user's request. Do not rebuild it.**
+This plan previously described an opt-in auto-start toggle as shipped and
+verified. It is not in the code — no `pm_autostart`, `#toggle-autostart` or any
+`autostart` string exists — and the user has now confirmed they do not want it.
+The settings menu ships `#toggle-notify` ("Notify when timer ends", backed by
+`pm_notify`) in its place. The rest of the Leak #2 work IS present and
+verified: `Notify`, `titleOverride`, `BASE_TITLE`, `getBgTicker`/`startTicker`.
 
 Copied out of Claude Code's local memory store on 2026-09-30 so it lives in the repo
 rather than only on one laptop. Treat this file as the source of truth from
@@ -46,15 +43,15 @@ sessions catch monsters").
 - Leak #2 (session-end signal): app.js now has a `Notify` helper (asks
   permission on first session end, never on load), a `titleOverride` that
   parks "Break time!" / "Back to work!" on the tab title until the next
-  start or a manual mode change, and an opt-in `pm_autostart` toggle that
-  auto-starts the next session/break.
+  start or a manual mode change. (An opt-in autostart toggle was described here
+  too; it never shipped and was dropped 2026-10-01 — see the note at the top.)
 - Settings menu: the speaker button in the wordmark row is now a gear
   (`#btn-settings`, reuses the `.audio-shadow`/`.pxb-audio` wrapper so it
   keeps the mobile top-right pin). It opens `#settings-menu` (end of body,
   positioned by app.js like `.mode-dropdown`) holding: sound toggle
   (`#btn-audio`, label reads Sound on/off), Discord link (`#btn-discord`),
-  Email updates (`#btn-signup`), and the Auto-start checkbox
-  (`#toggle-autostart`). The old top-left `.header-left-btns` cluster is
+  Email updates (`#btn-signup`), and a `#toggle-notify` checkbox ("Notify when
+  timer ends"). The old top-left `.header-left-btns` cluster is
   gone; its CSS in style-v3.css is now dead but left in place.
 - Settings menu label "Email updates" renamed to "Save". The free
   `#btn-save-code` button (got a save code with no email) was removed; it's
@@ -217,15 +214,15 @@ sessions catch monsters").
   rows from the Signups sheet) — DONE by the user 2026-09-06.
 - Leak #2 follow-up: PARTIALLY verified 2026-09-06 on a local 12s/6s test
   build driven via claude-in-chrome. Confirmed: `Notify` object + `titleOverride`
-  + `getBgTicker`/`startTicker` all present and wired; `#toggle-autostart`
-  persists `pm_autostart=1`; title shows the countdown ("00:12 — PomoMons")
-  during a run; the settings-menu autostart row is 295px in a 299px menu with
-  no overflow / no text clip, menu is only 173px tall anchored near the top so
-  it won't overflow phone heights either. NOT verified (automation env freezes
+  + `getBgTicker`/`startTicker` all present and wired; title shows the countdown
+  ("00:12 — PomoMons") during a run; the settings-menu toggle row is 295px in a
+  299px menu with no overflow / no text clip, menu is only 173px tall anchored
+  near the top so it won't overflow phone heights either. (That session also
+  reported verifying an autostart toggle; no such code exists — dropped
+  2026-10-01.) NOT verified (automation env freezes
   a non-OS-focused tab — the 12s session never completed, timer stuck at 00:12
   ~30s later): the actual end-of-session transition — title flipping to
-  "Break time! — PomoMons", the OS notification firing, and the break
-  auto-starting. Needs a human at the keyboard; see the manual test steps
+  "Break time! — PomoMons" and the OS notification firing. Needs a human at the keyboard; see the manual test steps
   handed over in that session.
 - Leak #3 follow-up: still NOT verifiable here for the same reason (the
   harness suspends the page + its Worker when the tab isn't OS-focused, which
