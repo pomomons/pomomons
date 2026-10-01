@@ -962,20 +962,19 @@ if (navigator.storage && navigator.storage.persist) {
 loadPlayerState();
 renderStats();
 document.body.dataset.mode = currentMode;
-Collection.init().then(async () => {
-  // One-time cleanup: earlier builds auto-seeded the whole roster into IndexedDB
-  // on every load. Wipe those leftover records once so the collection starts empty.
-  if (!localStorage.getItem('pm_seed_purged')) {
-    await Collection.clearAll();
-    ['pm_active', 'pm_active_rec_key', 'pm_active_pal_level', 'pm_active_pal_exp',
-     'pm_active_shiny', 'pm_active_dark'].forEach(k => localStorage.removeItem(k));
-    localStorage.setItem('pm_total_catches', '0');
-    localStorage.setItem('pm_today_catches', '0');
-    localStorage.setItem('pm_seed_purged', '1');
-    if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
-    if (typeof renderStats === 'function') renderStats();
-  }
-});
+// REMOVED 2026-10-01: a one-time cleanup used to run here. Earlier builds
+// auto-seeded the whole roster into IndexedDB on every load, so this wiped the
+// collection once and recorded that it had done so in a localStorage flag
+// (pm_seed_purged).
+//
+// Why it had to go: the flag lived in localStorage but the data it guarded
+// lived in IndexedDB, and those can be cleared independently. A missing flag
+// was indistinguishable from "never cleaned up", so losing localStorage alone
+// escalated to losing the entire collection on the next load. The migration
+// finished months ago, so the only effect it could still have was destroying
+// a real player's mons. Do not reinstate it. Any future migration must key
+// its "already ran" marker off the same storage as the data it touches.
+Collection.init();
 
 // Navigation
 document.getElementById('btn-go-mymons').addEventListener('click', () => showScreen('mymons'));
