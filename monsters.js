@@ -214,10 +214,12 @@ const MONS = [
       // blinkMode rests on frame 1 and flashes frame 0, so this reads as a
       // glint crossing the lenses rather than a blink. Timed slower and longer
       // than the roster's 3000/150 default on purpose — a sparkle firing as
-      // often as an eye-blink reads as a flicker.
+      // often as an eye-blink reads as a flicker. 6000/900 is the final-
+      // evolution timing Guacamonger and Strangletti already use, so the
+      // glint holds long enough to read as a deliberate shine.
       { atLevel: 20, dexNum: 29, name: 'Idabro', type: 'Savory', color: '#f5b057', accent: '#c3712e',
         sprite: 'assets/sprites/Idabro/Idabro.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 4000, blinkDuration: 200 },
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
   // Pineapple. Basic mon, no evolution line. Sweet rather than Sour, following
