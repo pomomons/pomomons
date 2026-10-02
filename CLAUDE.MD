@@ -79,6 +79,16 @@ of CSS).
   checks the rendered card count still matches the seed — renderMyMons drops
   any record whose species id is missing from MONS, silently, and the roster
   skips id 2.
+- `node tools/check-animation-rate.js [_site]` replaces rAF with a virtual clock
+  it can run at 60/30/15fps, plays a real encounter through to the catch and a
+  real evolution through to its dismiss button, and asserts both take the same
+  amount of TIME at every rate. The timed sequences in game.js are written in
+  60fps frames (throw arc 90, shake window 40) and advance off `clock.step(now)`
+  from frameClock() — never one frame per rAF callback, which is what made the
+  catch run 30s instead of 7.7s on a tab coming back from a long spell hidden.
+  Run it if you add or retime a phase. Sound cues are counted too: a cue has to
+  fire on the tick that *crosses* its mark, since a time-based clock lands on
+  14.7 and 15.3 and never on 15.
 - `node tools/check-sw-upgrade.js [ref]` is the regression test for that:
   it serves a previous deploy, lets the service worker cache it, swaps in the
   new build, reloads once, and asserts the fonts survived. Run it after any

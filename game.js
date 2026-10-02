@@ -80,6 +80,38 @@ function sizeMonName(el, targetPx, boxEl, cache, minPx) {
   el.style.fontSize = Math.max(minPx || NAME_MIN_PX, Math.floor(size)) + 'px';
 }
 
+// ── Animation clock ───────────────────────────────────────
+// Every timed animation below is written in 60fps frames: the throw arc is 90
+// frames, a shake window is 40, the evolution silhouette holds for 120. Those
+// numbers only mean what they say while the browser is actually delivering 60
+// frames a second — and it isn't always. For a good few seconds after a tab
+// that has been hidden a long time is brought back to the front, Chrome spins
+// that tab's rendering back up well below full rate, and these sequences used
+// to count rAF callbacks, so they stretched out with it. The throw→catch run is
+// 463 frames end to end, which turned ~7.7s into something like 20. The sprite
+// animations playing right beside it read Date.now() and kept real time, so the
+// mismatch read as "the throw is broken" rather than "the page is slow".
+//
+// frameClock() converts elapsed time into those same frame units, so a phase
+// written as 90 frames takes 1.5 seconds whatever the frame rate.
+function frameClock(maxStep = 6) {
+  const FRAME_MS = 1000 / 60;
+  let last = null;
+  return {
+    // Frames of animation this rAF callback covers. Capped at maxStep: a tab
+    // hidden partway through a sequence resumes where it paused rather than
+    // teleporting through the rest of it, and no sound cue gets jumped over.
+    step(now) {
+      const t = typeof now === 'number' ? now : performance.now();
+      if (last === null) { last = t; return 1; }  // seed: first frame counts as one
+      const frames = (t - last) / FRAME_MS;
+      last = t;
+      return Math.min(maxStep, Math.max(0, frames));
+    },
+    reset() { last = null; },
+  };
+}
+
 // ── Shared sprite renderer ────────────────────────────────
 // Used by EncounterScreen (encounter canvas) and Collection (card thumbnails).
 const MonSprite = (() => {
@@ -584,13 +616,15 @@ const CompanionCanvas = (() => {
     blinkDuration: 150,   // ms blink lasts
   };
 
+  const clock = frameClock();
+
   // Bob animation state
   const state = {
     y:         0,      // current vertical offset
     vy:        0,      // velocity
     squishY:   1,      // vertical scale for squash/stretch
     squishX:   1,      // horizontal scale
-    frame:     0,      // animation frame counter
+    frame:     0,      // bob clock, in 60fps frames (see frameClock)
     blinkTimer:0,      // frames until next blink
     blinking:  false,
     blinkFrame:0,
@@ -946,8 +980,8 @@ const CompanionCanvas = (() => {
   }
 
   // ── animation tick ─────────────────────────────────────
-  function tick() {
-    state.frame++;
+  function tick(now) {
+    state.frame += clock.step(now);
 
     // --- Sinusoidal bob (matches the encounter/catch screen), with a light
     // squash and stretch riding on it: widest and flattest at the bottom of
@@ -1198,6 +1232,7 @@ const CompanionCanvas = (() => {
 
   function stop() {
     if (rafId) cancelAnimationFrame(rafId);
+    clock.reset();   // next start() measures from its own first frame
   }
 
   // Reset to the empty state (draws the "?" placeholder). Called when there is
@@ -1319,15 +1354,18 @@ const EncounterScreen = (() => {
   const NAME_PER_CANVAS = 16 / SIZE;
   const nameFit = {};
 
+  const clock = frameClock();
+
   // State machine
   const st = {
     phase:        'idle',  // appearing|idle|throwing|shaking|result|done
     mon:          null,
     caught:       false,
-    frame:        0,       // general counter, reset each phase
+    frame:        0,       // phase clock in 60fps frames, reset each phase
+    step:         1,       // frames this tick covers (see frameClock)
     dpr:          1,
     monY:         0,       // current bob offset (idle phase)
-    monBob:       0,       // frame counter for idle bob
+    monBob:       0,       // bob clock, also in 60fps frames
     throwStartX:  SIZE * 0.82, // throw origin in canvas coords (set on throw)
     throwStartY:  H + 20,      // overwritten with button position on throw
   };
@@ -1511,7 +1549,7 @@ const EncounterScreen = (() => {
       drawIdleMon(cx, -monRestY() * (1 - ease));
 
     } else if (st.phase === 'idle') {
-      st.monBob++;
+      st.monBob += st.step;
       st.monY = Math.sin(st.monBob / 22) * BOB_PX;
       drawIdleMon(cx, st.monY);
       positionMonName();
@@ -1605,7 +1643,7 @@ const EncounterScreen = (() => {
 
     } else if (st.phase === 'postcatch') {
       // Mon bobs happily on the encounter canvas while the congrats text is shown
-      st.monBob++;
+      st.monBob += st.step;
       st.monY = Math.sin(st.monBob / 22) * BOB_PX;
       drawIdleMon(cx, st.monY);
       positionMonName();
@@ -1614,46 +1652,55 @@ const EncounterScreen = (() => {
   }
 
   // ── rAF tick ──────────────────────────────────────────────
-  function tick() {
-    st.frame++;
+  function tick(now) {
+    const prev = st.frame;
+    st.step = clock.step(now);
+    st.frame += st.step;
     draw();
 
-    // Phase transitions
+    // Sound cues fire on the tick that carries the phase clock past their mark.
+    // They used to test st.frame === mark, which only ever matched because the
+    // counter moved in whole steps of 1; st.frame is a time-based clock now, so
+    // it lands on 14.7 and 15.3 and never on 15.
+    const crossed = at => prev < at && st.frame >= at;
+
+    // Phase transitions. Each one carries the leftover frames into the next
+    // phase (-= rather than = 0) so a sequence of six phases can't shed up to
+    // a tick's worth of time at every handover.
     if (st.phase === 'appearing' && st.frame >= 30) {
       st.phase = 'idle';
-      st.frame = 0;
+      st.frame -= 30;
       enableButtons(true);
     } else if (st.phase === 'throwing' && st.frame >= 90) {
       st.caught = true;
       st.phase  = 'absorbing';
-      st.frame  = 0;
+      st.frame -= 90;
     } else if (st.phase === 'absorbing' && st.frame >= 35) {
       st.phase = 'falling';
-      st.frame = 0;
+      st.frame -= 35;
     } else if (st.phase === 'falling' && st.frame >= 12) {
       st.phase = 'landing';
-      st.frame = 0;
+      st.frame -= 12;
       SFX.play('bounce');                   // initial landing bounce
     } else if (st.phase === 'landing') {
-      if (st.frame === 15) SFX.play('bounce'); // bounce 1 hits ground
-      if (st.frame === 26) SFX.play('bounce'); // bounce 2 hits ground
+      if (crossed(15)) SFX.play('bounce');  // bounce 1 hits ground
+      if (crossed(26)) SFX.play('bounce');  // bounce 2 hits ground
       if (st.frame >= 45) {
         st.phase = 'shaking';
-        st.frame = 0;
+        st.frame -= 45;
+        SFX.play('shake');                  // shake window 1 opens on entry
       }
     } else if (st.phase === 'shaking') {
-      // Fire shake sound at the start of each of the 3 shake windows
-      if (st.frame === 1 || st.frame === 61 || st.frame === 121) {
-        SFX.play('shake');
-      }
+      // Windows 2 and 3 open at 60 and 120 (window 1 fires on entry, above).
+      if (crossed(60) || crossed(120)) SFX.play('shake');
       if (st.frame >= 161) {
         saveCaught();
         if (typeof saveExp === 'function') saveExp(25);
         st.phase = 'locked';
-        st.frame = 0;
+        st.frame -= 161;
       }
     } else if (st.phase === 'locked') {
-      if (st.frame === 25) SFX.play('click');  // delayed click with shimmer
+      if (crossed(25)) SFX.play('click');   // delayed click with shimmer
       if (st.frame >= 120) {
         st.phase = 'postcatch';
         st.frame = 0;
@@ -1863,7 +1910,9 @@ const EncounterScreen = (() => {
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
     st.frame    = 0;
+    st.step     = 1;
     st.monBob   = 0;
+    clock.reset();   // drop the previous encounter's timestamp
     st.monY     = 0;
     st.monSize  = 0;   // recomputed once the sprite image is ready
     st.caught   = false;
@@ -2354,9 +2403,11 @@ const EvolutionScreen = (() => {
   let overlay, canvas, ctx, elMsg, elSub, btnDismiss;
   let rafId = null, onDone = null, autoDismissTimer = null;
 
+  const clock = frameClock();
+
   const st = {
     phase:    'idle',  // blackin|text1|silhouette|flash|reveal|done
-    frame:    0,
+    frame:    0,       // phase clock in 60fps frames
     bobFrame: 0,
     fromMon:  null,   // base stage (before evolution)
     toMon:    null,   // new stage (after evolution)
@@ -2390,24 +2441,32 @@ const EvolutionScreen = (() => {
       { scale: 1, ...variantOf(mon) });
   }
 
-  function tick() {
-    st.frame++;
-    st.bobFrame++;
+  // Same clock as the encounter screen, for the same reason: this runs straight
+  // after a catch, inside the very window where a just-woken tab is still short
+  // of 60fps. Cues that used to test `f === 1` now fire on the handover into
+  // their phase, since a time-based clock steps over any exact value.
+  function tick(now) {
+    const prev = st.frame;
+    const step = clock.step(now);
+    st.frame    += step;
+    st.bobFrame += step;
     const f = st.frame;
+    const crossed = at => prev < at && f >= at;
     ctx.clearRect(0, 0, SIZE, SIZE);
 
     if (st.phase === 'blackin') {
       // Silhouette of old mon fades in over 60 frames
       drawSilhouette(st.fromMon, Math.min(1, f / 60));
-      if (f >= 60) { st.phase = 'text1'; st.frame = 0; }
-
-    } else if (st.phase === 'text1') {
-      drawSilhouette(st.fromMon, 1);
-      if (f === 1) {
+      if (f >= 60) {
+        st.phase = 'text1';
+        st.frame -= 60;
         elMsg.textContent = `WHAT? ${st.fromMon.name.toUpperCase()} IS EVOLVING!`;
         elMsg.style.opacity = '1';
       }
-      if (f >= 40) { st.phase = 'silhouette'; st.frame = 0; }
+
+    } else if (st.phase === 'text1') {
+      drawSilhouette(st.fromMon, 1);
+      if (f >= 40) { st.phase = 'silhouette'; st.frame -= 40; }
 
     } else if (st.phase === 'silhouette') {
       // Silhouette bobs gently for ~2 s
@@ -2415,7 +2474,7 @@ const EvolutionScreen = (() => {
       drawSilhouette(st.fromMon, 1, 1, bobY);
       if (f >= 120) {
         st.phase = 'flash';
-        st.frame = 0;
+        st.frame -= 120;
         elMsg.style.opacity = '0';
       }
 
@@ -2423,7 +2482,7 @@ const EvolutionScreen = (() => {
       // Rapidly alternate old / new silhouette (4-frame intervals)
       const useNew = Math.floor(f / 4) % 2 === 1;
       drawSilhouette(useNew ? st.toMon : st.fromMon, 1);
-      if (f >= 64) { st.phase = 'reveal'; st.frame = 0; }
+      if (f >= 64) { st.phase = 'reveal'; st.frame -= 64; }
 
     } else if (st.phase === 'reveal') {
       const bobY = Math.sin(st.bobFrame / 22) * 8;
@@ -2433,7 +2492,7 @@ const EvolutionScreen = (() => {
         else drawSilhouette(st.toMon, 1, 1, bobY);
       } else {
         drawColored(st.toMon, bobY);
-        if (f === 19) {
+        if (crossed(19)) {
           elMsg.textContent =
             `${st.fromMon.name.toUpperCase()} EVOLVED INTO ${st.toMon.name.toUpperCase()}!`;
           elMsg.style.opacity = '1';
@@ -2441,16 +2500,17 @@ const EvolutionScreen = (() => {
           elSub.style.opacity = '1';
         }
       }
-      if (f >= 120) { st.phase = 'done'; st.frame = 0; }
-
-    } else if (st.phase === 'done') {
-      drawColored(st.toMon, Math.sin(st.bobFrame / 22) * 8);
-      if (f === 1) {
+      if (f >= 120) {
+        st.phase = 'done';
+        st.frame -= 120;
         SFX.play('levelUp');
         btnDismiss.style.opacity      = '1';
         btnDismiss.style.pointerEvents = 'auto';
         autoDismissTimer = setTimeout(dismiss, 4000);
       }
+
+    } else if (st.phase === 'done') {
+      drawColored(st.toMon, Math.sin(st.bobFrame / 22) * 8);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -2494,6 +2554,7 @@ const EvolutionScreen = (() => {
     st.phase      = 'blackin';
     st.frame      = 0;
     st.bobFrame   = 0;
+    clock.reset();
     autoDismissTimer = null;
 
     elMsg.textContent  = '';
@@ -2520,10 +2581,11 @@ const CatchScreen = (() => {
   let overlay, canvas, ctx, elName, elShiny, btnContinue;
   let rafId = null, onDone = null, autoDismissTimer = null;
 
+  const clock = frameClock();
   const st = { frame: 0, mon: null, dpr: 1 };
 
-  function tick() {
-    st.frame++;
+  function tick(now) {
+    st.frame += clock.step(now);
     ctx.clearRect(0, 0, SIZE, SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
     const scale = MonSprite.sizeScale(st.mon, SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
@@ -2595,11 +2657,12 @@ const MonInfoScreen = (() => {
   let rafId  = null;
   let onDone = null;
 
+  const clock = frameClock();
   const st = { frame: 0, mon: null, dpr: 1 };
 
   // ── Main sprite animation (bobbing) ────────────────────
-  function tick() {
-    st.frame++;
+  function tick(now) {
+    st.frame += clock.step(now);
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const bobY  = Math.sin(st.frame / 22) * 6;
     const scale = MonSprite.sizeScale(st.mon, CANVAS_SIZE * 0.92, 1.5, (st.mon.shiny && !st.mon.dark) || false);
@@ -2794,9 +2857,10 @@ const MonDetailCanvas = (() => {
   const SIZE = 200; // logical px (matches #mon-detail-canvas width/height)
 
   let canvas = null, ctx = null, rafId = null, mon = null, frame = 0, scaled = false;
+  const clock = frameClock();
 
-  function tick() {
-    frame++;
+  function tick(now) {
+    frame += clock.step(now);
     ctx.clearRect(0, 0, SIZE, SIZE);
     const bobY  = Math.sin(frame / 22) * 6;
     const scale = MonSprite.sizeScale(mon, SIZE * 0.92, 1.5, (mon.shiny && !mon.dark) || false);
@@ -2830,7 +2894,7 @@ const MonDetailCanvas = (() => {
     rafId = requestAnimationFrame(tick);
   }
 
-  function stop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+  function stop() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } clock.reset(); }
 
   return { start, stop };
 })();
