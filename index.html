@@ -137,6 +137,27 @@
     </defs>
   </svg>
 
+  <!-- ── The app itself ──────────────────────────────────────
+       Everything the app is lives inside .app-viewport, which is exactly one
+       screen tall. That is what lets the page below it exist: before this
+       wrapper, <body> was the flex column and the three .screen elements were
+       its flex:1 children, so anything added after them took space away from
+       the timer rather than sitting below it.
+
+       The wrapper also owns the forest photo, the scanlines and the vignette,
+       which used to be on <body>. They had to move: the photo is positioned
+       `center calc(50% - 7vh)`, and once <body> is taller than the viewport
+       that 50% is half of the whole scrolling page, so the app would have
+       shown a different crop of the photo than it does today. On a wrapper
+       that is always one screen tall it renders exactly as before.
+
+       The overlays and the stats strip stay inside it. Every overlay is
+       position:fixed and .app-viewport sets no transform or filter, so their
+       positioning is unchanged — but the strip is now absolute within this
+       wrapper rather than fixed to the viewport, so it scrolls away with the
+       app instead of floating over the text below. -->
+  <div class="app-viewport" id="top">
+
   <!-- ── Header ─────────────────────────────────────────── -->
   <header class="app-header">
     <!-- .logo-row keeps the wordmark and the mute button on one line, as in
@@ -730,6 +751,193 @@
     </div>
   </div></div></footer>
 
+  <!-- ── Scroll cue ──────────────────────────────────────────
+       Without this nothing on screen suggests there is anything below the
+       timer, and a section only a crawler ever reads is half the value.
+       Inside .app-viewport so it scrolls away with the app, and positioned
+       above the stats strip off --stats-reserve. Last child so it is the final
+       stop in tab order on the first screen rather than interrupting the
+       timer's controls. -->
+  <a class="scroll-cue" href="#about" aria-label="Read more about PomoMons">
+    <svg width="14" height="9" viewBox="0 0 14 9" aria-hidden="true"
+         style="display:block;shape-rendering:crispEdges">
+      <rect x="0" y="0" width="2" height="2" fill="currentColor"/>
+      <rect x="2" y="2" width="2" height="2" fill="currentColor"/>
+      <rect x="4" y="4" width="2" height="2" fill="currentColor"/>
+      <rect x="6" y="6" width="2" height="2" fill="currentColor"/>
+      <rect x="8" y="4" width="2" height="2" fill="currentColor"/>
+      <rect x="10" y="2" width="2" height="2" fill="currentColor"/>
+      <rect x="12" y="0" width="2" height="2" fill="currentColor"/>
+    </svg>
+  </a>
+
+  </div><!-- /.app-viewport — everything below here is the page, not the app -->
+
+  <!-- ── The page below the app ──────────────────────────────
+       Why this exists: the app shell is ~320 words, almost all of them
+       uppercase button labels, and the word "pomodoro" appeared nowhere a
+       reader's eye lands. A search engine decides what a page is about by
+       reading it, and there was nothing here to read.
+
+       It is deliberately NOT a summary of /faq/ or /pomodoro-technique/.
+       Repeating those would set this site's own pages competing for the same
+       queries and leave all of them looking thin. Those two own the method and
+       the operational questions; this owns what PomoMons is and how it differs.
+       See agent_docs/keyword-strategy.md before adding to it.
+
+       Every number here is taken from the code, not from the docs — the docs
+       said the default session was 25 minutes for weeks after it became 30. -->
+  <section class="home-prose" id="about">
+    <div class="prose-col">
+
+      <h2>A Pomodoro timer with a monster at the end of every session</h2>
+      <p>
+        PomoMons is a free Pomodoro timer with a creature collector attached.
+        You pick one task, start a focus session, and work until the timer runs
+        out. When it does, a wild Pomomon appears &mdash; a food-themed pixel
+        monster &mdash; and you throw a tomato to catch it.
+      </p>
+      <p>
+        It runs in a browser tab. There is no account to make, nothing to
+        download, no paid tier and no ads, and once the page has loaded a
+        single time it keeps working with no connection at all.
+      </p>
+
+      <h2>How it works</h2>
+      <ol>
+        <li>
+          <strong>Set your session.</strong> It opens on 30 minutes of focus, a
+          5 minute break and a 15 minute long break &mdash; a little longer
+          than the classic 25. All three adjust with the arrows above the
+          clock: focus from 20 to 90 minutes, breaks from 1 to 90.
+        </li>
+        <li>
+          <strong>Press START and work.</strong> The clock is measured against
+          real time rather than counted frame by frame, so it stays correct
+          while the tab sits in the background. It can notify you when the
+          session is up.
+        </li>
+        <li><strong>Meet what turns up.</strong> A wild Pomomon appears the
+          moment the session ends.</li>
+        <li>
+          <strong>Throw a tomato.</strong> Every species has its own catch
+          rate, so a throw can miss and a rarer one can break free. Or press
+          RUN AWAY and go straight to your break.
+        </li>
+        <li><strong>Take the break.</strong> After every fourth focus session
+          you get the long one.</li>
+      </ol>
+
+      <h2>What you are collecting</h2>
+      <p>
+        There are <strong>30 Pomomon forms across 16 base species</strong>,
+        numbered #1 to #30 in the Pomodex. Only the 16 base forms appear in the
+        wild &mdash; the other 14 are evolutions, which a Pomomon you have
+        already caught reaches on its own at level 16, 20 or 36.
+      </p>
+      <p>
+        Every one is drawn from food. Tomotot is a tomato that evolves into a
+        pot of marinara and then into a tangle of spaghetti. Chilino is a
+        chilli that ends up as a ghost pepper. There are five flavour types
+        &mdash; Savory, Sweet, Spicy, Sour and Bitter &mdash; and a Pomomon can
+        change type as it evolves.
+      </p>
+      <p>
+        Two rare variants turn up on any encounter. A <strong>shiny</strong> is
+        gold-tinted and sparkling, at roughly <strong>1 in 500</strong>. A
+        <strong>dark</strong> is near-black, at about <strong>1 in 100</strong>.
+        Shiny is rolled first and wins outright, so no Pomomon is ever both. You
+        can see <a href="/pomodex/">every Pomomon and its evolution level</a>
+        before you start.
+      </p>
+
+      <h2>Why a reward at the end actually helps</h2>
+      <p>
+        The Pomodoro Technique works. Its weak point is that finishing a session
+        gives you nothing except the absence of a ringing noise. That is fine on
+        a day when the work is interesting. It is much less fine on the other
+        days, and the other days are when you needed the method.
+      </p>
+      <p>
+        PomoMons puts something small at the end instead. It is deliberately
+        small: it takes about ten seconds, it happens exactly where you were
+        going to stop anyway, and it never asks you to keep playing. The point
+        is to give the end of a session a shape, so that starting the next one
+        is a smaller decision than it was.
+      </p>
+      <p>
+        It will not fix a task you are avoiding for a real reason, and it will
+        not make a bad plan into a good one. If you have never got on with
+        timers at all, a monster at the end is unlikely to change that. What it
+        reliably does is make the fourth session of the afternoon easier to
+        start than the fourth session of a plain timer. If you are new to the
+        method, here is
+        <a href="/pomodoro-technique/">how the Pomodoro Technique works</a> and
+        where the 25 minutes came from.
+      </p>
+
+      <h2>Free, no account, and it keeps working offline</h2>
+      <p>There is no sign-up. Open the page and press START.</p>
+      <p>
+        Your level, your sessions and your whole collection are saved in your
+        own browser, on your own device. They are never uploaded, and there is
+        nothing to log in to, because there is no account for them to belong to.
+        The site counts anonymous page views and sets no tracking cookies.
+      </p>
+      <p>
+        The trade is that browser storage belongs to the browser: clear your
+        site data, switch browser, or use a private window, and the collection
+        goes with it. So there is an optional save code &mdash; copy it, or have
+        it emailed &mdash; that restores your collection on any device. It is
+        the only thing an email address is ever used for, and nothing in the app
+        requires one.
+      </p>
+      <p>
+        Because it is an installable web app, your browser can add PomoMons to
+        your home screen or desktop and open it in its own window with no
+        address bar. After one load, the timer, the encounters and your
+        collection all work with no connection. The <a href="/faq/">FAQ</a>
+        covers the rest.
+      </p>
+
+      <h2>How it compares to other focus timers</h2>
+      <p>
+        Most focus apps with a reward loop are phone apps you install from a
+        store, and most of the browser ones are hobby projects built around
+        characters their authors do not own. PomoMons is deliberately neither:
+        it opens in a tab on any device, the creatures are original, and nothing
+        is behind a payment or a login.
+      </p>
+      <p>
+        Against a plain Pomodoro timer, the honest difference is one thing
+        &mdash; the ten seconds at the end. Everything underneath is a real
+        timer: adjustable intervals, a long break every fourth session, a
+        running history of your sessions, minutes and catches, and a clock that
+        does not drift when you look away.
+      </p>
+
+      <p class="prose-cta">
+        <a href="#top" class="prose-cta-link">START A FOCUS SESSION &uarr;</a>
+      </p>
+
+    </div>
+
+    <!-- The three standalone pages were reachable only from inside the
+         settings menu, behind a click. A plain footer is worth more: a crawler
+         sees these without simulating an interaction, and so does anyone who
+         scrolled this far. -->
+    <footer class="home-foot">
+      <div class="prose-col">
+        <p class="foot-mark">POMOMONS &mdash; FOCUS &middot; CATCH &middot; COLLECT</p>
+        <nav class="foot-nav" aria-label="Site">
+          <a href="/pomodex/">All 30 Pomomons</a>
+          <a href="/pomodoro-technique/">The Pomodoro Technique</a>
+          <a href="/faq/">FAQ</a>
+          <a href="https://discord.gg/bXnKR8FeG" rel="noopener">Discord</a>
+        </nav>
+      </div>
+    </footer>
+  </section>
 
   <div class="mode-dropdown" id="mode-dropdown" hidden>
     <button class="mode-option active" data-mode="focus">FOCUS SESSION</button>

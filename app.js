@@ -1127,6 +1127,10 @@ CompanionCanvas.init(document.getElementById('companion-canvas'));
 // about a pixel, and it still overflows between 941-949px, around 765-790px,
 // and everywhere under ~710px. These two steps close the gap for good.
 const timerScreen = document.getElementById('screen-timer');
+// The one-screen-tall wrapper holding the whole app. The prose section sits
+// outside it, so this — not the window — is what the app's layout measures
+// itself against once the page can scroll. See updateStatsReserve.
+const appViewport = document.getElementById('top');
 const statsStrip  = document.querySelector('.stats-strip');
 
 // Step 1 — reserve the room the strip actually takes, not the worst case.
@@ -1139,7 +1143,14 @@ function updateStatsReserve() {
   if (!statsStrip) return;
   const r = statsStrip.getBoundingClientRect();
   if (!r.height) return;                       // hidden / not laid out yet
-  const gapBelow = window.innerHeight - r.bottom;
+  // Measured against the app's own screen, not the window. These agreed while
+  // the page was exactly one viewport tall; now that it scrolls, running this
+  // from a resize while the reader is down in the prose would read a strip
+  // that is somewhere above the viewport, make gapBelow huge, and reserve a
+  // space the timer screen does not have. Clamped at 0 for the same reason.
+  const frame = appViewport ? appViewport.getBoundingClientRect() : null;
+  const base  = frame ? frame.bottom : window.innerHeight;
+  const gapBelow = Math.max(0, base - r.bottom);
   document.documentElement.style.setProperty(
     '--stats-reserve', Math.ceil(r.height + gapBelow + 8) + 'px');
 }
