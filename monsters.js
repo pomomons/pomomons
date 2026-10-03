@@ -81,7 +81,7 @@ const MONS = [
       //
       // 64px frames against Bluble's 32px — the full jump from the basic tier
       // to the final-evolution tier, the same shape as Cocokid → Cocokong and
-      // Pita Pal → Pitagon. Mufman's 48px middle step is what dropped out.
+      // Pitapal → Pitagon. Mufman's 48px middle step is what dropped out.
       //
       // Colours sampled from the sprite: the fur's blue and the darker blue it
       // is shaded with (the near-black #160d3d is the outline, which no other
@@ -125,11 +125,11 @@ const MONS = [
   // which an old evolution used to hold — caught records store the id, so a
   // number that has ever meant something else is not worth reusing.
   // Colours sampled from the sprite: the skin's magenta and its shadow.
-  { id: 13, dexNum: 21, name: 'Pita Pal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
+  { id: 13, dexNum: 21, name: 'Pitapal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
     sprite: 'assets/sprites/Pitapal/Pitapal.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      // 64px frames against Pita Pal's 32px — the full jump from the basic
+      // 64px frames against Pitapal's 32px — the full jump from the basic
       // tier to the final-evolution tier, so it doubles in size on screen.
       // Colours sampled from the sprite: the skin's red and its shadow, both
       // brighter than the basic's.
@@ -179,7 +179,7 @@ const MONS = [
   // to use the type after Soursquad. Colours sampled from the sprite: the
   // peel's orange and the red-orange it is shaded with.
   //
-  // 32px frames, the basic-mon size tier (same as Tomotot and Pita Pal), so it
+  // 32px frames, the basic-mon size tier (same as Tomotot and Pitapal), so it
   // draws small next to the 48px and 64px mons. That is the intended rule —
   // see agent_docs/monsters.md.
   //
@@ -193,7 +193,7 @@ const MONS = [
   // brown it is shaded with.
   //
   // 32px frames (the file is 32×64, two stacked frames), the basic-mon size
-  // tier alongside Tomotot, Pita Pal and Citrano.
+  // tier alongside Tomotot, Pitapal and Citrano.
   //
   // id 17 — the next unused number. 2 stays skipped: an old evolution held it
   // and caught records store the id.
@@ -226,7 +226,7 @@ const MONS = [
     ]
   },
   // Pineapple. Evolves once, into Pikeapple. Sweet rather than Sour, following
-  // Pita Pal (dragon fruit): a tropical fruit reads Sweet here, and Sour is
+  // Pitapal (dragon fruit): a tropical fruit reads Sweet here, and Sour is
   // held by the sharply acidic pair, Soursquad (grapes) and Citrano (orange).
   // Colours sampled from the sprite: the flesh's yellow and the orange it is
   // shaded with. The crown's greens are the third colour, but accent is a
@@ -271,7 +271,7 @@ const MONS = [
 ];
 
 // ── TESTING ONLY — force every encounter to one mon ───────
-// Set to a mon's name (e.g. 'Pita Pal') to make it spawn 100% of the time;
+// Set to a mon's name (e.g. 'Pitapal') to make it spawn 100% of the time;
 // null uses the normal even roll across the roster. Mirrors the session-length
 // switches in app.js. ALWAYS return this to null before shipping — with it
 // set there is no way to encounter anything else.
