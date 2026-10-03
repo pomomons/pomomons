@@ -371,6 +371,17 @@ subpages. Shipped in response:
 - **Two repos to commit:** the three new checkers live in `tools/`, which is
   gitignored here and has its own git repo. `gen-pomodex.js` is at the root
   precisely because tools/ does not exist on the Pages runner.
+
+**TRAFFIC BASELINE — 153 visitors in the 30 days to 2026-10-03** (GoatCounter,
+specialaccount11.goatcounter.com). Roughly 5/day. Recorded the day the three
+content pages went live and Search Console was first verified, so it is the
+before-figure for every SEO change in this section. Compare against it at
+2026-11-03 (one month) and 2027-01-03 (three months) rather than reading the
+daily numbers, which are too small to mean anything individually.
+
+Deployed and verified live 2026-10-03: Search Console verification tag
+(property `https://pomomons.io/`, URL-prefix type), /faq/, /pomodoro-technique/,
+/pomodex/, 404.html, the sw.js shell fix and the corrected llms.txt counts.
 - **Deploy note:** index.html + style.css + app.js are all in sw.js PRECACHE,
   so bump `CACHE_VERSION` 'v1'→'v2' in sw.js in the commit that ships this or
   returning visitors keep the stale shell.
