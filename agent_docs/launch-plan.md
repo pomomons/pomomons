@@ -315,6 +315,62 @@ impact, (4) user / no UI impact. Offered to save the full plan as
   /pomodoro-technique, /25-minute-timer etc., /pomodex, /blog + posts,
   comparison page, /changelog) — deferred as the next chunk; they need a
   shared page template + a content/voice review. README rewrite also pending.
+
+**SEO audit + first content pages (2026-10-03):** full audit run. Finding: the
+technical layer was already in good shape (title/description/canonical/OG/
+JSON-LD/robots/llms.txt all correct, page weight fine, no CWV problem) and the
+content layer was the entire gap — one URL, ~320 words of body text, almost all
+uppercase UI labels, and the word "pomodoro" appearing **zero** times in the
+body. Competitor pomofox.com runs ~1,100 words on its homepage plus ~40
+subpages. Shipped in response:
+
+- **GitHub repo metadata.** The repo, not pomomons.io, was the #1 result for
+  the brand name, and it had no description, no homepage URL and no topics — so
+  the one page ranking for "pomomons" did not link to the site. All three set
+  via `gh repo edit` (14 topics).
+- **Stale facts corrected.** llms.txt and the JSON-LD `featureList` both said
+  "20 forms across 12 base species"; the roster is 30 across 16. A web search
+  was observed quoting the stale numbers back verbatim, so this was actively
+  misinforming AI assistants. llms.txt also gained the long-break rule, the
+  real shiny/dark odds (0.2% / ~1%), the five types, blending and companions.
+- **Three standalone pages**, styled by `assets/content.css`, linked from the
+  settings menu and listed in sitemap.xml: `/faq/` (12 Q&A + FAQPage schema —
+  the schema bucket 1 deliberately held back until the Q&A was visible),
+  `/pomodoro-technique/` (~1,100 words, Article + HowTo schema), and
+  `/pomodex/` (every mon, generated from monsters.js).
+- **`404.html`.** GitHub Pages was serving its own generic 404 with no route
+  back to the app.
+- **Build hardening:** sitemap `<lastmod>` stamped from HEAD's commit date
+  (it had drifted a month behind); every sitemap `<loc>` asserted to resolve to
+  a real page in `_site/`; the Pomodex page generated at build time so it
+  cannot go stale.
+- **sw.js bug found and fixed.** `networkFirstPage` ran
+  `cache.put('index.html', ...)` on every navigation, so one visit to a content
+  page overwrote the offline app shell — the next offline launch opened that
+  page instead of the timer. Only the shell's own path writes the shell now;
+  content pages cache under their own URL. Also added a `fresh.ok` guard, since
+  a 404/5xx from the host used to become the permanent offline shell. Covered
+  by `tools/check-sw-shell.js`, which was confirmed to fail against the old
+  code.
+- **Deliberately NOT done — prose on the homepage itself.** This is the single
+  highest-value item left and it is the one that needs supervision. `body` is
+  `min-height:100dvh` with `.screen{flex:1;overflow-y:auto}`, the stats strip is
+  `position:fixed`, and `fitTimerScreen()` scales the whole timer screen down
+  from `scrollHeight` — so content added inside `#screen-timer` shrinks the
+  timer, and content added after it needs the header + screens + strip wrapped
+  in a `.app-shell` of its own. That is a structural change to the layout the
+  geometry test exists to protect, across ~12 height/orientation media queries.
+  Do it as a dedicated task with eyes on the result, not bundled into other
+  work.
+- **Still user-side:** Google Search Console + Bing verification (no
+  `google-site-verification` tag exists yet — paste the string and it goes in),
+  a GoatCounter traffic baseline before measuring any of this, keyword-volume
+  sanity check in Keyword Planner before building the `/N-minute-timer` pages,
+  and the backlink/distribution push (Product Hunt, itch.io, AlternativeTo,
+  Reddit — all need a human account and a human posting).
+- **Two repos to commit:** the three new checkers live in `tools/`, which is
+  gitignored here and has its own git repo. `gen-pomodex.js` is at the root
+  precisely because tools/ does not exist on the Pages runner.
 - **Deploy note:** index.html + style.css + app.js are all in sw.js PRECACHE,
   so bump `CACHE_VERSION` 'v1'→'v2' in sw.js in the commit that ships this or
   returning visitors keep the stale shell.

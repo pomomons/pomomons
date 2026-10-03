@@ -1439,6 +1439,16 @@ html::after {
   cursor: pointer;
 }
 .settings-row:last-child { border-bottom: none; }
+
+/* Divider between the app's own controls and the links out to the standalone
+   pages. Heavier than the hairline each row already carries on its bottom
+   edge, so the menu reads as two groups rather than one long list. */
+.settings-sep {
+  height: 0;
+  margin: 0;
+  border: none;
+  border-top: 2px solid rgba(255,255,255,.22);
+}
 .settings-row:hover,
 .settings-row:focus-visible { background: rgba(255,255,255,.1); color: var(--text); outline: none; }
 

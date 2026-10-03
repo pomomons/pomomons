@@ -11,10 +11,14 @@
 - Free, no sign-up, no tracking cookies. Live at https://pomomons.io
 - Works on desktop and mobile; installable (PWA) and usable offline
 - Adjustable focus / short break / long break lengths (classic Pomodoro 25/5/15 by default)
-- 20 Pomomon forms across 12 base species, plus evolutions and rare "shiny" and "dark" variants
+- Every 4th completed focus session earns a long break
+- 30 Pomomon forms across 16 base species (Pomodex #1-#30), including evolutions that trigger at level 16, 20 or 36
+- Two rare variants: "shiny" (gold-tinted, 0.2% of encounters) and "dark" (near-black, 1%); 98.8% of encounters are normal
+- Five flavour types: Savory, Sweet, Spicy, Sour and Bitter
 - Player level, XP and collection are saved in the browser (localStorage + IndexedDB); an optional emailed backup code moves a collection between devices
-- 8-bit synthesized sound effects (Web Audio API)
-- Built with vanilla HTML, CSS and JavaScript — no framework, no build step — and hosted on GitHub Pages
+- Caught mons can be set as a companion, or blended into a smoothie item that grants +1 level to another mon
+- 8-bit synthesized sound effects (Web Audio API); no audio files
+- Built with vanilla HTML, CSS and JavaScript — no framework — and hosted on GitHub Pages
 
 ## Who it's for
 

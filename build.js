@@ -29,6 +29,11 @@ const { minify: minifyHTML } = require('html-minifier-terser');
 const ROOT = __dirname;
 const OUT  = path.join(ROOT, '_site');
 
+// The live origin, taken from CNAME so the two can never disagree. Used to
+// check that every URL the sitemap advertises is a page this build produced.
+const SITE_ORIGIN = 'https://' +
+  fs.readFileSync(path.join(ROOT, 'CNAME'), 'utf8').trim();
+
 // Everything else in the repo is source, tooling or documentation and has no
 // business on the live site. agent_docs/ and CLAUDE.md were being served
 // publicly before this build existed.
@@ -39,6 +44,10 @@ const EXCLUDE = new Set([
   '_site', 'node_modules', '.git', '.claude', '.github', 'tools',
   'agent_docs', 'art-source', 'build.js', 'package.json', 'package-lock.json',
   'claude.md', 'readme.md', '.gitignore',
+  // Build infrastructure, not content: build.js requires it to generate the
+  // Pomodex page. It sits at the root rather than in tools/ because tools/ is
+  // gitignored and so does not exist on the Pages runner.
+  'gen-pomodex.js',
 ].map((s) => s.toLowerCase()));
 
 // Individual files kept in the repo but not published. The full 568-glyph TTF
@@ -187,6 +196,36 @@ async function processFile(rel, stamp) {
   fs.copyFileSync(src, dest);            // assets, icons, CNAME, txt, ico
 }
 
+// ── sitemap lastmod ────────────────────────────────────────
+// <lastmod> was a hand-typed date and had drifted a month behind the site it
+// describes. A date that is demonstrably wrong is worse than no date: Google
+// stops trusting the field and ignores it everywhere on the sitemap.
+//
+// Stamped from HEAD's commit date rather than "today", so rebuilding an
+// unchanged site does not keep moving the date forward — that churn is the
+// other way crawlers learn to distrust it. Falls back to today only when git
+// is unavailable (the Pages runner checks out at depth 1, which still carries
+// HEAD's own commit date).
+function lastCommitDate() {
+  try {
+    return require('child_process')
+      .execSync('git log -1 --format=%cs', { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString().trim();
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function stampSitemap() {
+  const dest = path.join(OUT, 'sitemap.xml');
+  if (!fs.existsSync(dest)) return;
+  const date = lastCommitDate();
+  const xml  = fs.readFileSync(dest, 'utf8')
+    .replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${date}</lastmod>`);
+  fs.writeFileSync(dest, xml);
+  console.log(`  sitemap.xml lastmod stamped ${date}`);
+}
+
 function walk(dir, base = '') {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -299,6 +338,53 @@ function verify() {
     if (hashable(m[1]) && !m[2]) problems.push(`sw.js precaches ${m[1]} without a ?v= hash`);
   }
 
+  // ── The generated Pomodex page describes the real roster ──
+  // The page is generated from monsters.js on every build, so it cannot be
+  // stale — but assert the counts it published match the roster anyway, since
+  // those numbers are the ones quoted in llms.txt and the JSON-LD and the
+  // whole reason this page is generated is that they had silently drifted.
+  const dexOut = path.join(OUT, 'pomodex', 'index.html');
+  if (!fs.existsSync(dexOut)) {
+    problems.push('pomodex/index.html was not generated into _site/');
+  } else {
+    const dexHTML = fs.readFileSync(dexOut, 'utf8');
+    const { formCount, baseCount } = require('./gen-pomodex.js');
+    if (!dexHTML.includes(`All ${formCount} Pomomon forms across ${baseCount} base species`)) {
+      problems.push(`the Pomodex page does not state "${formCount} forms across ${baseCount} base species" — the generator and the roster disagree`);
+    }
+  }
+
+  // ── Every sitemap URL must be a page that exists ──
+  // A sitemap is a direct instruction to Google to go and fetch these URLs.
+  // Pointing it at one that 404s is the fastest way to teach a crawler the
+  // file is unreliable, and it is silent — nothing in the app breaks, the
+  // pages just quietly stop getting indexed. Cheap to assert here, since the
+  // sitemap is about to grow a row per content page.
+  const smPath = path.join(OUT, 'sitemap.xml');
+  if (fs.existsSync(smPath)) {
+    const sm = fs.readFileSync(smPath, 'utf8');
+    const locs = [...sm.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1]);
+    if (!locs.length) problems.push('sitemap.xml lists no <loc> URLs');
+    for (const loc of locs) {
+      if (!loc.startsWith(SITE_ORIGIN + '/')) {
+        problems.push(`sitemap.xml lists ${loc}, which is not under ${SITE_ORIGIN}`);
+        continue;
+      }
+      const rel = loc.slice(SITE_ORIGIN.length + 1);
+      // "" is the homepage; a trailing-slash path is a directory index.
+      const target = rel === ''            ? 'index.html'
+                   : rel.endsWith('/')     ? rel + 'index.html'
+                   : rel.endsWith('.html') ? rel
+                   :                         rel + '/index.html';
+      if (!fs.existsSync(path.join(OUT, target))) {
+        problems.push(`sitemap.xml lists ${loc}, but _site/${target} does not exist`);
+      }
+    }
+    if (!/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/.test(sm)) {
+      problems.push('sitemap.xml lastmod was not stamped to a YYYY-MM-DD date');
+    }
+  }
+
   return problems;
 }
 
@@ -326,6 +412,19 @@ function verify() {
   for (const rel of files.filter((r) => STAMPED.includes(r))) {
     await processFile(rel, { hashes, version });
   }
+
+  // The Pomodex page has no source file — it is derived from monsters.js, so
+  // it is built here rather than copied. Minified through the same pipeline as
+  // the hand-written pages so it is not the one page shipping raw.
+  const dex = require('./gen-pomodex.js');
+  const dexDest = path.join(OUT, 'pomodex', 'index.html');
+  fs.mkdirSync(path.dirname(dexDest), { recursive: true });
+  const dexMin = await minifyHTML(dex.html, HTML_OPTS);
+  fs.writeFileSync(dexDest, dexMin);
+  record('pomodex/index.html', dex.html, dexMin);
+  console.log(`  pomodex/index.html generated — ${dex.formCount} forms across ${dex.baseCount} species`);
+
+  stampSitemap();
 
   rows.sort((a, b) => (b[1] - b[2]) - (a[1] - a[2]));
   console.log('\n  file                      gzipped before   after    saved');

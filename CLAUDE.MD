@@ -15,7 +15,7 @@ appears. Players throw a tomato to catch it and build a collection.
   (custom domain pomomons.io via CNAME)
 
 ## File Structure
-- index.html — single app shell
+- index.html — the app shell
 - style.css — base styles; style-v2.css and style-v3.css layer on top (v3 = the current "field console" skin: forest-photo background, amber/green palette, plate frames, CRT scanlines)
 - app.js — timer logic and session flow
 - game.js — encounter screen, throw animation, catch logic, all canvas drawing
@@ -24,6 +24,18 @@ appears. Players throw a tomato to catch it and build a collection.
 - backup.js — save-code encode/decode for cross-device restore
 - audio.js — 8-bit sound effects, fully synthesized via Web Audio API (no audio files)
 - signup.js — optional mailing-list card
+- 404.html — served by GitHub Pages for unknown paths; self-contained (inline
+  CSS) so it needs no stamped asset references
+- faq/index.html, pomodoro-technique/index.html — standalone prose pages, no
+  app JS, styled by assets/content.css. They exist for search: the app shell
+  has ~320 words of UI labels and the word "pomodoro" appears nowhere in its
+  body, so it has nothing to rank on by itself.
+- gen-pomodex.js — generates the /pomodex/ page from monsters.js at build time
+  (see Build & Deploy). Root-level, not tools/, because tools/ is gitignored
+  and absent on the Pages runner. In build.js EXCLUDE, so never published.
+- assets/content.css — styles for the prose pages only; nothing in the app
+  loads it. Deliberately separate from the three app sheets, which exist to
+  build a fixed-viewport pixel console and do not suit a page of text.
 - assets/sprites/ — PNG sprite sheets
 - assets/backgrounds/ — greenbackground.webp / redbackground.webp (v3 background; source PNGs in art-source/backgrounds/)
 - assets/icons/ — PWA icons
@@ -56,6 +68,23 @@ of CSS).
   app.js. If a push slips through, the build fails and the previous deploy
   keeps serving.
 - Never edit `_site/` — it is regenerated and gitignored.
+- **The /pomodex/ page has no source file.** `gen-pomodex.js` derives it from
+  the roster in monsters.js and build.js writes it straight into
+  `_site/pomodex/index.html`. Add a mon and the public page updates itself on
+  the next build; there is nothing to remember to regenerate. This is on
+  purpose: llms.txt and the JSON-LD `featureList` both advertised "20 forms
+  across 12 base species" for weeks after the roster reached 30 across 16, and
+  an AI assistant was found quoting the stale figure back verbatim. If you add
+  a roster field the page should show, edit gen-pomodex.js. It asserts the
+  Pomodex numbering has no holes and that every sprite sheet is a vertical
+  stack of square frames, and throws (failing the build) if not.
+- `sitemap.xml` `<lastmod>` is stamped by build.js from HEAD's commit date —
+  never type a date in by hand. build.js also asserts every `<loc>` resolves to
+  a page in `_site/`, so add the page before adding the URL.
+- When adding a standalone page, add it to `sitemap.xml`, link to it from the
+  settings menu in index.html, and add it to the `PAGES` list in
+  `tools/check-content-pages.js`. A page reachable only from the sitemap gets
+  indexed far more reluctantly than one the site actually links to.
 - Never minify a source file in place.
 - build.js stamps `?v=<content hash>` onto every stylesheet and script
   reference in index.html and sw.js, and stamps CACHE_VERSION from those
@@ -89,6 +118,23 @@ of CSS).
   Run it if you add or retime a phase. Sound cues are counted too: a cue has to
   fire on the tick that *crosses* its mark, since a time-based clock lands on
   14.7 and 15.3 and never on 15.
+- `node tools/check-content-pages.js [_site]` renders 404.html and each prose
+  page at three widths and asserts: no sideways scroll, no console errors or
+  failed requests, one h1, a title/description/canonical, every same-origin
+  link resolves to a real file, every JSON-LD block parses, each Pomodex sprite
+  actually decodes, and — on /faq/ — that every question in the FAQPage schema
+  appears verbatim as a visible h2. That last one is the condition Google
+  requires for an FAQ rich result, and the schema and the prose are two copies
+  of the same text that can drift apart silently.
+- `node tools/check-sw-shell.js [_site]` proves a visit to a content page
+  cannot replace the cached offline app shell. `networkFirstPage` used to run
+  `cache.put('index.html', ...)` on EVERY navigation, which was harmless on a
+  one-page site and wrong the moment /faq/ existed: one visit stored the FAQ as
+  the shell, and the next offline launch opened the FAQ with no timer. Note it
+  serves `no-store` where check-sw-upgrade.js serves `max-age=600` — with a
+  live HTTP cache an offline navigation is answered from it, the service
+  worker's fallback never runs, and the test passes no matter what sw.js does.
+  It did exactly that while the bug was still present.
 - `node tools/check-sw-upgrade.js [ref]` is the regression test for that:
   it serves a previous deploy, lets the service worker cache it, swaps in the
   new build, reloads once, and asserts the fonts survived. Run it after any

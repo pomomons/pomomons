@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found — PomoMons</title>
+
+  <!-- GitHub Pages serves this file, with a real 404 status, for any path it
+       cannot find. Before it existed that was GitHub's own generic 404: no way
+       back to the app, and nothing saying whose site you had landed on. Any
+       mistyped or stale inbound link — the kind SEO work attracts — dead-ended
+       there.
+
+       noindex belongs here even though the 404 status already keeps this out
+       of the index: the status is what GitHub sends for an unknown path, but
+       this same file is reachable at /404.html, where it returns 200 and would
+       otherwise be indexable as a thin duplicate page. -->
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#2b5343">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+
+  <!-- Deliberately self-contained: every stylesheet and script reference in
+       index.html carries a ?v=<hash> that build.js stamps, and it only stamps
+       index.html and sw.js. A <link> to style.css from here would either go
+       unstamped and serve a stale cached file, or need its own stamping pass
+       for one page. Inline keeps this page correct with no build coupling —
+       and it loads in one request even when the rest of the site is cold. -->
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem 1.25rem;
+      background: #2b5343;
+      color: #f4ecd8;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .tomato {
+      width: 96px;
+      height: 96px;
+      image-rendering: pixelated;   /* a 32px sprite scaled up stays crisp */
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+    p { margin: 0; max-width: 34rem; color: #b8d8c2; }
+    .cta {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      background: #e5ac35;
+      color: #1c2b22;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      border: 3px solid #0d1c13;
+      box-shadow: 4px 4px 0 #0d1c13;
+    }
+    .cta:hover, .cta:focus-visible { background: #f0bc4d; }
+    .cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0d1c13; }
+    small { color: #8fae9b; }
+  </style>
+</head>
+<body>
+  <img class="tomato" src="/assets/sprites/Tomato/Tomato.png"
+       alt="A pixel-art tomato, the ball you throw to catch a Pomomon.">
+
+  <h1>This page ran away.</h1>
+
+  <p>
+    There's no page at that address — but your focus timer and your Pomodex are
+    exactly where you left them.
+  </p>
+
+  <a class="cta" href="/">BACK TO THE TIMER</a>
+
+  <p><small>PomoMons — focus &middot; catch &middot; collect</small></p>
+</body>
+</html>

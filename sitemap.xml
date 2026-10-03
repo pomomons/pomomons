@@ -1,9 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- <lastmod> values are stamped by build.js from HEAD's commit date. Do not
+     edit them by hand; a date that drifts out of step with the site teaches
+     crawlers to ignore the field. build.js also asserts every <loc> below
+     resolves to a page in _site/, so adding a URL here before the page exists
+     fails the build. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://pomomons.io/</loc>
-    <lastmod>2026-09-06</lastmod>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://pomomons.io/pomodex/</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pomomons.io/pomodoro-technique/</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://pomomons.io/faq/</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
