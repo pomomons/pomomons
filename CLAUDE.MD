@@ -25,7 +25,7 @@ appears. Players throw a tomato to catch it and build a collection.
 - audio.js — 8-bit sound effects, fully synthesized via Web Audio API (no audio files)
 - signup.js — optional mailing-list card
 - assets/sprites/ — PNG sprite sheets
-- assets/backgrounds/ — forest.webp / forest-red.webp (v3 background)
+- assets/backgrounds/ — greenbackground.webp / redbackground.webp (v3 background; source PNGs in art-source/backgrounds/)
 - assets/icons/ — PWA icons
 - assets/fonts/ — both pixel faces, self-hosted. PressStart2P-latin.woff2 is
   Google's own latin subset (--font-pixel, the whole UI);

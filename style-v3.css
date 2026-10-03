@@ -291,11 +291,11 @@
    the number, not the formula, and every screen that uses the photo follows,
    because all four background declarations below read the same two tokens. */
 :root {
-  --bg-size: auto max(125vh, 99vw);
+  --bg-size: auto max(125vh, 100vw);
   --bg-pos:  center calc(50% - 7vh);
 }
 
-body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg-pos) / var(--bg-size) no-repeat; }
+body { background: var(--mode-bg) url("assets/backgrounds/greenbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat; }
 
 /* Full-screen overlays get the same photo as the body — they were still on
    the base sheet's hardcoded teal/red (#228674/#af4d4d), disconnected from
@@ -315,7 +315,7 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg
 .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg-pos) / var(--bg-size) no-repeat;
+    var(--mode-bg) url("assets/backgrounds/greenbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 
 /* Running a focus session stays red, re-tuned to the new deeper register
@@ -332,14 +332,14 @@ body { background: var(--mode-bg) url("assets/backgrounds/forest.webp") var(--bg
    and horizon as the default photo, painted red rather than approximated
    with a multiply-blend tint over the green one. */
 body.run-focus {
-  background: var(--mode-bg) url("assets/backgrounds/forest-red.webp") var(--bg-pos) / var(--bg-size) no-repeat;
+  background: var(--mode-bg) url("assets/backgrounds/redbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 body.run-focus .encounter-overlay,
 body.run-focus .mon-info-overlay,
 body.run-focus .mon-detail-overlay {
   background:
     var(--scanlines),
-    var(--mode-bg) url("assets/backgrounds/forest-red.webp") var(--bg-pos) / var(--bg-size) no-repeat;
+    var(--mode-bg) url("assets/backgrounds/redbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 body.run-focus {
   --mode-bg:    #8f3b34;
