@@ -38,10 +38,14 @@ unlocked evolution's fields.
 
 ---
 
-## Current Roster (16 lines, 28 dex entries)
+## Current Roster (16 lines, 30 dex entries)
 
-Dex #17 is a hole: Wedgling was removed and its number retired, the same
-way id 2 stays skipped.
+Dex numbers run 1-30 with no gaps. #17 used to be a hole — Wedgling was
+removed and its number retired — and was closed by shifting every entry above
+it down one; Purrplant holds 17 now. The *id* 9 Wedgling used stays retired,
+as does id 2, because caught records store the id and reusing one would
+re-label an existing catch. dexNum carries no such risk: nothing persists it,
+so it can be renumbered freely.
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
@@ -60,15 +64,15 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 5  | 11  | Bluble     | Sweet   | 20 → Bluebeary #12 (Sweet)                           |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
 | 8  | 15  | Marshpuff  | Sweet   | 20 → Marshmelt #16 (Sweet)                           |
-| 10 | 18  | Purrplant  | Savory  | —                                                    |
-| 11 | 19  | Chillcone  | Sweet   | —                                                    |
-| 12 | 20  | Cocokid    | Sweet   | 20 → Cocokong #21 (Sweet)                            |
-| 13 | 22  | Pita Pal   | Sweet   | 20 → Pitagon #23 (Sweet)                             |
-| 14 | 24  | Soursquad  | Sour    | —                                                    |
-| 15 | 25  | Mushkin    | Savory  | 20 → Portobellord #26 (Savory)                       |
-| 16 | 27  | Citrano    | Sour    | —                                                    |
-| 17 | 28  | Spud       | Savory  | 20 → Idabro #29 (Savory)                             |
-| 18 | 30  | Pinapip    | Sweet   | 20 → Pikeapple #31 (Sweet)                           |
+| 10 | 17  | Purrplant  | Savory  | —                                                    |
+| 11 | 18  | Chillcone  | Sweet   | —                                                    |
+| 12 | 19  | Cocokid    | Sweet   | 20 → Cocokong #20 (Sweet)                            |
+| 13 | 21  | Pita Pal   | Sweet   | 20 → Pitagon #22 (Sweet)                             |
+| 14 | 23  | Soursquad  | Sour    | —                                                    |
+| 15 | 24  | Mushkin    | Savory  | 20 → Portobellord #25 (Savory)                       |
+| 16 | 26  | Citrano    | Sour    | —                                                    |
+| 17 | 27  | Spud       | Savory  | 20 → Idabro #28 (Savory)                             |
+| 18 | 29  | Pinapip    | Sweet   | 20 → Pikeapple #30 (Sweet)                           |
 
 Spawning is **uniform** across base mons (no rarity weighting). Shiny (1/500,
 0.2%) and dark (1/100, 1% — 0.998% effective, since the dark roll only happens
