@@ -1,0 +1,282 @@
+/* content.css — the standalone prose pages (/faq/, /pomodoro-technique/,
+ * /pomodex/). Nothing here is loaded by the app.
+ *
+ * Deliberately separate from style.css and its two layers. Those three sheets
+ * exist to build a fixed-viewport pixel console: uppercase everywhere, a
+ * height-fitting timer screen, a fixed bottom strip. None of that suits a page
+ * of readable text, and reusing them would mean every tweak to a paragraph
+ * risked the app's layout — which is the one thing in this repo guarded by a
+ * geometry test.
+ *
+ * Lives in assets/ rather than the repo root on purpose: build.js stamps
+ * ?v=<hash> onto root-level .css/.js and asserts index.html references each
+ * one at its current hash. A root-level content.css would fail that check,
+ * since the app's page has no reason to load it.
+ *
+ * The brand tokens are copied from style-v3.css rather than imported, so these
+ * pages keep rendering if the app's skin is reworked. Keep them in step by
+ * hand if the palette changes.
+ */
+
+:root {
+  --ink:        #f4ecd8;   /* cream, body text          */
+  --ink-dim:    #b8d8c2;   /* frame green, secondary    */
+  --ink-faint:  #8fae9b;
+  --ground:     #2b5343;   /* mode-bg                   */
+  --panel:      #3d6b57;   /* panel-bg                  */
+  --gold:       #e5ac35;
+  --gold-lt:    #f0bc4d;
+  --outline:    #0d1c13;
+  --strip:      #152f29;
+
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* ── Pixel face, for headings and chrome only ───────────────
+   Self-hosted latin subset, same file the app preloads. Text set in it is
+   nearly unreadable at paragraph length and at paragraph length it is also
+   ~8x the bytes of a system font, so prose stays on the system stack. */
+@font-face {
+  font-family: 'PressStart2P';
+  src: url('fonts/PressStart2P-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.pixel { font-family: 'PressStart2P', monospace; text-transform: uppercase; }
+
+/* ── Skip link ─────────────────────────────────────────────── */
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--gold);
+  color: var(--outline);
+  font-weight: 700;
+}
+.skip:focus { left: 0; }
+
+/* ── Header ────────────────────────────────────────────────── */
+.site-head {
+  border-bottom: 3px solid var(--outline);
+  background: var(--strip);
+}
+.site-head-in {
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'PressStart2P', monospace;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.wordmark img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+.wordmark .pomo { color: var(--gold); }
+
+.site-nav {
+  display: flex;
+  gap: 1.125rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}
+.site-nav a {
+  color: var(--ink-dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible { color: var(--ink); border-bottom-color: var(--gold); }
+.site-nav a[aria-current="page"] { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ── Layout ────────────────────────────────────────────────── */
+main {
+  max-width: 44rem;          /* ~70 characters at this size */
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+h1 {
+  font-family: 'PressStart2P', monospace;
+  text-transform: uppercase;
+  font-size: clamp(1.25rem, 4.2vw, 1.75rem);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.75rem;
+}
+
+.standfirst {
+  font-size: 1.1875rem;
+  color: var(--ink-dim);
+  margin-bottom: 2.5rem;
+}
+
+h2 {
+  font-size: 1.375rem;
+  line-height: 1.35;
+  margin: 2.75rem 0 0.75rem;
+  padding-top: 1.75rem;
+  border-top: 2px solid rgba(184, 216, 194, 0.22);
+}
+h2:first-of-type { margin-top: 2rem; }
+
+h3 {
+  font-size: 1.125rem;
+  margin: 1.75rem 0 0.5rem;
+  color: var(--gold);
+}
+
+p, ul, ol { margin-bottom: 1.125rem; }
+ul, ol { padding-left: 1.5rem; }
+li { margin-bottom: 0.4375rem; }
+
+a { color: var(--gold); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover, a:focus-visible { color: var(--gold-lt); }
+
+strong { color: #fff; }
+
+/* ── Call to action ────────────────────────────────────────── */
+.cta {
+  display: inline-block;
+  margin: 0.5rem 0 1rem;
+  padding: 0.875rem 1.75rem;
+  background: var(--gold);
+  color: var(--outline);
+  font-family: 'PressStart2P', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 3px solid var(--outline);
+  box-shadow: 4px 4px 0 var(--outline);
+}
+.cta:hover, .cta:focus-visible { background: var(--gold-lt); color: var(--outline); }
+.cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--outline); }
+
+.cta-block {
+  margin: 3rem 0 0;
+  padding: 1.75rem;
+  background: var(--panel);
+  border: 3px solid var(--outline);
+  text-align: center;
+}
+.cta-block p { color: var(--ink); }
+.cta-block p:last-of-type { margin-bottom: 0; }
+
+/* ── FAQ ───────────────────────────────────────────────────── */
+/* Plain headings and paragraphs, not <details>. Google will not award an FAQ
+   rich result for an answer it considers hidden, and a collapsed <details> is
+   exactly that — the whole point of putting the Q&A on a page is that it is
+   visible. */
+.faq h2 {
+  font-size: 1.25rem;
+  border-top-width: 2px;
+}
+
+/* ── Pomodex table ─────────────────────────────────────────── */
+.dex-wrap { overflow-x: auto; margin-bottom: 1.5rem; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9375rem;
+}
+caption {
+  text-align: left;
+  color: var(--ink-faint);
+  font-size: 0.875rem;
+  padding-bottom: 0.625rem;
+}
+th, td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(184, 216, 194, 0.18);
+  white-space: nowrap;
+}
+thead th {
+  font-family: 'PressStart2P', monospace;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 2px solid var(--gold-lt);
+}
+tbody tr:hover { background: rgba(184, 216, 194, 0.06); }
+td .sprite {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+.dex-num { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.dex-name { font-weight: 600; }
+
+/* Type and rarity chips. Colours are the roster's own type colours, dimmed
+   enough to carry white text at 4.5:1 or better. */
+.chip {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+}
+.chip-savory { background: #8c3a32; }
+.chip-sweet  { background: #8a5a86; }
+.chip-spicy  { background: #9c3a1e; }
+.chip-sour   { background: #6d7524; }
+.chip-bitter { background: #5e4722; }
+
+/* ── Footer ────────────────────────────────────────────────── */
+.site-foot {
+  border-top: 3px solid var(--outline);
+  background: var(--strip);
+  color: var(--ink-faint);
+  font-size: 0.875rem;
+}
+.site-foot-in {
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+}
+.site-foot a { color: var(--ink-dim); }
+.site-foot nav { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

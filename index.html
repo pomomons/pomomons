@@ -52,8 +52,8 @@
       "Customisable focus, short break and long break lengths",
       "No account required; progress saved locally in the browser",
       "Works offline as an installable web app (PWA)",
-      "Catch and collect 20 food-themed Pomomon across 12 base species, with evolutions",
-      "Rare shiny and dark monster variants",
+      "Catch and collect 30 food-themed Pomomon forms across 16 base species, with evolutions",
+      "Rare shiny (0.2%) and dark (1%) monster variants",
       "Optional email backup code to move a collection between devices",
       "8-bit sound effects; no ads, no tracking cookies"
     ],
@@ -861,6 +861,80 @@
       <input type="checkbox" id="toggle-notify">
       <span class="settings-label">Notify when timer ends</span>
     </label>
+
+    <!-- ── Standalone pages ──────────────────────────────────
+         The three prose pages (/pomodex/, /pomodoro-technique/, /faq/) live
+         outside the app shell and nothing in the app linked to them, which
+         left them reachable only from sitemap.xml. These rows are both the
+         human route to them and the crawl path: a page a search engine can
+         only find in the sitemap is indexed far more reluctantly than one the
+         site actually links to.
+
+         Plain same-tab links, unlike the Discord row above — they are part of
+         this site, so opening a new tab for them would be wrong. Each carries
+         a one-word pixel glyph rather than borrowing another row's icon, so
+         the menu still reads as a single column of labelled rows. -->
+    <hr class="settings-sep" aria-hidden="true">
+
+    <a class="settings-row" href="/pomodex/" role="menuitem">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <!-- Open book: two pages and a spine -->
+        <rect x="0" y="1" width="4" height="1" fill="currentColor"/>
+        <rect x="6" y="1" width="4" height="1" fill="currentColor"/>
+        <rect x="0" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="4" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="5" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="9" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="1" y="4" width="3" height="1" fill="currentColor"/>
+        <rect x="6" y="4" width="3" height="1" fill="currentColor"/>
+        <rect x="1" y="6" width="3" height="1" fill="currentColor"/>
+        <rect x="6" y="6" width="3" height="1" fill="currentColor"/>
+        <rect x="0" y="8" width="4" height="1" fill="currentColor"/>
+        <rect x="6" y="8" width="4" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">All Pomomons</span>
+    </a>
+
+    <a class="settings-row" href="/pomodoro-technique/" role="menuitem">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <!-- Clock: ring with hands -->
+        <rect x="3" y="0" width="4" height="1" fill="currentColor"/>
+        <rect x="2" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="1" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="2" width="1" height="1" fill="currentColor"/>
+        <rect x="0" y="3" width="1" height="4" fill="currentColor"/>
+        <rect x="9" y="3" width="1" height="4" fill="currentColor"/>
+        <rect x="4" y="3" width="1" height="2" fill="currentColor"/>
+        <rect x="4" y="5" width="2" height="1" fill="currentColor"/>
+        <rect x="1" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="8" y="7" width="1" height="1" fill="currentColor"/>
+        <rect x="2" y="8" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="8" width="1" height="1" fill="currentColor"/>
+        <rect x="3" y="9" width="4" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">The technique</span>
+    </a>
+
+    <a class="settings-row" href="/faq/" role="menuitem">
+      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <!-- Question mark -->
+        <rect x="2" y="0" width="5" height="1" fill="currentColor"/>
+        <rect x="1" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="1" width="1" height="1" fill="currentColor"/>
+        <rect x="7" y="2" width="1" height="2" fill="currentColor"/>
+        <rect x="5" y="4" width="2" height="1" fill="currentColor"/>
+        <rect x="4" y="5" width="1" height="2" fill="currentColor"/>
+        <rect x="4" y="9" width="1" height="1" fill="currentColor"/>
+      </svg>
+      <span class="settings-label">FAQ</span>
+    </a>
   </div>
 
   <!-- ── Mailing-list card ─────────────────────────────

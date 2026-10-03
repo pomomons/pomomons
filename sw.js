@@ -16,7 +16,9 @@
  *     fonts outright the day the stylesheet started self-hosting them.
  *   - Navigations (the HTML page) are network-first, so an online visitor
  *     always gets the freshest index.html and only falls back to the cached
- *     copy when offline.
+ *     copy when offline. Only the app shell's own path writes the cached
+ *     shell; the standalone content pages (/faq/, /pomodoro-technique/,
+ *     /pomodex/) cache under their own URLs. See networkFirstPage.
  *   - Other same-origin files (CSS/JS/sprites/backgrounds) are
  *     stale-while-revalidate: served from cache immediately, refreshed in the
  *     background for next time.
@@ -104,14 +106,35 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(staleWhileRevalidate(request));
 });
 
+// The app shell is the only page allowed to occupy the 'index.html' cache
+// slot. This used to write EVERY navigation there, which was harmless while
+// the site was a single page and actively wrong the moment it was not: one
+// visit to /faq/ stored that page's HTML as the shell, and the next offline
+// launch of the app opened the FAQ instead of the timer. Content pages get
+// their own runtime entry under their own URL, and only fall back to the
+// shell when they have none.
+const isShellPath = (p) => p === '/' || p === '/index.html';
+
 async function networkFirstPage(request) {
-  const cache = await caches.open(PRECACHE);
+  const cache   = await caches.open(PRECACHE);
+  const runtime = await caches.open(RUNTIME);
+  const shell   = isShellPath(new URL(request.url).pathname);
+
   try {
     const fresh = await fetch(request);
-    // Keep the cached shell current for offline use.
-    cache.put('index.html', fresh.clone());
+    // Only cache a real page. Caching unconditionally meant one 404 or 5xx
+    // from the host — served with a body, so fetch resolves rather than
+    // throwing — became the permanent offline shell.
+    if (fresh && fresh.ok) {
+      if (shell) cache.put('index.html', fresh.clone());
+      else       runtime.put(request, fresh.clone());
+    }
     return fresh;
   } catch (err) {
+    if (!shell) {
+      const hit = await runtime.match(request);
+      if (hit) return hit;
+    }
     return (
       (await cache.match('index.html')) ||
       (await cache.match('./')) ||
