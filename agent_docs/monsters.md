@@ -68,7 +68,7 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 15 | 25  | Mushkin    | Savory  | 20 → Portobellord #26 (Savory)                       |
 | 16 | 27  | Citrano    | Sour    | —                                                    |
 | 17 | 28  | Spud       | Savory  | 20 → Idabro #29 (Savory)                             |
-| 18 | 30  | Pinapip    | Sweet   | —                                                    |
+| 18 | 30  | Pinapip    | Sweet   | 20 → Pikeapple #31 (Sweet)                           |
 
 Spawning is **uniform** across base mons (no rarity weighting). Shiny (1/500,
 0.2%) and dark (1/100, 1% — 0.998% effective, since the dark roll only happens

@@ -222,7 +222,7 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  // Pineapple. Basic mon, no evolution line. Sweet rather than Sour, following
+  // Pineapple. Evolves once, into Pikeapple. Sweet rather than Sour, following
   // Pita Pal (dragon fruit): a tropical fruit reads Sweet here, and Sour is
   // held by the sharply acidic pair, Soursquad (grapes) and Citrano (orange).
   // Colours sampled from the sprite: the flesh's yellow and the orange it is
@@ -240,7 +240,30 @@ const MONS = [
   // persists dexNum, so pushing Pinapip up one costs nothing.
   { id: 18, dexNum: 30, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Pinapip/Pinapip.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames (64×128 file, two stacked) — the final-evolution tier, so
+      // Pikeapple draws at full box size against Pinapip's 32px basic. One jump
+      // with no 48px middle step, the same shape as Spud → Idabro and
+      // Cocokid → Cocokong. atLevel 20 is what every other two-stage line uses.
+      //
+      // Colours sampled from the sprite, the same pair Pinapip takes: the
+      // flesh's yellow (#fee22c, 13% of the opaque pixels) and the orange it is
+      // shaded with (#fa8302, 7%). The crown's greens are far louder here than
+      // on Pinapip — ~30% across four tones — and still lose, because accent is
+      // a shadow everywhere else in this roster. Black is the single biggest
+      // block at 25%, but that is the outline, not a surface.
+      //
+      // The 36 changed pixels sit in rows 38-43, the eye band, and include the
+      // same two white highlights Pinapip carries — a real blink, not a glint
+      // like Idabro's sunglasses. 6000/900 is the timing every other 64px final
+      // evolution uses (Portobellord, Guacamonger, Strangletti, Idabro): slower
+      // and longer than the 3000/150 basics, so the bigger mon reads heavier.
+      { atLevel: 20, dexNum: 31, name: 'Pikeapple', type: 'Sweet', color: '#fee22c', accent: '#fa8302',
+        sprite: 'assets/sprites/Pikeapple/Pikeapple.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
 ];
 
 // ── TESTING ONLY — force every encounter to one mon ───────
