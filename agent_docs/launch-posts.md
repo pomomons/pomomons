@@ -36,8 +36,18 @@ requirement, and the link is permanent. alternativeto.net, "Add application".
 > Your collection is stored in your own browser; an optional emailed save code
 > moves it between devices. No ads, no tracking cookies, no paid tier.
 
-**List as an alternative to:** Pomofocus, Forest, Flora, Focus To-Do, Tomato
-Timer, Session, Flocus
+**List as an alternative to:** Focus Friend, Forest, Study Bunny, Flora, Focus
+Plant, Focumon, Pomofocus, Tomato Timer, Focus To-Do
+
+> **Put Focus Friend first and do not skip this field.** It is the highest-value
+> ten minutes in this entire document. Focus Friend is Google Play's App of the
+> Year and the #1 focus app in America, it has no web version, and its
+> AlternativeTo page lists **60 alternatives of which not one is a
+> browser-based creature collector** — they are nearly all app-blockers.
+> The whole cute-companion category (Forest, Flora, Study Bunny, Focus Plant,
+> Finch) is phone-only. These pages already rank and already collect people
+> actively looking to switch, and the most on-point answer is missing from all
+> of them.
 
 **Tags:** pomodoro-timer, productivity, time-management, gamification,
 study-timer, pwa, offline, no-registration, free

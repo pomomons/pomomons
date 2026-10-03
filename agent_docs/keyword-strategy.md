@@ -64,15 +64,70 @@ it requires an account. Forest is an app-store install. PomoMons needs neither
 — no account, no install, works offline, free with no paid tier. For a certain
 searcher that is decisive, and no amount of Focumon's feature depth answers it.
 
+### The finding that reframes all of this (researched 2026-10-03)
+
+Checked the whole "cute companion focus app" category, not just Forest:
+
+| App | Platforms | Companion mechanic |
+|---|---|---|
+| Focus Friend | iPhone, iPad, Android | A bean that knits while you focus |
+| Forest | iOS, Android (+ browser extensions) | Plant a tree, it dies if you leave |
+| Flora | Mobile | Plant a tree, optional real-money stake |
+| Study Bunny | iOS, Android | Bunny companion, coins, shop |
+| Focus Plant | iOS, Android | Collect raindrops, grow plants |
+| Finch | Mobile | Self-care pet bird |
+
+**Every popular app in this category is a phone app.** Not one of them runs in
+a browser. Meanwhile the people who most need a focus timer are sitting at a
+desk with a browser already open, and the phone-based ones cannot even see
+whether you are working — Focus Friend's mechanic is detecting whether you
+picked your phone up.
+
+That is the positioning, and it is true rather than spun: **the focus-pet
+category is phone-shaped, and PomoMons is the one for people working at a
+computer.** It is a better line than any individual comparison, because it is
+a category-level observation nobody else can make without admitting it.
+
+### Focus Friend is the single best target
+
+- **Google Play's App of the Year and the #1 focus app in America**, built by
+  Hank Green with Honey B Games. Enormous, recently-created brand awareness —
+  which means enormous search volume for the name and everything around it.
+- **No web version.** iPhone, iPad and Android only.
+- Its whole mechanic is phone-native: the bean knits as long as you do not
+  open another app *on your phone*. For someone whose distraction is a browser
+  tab on a laptop, the app cannot help by design.
+- AlternativeTo's "Focus Friend Alternatives" page lists **60 alternatives**,
+  and search results show that listing running to at least five pages — so the
+  demand for an alternative is demonstrably large.
+- **Not one of those 60 is a browser-based creature collector.** They are
+  overwhelmingly app-blockers: LeechBlock, Cold Turkey, SelfControl,
+  ClearSpace, Focus Firewall. Tools that punish distraction, not tools that
+  reward focus.
+
+The closest thing in spirit to Focus Friend that runs in a browser for free is
+missing from the page where people go looking for exactly that.
+
 ### Targets, best first
 
 | Page | The searcher's problem |
 |---|---|
-| Forest alternative for desktop / browser | Wants Forest on a computer; there is no desktop app |
-| Free alternative to Forest | Does not want to pay |
+| **Focus Friend for desktop / on your computer** | Huge new audience, no web version, phone-only mechanic |
+| **Forest alternative for desktop / browser** | No official desktop app; searchers are told to use an Android emulator |
+| Study Bunny alternative for PC | Big student following, iOS/Android only |
+| Free alternative to Forest / Flora | Does not want to pay, or does not want the real-money stake |
 | Focus app with no account / no sign-up | Will not make an account for a timer |
 | Focumon alternative | Hit the sign-up wall |
-| Habitica / Flora / Finch alternative | Wants lighter, or browser-based |
+
+### Do not build eight of these
+
+Templated comparison pages are a recognised spam pattern and Google's
+helpful-content system demotes them as a group. Build **two or three genuinely
+written ones** for the biggest names, plus **one flagship category page** built
+on the observation above — that every app in this category is a phone app.
+The category page is the one that can rank for the long tail of "focus pet app
+for pc", "study timer with a pet on computer" and everything shaped like it,
+and it is a real piece of writing rather than a fill-in-the-blanks table.
 
 **Rules for these pages, non-negotiable:** every claim about a competitor must
 be true on the day it is written, dated, and limited to things that do not
@@ -181,6 +236,30 @@ roundups is how it finds it at all.
 This is outreach, not writing: a short, honest email to the author of a roundup
 that is actually maintained, saying what PomoMons is and why it is different
 enough to be worth a line. Low hit rate, very high value per hit.
+
+**Specific targets found 2026-10-03**, and the niche ones are far better odds
+than the big names because they are smaller sites actively maintaining lists:
+
+| Site | The post | Note |
+|---|---|---|
+| gridfiti.com | "10 Apps like Flora: The Best Alternatives" | Niche, student audience |
+| gillde.com | "10+ Apps like Study Bunny: The Best Alternatives" | Same shape |
+| peazehub.com | "9 Best Gamified Study Apps in 2026 — Ranked" | Directly on-topic |
+| toolfinder.com | "Best Pomodoro Timers" | Established, curated |
+| zapier.com | "The 6 best Pomodoro timer apps" | Huge authority, hardest to get into |
+| focusdog.app | "The Best Focus Pet Apps in 2026, Compared" | **Skip** — a competitor running content marketing; they will not list us |
+
+The pitch writes itself and does not need to be a pitch: *every app on your
+list is a phone app, and some of your readers are looking for one that runs on
+the computer they are already working at.* That is a useful note to an author
+maintaining a list, not a favour being asked.
+
+**Free and immediate — AlternativeTo.** The listing drafted in
+`launch-posts.md` lets one entry be filed as an alternative to several apps at
+once. File PomoMons against **Focus Friend, Forest, Flora, Study Bunny and
+Focus Plant**. Those pages already rank and already collect people looking to
+switch, and the Focus Friend page in particular lists 60 alternatives without a
+single browser-based one. This costs nothing and takes ten minutes.
 
 Other surfaces worth the same thinking:
 
