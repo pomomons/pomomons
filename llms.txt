@@ -10,7 +10,7 @@
 
 - Free, no sign-up, no tracking cookies. Live at https://pomomons.io
 - Works on desktop and mobile; installable (PWA) and usable offline
-- Adjustable focus / short break / long break lengths (classic Pomodoro 25/5/15 by default)
+- Defaults to 30 minutes focus / 5 short break / 15 long break — slightly longer than the classic 25/5/15. Focus is adjustable from 20 to 90 minutes, breaks from 1 to 90
 - Every 4th completed focus session earns a long break
 - 30 Pomomon forms across 16 base species (Pomodex #1-#30), including evolutions that trigger at level 16, 20 or 36
 - Two rare variants: "shiny" (gold-tinted, 0.2% of encounters) and "dark" (near-black, 1%); 98.8% of encounters are normal
