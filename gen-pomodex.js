@@ -201,9 +201,8 @@ const page = `<!DOCTYPE html>
     <h1>The Pomodex</h1>
     <p class="standfirst">
       All ${formCount} Pomomon forms across ${baseCount} base species. You meet
-      one at the end of a focus session &mdash; only base forms appear in the
-      wild, and the other ${formCount - baseCount} are evolutions you reach by
-      levelling a Pomomon you already caught.
+      one at the end of a focus session, and ${formCount - baseCount} of them
+      are evolutions you reach by levelling a Pomomon you already caught.
     </p>
 
     <h2>Every Pomomon</h2>
@@ -228,10 +227,9 @@ const page = `<!DOCTYPE html>
     <h2>How catching and evolving work</h2>
     <p>
       A wild Pomomon appears when a focus session ends, and you throw a tomato
-      to catch it. Each species has its own catch rate, so a throw can miss and
-      the Pomomon can break free. Caught Pomomons gain levels as you complete
-      more sessions, and evolve on their own at level 16, 20 or 36 depending on
-      the line.
+      to catch it. The catch always succeeds. Caught Pomomons gain levels as you
+      complete more sessions, and evolve on their own at level 16, 20 or 36
+      depending on the line.
     </p>
     <p>
       Two rare variants can turn up on any encounter: a <strong>shiny</strong>
