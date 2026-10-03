@@ -67,7 +67,7 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 10 | 17  | Purrplant  | Savory  | —                                                    |
 | 11 | 18  | Chillcone  | Sweet   | —                                                    |
 | 12 | 19  | Cocokid    | Sweet   | 20 → Cocokong #20 (Sweet)                            |
-| 13 | 21  | Pita Pal   | Sweet   | 20 → Pitagon #22 (Sweet)                             |
+| 13 | 21  | Pitapal   | Sweet   | 20 → Pitagon #22 (Sweet)                             |
 | 14 | 23  | Soursquad  | Sour    | —                                                    |
 | 15 | 24  | Mushkin    | Savory  | 20 → Portobellord #25 (Savory)                       |
 | 16 | 26  | Citrano    | Sour    | —                                                    |

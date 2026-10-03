@@ -136,7 +136,7 @@ const MonSprite = (() => {
   // displaySize() rounds to a pixel that is rarely an exact multiple of the
   // frame, and drawSprite's squish multiplies it again every tick.
   //
-  // Pita Pal is where it shows. It is the only mon whose art fills the last
+  // Pitapal is where it shows. It is the only mon whose art fills the last
   // row of frame 1 — the two black feet — so frame 2, the eyes-open frame on
   // screen ~95% of the time, borrows those pixels as faint dark lines across
   // its top edge.
@@ -899,7 +899,7 @@ const CompanionCanvas = (() => {
         // GROUND_Y is where the mon's FEET go, not where its frame ends. The
         // frame used to be what was bottom-anchored, which quietly handed each
         // mon a different standing height: a sprite with empty rows under the
-        // art floated by exactly that much, from 0 units for Pita Pal (art to
+        // art floated by exactly that much, from 0 units for Pitapal (art to
         // the frame edge) to 22 for Chillcone. Anchoring the measured art
         // bottom puts every mon's feet on one line, and leaves the sprites
         // that already fill their frame exactly where they were.
