@@ -158,6 +158,39 @@ of CSS).
   would break them silently. If you add a new cross-file global, add it to the
   API list in tools/check-build.js.
 
+## The homepage is two things stacked
+`index.html` is the app **and** a page of prose below it. The split matters:
+
+- `.app-viewport` (`#top`) wraps the header, the three screens, every overlay
+  and the stats strip, and has a **hard `height: 100dvh`**. That is what keeps
+  the app exactly one screen tall; `min-height` alone let it measure 814px
+  against an 807px viewport and pushed the prose down by the difference. The
+  base sheet's `body { height: 100% }` used to do this job.
+- The forest photo, the scanlines and the vignette moved from `<body>` onto
+  `.app-viewport`. They had to: `--bg-pos` is `center calc(50% - 7vh)` and that
+  50% resolves against whatever box paints it, so on a now-taller body the app
+  would open on a different crop. The two fixed overlays would also have lain
+  across the prose — the vignette is 52% black at the edges. `body::after` from
+  the base sheet is switched off in style-v3.css for the same reason.
+- `.stats-strip` is `position: absolute`, not fixed, so it scrolls away with
+  the app instead of floating over the text.
+- `updateStatsReserve()` measures against `.app-viewport`, not
+  `window.innerHeight`. Those agreed while the page was one screen tall; now a
+  resize fired while the reader is down in the prose would read a strip that is
+  above the viewport and reserve space the timer screen does not have.
+- `.home-prose` and its footer live **outside** `.app-viewport`. Anything added
+  inside it takes height from the timer, because `fitTimerScreen()` scales the
+  screen's contents down from `scrollHeight`.
+- Prose styles are scoped under `.home-prose`. Note `.home-prose a` is 0-1-1,
+  so a single-class rule like `.prose-cta-link` loses to it — that shipped the
+  CTA as gold text on a gold slab until a screenshot caught it. Scope new
+  element styles under `.home-prose` too.
+- `node tools/_diff-head.js` renders the app against HEAD at four viewports and
+  diffs every element's geometry. Run it after any layout change here. **Use a
+  fresh browser context per version** — it originally shared one, and the
+  service worker served HEAD's cached CSS to the new HTML, inventing 147
+  differences that existed only in the test.
+
 ## Key Rules
 - No external libraries in the shipped app unless explicitly approved
   (build-time devDependencies in package.json are separate and already approved)

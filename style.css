@@ -1207,7 +1207,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* ── Stats strip — full browser width ───────────────────── */
 .stats-strip {
-  position: fixed;
+  /* Absolute, not fixed: it belongs to the app and is a child of
+     .app-viewport, so it sits at the bottom of that one screen and scrolls
+     away with it. Fixed would glue it to the viewport and float it over the
+     prose section below at every scroll position. */
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;

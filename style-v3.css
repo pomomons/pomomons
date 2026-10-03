@@ -295,7 +295,33 @@
   --bg-pos:  center calc(50% - 7vh);
 }
 
-body { background: var(--mode-bg) url("assets/backgrounds/greenbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat; }
+/* The photo lives on .app-viewport, not <body>.
+   --bg-pos is `center calc(50% - 7vh)`, and 50% resolves against the box it is
+   painted on. On <body> that was the viewport, because body was exactly one
+   screen tall. Now that the page continues below the app, body is taller than
+   the screen and the same declaration would centre the photo on the middle of
+   the whole scrolling document — the app would open on a visibly different
+   crop. .app-viewport is always exactly one screen tall, so painting it there
+   reproduces the original framing precisely.
+   Body keeps the flat colour, which is what the prose section sits on. */
+body { background: var(--mode-bg); }
+
+.app-viewport {
+  position: relative;          /* the stats strip positions against this */
+  /* A hard height, not just a minimum. The base sheet caps <body> with
+     `height: 100%`, which is what used to stop the app growing past one
+     screen — with only a min-height here the wrapper measured 814px against an
+     807px viewport and pushed the prose section down by the difference.
+     fitTimerScreen() scales the screen's contents down to whatever height it
+     is given, so a definite height is what it expects. */
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;              /* never shrink to make room for the prose */
+  overflow: hidden;            /* clips the photo to the app's own screen */
+  background: var(--mode-bg) url("assets/backgrounds/greenbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat;
+}
 
 /* Full-screen overlays get the same photo as the body — they were still on
    the base sheet's hardcoded teal/red (#228674/#af4d4d), disconnected from
@@ -331,7 +357,12 @@ body { background: var(--mode-bg) url("assets/backgrounds/greenbackground.webp")
 /* Dedicated red-toned background for a running session — same composition
    and horizon as the default photo, painted red rather than approximated
    with a multiply-blend tint over the green one. */
-body.run-focus {
+/* Running a focus session swaps the photo. Follows the photo onto
+   .app-viewport for the same reason as the green one above; body keeps the
+   flat red so the prose section below changes with the session too. */
+body.run-focus { background: var(--mode-bg); }
+
+body.run-focus .app-viewport {
   background: var(--mode-bg) url("assets/backgrounds/redbackground.webp") var(--bg-pos) / var(--bg-size) no-repeat;
 }
 body.run-focus .encounter-overlay,
@@ -398,18 +429,34 @@ html:has(body.run-focus) {
   );
 }
 
-body::before {
+/* Scanlines and vignette, moved off <body> onto the app wrapper.
+   Both were position:fixed, which painted them over the whole viewport
+   forever — fine when the viewport was the whole site, wrong now: they would
+   lie across the prose section at every scroll position, and the vignette in
+   particular is 52% black at the edges, which would dim the text it sat on.
+   Absolute inside .app-viewport means they cover the app exactly as before
+   and end where it ends. */
+.app-viewport::before,
+.app-viewport::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: var(--scanlines);
 }
 
-body::after {
+.app-viewport::before { background: var(--scanlines); }
+
+.app-viewport::after {
   background: radial-gradient(ellipse at 50% 34%, transparent 30%, rgba(0,0,0,.52) 100%);
 }
+
+/* The base sheet draws its own softer vignette on body::after, also fixed and
+   full-viewport. v3 used to override only its `background`, so moving the
+   vignette onto .app-viewport would have left the base one painting across
+   the prose. Switched off here rather than edited there, so removing this
+   sheet still reverts cleanly to the v2 look. */
+body::after { content: none; }
 
 /* ── Outer bezel ───────────────────────────────────────────
    The screwed frame around the whole console. Drawn on html::before rather
@@ -3462,4 +3509,179 @@ html::after,
 @media (max-width: 560px) {
   .collection-header-end { flex-wrap: nowrap; }
   #btn-mymons-sort { font-size: 9px; padding: 8px 10px; gap: 6px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   THE PAGE BELOW THE APP
+   ══════════════════════════════════════════════════════════
+   Everything from here down styles the prose section and its footer, which
+   live outside .app-viewport and are the only things on this page that are
+   not the app.
+
+   Set in a system font, not the pixel face. --font-pixel is the whole app's
+   voice and it is the right one for labels, but Press Start 2P at paragraph
+   length is close to unreadable and ships far more bytes than a system stack
+   for text nobody is meant to squint at. Headings keep the pixel face so the
+   section still reads as part of PomoMons. Sentence case too: the app is
+   uppercase throughout (body sets text-transform) and uppercase paragraphs
+   are a wall. */
+
+.home-prose {
+  position: relative;
+  z-index: 1;
+  background: var(--strip-bg, #152f29);
+  border-top: 4px solid var(--outline);
+  color: #e8f0e6;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  text-transform: none;         /* body sets uppercase; undo it for prose */
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  letter-spacing: normal;
+}
+
+.prose-col {
+  max-width: 44rem;             /* ~70 characters at this size */
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 1rem;
+}
+
+.home-prose h2 {
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  font-size: clamp(.8125rem, 2.4vw, 1rem);
+  line-height: 1.6;
+  letter-spacing: .02em;
+  color: var(--gold);
+  margin: 3rem 0 1rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(184,216,194,.2);
+}
+
+.home-prose h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+.home-prose p { margin: 0 0 1.125rem; }
+
+.home-prose ol {
+  margin: 0 0 1.125rem;
+  padding-left: 1.5rem;
+}
+
+.home-prose li { margin-bottom: .75rem; }
+
+.home-prose strong { color: #fff; font-weight: 600; }
+
+.home-prose a {
+  color: var(--gold);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.home-prose a:hover,
+.home-prose a:focus-visible { color: #f0bc4d; }
+
+/* Back to the top of the app. A button in the app's own idiom, since this is
+   the one link here that returns you to it. */
+.prose-cta { margin: 2.5rem 0 0; text-align: center; }
+
+/* Scoped to .home-prose so it outweighs `.home-prose a` above (0-1-1), which
+   otherwise won on specificity and painted this gold on gold — an invisible
+   label on a solid gold slab. */
+.home-prose .prose-cta-link {
+  display: inline-block;
+  padding: .875rem 1.5rem;
+  background: var(--gold);
+  color: var(--outline);
+  font-family: var(--font-pixel);
+  font-size: .6875rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 3px solid var(--outline);
+  box-shadow: 4px 4px 0 var(--outline);
+}
+.home-prose .prose-cta-link:hover,
+.home-prose .prose-cta-link:focus-visible { background: #f0bc4d; color: var(--outline); }
+.home-prose .prose-cta-link:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--outline); }
+
+/* ── Footer ────────────────────────────────────────────── */
+.home-foot {
+  border-top: 2px solid rgba(184,216,194,.2);
+  margin-top: 3rem;
+}
+
+.home-foot .prose-col {
+  padding-top: 1.75rem;
+  padding-bottom: 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.foot-mark {
+  font-family: var(--font-pixel);
+  font-size: .5625rem;
+  letter-spacing: .04em;
+  color: rgba(232,240,230,.5);
+  margin: 0;
+}
+
+.foot-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.5rem;
+  font-size: .9375rem;
+}
+
+.foot-nav a { color: #b8d8c2; text-decoration: none; }
+.foot-nav a:hover,
+.foot-nav a:focus-visible { color: var(--gold); text-decoration: underline; }
+
+/* ── Scroll cue ────────────────────────────────────────────
+   Sits just above the stats strip at the bottom of the app's screen. Without
+   it the first screen gives no sign the page continues, and a section only a
+   crawler reads is half wasted.
+
+   Absolute inside .app-viewport, so it scrolls away with the app. Its offset
+   rides --stats-reserve, the strip's real measured height, which app.js keeps
+   current — the strip's own height is auto in this skin and changes as the
+   tiles wrap and the XP numbers grow a digit, so a fixed offset would collide
+   with it at some widths.
+
+   z-index 40 is deliberately BELOW the stats strip (50) and every overlay
+   (100+), so an encounter, a modal or the strip itself covers it with no
+   JavaScript and no state class to keep in sync. */
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--stats-reserve, 160px) + 6px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  animation: cue-bob 2.4s ease-in-out infinite;
+}
+
+/* A bare chevron, no caption. It started as a labelled "WHAT IS THIS?" button
+   and there is simply no room for one: the band between the panel's bottom
+   edge and the stats strip is about 32px at every size, and a two-line cue
+   filled it completely, overlapping the panel border and crowding START.
+   The page also has a real scrollbar now, which is the browser's own hint —
+   so this only has to suggest, not announce. The accessible name lives on the
+   anchor's aria-label. */
+.scroll-cue:hover,
+.scroll-cue:focus-visible { color: var(--gold); outline: none; }
+
+@keyframes cue-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 3px); }
+}
+
+@media (max-width: 560px) {
+  .prose-col { padding-top: 2.5rem; }
+  .home-prose { font-size: 1rem; }
+  .home-foot .prose-col { justify-content: flex-start; }
 }
