@@ -91,26 +91,29 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  // id 9 and dexNum 17 were Wedgling, removed from the roster. Both stay
+  // id 9 and dexNum 17 were Wedgling, removed from the roster. The id stays
   // retired rather than reused: caught records store the species id, so a
   // number that has meant something else is not worth handing to a new mon —
-  // the same reason 2 has stayed skipped. That leaves a hole at #17 in the
-  // dex; renumbering everything after it would be safe (nothing persists
-  // dexNum) but would move twelve mons, so the gap stands instead.
-  { id: 10, dexNum: 18, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon', catchRate: 0.45,
+  // the same reason 2 has stayed skipped.
+  //
+  // The dexNum did not have to stay retired, because nothing persists it, and
+  // the hole at #17 is now closed: every entry above it shifted down one, so
+  // the dex reads 1-30 unbroken and Purrplant holds 17. Caught records were
+  // untouched by that — they store id, and no id moved.
+  { id: 10, dexNum: 17, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon', catchRate: 0.45,
     sprite: 'assets/sprites/Purrplant/Purrplant.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 11, dexNum: 19, name: 'Chillcone', type: 'Sweet', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',   catchRate: 0.68,
+  { id: 11, dexNum: 18, name: 'Chillcone', type: 'Sweet', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',   catchRate: 0.68,
     sprite: 'assets/sprites/Chillcone/Chillcone.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 12, dexNum: 20, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
+  { id: 12, dexNum: 19, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
     sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
       // 64px frames — the final-evolution size tier, so it draws at full box
       // size next to Cocokid's 32px basic. Colours sampled from the sprite:
       // the husk's brown and the shadow it is shaded with.
-      { atLevel: 20, dexNum: 21, name: 'Cocokong', type: 'Sweet', color: '#783d1e', accent: '#4f1e0f',
+      { atLevel: 20, dexNum: 20, name: 'Cocokong', type: 'Sweet', color: '#783d1e', accent: '#4f1e0f',
         sprite: 'assets/sprites/Cocokong/Cocokong.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 4500, blinkDuration: 150 },
     ]
@@ -122,7 +125,7 @@ const MONS = [
   // which an old evolution used to hold — caught records store the id, so a
   // number that has ever meant something else is not worth reusing.
   // Colours sampled from the sprite: the skin's magenta and its shadow.
-  { id: 13, dexNum: 22, name: 'Pita Pal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
+  { id: 13, dexNum: 21, name: 'Pita Pal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
     sprite: 'assets/sprites/Pitapal/Pitapal.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -130,7 +133,7 @@ const MONS = [
       // tier to the final-evolution tier, so it doubles in size on screen.
       // Colours sampled from the sprite: the skin's red and its shadow, both
       // brighter than the basic's.
-      { atLevel: 20, dexNum: 23, name: 'Pitagon', type: 'Sweet', color: '#e20239', accent: '#931a39',
+      { atLevel: 20, dexNum: 22, name: 'Pitagon', type: 'Sweet', color: '#e20239', accent: '#931a39',
         sprite: 'assets/sprites/Pitagon/Pitagon.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 4500, blinkDuration: 150 },
     ]
@@ -144,7 +147,7 @@ const MONS = [
   // the tier that until now held only final evolutions (Guacamonger,
   // Strangletti, Ghostpepper). Deliberate — it is meant to read as a big mon —
   // but it is why a basic mon out-sizes several evolved ones on screen.
-  { id: 14, dexNum: 24, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
+  { id: 14, dexNum: 23, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
     sprite: 'assets/sprites/Soursquad/Soursquad.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Toadstool. Savory for the mushroom's umami, which is also the type the art
@@ -163,11 +166,11 @@ const MONS = [
   // tier, so it reads as a proper growth from Mushkin's 48. Its colours are
   // sampled the same way: the portobello cap's brown and its shade, which is
   // where the line leaves the red toadstool palette behind.
-  { id: 15, dexNum: 25, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
+  { id: 15, dexNum: 24, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
     sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
-      { atLevel: 20, dexNum: 26, name: 'Portobellord', type: 'Savory', color: '#803b33', accent: '#632d2d',
+      { atLevel: 20, dexNum: 25, name: 'Portobellord', type: 'Savory', color: '#803b33', accent: '#632d2d',
         sprite: 'assets/sprites/Portobellord/Portobellord.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
@@ -182,7 +185,7 @@ const MONS = [
   //
   // catchRate 1.00 is cosmetic: the field is inert legacy, every catch already
   // succeeds. Kept explicit so the roster reads consistently.
-  { id: 16, dexNum: 27, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
+  { id: 16, dexNum: 26, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Potato. Basic mon, no evolution line. Savory — a potato is the plainest
@@ -194,7 +197,7 @@ const MONS = [
   //
   // id 17 — the next unused number. 2 stays skipped: an old evolution held it
   // and caught records store the id.
-  { id: 17, dexNum: 28, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',   catchRate: 1.00,
+  { id: 17, dexNum: 27, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Spud/Spud.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -217,7 +220,7 @@ const MONS = [
       // often as an eye-blink reads as a flicker. 6000/900 is the final-
       // evolution timing Guacamonger and Strangletti already use, so the
       // glint holds long enough to read as a deliberate shine.
-      { atLevel: 20, dexNum: 29, name: 'Idabro', type: 'Savory', color: '#f5b057', accent: '#c3712e',
+      { atLevel: 20, dexNum: 28, name: 'Idabro', type: 'Savory', color: '#f5b057', accent: '#c3712e',
         sprite: 'assets/sprites/Idabro/Idabro.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
@@ -235,10 +238,11 @@ const MONS = [
   // ONLY white left in the sheet — worth knowing before running any "remove the
   // background" pass over this sprite again, because the first export had the
   // background baked in as opaque near-white and clearing it took the eyes too.
-  // dexNum 30, not 29: Idabro took 29 as Spud's evolution, and an evolution
-  // sits directly after its base (see the convention note at the top). Nothing
-  // persists dexNum, so pushing Pinapip up one costs nothing.
-  { id: 18, dexNum: 30, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
+  // dexNum 29, straight after Idabro's 28: an evolution sits directly after
+  // its base (see the convention note at the top), so Spud's line holds 27-28
+  // and Pinapip's starts at 29. Nothing persists dexNum, so these numbers move
+  // freely whenever the roster is renumbered.
+  { id: 18, dexNum: 29, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
     sprite: 'assets/sprites/Pinapip/Pinapip.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -259,7 +263,7 @@ const MONS = [
       // like Idabro's sunglasses. 6000/900 is the timing every other 64px final
       // evolution uses (Portobellord, Guacamonger, Strangletti, Idabro): slower
       // and longer than the 3000/150 basics, so the bigger mon reads heavier.
-      { atLevel: 20, dexNum: 31, name: 'Pikeapple', type: 'Sweet', color: '#fee22c', accent: '#fa8302',
+      { atLevel: 20, dexNum: 30, name: 'Pikeapple', type: 'Sweet', color: '#fee22c', accent: '#fa8302',
         sprite: 'assets/sprites/Pikeapple/Pikeapple.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
