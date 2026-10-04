@@ -16,7 +16,11 @@
   color:     String,   // hex — used by procedural block-art fallback
   accent:    String,   // hex — darker accent for fallback art
   rarity:    String,   // LEGACY — inert, not read anywhere
-  catchRate: Number,   // LEGACY — inert, catches are always 100%
+  // catchRate was removed 2026-10. It had never been read: catches always
+  // succeed (game.js: "Escape path only"). It survived long enough to be
+  // mistaken for live data and written into the public FAQ as "rarer mons can
+  // break free", which was never true. Do not reintroduce a field the code
+  // does not consult.
 
   // Sprite fields (all mons currently use PNG sprites):
   sprite:          'assets/sprites/<Name>/<Name>.png',

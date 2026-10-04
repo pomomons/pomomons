@@ -1897,8 +1897,12 @@ const EncounterScreen = (() => {
 
     onDone = doneCb;
 
-    // Pick a random mon — clone it so shiny/dark rolls never mutate the shared MONS roster
-    const mon   = { ...getRandomMon() };
+    // Pick a random mon — clone it so shiny/dark rolls never mutate the shared
+    // MONS roster. The player's level decides which evolutions are in the
+    // pool at all (see spawnableForms), so it has to be read before the pick
+    // rather than after it, as it used to be.
+    const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10) || 1;
+    const mon   = { ...getRandomMon(playerLevel) };
     mon.shiny   = Math.random() < SHINY_RATE;
     // Dark variant — rare darkened version of any mon. Shiny takes priority:
     // dark only applies when the mon did NOT roll shiny, so the dark rate you
@@ -1919,10 +1923,21 @@ const EncounterScreen = (() => {
     st.caughtRec = null;
     st.caughtKey = null;
 
-    // Compute wild mon level (player level ±2) once at encounter start
-    const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10);
-    const offset      = Math.floor(Math.random() * 5) - 2;
-    st.monLevel       = Math.max(1, Math.min(100, playerLevel + offset));
+    // Compute wild mon level (player level ±2) once at encounter start, then
+    // clamp it into the band that actually produces the form on screen.
+    //
+    // That clamp is load-bearing rather than cosmetic. A caught record stores
+    // a species id and a level, and getMonStage derives the form from the
+    // level — so a level 50 wild Tomotot would be filed as a level 50 Tomotot
+    // and immediately render as Strangletti, the thing it evolves into. The
+    // clamp is what lets a high-level player still catch a base form and have
+    // it stay a base form. It cuts the other way too: meeting a Marinaro at
+    // player level 14 pulls the roll up to 16, the level that makes it one.
+    const offset  = Math.floor(Math.random() * 5) - 2;
+    const rolled  = playerLevel + offset;
+    const loLevel = mon.loLevel || 1;
+    const hiLevel = mon.hiLevel || 100;
+    st.monLevel   = Math.max(loLevel, Math.min(hiLevel, rolled));
 
     // Populate UI
     elMsg.textContent = 'A WILD MON APPEARED!';

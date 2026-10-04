@@ -118,6 +118,17 @@ of CSS).
   Run it if you add or retime a phase. Sound cues are counted too: a cue has to
   fire on the tick that *crosses* its mark, since a time-based clock lands on
   14.7 and 15.3 and never on 15.
+- `node tools/check-spawn-levels.js [_site]` samples the real roster at seven
+  player levels and asserts the wild-spawn rules: every form can appear, an
+  evolution only once the player is within `SPAWN_LEVEL_GRACE` (2) of the level
+  it evolves at, base forms are never crowded out, and — the quiet one — that
+  every spawn's level sits inside the band that produces the form on screen. A
+  caught record stores only a species id and a level, and `getMonStage` derives
+  the form from the level, so an unclamped level 50 wild Tomotot is filed as a
+  level 50 Tomotot and renders as Strangletti. Nothing errors; the player just
+  catches one mon and is given another. Run it after touching `getRandomMon`,
+  `spawnableForms`, the level maths in `game.js` `start()`, or any
+  `evolutions[].atLevel`.
 - `node tools/check-content-pages.js [_site]` renders 404.html and each prose
   page at three widths and asserts: no sideways scroll, no console errors or
   failed requests, one h1, a title/description/canonical, every same-origin

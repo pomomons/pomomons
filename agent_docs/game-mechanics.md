@@ -16,12 +16,42 @@
 
 ## Spawning
 
-**Uniform.** `getRandomMon()` in `monsters.js` picks any base mon with equal
-probability. Rarity tiers (common/uncommon/rare weighting) were removed for
-launch — the `rarity` / `catchRate` fields still on the mon data are inert
-legacy and are not read anywhere.
+**Every form can spawn, gated by player level.** `getRandomMon(playerLevel)` in
+`monsters.js` builds its pool from `spawnableForms(playerLevel)`: all 16 base
+forms, always, plus every evolution the player has earned. An evolution is
+earned when `playerLevel >= evo.atLevel - SPAWN_LEVEL_GRACE` (grace = 2).
 
-Wild mon level = player level ± 2 (clamped 1–100), rolled at encounter start.
+The grace is not arbitrary — it is the same ±2 the level roll uses, so a form
+becomes encounterable exactly when the roll could legitimately produce it. A
+level 14 player can meet a Marinaro (evolves at 16) because a +2 roll reaches
+16; at 13 they cannot, because no roll does.
+
+Base forms are never removed from the pool. Unlocking an evolution *adds* to
+what a player can meet, so a level 50 player still runs into Tomotot. A side
+effect worth knowing: a species with evolutions unlocked occupies more of the
+pool than one without, so it spawns more often. That is deliberate.
+
+Picking is uniform across the pool. Rarity tiers were removed for launch and
+the `rarity` field is inert legacy. `catchRate` was removed outright in
+2026-10 — it had never been read.
+
+**Wild mon level** = player level ± 2, then **clamped into the band that
+produces the form on screen** (`loLevel`/`hiLevel`, attached by
+`spawnableForms`). The clamp is load-bearing, not cosmetic: a caught record
+stores only a species id and a level, and `getMonStage` derives the displayed
+form from that level. Without the clamp a level 50 wild Tomotot would be filed
+at level 50 and render in the collection as Strangletti — the player catches
+one mon and is handed another. It cuts both ways: meeting a Marinaro at player
+level 14 pulls the roll up to 16, the level that makes it one.
+
+Consequence of the shared record: catching a wild evolution credits its earlier
+stages in the dex too, because `getCaughtNames` walks a record's level through
+the whole line. Catching a Marinaro counts Tomotot as seen.
+
+Covered by `tools/check-spawn-levels.js`, which samples the real built roster
+at seven player levels and asserts the gate boundaries, that base forms are
+never crowded out, and that every catch is filed at a level that keeps it the
+form that was caught.
 
 ---
 
