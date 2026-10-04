@@ -178,7 +178,7 @@ minutes and catches, and a clock that does not drift when you look away.
 
 ---
 
-## 4. Decisions that need David
+## 4. Decisions that need the owner
 
 ### a) The H1 — recommend leaving it
 

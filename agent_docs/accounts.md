@@ -9,8 +9,11 @@
 > public repo. This records *which* accounts exist and *what they do*. The
 > secrets belong in a password manager.
 
-Written 2026-10-01. Owner: the `david.omerica@gmail.com` Google identity
-(every service below is registered to it unless noted).
+Written 2026-10-01. Owner: the project owner's personal Google identity (every
+service below is registered to it unless noted). The address itself is
+deliberately not written here — this file is in a public repo, and an email
+address in it is an address scrapers can read. It is in the password manager
+with everything else.
 
 ---
 
