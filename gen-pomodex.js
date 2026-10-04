@@ -232,6 +232,12 @@ const page = `<!DOCTYPE html>
       depending on the line.
     </p>
     <p>
+      Evolved forms appear in the wild too, once your own level is within two of
+      the level they evolve at &mdash; so a Marinaro starts turning up at player
+      level 14. Base forms never stop appearing, so levelling widens what you
+      can meet rather than replacing it.
+    </p>
+    <p>
       Two rare variants can turn up on any encounter: a <strong>shiny</strong>
       Pomomon, gold-tinted with sparkles, at roughly 0.2% &mdash; about 1 in 500
       &mdash; and a <strong>dark</strong> Pomomon, near-black, at about 1%. The

@@ -13,7 +13,7 @@
 // Mons without a sprite field will use the procedural block-art renderer.
 
 const MONS = [
-  { id: 1, dexNum: 1,  name: 'Tomotot',  type: 'Savory', color: '#e74c3c', accent: '#c0392b', rarity: 'common',   catchRate: 0.99,
+  { id: 1, dexNum: 1,  name: 'Tomotot',  type: 'Savory', color: '#e74c3c', accent: '#c0392b', rarity: 'common',
     sprite: 'assets/sprites/Tomotot/tomotot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -25,7 +25,7 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  { id: 3, dexNum: 4,  name: 'Avocuddle', type: 'Savory', color: '#7db356', accent: '#4a7c2f', rarity: 'common',   catchRate: 1.00,
+  { id: 3, dexNum: 4,  name: 'Avocuddle', type: 'Savory', color: '#7db356', accent: '#4a7c2f', rarity: 'common',
     sprite: 'assets/sprites/Avocuddle/avocuddle.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -37,7 +37,7 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  { id: 4, dexNum: 7,  name: 'Chilino',    type: 'Spicy', color: '#d32f2f', accent: '#b71c1c', rarity: 'common',   catchRate: 0.70,
+  { id: 4, dexNum: 7,  name: 'Chilino',    type: 'Spicy', color: '#d32f2f', accent: '#b71c1c', rarity: 'common',
     sprite: 'assets/sprites/Chilino/chilino.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -49,7 +49,7 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
-  { id: 8, dexNum: 15, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',   catchRate: 0.70,
+  { id: 8, dexNum: 15, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',
     sprite: 'assets/sprites/Marshpuff/Marshpuff.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -58,7 +58,7 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
     ]
   },
-  { id: 7, dexNum: 13, name: 'Pumplet',    type: 'Savory', color: '#e67e22', accent: '#d35400', rarity: 'common',   catchRate: 0.70,
+  { id: 7, dexNum: 13, name: 'Pumplet',    type: 'Savory', color: '#e67e22', accent: '#d35400', rarity: 'common',
     sprite: 'assets/sprites/Pumplet/Pumplet.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -67,10 +67,10 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',   catchRate: 0.65,
+  { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',
     sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
-  { id: 5, dexNum: 11, name: 'Bluble',     type: 'Sweet', color: '#2980b9', accent: '#1a5276', rarity: 'common',   catchRate: 0.65,
+  { id: 5, dexNum: 11, name: 'Bluble',     type: 'Sweet', color: '#2980b9', accent: '#1a5276', rarity: 'common',
     sprite: 'assets/sprites/Bluble/Bluble.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -100,13 +100,13 @@ const MONS = [
   // the hole at #17 is now closed: every entry above it shifted down one, so
   // the dex reads 1-30 unbroken and Purrplant holds 17. Caught records were
   // untouched by that — they store id, and no id moved.
-  { id: 10, dexNum: 17, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon', catchRate: 0.45,
+  { id: 10, dexNum: 17, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon',
     sprite: 'assets/sprites/Purrplant/Purrplant.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 11, dexNum: 18, name: 'Chillcone', type: 'Sweet', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',   catchRate: 0.68,
+  { id: 11, dexNum: 18, name: 'Chillcone', type: 'Sweet', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',
     sprite: 'assets/sprites/Chillcone/Chillcone.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 12, dexNum: 19, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',   catchRate: 0.66,
+  { id: 12, dexNum: 19, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',
     sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -125,7 +125,7 @@ const MONS = [
   // which an old evolution used to hold — caught records store the id, so a
   // number that has ever meant something else is not worth reusing.
   // Colours sampled from the sprite: the skin's magenta and its shadow.
-  { id: 13, dexNum: 21, name: 'Pitapal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',   catchRate: 0.68,
+  { id: 13, dexNum: 21, name: 'Pitapal', type: 'Sweet', color: '#c3193e', accent: '#760d28', rarity: 'common',
     sprite: 'assets/sprites/Pitapal/Pitapal.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -147,7 +147,7 @@ const MONS = [
   // the tier that until now held only final evolutions (Guacamonger,
   // Strangletti, Ghostpepper). Deliberate — it is meant to read as a big mon —
   // but it is why a basic mon out-sizes several evolved ones on screen.
-  { id: 14, dexNum: 23, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',   catchRate: 0.65,
+  { id: 14, dexNum: 23, name: 'Soursquad', type: 'Sour',  color: '#64278d', accent: '#3d1460', rarity: 'common',
     sprite: 'assets/sprites/Soursquad/Soursquad.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Toadstool. Savory for the mushroom's umami, which is also the type the art
@@ -166,7 +166,7 @@ const MONS = [
   // tier, so it reads as a proper growth from Mushkin's 48. Its colours are
   // sampled the same way: the portobello cap's brown and its shade, which is
   // where the line leaves the red toadstool palette behind.
-  { id: 15, dexNum: 24, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',   catchRate: 0.67,
+  { id: 15, dexNum: 24, name: 'Mushkin',   type: 'Savory', color: '#b50f13', accent: '#7d060f', rarity: 'common',
     sprite: 'assets/sprites/Mushkin/Mushkin.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -185,7 +185,7 @@ const MONS = [
   //
   // catchRate 1.00 is cosmetic: the field is inert legacy, every catch already
   // succeeds. Kept explicit so the roster reads consistently.
-  { id: 16, dexNum: 26, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',   catchRate: 1.00,
+  { id: 16, dexNum: 26, name: 'Citrano',   type: 'Sour',  color: '#f2700e', accent: '#cc3a19', rarity: 'common',
     sprite: 'assets/sprites/Citrano/Citrano.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
   // Potato. Basic mon, no evolution line. Savory — a potato is the plainest
@@ -197,7 +197,7 @@ const MONS = [
   //
   // id 17 — the next unused number. 2 stays skipped: an old evolution held it
   // and caught records store the id.
-  { id: 17, dexNum: 27, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',   catchRate: 1.00,
+  { id: 17, dexNum: 27, name: 'Spud',      type: 'Savory', color: '#f3b263', accent: '#985b33', rarity: 'common',
     sprite: 'assets/sprites/Spud/Spud.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -242,7 +242,7 @@ const MONS = [
   // its base (see the convention note at the top), so Spud's line holds 27-28
   // and Pinapip's starts at 29. Nothing persists dexNum, so these numbers move
   // freely whenever the roster is renumbered.
-  { id: 18, dexNum: 29, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',   catchRate: 1.00,
+  { id: 18, dexNum: 29, name: 'Pinapip',   type: 'Sweet',  color: '#fef438', accent: '#e06804', rarity: 'common',
     sprite: 'assets/sprites/Pinapip/Pinapip.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
     evolutions: [
@@ -277,28 +277,82 @@ const MONS = [
 // set there is no way to encounter anything else.
 const TEST_FORCE_MON = null;
 
-function getRandomMon() {
+// ── Wild spawns ─────────────────────────────────────────────
+// Every form can appear in the wild, not only the 16 base ones — but an
+// evolution has to be earned before it will turn up.
+//
+// The gate is the player's level, and it leans on a rule the encounter already
+// followed: a wild mon's level is the player's, give or take two. So a form
+// becomes encounterable exactly when that roll could legitimately produce it —
+// when the player is within SPAWN_LEVEL_GRACE of the level the form evolves
+// at. A level 14 player can meet a Marinaro (evolves at 16) because a +2 roll
+// reaches 16. At level 13 they cannot, because no roll does.
+//
+// Base forms are never removed from the pool. Unlocking Marinaro adds to what
+// a player can meet rather than replacing anything, so a high-level player
+// still runs into Tomotot.
+//
+// Each entry carries the level band that PRODUCES its form, which is what
+// makes catching one work at all. A caught record stores only the species id
+// and a level; which form it displays as is derived from that level by
+// getMonStage. So a wild Tomotot has to be caught below its first evolution
+// threshold or it would appear in the collection as the thing it evolves into.
+// game.js rolls the level normally and then clamps it into this band.
+const SPAWN_LEVEL_GRACE = 2;
+
+function spawnableForms(playerLevel) {
+  const pool = [];
+
+  for (const mon of MONS) {
+    const evos = (mon.evolutions || []).slice().sort((a, b) => a.atLevel - b.atLevel);
+
+    // The base form, valid from level 1 until its first evolution takes over.
+    pool.push({
+      form: mon,
+      loLevel: 1,
+      hiLevel: evos.length ? evos[0].atLevel - 1 : 100,
+    });
+
+    for (let i = 0; i < evos.length; i++) {
+      const evo = evos[i];
+      if (playerLevel < evo.atLevel - SPAWN_LEVEL_GRACE) continue;
+      // Merged the same way getMonStage does it. The spread keeps the BASE's
+      // id — evolution entries carry no id of their own — so a catch still
+      // files under the right species while showing the evolved name, sprite
+      // and colours.
+      pool.push({
+        form: { ...mon, ...evo },
+        loLevel: evo.atLevel,
+        hiLevel: evos[i + 1] ? evos[i + 1].atLevel - 1 : 100,
+      });
+    }
+  }
+
+  return pool;
+}
+
+// Returns a form to spawn, with loLevel/hiLevel attached. playerLevel decides
+// which evolutions are in the running; it defaults to 1 so a caller that
+// forgets it still gets base forms rather than a crash.
+function getRandomMon(playerLevel = 1) {
   if (TEST_FORCE_MON) {
-    // Evolution stages are reachable here too, not just the base roster: a
-    // stage only ever appears on screen after a player levels one, so pinning
-    // spawns to it is the only quick way to look at a new evolution's art in
-    // an encounter. The stage is merged onto its base the way getMonStage
-    // does it, so the spawn carries the evolved name, sprite and colours.
-    //
-    // It also carries the BASE's id, which is the right call for the roster
-    // but worth knowing while testing: catching a forced evolution files the
-    // record under its base species at level 1, so it lands in My Mons as the
-    // first-stage mon, not as the thing that was on the encounter screen.
-    const forced = MONS.find(m => m.name === TEST_FORCE_MON)
-      || MONS.flatMap(m => (m.evolutions || []).map(evo => ({ ...m, ...evo })))
-             .find(stage => stage.name === TEST_FORCE_MON);
+    // Evolution stages are reachable here too, and ignore the level gate — the
+    // point is to look at a new evolution's art in an encounter without
+    // levelling to it first.
+    const pool   = spawnableForms(Infinity);
+    const forced = pool.find(e => e.form.name === TEST_FORCE_MON);
     // Falls through to the normal roll if the name is a typo, rather than
     // returning undefined and breaking every encounter.
-    if (forced) return forced;
+    if (forced) return { ...forced.form, loLevel: forced.loLevel, hiLevel: forced.hiLevel };
     console.warn('TEST_FORCE_MON: no mon named ' + TEST_FORCE_MON);
   }
-  // Rarity tiers removed — every first-stage mon spawns at an equal rate.
-  return MONS[Math.floor(Math.random() * MONS.length)];
+
+  // Rarity tiers removed — every unlocked form spawns at an equal rate, so a
+  // species with evolutions unlocked is more likely to show up than one
+  // without. That is deliberate: it is the reward for having levelled.
+  const pool = spawnableForms(playerLevel);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return { ...pick.form, loLevel: pick.loLevel, hiLevel: pick.hiLevel };
 }
 
 // ── Natures ─────────────────────────────────────────────────
