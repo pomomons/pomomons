@@ -75,6 +75,26 @@ Do **not** add: `open-source` (there is no licence — see below), `dark-mode`
 (does not exist), `task-management` / `todo` (no task list), `time-tracking`
 (implies billable logging), `self-hosted`, or any blocker tag.
 
+**Directory feature checkboxes, adjudicated 2026-10-04** against the code, not
+from memory. Directories offer a long list and most of it does not apply:
+
+| Offered | Verdict | Why |
+|---|---|---|
+| Works offline | **yes** | Service worker + PWA; the three core JS files make no `fetch`/XHR calls at all |
+| Portable | **yes** | No install, runs from a URL, save code moves the data between devices |
+| Privacy focused | **yes** | No account, no cookies anywhere, data stays local, cookieless analytics |
+| Lightweight | **yes** | 237 KB of HTML+CSS+JS; 860 KB for the whole site including sprites and both fonts |
+| Encrypted backup | **no** | The save code is `PMZ1.<base64url>.<check>` — gzip, base64url, then an FNV-1a hash that `backup.js` itself describes as "enough to catch damage". A corruption check, not a cipher; anyone holding a code can decode it in a console |
+| E2E encryption | **no** | Nothing is encrypted at any point, and the code is emailed through Brevo in plain text. The most damaging claim on this list if made |
+| Cloud sync | **no** | The code is manual copy-paste or email. No sync and no server-side store, on purpose: no account means no database of anyone's data to leak |
+| Calendar view | **no** | The history modal renders `history-list`, a plain list of days. No month grid |
+| Distraction free | **no**, and deliberately | A judgement call rather than a code fact. In this category it means a bare minimal timer, and PomoMons is the opposite by design: catch animation, sparkles, sound, a reward loop |
+
+That last row is the strategic one. The apps on the Focus Friend alternative
+pages are mostly blockers selling distraction-free, so borrowing their language
+enters a comparison PomoMons loses on its own terms. `gamification` and
+`pixel-art` are where it wins, because nothing else on that page has either.
+
 **Source code / licence.** The repo is public with **no licence file**, which
 GitHub reports as `license: none declared` and which legally means all rights
 reserved — visible source is not open source. Answer **Source Available** and
