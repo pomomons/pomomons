@@ -500,6 +500,40 @@ feature was built and then removed at the user's request — don't re-suggest it
   the send fails, the signup is still recorded, and that person never gets a
   backup code. A Product Hunt spike is the one realistic way to hit that.
 
+**BUG — the SHINY/DARK label collides with the mon name (found 2026-10-04,
+NOT fixed):** on an encounter, `#encounter-rarity` sits at a fixed y, but the
+mon name `#encounter-mon-name` is a floating caption positioned off the sprite
+(`layoutName()` in game.js), so its y varies by how tall the mon is. On the
+five tallest forms the name rides up into the label and the two overlap:
+
+| Form | Overlap |
+|---|---|
+| Soursquad | 58 x 8 px |
+| Ghostpepper | 58 x 6 px |
+| Portobellord | 58 x 5 px |
+| Strangletti | 58 x 2 px |
+| Idabro | 58 x 1 px |
+
+Found by shooting a shiny Ghostpepper for a directory listing and reading the
+result. Two reasons it is worth fixing despite being 5 of 30 forms:
+
+1. **It only happens on a shiny or dark encounter.** When neither applies the
+   rarity element is empty and collapses to zero size, so nothing collides.
+   The collision is therefore exclusive to the ~1.2% of encounters that are
+   the most memorable and the most likely to be screenshotted and shared.
+2. It had gone unnoticed, which makes sense — reproducing it needs a rare
+   variant of one of five specific mons.
+
+The fix is not simply moving the label: the caption's whole point is to track
+the sprite. Either the rarity row needs to reserve space the caption treats as
+occupied, or `layoutName()` needs the label's box as one more thing it floors
+against — the same shape as the LV/XP overlap it already handles. Note the
+caption's position is cached and recomputed only on invalidation, so a new
+input has to be marked dirty there or it will not update.
+
+Reproduce: `tools/listing-shots.js` forces a species and a shiny roll; the
+scan that produced the table above does the same across all 30 forms.
+
 **Open (P1):**
 - Streaks / completion count.
 - More mons past 21.
