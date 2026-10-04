@@ -60,8 +60,31 @@ Plant, Focumon, Pomofocus, Tomato Timer, Focus To-Do
 > actively looking to switch, and the most on-point answer is missing from all
 > of them.
 
-**Tags:** pomodoro-timer, productivity, time-management, gamification,
-study-timer, pwa, offline, no-registration, free
+**Tags.** Take whatever the field autocompletes rather than inventing a
+spelling — a tag nobody else uses is a tag nobody browses. In priority order,
+because the first few do nearly all the work:
+
+> *Core:* `pomodoro` · `pomodoro-timer` · `productivity` · `timer` ·
+> `time-management`
+> *Why someone picks this one:* `gamification` · `pixel-art` · `study-timer` ·
+> `focus`
+> *Filters people actually use:* `pwa` · `offline` · `no-registration` ·
+> `free` · `privacy-friendly` · `web-based` · `no-ads` · `cross-platform`
+
+Do **not** add: `open-source` (there is no licence — see below), `dark-mode`
+(does not exist), `task-management` / `todo` (no task list), `time-tracking`
+(implies billable logging), `self-hosted`, or any blocker tag.
+
+**Source code / licence.** The repo is public with **no licence file**, which
+GitHub reports as `license: none declared` and which legally means all rights
+reserved — visible source is not open source. Answer **Source Available** and
+`No licence / All rights reserved`. That is the reversible direction: adding an
+open-source licence later is easy, withdrawing one is not possible. If the
+open-source audience is ever wanted — several `awesome-*` lists require an OSI
+licence, and AlternativeTo has an open-source filter — the standard move for a
+project like this is MIT for the code with the sprite art explicitly reserved,
+since the client-side source is already served to every visitor anyway and the
+artwork is the part that is actually defensible.
 
 **Licence:** Free · **Platforms:** Web, PWA
 
@@ -71,8 +94,26 @@ study-timer, pwa, offline, no-registration, free
 they are searchable facets, so claim only what is true):
 
 > Pomodoro timer · Gamification · Works offline · No registration required ·
-> Progressive Web App · Adjustable intervals · Session history · Dark mode ·
-> Privacy-friendly · No ads · Portable / no install · Collectible creatures
+> Progressive Web App · Adjustable intervals · Session history · Desktop
+> notifications · Privacy-friendly · No ads · Portable / no install ·
+> Collectible creatures
+
+> **"Dark mode" was in this list until 2026-10-04 and is false.** There is no
+> theme toggle, no `prefers-color-scheme` rule and no `data-theme` attribute
+> anywhere; the v3 skin is one fixed palette that only swaps the backdrop
+> green-to-red during a focus run. A "dark" Pomomon is a rare *variant*, which
+> is presumably where the confusion came from. It was verified by grep before
+> being removed, the same way the 25-vs-30 default was.
+>
+> Checked and true, for the record: zero `document.cookie` use anywhere,
+> GoatCounter is cookieless, and app.js / game.js / collection.js make no
+> `fetch` or `XMLHttpRequest` calls at all, so offline and privacy both hold.
+> But GoatCounter *does* send a pageview, so "no analytics" would be false —
+> "no tracking cookies" is the accurate claim and the one to keep using.
+>
+> Also absent, so never claim them: any task or to-do list, time tracking in
+> the billable sense, and app or website blocking — which is what most of the
+> apps on those Focus Friend alternative pages actually do.
 
 **Images.** The listing is far weaker without them, and nothing in the repo is
 a screenshot yet. What exists and is usable as-is:
