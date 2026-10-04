@@ -59,7 +59,7 @@ sessions catch monsters").
   (`backup.js` `open(prefill, restoreOnly)` + `.save-code.restore-only`
   CSS) — email is the only way to get a code, restoring a code doesn't
   require one.
-- Committed and pushed to origin/main (ee9578b) 2026-09-04. Confirmed
+- Committed and pushed to origin/main (b39be65) 2026-09-04. Confirmed
   TEST_FOCUS_SECS/TEST_BREAK_SECS were reset to `null` before the push.
 - Leak #3 (background-tab alarm lateness): timerTick() was already
   wall-clock-based (safe against drift), but the driving `setInterval`
@@ -67,9 +67,9 @@ sessions catch monsters").
   the alarm/notification firing. Fixed by adding a tiny dedicated Worker
   (inline, via Blob URL — `getBgTicker()`/`startTicker()`/`stopTicker()`
   in app.js) running its own 1s interval alongside the main one; workers
-  aren't subject to that page-level throttling. Pushed dfc3284
+  aren't subject to that page-level throttling. Pushed 9561ef1
   2026-09-04. Not yet verified with a real 25-min backgrounded-tab test.
-- Mobile audit pass 1 (2026-09-04, pushed ec1ca28): tested the whole flow
+- Mobile audit pass 1 (2026-09-04, pushed 24a9d6d): tested the whole flow
   at 390x844, 360x800, and spot-checked 320x568, using a same-origin
   iframe on a local `python -m http.server` as a true-viewport test
   harness (window resize_window did not actually change the tab's real
@@ -83,13 +83,13 @@ sessions catch monsters").
   mobile-specific): `#btn-tab-mymons` in the Dex-screen header has no
   click handler — clicking "MY MONS" while already on the Dex screen does
   nothing; `#btn-to-mymons` is the one that actually works.
-- README rewrite (2026-09-04, pushed 428e728): replaced the one-line
+- README rewrite (2026-09-04, pushed 7af8e03): replaced the one-line
   placeholder with a real overview — feature list, file structure, how
   to run locally, deploy note (GitHub Pages from main). Mon count stated
   as "12 base species, 20 forms with evolutions" (verified by grepping
   monsters.js for dexNum entries), not the "50+" figure in CLAUDE.md's
   IndexedDB comment, which looks stale/aspirational.
-- SHARE button on the catch screen (2026-09-04, pushed b841374), for the
+- SHARE button on the catch screen (2026-09-04, pushed 7a87745), for the
   "loops" push (getting people to bring PomoMons into Discord/elsewhere
   themselves): a third button next to NEXT/INFO after a catch. Tries
   `navigator.share` first (native OS share sheet — this is what actually
@@ -103,7 +103,7 @@ sessions catch monsters").
   click-through, especially the clipboard-image-paste-into-Discord path
   and the postcatch button row at mobile widths (that screen is still on
   the "rest of the mobile audit" list below, unrelated to this add).
-- Catch-screen NEXT button fix (2026-09-04, pushed c63c411): NEXT was
+- Catch-screen NEXT button fix (2026-09-04, pushed 9d38d3e): NEXT was
   taller than INFO/SHARE because "NEXT ▶" wrapped onto its own line —
   turned out to reproduce at full desktop width too, not just mobile,
   because .encounter-controls-wrap caps at 560px regardless of window
@@ -115,7 +115,7 @@ sessions catch monsters").
   of the postcatch/SHARE row (the SHARE-button commit itself was only
   syntax-checked, not visually verified, until this pass).
 - SHARE button was actually dead on click, found + fixed (2026-09-04,
-  pushed 29568c9) while doing a real end-to-end catch test (start focus
+  pushed 1a7932d) while doing a real end-to-end catch test (start focus
   session -> encounter -> throw -> catch -> click SHARE for real,
   instead of only inspecting layout). Cause: shareCatch() awaited
   canvas.toBlob() before calling navigator.share()/clipboard — that
@@ -142,7 +142,7 @@ sessions catch monsters").
   scrollHeight vs clientHeight confirmed it's the full text with ~24px
   of clear padding below it, not a bug. The mobile audit from the
   launch plan is now fully done.
-- SHARE card redesign (2026-09-04, pushed 3250b3f): the shared image was
+- SHARE card redesign (2026-09-04, pushed 5030dd9): the shared image was
   a bare grab of the live encounter canvas — transparent background,
   just the mon + platform, no name/level/branding, read as a random
   stock cutout once posted anywhere (user's own words: "doesn't look
@@ -152,7 +152,7 @@ sessions catch monsters").
   usual ground platform (reuses MonSprite.drawOnCtx/sizeScale so shiny
   hue-rotate/dark filter/sparkles all match exactly), "WAS CAUGHT!",
   pomomons.io footer. Has to stay fully synchronous like the rest of
-  shareCatch() (see the 29568c9 entry above) — both background jpgs are
+  shareCatch() (see the 1a7932d entry above) — both background jpgs are
   now preloaded alongside the ground sprite so that holds. Verified by
   rendering the card directly for a normal/shiny/dark catch, the red
   backdrop, and the roster's longest name (Guacamonger) — all clean, no
@@ -162,7 +162,7 @@ sessions catch monsters").
   calling the drawing function directly / forcing button state instead
   of waiting on the animation. Mention this to the user if a future
   session hits the same stall, so it isn't mistaken for a real bug.
-- Background load speed-up (2026-09-05, pushed 719769d): user reported the
+- Background load speed-up (2026-09-05, pushed 64374f4): user reported the
   forest backdrop sometimes appearing late. Two fixes: converted
   forest.jpg/forest-red.jpg to WebP (378KB->29KB, 442KB->39KB — flat pixel
   art compresses ~92%, verified visually identical with a crop compare),
@@ -172,14 +172,14 @@ sessions catch monsters").
   previously didn't load until the first focus session). Same commit also
   halved the three gain layers in SFX.shake() (audio.js). Not yet
   live-verified in a browser — worth confirming the WebP renders right.
-- Batch pushed 3483c58 (2026-09-05), all not yet browser-verified:
+- Batch pushed e4f9894 (2026-09-05), all not yet browser-verified:
   * SHARE desktop preview: on browsers with no navigator.share, SHARE now
     opens #share-preview (blender-confirm shell) showing buildShareCanvas()'s
     card with COPY / SAVE / CLOSE — each button its own gesture so
     clipboard.write() keeps working. Mobile still goes straight to
     navigator.share. Extracted copyShareToClipboard + canvasToPngBlob in
     game.js. Worth a real click-through (gesture/clipboard path has broken
-    here before — see the 29568c9 note above).
+    here before — see the 1a7932d note above).
   * Backup prompt (signup.js) less pushy: first offer at 5 catches / 6
     sessions (was 2/3), re-ask gap 30d (was 14), still MAX_PROMPTS 3.
     Catching a dark/shiny qualifies it on its own — noteRareCatch() sets
@@ -230,7 +230,7 @@ sessions catch monsters").
   start a focus session, switch to another app/tab for the full duration,
   confirm the alarm/notification fires on time (±a couple seconds), not late.
 - Make it installable (manifest.webmanifest + service worker) — DONE, pushed
-  a65d6e3 2026-09-06, and verified live in Chrome: SW registered + activated +
+  cd01522 2026-09-06, and verified live in Chrome: SW registered + activated +
   controlling the page, caches pomomons-precache-v1 (19 files) +
   pomomons-runtime-v1 populated, manifest + all 4 icons serve 200, and on a
   reload every asset incl. the HTML doc came from cache (transferSize 0) so a
@@ -240,17 +240,17 @@ sessions catch monsters").
 - Mobile audit is done except the blender/smoothie flow (already
   `display:none`-hidden on touch per existing CSS — worth confirming
   that's still the intended call, but low priority).
-- Fix `#btn-tab-mymons` having no click handler — DONE, pushed 39523bb
+- Fix `#btn-tab-mymons` having no click handler — DONE, pushed 0fc10a9
   2026-09-06. Turned out `#btn-tab-dex` had the same gap; both are the gold
   already-active tab in their collection header. Wired each to
   `showScreen()` for its own screen (harmless no-op) + added
   `aria-current="page"`. The cross-nav buttons (`#btn-to-dex`/`#btn-to-mymons`)
   were always fine.
-- WebP backgrounds (from 719769d) — VERIFIED 2026-09-06: `body`
+- WebP backgrounds (from 64374f4) — VERIFIED 2026-09-06: `body`
   background-image resolves to `forest.webp`, both webp files serve 200 and
   decode, and the live pomomons.io screenshot shows the forest bg rendering
   correctly. Done.
-- Desktop SHARE preview (#share-preview from 3483c58) — still NOT
+- Desktop SHARE preview (#share-preview from e4f9894) — still NOT
   browser-verified; the automation env freezes on the catch animation so the
   catch→SHARE→preview→COPY/SAVE path couldn't be walked. Needs a real catch
   in Chrome.
@@ -278,8 +278,8 @@ sessions catch monsters").
   asymmetric `8px 12px` on a 40x40 square (min-size governs); `.settings-row`
   `12px 14px` vs `.mode-option` `12px 8px` (separate menus).
 
-**2026-09-06 session — all shipped in `f16356f` (pushed to origin/main), plus
-`edbdfc7` (tomotot blush).** One commit covering: SEO foundation (bucket 1),
+**2026-09-06 session — all shipped in `30d72cd` (pushed to origin/main), plus
+`35fee94` (tomotot blush).** One commit covering: SEO foundation (bucket 1),
 the UI button-spacing audit fixes, LV/help alignment + START/POMODEX bottom
 gap, encounter-controls dead space, rare-mon encounter sounds, ~360 lines of
 dead CSS removed, the audio.js music engine removed, orphan NewMap.png
@@ -444,7 +444,7 @@ Deployed and verified live 2026-10-03: Search Console verification tag
   line). Also removed the 3 dead `SFX.music.stop()` / commented `.start()`
   call sites in game.js and dropped `music` from `SFX`'s public API. No
   behaviour change (there was never any music).
-- **`assets/sprites/Tomotot/tomotot.png` committed** 2026-09-06 as `edbdfc7`
+- **`assets/sprites/Tomotot/tomotot.png` committed** 2026-09-06 as `35fee94`
   on main (NOT pushed) — user confirmed the ~10px cheek-blush tweak was
   intentional. Committed alone; the rest of the session's work stays
   uncommitted.
@@ -479,8 +479,8 @@ Still not started from the kit: demo GIF/video, PH gallery screenshots, PH
 "coming soon" page (~Oct 11), engagement group of 30-50, mailing-list
 migration off Apps Script.
 
-**Repo state 2026-09-07:** clean, `main` == `origin/main` at `5959f04`
-(transparent favicon). `f16356f` before it. A "mon level appended to the name"
+**Repo state 2026-09-07:** clean, `main` == `origin/main` at `7a80ec4`
+(transparent favicon). `30d72cd` before it. A "mon level appended to the name"
 feature was built and then removed at the user's request — don't re-suggest it.
 
 **Launch-day checklist (added 2026-10-01):**
