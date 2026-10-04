@@ -1,4 +1,4 @@
-# Launch posts — drafts for David to review and post
+# Launch posts — drafts for the owner to review and post
 
 Written 2026-10-03, alongside the SEO work logged in `launch-plan.md`.
 
