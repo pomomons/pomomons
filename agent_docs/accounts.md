@@ -41,6 +41,29 @@ Ranked by how bad it is: **Spaceship → Google → GitHub → Brevo → the res
   name to be claimed by anyone, which would break those redirects — so treat
   every `github.com/<old-name>/…` URL anywhere as already dead and use the
   URLs below.
+- **History was rewritten on 2026-10-04** so no commit carries a personal
+  address: `git filter-repo --mailmap` across all 182 commits here and all 6 in
+  the tools repo, then a force-push of every ref. Verified by fresh `--mirror`
+  clones of both repos, which reach exactly one identity and zero occurrences
+  of the old one. File contents were untouched — the pre-rewrite HEAD's tree
+  and its rewritten twin are both `bcd9560`.
+  - The lesson worth keeping: pushing `main` was **not** enough. Two stale
+    branches (`no-pixel-borders`, `worktree-companion-box-padding`) and the
+    `ui-v1` tag still pointed at unrewritten history, so a fresh clone still
+    reached 54 commits with the old address. Check every ref, and verify from
+    a fresh clone rather than from the local repo — the local repo looked
+    clean while the remote was not.
+  - Pre-rewrite bundles, the mailmap and the patches from the deleted branch
+    are in `../pomomons-history-backup/` (outside the repo, OneDrive-synced).
+  - **Known and accepted:** unreachable pre-rewrite commits are still
+    retrievable from GitHub by exact 40-character SHA — e.g. the `.patch` for
+    one of them still returns the old author line. Only GitHub Support can run
+    the garbage collection that purges those. The owner considered this and
+    chose not to pursue it on 2026-10-04: nothing points at those objects, so
+    retrieving one means already holding a SHA that appears in no ref, clone,
+    branch, tag or doc. **Do not re-raise this as an open item.** If it ever
+    does matter, the ask is a support request naming both repos, a force-push
+    for sensitive data, and a request for GC.
 - Commits are authored as `pomomons
   <263062220+pomomons@users.noreply.github.com>`, GitHub's private no-reply
   form. The number is the account ID and is what actually attributes a commit,
