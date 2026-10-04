@@ -237,9 +237,16 @@ sessions catch monsters").
   no-network reload works. No console errors, no visual regression. Only bit
   not machine-checked: the literal omnibox "Install" button (not visible to
   automation) — all of Chrome's criteria for it pass though.
-- Mobile audit is done except the blender/smoothie flow (already
-  `display:none`-hidden on touch per existing CSS — worth confirming
-  that's still the intended call, but low priority).
+- Mobile audit is done. **The blender note here was stale and is now
+  corrected (2026-10-04):** the smoothie flow is NOT hidden on touch any more.
+  It was `display: none !important` under `@media (max-width: 479px)` because
+  the zone is built on HTML5 drag-and-drop, which phones do not fire for touch,
+  so it rendered visible-but-dead. Blending and feeding are two taps now (see
+  the tap-to-blend note in collection.js) and the zone is back, sized down for
+  the sticky header. The live CSS comment at style.css:2189 records the whole
+  history. This matters beyond tidiness: it is the difference between "works on
+  mobile with a feature missing" and "works on mobile", which is what gets
+  claimed on directory listings.
 - Fix `#btn-tab-mymons` having no click handler — DONE, pushed 0fc10a9
   2026-09-06. Turned out `#btn-tab-dex` had the same gap; both are the gold
   already-active tab in their collection header. Wired each to

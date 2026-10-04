@@ -106,7 +106,32 @@ project like this is MIT for the code with the sprite art explicitly reserved,
 since the client-side source is already served to every visitor anyway and the
 artwork is the part that is actually defensible.
 
-**Licence:** Free · **Platforms:** Web, PWA
+**Licence:** Free
+
+**Platforms**, checked 2026-10-04 against the manifest and the live site rather
+than assumed. `display: standalone`, 192 and 512 icons, a registered service
+worker, and `manifest.webmanifest` serving live as
+`application/manifest+json` — so it genuinely installs, it is not just a
+bookmark:
+
+| Tick | Why |
+|---|---|
+| **Online** / Web | The primary one. Any modern browser |
+| **PWA** | Installable, offline-capable, `standalone` display |
+| **Windows**, **Mac**, **Linux**, **Chrome OS** | Installs as a desktop app through Chrome or Edge. Tick these as PWA install targets, not as native builds |
+| **Android** | Add to home screen, runs standalone |
+| **iPhone**, **iPad** | `apple-mobile-web-app-capable`, `apple-touch-icon` and `apple-mobile-web-app-title` are all present, so Safari's Add to Home Screen gives a standalone app |
+
+**Leave blank:** any individual browser slot (Google Chrome, Firefox, Safari,
+Edge). On AlternativeTo those mean a browser *extension*, and PomoMons is not
+one — ticking them promises something that does not exist. Also leave
+**Self-Hosted** (no documented path, and no licence permitting redistribution)
+and **Software as a Service** (there is no service; nothing runs server-side).
+
+Mobile is a full claim, not a hedged one: the mobile audit is complete at 390,
+360 and 320px, and the blender — the one feature that used to be hidden on
+touch, because drag-and-drop does not fire there — came back as a two-tap
+flow. Nothing is missing on a phone.
 
 **URL:** `https://pomomons.io/`
 
