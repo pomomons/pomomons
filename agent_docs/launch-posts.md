@@ -26,15 +26,26 @@ requirement, and the link is permanent. alternativeto.net, "Add application".
 **Description:**
 
 > PomoMons is a free Pomodoro timer with a monster-catching game attached.
-> Finish a focus session and a wild food-themed pixel monster appears — throw a
+> Finish a focus session and a wild food-themed pixel mon appears — throw a
 > tomato, catch it, and it joins your Pomodex. There are 30 forms across 16
 > base species, with evolutions and rare shiny and dark variants.
 >
 > It runs in the browser with no account and no download, works offline once
-> loaded, and can be installed to your home screen or desktop. Focus, short
-> break and long break lengths are all adjustable from the classic 25/5/15.
-> Your collection is stored in your own browser; an optional emailed save code
-> moves it between devices. No ads, no tracking cookies, no paid tier.
+> loaded, and can be installed to your home screen or desktop. Sessions default
+> to 30 minutes with 5-minute short breaks and a 15-minute long break every
+> fourth session; focus is adjustable from 20 to 90 minutes and breaks from 1 to
+> 90. Your collection is stored in your own browser, and an optional emailed
+> save code moves it between devices. No ads, no tracking cookies, no paid tier.
+
+> **Two wording decisions, deliberate.** "monster-catching" stays in the first
+> line because that is the phrase people search and it matches the live meta
+> description; the creatures themselves are "mons" everywhere after it.
+>
+> And the durations are stated outright rather than as "adjustable from the
+> classic 25/5/15", which is what this draft said until 2026-10-04. The default
+> is **30**, not 25. That exact error shipped to the live FAQ and its structured
+> data once already. Any copy quoting a session length must be checked against
+> `focusMins` in app.js, not against what a Pomodoro timer is assumed to do.
 
 **List as an alternative to:** Focus Friend, Forest, Study Bunny, Flora, Focus
 Plant, Focumon, Pomofocus, Tomato Timer, Focus To-Do
@@ -53,6 +64,39 @@ Plant, Focumon, Pomofocus, Tomato Timer, Focus To-Do
 study-timer, pwa, offline, no-registration, free
 
 **Licence:** Free · **Platforms:** Web, PWA
+
+**URL:** `https://pomomons.io/`
+
+**Features** (AlternativeTo has a separate field for these; one per line, and
+they are searchable facets, so claim only what is true):
+
+> Pomodoro timer · Gamification · Works offline · No registration required ·
+> Progressive Web App · Adjustable intervals · Session history · Dark mode ·
+> Privacy-friendly · No ads · Portable / no install · Collectible creatures
+
+**Images.** The listing is far weaker without them, and nothing in the repo is
+a screenshot yet. What exists and is usable as-is:
+
+| Field | File | Note |
+|---|---|---|
+| Icon | `assets/icons/icon-512.png` | 512x512, already the PWA icon |
+| Social / header | `assets/og-image.png` | 1200x630 |
+
+Screenshots still to capture, in this order of usefulness — the catch is the
+whole pitch, so lead with it:
+
+1. The moment after a catch, with the mon named on screen
+2. The timer mid-focus-session, companion visible
+3. My Mons with a collection of six or more
+4. The Pomodex grid
+
+Capture them at desktop width on the real site, not a local test build, so the
+stamped asset versions and the real backdrop are what appear. A seeded
+collection is needed for 3 — an empty one makes the app look unfinished.
+
+**Do not fill in:** a pricing field (there is no paid tier — leave it free, do
+not enter 0 into a "starting price" box, which some directories render as
+"$0/mo" and makes it look like a lapsed trial), or a company/vendor name.
 
 ---
 
