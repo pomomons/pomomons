@@ -35,15 +35,30 @@ Ranked by how bad it is: **Spaceship → Google → GitHub → Brevo → the res
 
 ## 1. GitHub — the code and the deploy
 
-- Account: `davidomerica`
-- `github.com/davidomerica/pomomons` — **PUBLIC**. The app. Pushing to `main`
+- Account: `pomomons` (user ID `263062220`). **Renamed from a personal handle
+  on 2026-10-04** so the account name gives away nothing about its owner.
+  GitHub redirects the old namespace, but the owner is content for the old
+  name to be claimed by anyone, which would break those redirects — so treat
+  every `github.com/<old-name>/…` URL anywhere as already dead and use the
+  URLs below.
+- Commits are authored as `pomomons
+  <263062220+pomomons@users.noreply.github.com>`, GitHub's private no-reply
+  form. The number is the account ID and is what actually attributes a commit,
+  so attribution survives any future rename. Both repos pin this in their local
+  `user.email`, and "Keep my email addresses private" + "Block command line
+  pushes that expose my email" are on in GitHub's settings. A personal address
+  must never appear in a commit again.
+- `github.com/pomomons/pomomons` — **PUBLIC**. The app. Pushing to `main`
   triggers `.github/workflows/deploy.yml`, which runs `build.js` and publishes
   `_site/` to GitHub Pages.
-- `github.com/davidomerica/pomomons-tools` — **PRIVATE**. The dev-only
+- `github.com/pomomons/pomomons-tools` — **PRIVATE**. The dev-only
   screenshot and build-verification harness. Deliberately kept out of the
   public repo. Includes `signup-collector.gs`, which is the only copy of the
   Apps Script backend outside Google's editor.
-- Pages serves the custom domain from the `CNAME` file (`pomomons.io`).
+- Pages serves the custom domain from the `CNAME` file (`pomomons.io`), so the
+  live site does not depend on the account name at all — nothing on
+  pomomons.io links to GitHub, and the deploy workflow never names the owner.
+  A rename cannot take the site down.
 
 **If this account is lost:** the live site keeps working — Pages serves the
 last build — but nothing can be changed or fixed. The public repo could be
@@ -64,6 +79,16 @@ being private means there is no public copy to fall back on.
 - Mail: `mx1/mx2.efwd.spaceship.net` — `efwd` is Spaceship's **email
   forwarding**, so `hello@pomomons.io` is a *forwarder*, not a mailbox. Mail to
   it is relayed to the personal Gmail.
+- **WHOIS privacy is ON — verified 2026-10-04 against the registry, not the
+  Spaceship dashboard.** The public registrant record shows an empty name,
+  `org = Privacy service provided by WITHHELD FOR PRIVACY LLC` and nothing but
+  "Delaware" for an address; the only published email is
+  `abuse@spaceship.com`. Domain status is `client transfer prohibited`, which
+  blocks a transfer-out hijack. This matters because WHOIS is the one place in
+  the whole project that would otherwise publish a real legal name and postal
+  address — the repo and the site never had either. Re-check at the same RDAP
+  URL above if the domain is ever transferred or the privacy service lapses;
+  the dashboard can say "on" while the registry still serves old data.
 
 **Why this is the worst one.** If the domain lapses it goes back on the open
 market and anyone can register it. Then: `pomomons.io` points somewhere else,
