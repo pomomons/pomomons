@@ -114,19 +114,32 @@ worker, and `manifest.webmanifest` serving live as
 `application/manifest+json` — so it genuinely installs, it is not just a
 bookmark:
 
-| Tick | Why |
-|---|---|
-| **Online** / Web | The primary one. Any modern browser |
-| **PWA** | Installable, offline-capable, `standalone` display |
-| **Windows**, **Mac**, **Linux**, **Chrome OS** | Installs as a desktop app through Chrome or Edge. Tick these as PWA install targets, not as native builds |
-| **Android** | Add to home screen, runs standalone |
-| **iPhone**, **iPad** | `apple-mobile-web-app-capable`, `apple-touch-icon` and `apple-mobile-web-app-title` are all present, so Safari's Add to Home Screen gives a standalone app |
+**Tick `Online`, and nothing else.** Plus a separate `PWA` field if the form
+has one outside the OS list.
 
-**Leave blank:** any individual browser slot (Google Chrome, Firefox, Safari,
-Edge). On AlternativeTo those mean a browser *extension*, and PomoMons is not
-one — ticking them promises something that does not exist. Also leave
-**Self-Hosted** (no documented path, and no licence permitting redistribution)
-and **Software as a Service** (there is no service; nothing runs server-side).
+AlternativeTo's own instruction on that field is explicit: *"Only add desktop /
+mobile OS if the app has an app for the platform. For web apps only use online
+and / or SaaS."* A PWA is still a web app to them. Being installable is not the
+test — shipping a platform build is, and there is none.
+
+This entry first said to tick Windows, Mac, Linux, Chrome OS, Android, iPhone
+and iPad on the grounds that the manifest makes it installable on all of them.
+That reasoning was sound and still wrong, because the field is not asking what
+the app can run on. Worth keeping as a warning: the facts were all verified and
+the answer was still incorrect, because the question was misread. Read the
+directory's guidance text before filling a field, not just the field label.
+
+**Leave blank, with reasons:**
+
+- **Windows, Mac, Linux, Chrome OS, Android, iPhone, iPad** — no platform build
+  exists. Installability does not qualify.
+- **Software as a Service** — implies a hosted service with a server-side
+  component. PomoMons is static files; there are no accounts and nothing runs
+  on a server.
+- **Self-Hosted** — no documented path, and no licence permitting
+  redistribution.
+- **Any individual browser slot** (Google Chrome, Firefox, Safari, Edge) —
+  these mean a browser *extension*, which this is not.
 
 Mobile is a full claim, not a hedged one: the mobile audit is complete at 390,
 360 and 320px, and the blender — the one feature that used to be hidden on
