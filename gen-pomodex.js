@@ -123,7 +123,7 @@ const lines = MONS.map((m) => {
             : `<strong>${esc(c.name)}</strong> (level ${c.atLevel})`).join(' &rarr; ');
   const types = [...new Set(chain.map((c) => c.type))];
   return `
-    <h3>${esc(m.name)}${chain.length > 1 ? ` &mdash; #${m.dexNum}&ndash;#${chain[chain.length - 1].dexNum}` : ` &mdash; #${m.dexNum}`}</h3>
+    <h3>${esc(m.name)} (#${String(m.dexNum).padStart(2, '0')}${chain.length > 1 ? `–#${String(chain[chain.length - 1].dexNum).padStart(2, '0')}` : ''})</h3>
     <p>
       ${names}.
       ${types.length > 1
@@ -139,7 +139,7 @@ const page = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pomodex — All ${formCount} Pomomons and Their Evolutions</title>
+  <title>Pomodex: All ${formCount} Pomomons and Their Evolutions</title>
 
   <!-- GENERATED FILE — do not edit by hand.
        Produced by tools/gen-pomodex.js from the roster in monsters.js.
@@ -153,7 +153,7 @@ const page = `<!DOCTYPE html>
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="PomoMons">
-  <meta property="og:title" content="Pomodex — All ${formCount} Pomomons and Their Evolutions">
+  <meta property="og:title" content="Pomodex: All ${formCount} Pomomons and Their Evolutions">
   <meta property="og:description" content="All ${formCount} Pomomon forms across ${baseCount} base species, with flavour types and evolution levels.">
   <meta property="og:url" content="https://pomomons.io/pomodex/">
   <meta property="og:image" content="https://pomomons.io/assets/og-image.png">
@@ -191,8 +191,7 @@ const page = `<!DOCTYPE html>
       <nav class="site-nav" aria-label="Site">
         <a href="/">Timer</a>
         <a href="/pomodex/" aria-current="page">Pomodex</a>
-        <a href="/pomodoro-technique/">The technique</a>
-        <a href="/faq/">FAQ</a>
+        <a href="/research/">Research</a>
       </nav>
     </div>
   </header>
@@ -233,17 +232,16 @@ const page = `<!DOCTYPE html>
     </p>
     <p>
       Evolved forms appear in the wild too, once your own level is within two of
-      the level they evolve at &mdash; so a Marinaro starts turning up at player
-      level 14. Base forms never stop appearing, so levelling widens what you
-      can meet rather than replacing it.
+      the level they evolve at: a Marinaro starts turning up at player level
+      14. Base forms never stop appearing, so levelling widens what you can
+      meet rather than replacing it.
     </p>
     <p>
       Two rare variants can turn up on any encounter: a <strong>shiny</strong>
-      Pomomon, gold-tinted with sparkles, at roughly 0.2% &mdash; about 1 in 500
-      &mdash; and a <strong>dark</strong> Pomomon, near-black, at about 1%. The
+      Pomomon, gold-tinted with sparkles, at roughly 0.2% (about 1 in 500),
+      and a <strong>dark</strong> Pomomon, near-black, at about 1%. The
       other 98.8% are normal. Shiny is rolled first and wins outright, so no
-      Pomomon is ever both. The <a href="/faq/">FAQ</a> has more on the
-      mechanics.
+      Pomomon is ever both.
     </p>
 
     <h2>Evolution lines</h2>
@@ -251,20 +249,13 @@ const page = `<!DOCTYPE html>
       The ${baseCount} lines in full, in Pomodex order.
     </p>
     ${lines}
-
-    <div class="cta-block">
-      <p>Every Pomomon is caught by finishing a focus session.</p>
-      <a class="cta" href="/">START A SESSION</a>
-    </div>
   </main>
 
   <footer class="site-foot">
     <div class="site-foot-in">
       <span>PomoMons &mdash; focus &middot; catch &middot; collect</span>
       <nav aria-label="Footer">
-        <a href="/">Timer</a>
-        <a href="/pomodoro-technique/">The technique</a>
-        <a href="/faq/">FAQ</a>
+        <a href="/research/">Research</a>
         <a href="https://discord.gg/bXnKR8FeG" rel="noopener">Discord</a>
       </nav>
     </div>

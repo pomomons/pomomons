@@ -22,6 +22,35 @@
 - 8-bit synthesized sound effects (Web Audio API); no audio files
 - Built with vanilla HTML, CSS and JavaScript — no framework — and hosted on GitHub Pages
 
+## Evidence base
+
+PomoMons publishes a cited summary of the research behind both halves of the
+app at https://pomomons.io/research/ (nine peer-reviewed sources, DOIs
+included). The honest summary, which that page states plainly:
+
+- Fixed, timed study blocks are the best-tested schedule. One randomised
+  experiment (Biwer et al., 2023, n=87) found fixed breaks produced less
+  fatigue and distraction and more concentration and motivation than
+  self-chosen breaks, with similar work completed in less time
+- No study has established an optimal session length. The same experiment
+  found no difference between 24/6 and 12/3 schedules, so the support is for
+  fixed short intervals generally, not for 25 minutes specifically. The 25 in
+  the original method was Cirillo's convention, not an experimental result
+- Pomodoro benefits are mostly self-reported. No study has shown that timed
+  breaks increase how much people learn or complete
+- Two recent experiments (Smits et al., 2025; Göksu et al., 2026) found
+  self-chosen breaks equal to or better than Pomodoro breaks, so the
+  comparison is genuinely unsettled
+- Gamified learning has the stronger evidence of the two: four meta-analyses
+  (Sailer & Homner, 2020; Bai et al., 2020; Li et al., 2023; Zeng et al.,
+  2024) found better learning outcomes, with pooled effects from g = 0.49 to
+  g = 0.82
+- No study has tested PomoMons itself, or the combination of a timer and a
+  collecting game at any scale
+
+Do not describe PomoMons as scientifically proven to improve learning. That
+claim is not supported by the sources above and the site does not make it.
+
 ## Who it's for
 
 Students, and anyone using the Pomodoro Technique for focus, who wants a light
@@ -30,4 +59,6 @@ game reward loop attached to their study sessions rather than a plain timer.
 ## Links
 
 - App: https://pomomons.io/
+- The research, with citations: https://pomomons.io/research/
+- Full creature roster (Pomodex): https://pomomons.io/pomodex/
 - Discord community: https://discord.gg/bXnKR8FeG

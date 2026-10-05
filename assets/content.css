@@ -1,5 +1,5 @@
-/* content.css — the standalone prose pages (/faq/, /pomodoro-technique/,
- * /pomodex/). Nothing here is loaded by the app.
+/* content.css — the standalone prose pages (/research/, /pomodex/). Nothing
+ * here is loaded by the app.
  *
  * Deliberately separate from style.css and its two layers. Those three sheets
  * exist to build a fixed-viewport pixel console: uppercase everywhere, a
@@ -168,33 +168,6 @@ a:hover, a:focus-visible { color: var(--gold-lt); }
 
 strong { color: #fff; }
 
-/* ── Call to action ────────────────────────────────────────── */
-.cta {
-  display: inline-block;
-  margin: 0.5rem 0 1rem;
-  padding: 0.875rem 1.75rem;
-  background: var(--gold);
-  color: var(--outline);
-  font-family: 'PressStart2P', monospace;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: 3px solid var(--outline);
-  box-shadow: 4px 4px 0 var(--outline);
-}
-.cta:hover, .cta:focus-visible { background: var(--gold-lt); color: var(--outline); }
-.cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--outline); }
-
-.cta-block {
-  margin: 3rem 0 0;
-  padding: 1.75rem;
-  background: var(--panel);
-  border: 3px solid var(--outline);
-  text-align: center;
-}
-.cta-block p { color: var(--ink); }
-.cta-block p:last-of-type { margin-bottom: 0; }
-
 /* ── FAQ ───────────────────────────────────────────────────── */
 /* Plain headings and paragraphs, not <details>. Google will not award an FAQ
    rich result for an answer it considers hidden, and a collapsed <details> is
@@ -241,6 +214,54 @@ td .sprite {
 }
 .dex-num { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 .dex-name { font-weight: 600; }
+
+/* ── Research page ─────────────────────────────────────────── */
+/* The base table above is built for the Pomodex, whose cells are a word or
+   two, so it sets white-space: nowrap. The evidence tables hold sentences and
+   have to wrap instead, and they stay wide enough to need their own scroller
+   on a phone. */
+.table-scroll { overflow-x: auto; margin-bottom: 1.5rem; }
+.evidence { min-width: 34rem; }
+.evidence th,
+.evidence td {
+  white-space: normal;
+  vertical-align: top;
+  line-height: 1.45;
+}
+.evidence tbody td:first-child { white-space: nowrap; }
+
+/* The "last reviewed" dateline, directly under the standfirst. */
+.asof {
+  margin-top: -1.75rem;
+  margin-bottom: 2.5rem;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+
+/* References. Hanging indent so the author name starts each entry cleanly,
+   and DOIs are long unbroken strings that must be allowed to break. */
+.refs {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ink-dim);
+  list-style: none;
+  padding-left: 1.75rem;
+  counter-reset: ref;
+}
+.refs li {
+  position: relative;
+  margin-bottom: 1rem;
+  overflow-wrap: break-word;
+}
+.refs li::before {
+  counter-increment: ref;
+  content: counter(ref) ".";
+  position: absolute;
+  left: -1.75rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.refs em { color: var(--ink); }
 
 /* Type and rarity chips. Colours are the roster's own type colours, dimmed
    enough to carry white text at 4.5:1 or better. */
