@@ -478,17 +478,34 @@ function onSessionEnd() {
         applyNextSession(nextMode);
       };
 
+      // Collection resolves "the active companion" from pm_active_rec_key
+      // itself, which is why there is no record key to pass from here.
+      const declineHandler = (atLevel) => {
+        const p = (typeof Collection !== 'undefined' && Collection.declineEvolution)
+          ? Collection.declineEvolution(null, atLevel) : Promise.resolve();
+        // The companion box is rebuilt from the mirror, which
+        // declineEvolution has already written by the time this returns.
+        return Promise.resolve(p).then(() => updateCompanionDisplay());
+      };
+
       if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
-        // Third argument is the STOP handler. Collection resolves "the active
-        // companion" from pm_active_rec_key itself, which is why there is no
-        // record key to pass from here.
-        EvolutionScreen.start(palResult, backOnTimer, (atLevel) => {
-          const p = (typeof Collection !== 'undefined' && Collection.declineEvolution)
-            ? Collection.declineEvolution(null, atLevel) : Promise.resolve();
-          // The companion box is rebuilt from the mirror, which
-          // declineEvolution has already written by the time this returns.
-          return Promise.resolve(p).then(() => updateCompanionDisplay());
-        });
+        EvolutionScreen.start(palResult, backOnTimer, declineHandler);
+      } else if (palResult && palResult.reoffer && typeof EvolutionScreen !== 'undefined') {
+        // A previously declined evolution, offered again now that the pal is
+        // EVOLUTION_REPROMPT_LEVELS further past its threshold. Same screen,
+        // same STOP option — declining again just leaves it declined for the
+        // next re-offer. Taking it this time is the one outcome the normal
+        // `evolved` path never has to handle: getMonStage already skips
+        // declined stages forever, so accepting has to erase this one from
+        // the record or the pal would still read as refused on the very next
+        // screen that draws it.
+        const atLevel = palResult.reoffer.toMon && palResult.reoffer.toMon.atLevel;
+        EvolutionScreen.start(palResult.reoffer, (wasStopped) => {
+          if (wasStopped) { backOnTimer(); return; }
+          const p = (typeof Collection !== 'undefined' && Collection.acceptEvolution)
+            ? Collection.acceptEvolution(null, atLevel) : Promise.resolve();
+          Promise.resolve(p).then(() => { updateCompanionDisplay(); backOnTimer(); });
+        }, declineHandler);
       } else {
         backOnTimer();
       }
@@ -879,6 +896,7 @@ function savePalExp(speciesId, delta) {
   });
 
   const fromMon = stageAt(level);
+  const startLevel = level;
 
   exp += delta;
   let leveled = false;
@@ -900,8 +918,33 @@ function savePalExp(speciesId, delta) {
   const toMon  = stageAt(level);
   const evolved = fromMon.name !== toMon.name;
 
+  // getMonStage skips a declined evolution forever once it's recorded — this
+  // is the one place that gives it a second chance. Only relevant when
+  // nothing evolved above: a stage that just unlocked for the first time goes
+  // through the normal `evolved` path instead, declined or not.
+  let reoffer = null;
+  if (!evolved && leveled && typeof pendingDeclinedEvolution === 'function') {
+    const pending = pendingDeclinedEvolution(mon, level, declined);
+    if (pending) {
+      const atLevel = pending.atLevel;
+      const before = Math.floor((startLevel - atLevel) / EVOLUTION_REPROMPT_LEVELS);
+      const after  = Math.floor((level      - atLevel) / EVOLUTION_REPROMPT_LEVELS);
+      // Crossing a multiple of EVOLUTION_REPROMPT_LEVELS past the threshold —
+      // 16 -> 21 -> 26, not just "5+ levels have passed" — so a pal that was
+      // already 8 levels overdue when it was first declined isn't re-asked on
+      // its very next level-up.
+      if (after > before) {
+        const accepted = {
+          ...getMonStage(mon, level, declined.filter(l => l !== atLevel)),
+          ...variant,
+        };
+        reoffer = { fromMon: toMon, toMon: accepted };
+      }
+    }
+  }
+
   updateCompanionDisplay();
-  return { leveled, evolved, fromMon, toMon, newLevel: level };
+  return { leveled, evolved, reoffer, fromMon, toMon, newLevel: level };
 }
 
 // Refresh the companion area (name, pal level, canvas colours) from localStorage.

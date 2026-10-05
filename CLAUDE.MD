@@ -165,6 +165,16 @@ of CSS).
   card, `getCaughtNames`, the companion box. Miss one and that screen silently
   shows the form the player refused. Run it if you add a screen that renders a
   pal's form.
+- `node tools/check-evolution-reoffer.js [_site]` covers the re-offer: a
+  decline isn't permanent, and every `EVOLUTION_REPROMPT_LEVELS` (5) levels
+  past the threshold it was stopped at, `pendingDeclinedEvolution`
+  (monsters.js) flags it again and `savePalExp`/`applySmootie` re-open the
+  evolution screen. Asserts the quiet levels in between open nothing, the
+  screen re-opens exactly on the +5 boundary with STOP still live, accepting
+  clears `evoDeclined` (via `Collection.acceptEvolution`) and survives a
+  reload, and declining again just re-arms the next +5 boundary. Run it if you
+  touch `pendingDeclinedEvolution`, the reoffer branches in `savePalExp` or
+  `applySmootie`, or `EvolutionScreen`'s dismiss/STOP wiring.
 - `node tools/check-content-pages.js [_site]` renders 404.html and each prose
   page at three widths and asserts: no sideways scroll, no console errors or
   failed requests, one h1, a title/description/canonical, every same-origin
