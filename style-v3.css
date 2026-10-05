@@ -3578,29 +3578,6 @@ html::after,
 .home-prose a:hover,
 .home-prose a:focus-visible { color: #f0bc4d; }
 
-/* Back to the top of the app. A button in the app's own idiom, since this is
-   the one link here that returns you to it. */
-.prose-cta { margin: 2.5rem 0 0; text-align: center; }
-
-/* Scoped to .home-prose so it outweighs `.home-prose a` above (0-1-1), which
-   otherwise won on specificity and painted this gold on gold — an invisible
-   label on a solid gold slab. */
-.home-prose .prose-cta-link {
-  display: inline-block;
-  padding: .875rem 1.5rem;
-  background: var(--gold);
-  color: var(--outline);
-  font-family: var(--font-pixel);
-  font-size: .6875rem;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: 3px solid var(--outline);
-  box-shadow: 4px 4px 0 var(--outline);
-}
-.home-prose .prose-cta-link:hover,
-.home-prose .prose-cta-link:focus-visible { background: #f0bc4d; color: var(--outline); }
-.home-prose .prose-cta-link:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--outline); }
-
 /* ── Footer ────────────────────────────────────────────── */
 .home-foot {
   border-top: 2px solid rgba(184,216,194,.2);

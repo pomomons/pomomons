@@ -379,6 +379,64 @@ subpages. Shipped in response:
   gitignored here and has its own git repo. `gen-pomodex.js` is at the root
   precisely because tools/ does not exist on the Pages runner.
 
+**The evidence angle + /research/ (2026-10-05).** User asked whether a
+science-backed framing could win queries like "most scientifically optimized
+way to study". Assessed honestly and the answer was **no for those queries**:
+the canonical answer in the literature is retrieval practice and spaced
+practice (Dunlosky et al., 2013), Pomodoro is not a learning technique at all,
+and the SERP is owned by .edu learning centres. We would be trying to rank with
+an answer that is wrong, which is a harder problem than low authority.
+
+Redirected to the queries where we can be the best page on the open web —
+"does the pomodoro technique actually work", "is pomodoro backed by science",
+"pomodoro vs flowtime", "does gamified studying work" — where page one is
+mostly blogs restating Cirillo as fact. The AI-citation case is stronger than
+the Google case: a page with specific findings, effect sizes and DOIs is
+quotable without needing domain authority.
+
+**The finding that drove the copy:** the user's own research doc shows the
+Pomodoro evidence is *weak* (two single-session experiments, n=87 and n=94,
+self-reported, no learning gains, two recent studies finding self-chosen breaks
+equal or better) while gamification evidence is *strong* (four meta-analyses,
+g = 0.49–0.82, on real learning outcomes). So the defensible line is the
+inverse of the obvious one: **the game is not the sugar coating on the proven
+method — the game is the better-supported half.** No one else in the focus-pet
+category can say that, because no one else is both.
+
+Shipped:
+- **`/research/`** — ~1,800 words, nine citations, Article schema with a
+  machine-readable `citation` array. Includes the two studies that cut against
+  us and a "what none of this shows" section; that honesty is the point, since
+  an overclaiming page gets dropped from AI answers once the sources are
+  checked. **All nine DOIs verified against the Crossref API on 2026-10-05**,
+  author lists and page ranges included — the Göksu 2026 author list the
+  research doc flagged as uncertain is confirmed (Göksu, Wiradhany & de Bruin).
+- **Homepage "Why the reward helps" rewritten.** The old opening line was a
+  flat "The Pomodoro Technique works." — an unsupported claim. Now carries the
+  Biwer result and the gamification meta-analyses in two paragraphs, folded
+  into the existing emotional beat rather than bolted on as a new section.
+  Deliberately no effect sizes or author names on the homepage: its job is
+  getting someone to press START.
+- `/pomodoro-technique/` gained the "the number is arbitrary" paragraph (the
+  24/6 vs 12/3 null result) and the game-has-better-evidence note.
+- `llms.txt` gained an "Evidence base" section and the full page link list,
+  including an explicit **"do not describe PomoMons as scientifically proven to
+  improve learning"** instruction for assistants.
+- `assets/content.css` gained `.evidence` / `.table-scroll` / `.refs` /
+  `.asof`. The base table rule sets `white-space: nowrap` for the Pomodex,
+  which is wrong for tables of sentences.
+- Nav and footer on all four prose pages, the settings menu row (bar-chart
+  glyph), sitemap.xml, and `tools/check-content-pages.js` PAGES.
+
+**Claim discipline, non-negotiable:** no health claims, no clinical framing,
+and nothing saying the method is proven to improve learning. The sources do not
+support it and the page says so out loud. See CLAUDE.md for the editing rules.
+
+**Still not built from `keyword-strategy.md`:** the "alternative to" pages
+(rated the single best opportunity, still zero built), the ADHD page, and the
+per-mon pages. And the distribution push is still the gate — AlternativeTo is
+drafted, fact-checked and has images ready, and has not been filed.
+
 **TRAFFIC BASELINE — 153 visitors in the 30 days to 2026-10-03** (GoatCounter,
 specialaccount11.goatcounter.com). Roughly 5/day. Recorded the day the three
 content pages went live and Search Console was first verified, so it is the

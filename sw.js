@@ -17,8 +17,8 @@
  *   - Navigations (the HTML page) are network-first, so an online visitor
  *     always gets the freshest index.html and only falls back to the cached
  *     copy when offline. Only the app shell's own path writes the cached
- *     shell; the standalone content pages (/faq/, /pomodoro-technique/,
- *     /pomodex/) cache under their own URLs. See networkFirstPage.
+ *     shell; the standalone content pages (/research/, /pomodex/) cache
+ *     under their own URLs. See networkFirstPage.
  *   - Other same-origin files (CSS/JS/sprites/backgrounds) are
  *     stale-while-revalidate: served from cache immediately, refreshed in the
  *     background for next time.
@@ -109,10 +109,10 @@ self.addEventListener('fetch', (event) => {
 // The app shell is the only page allowed to occupy the 'index.html' cache
 // slot. This used to write EVERY navigation there, which was harmless while
 // the site was a single page and actively wrong the moment it was not: one
-// visit to /faq/ stored that page's HTML as the shell, and the next offline
-// launch of the app opened the FAQ instead of the timer. Content pages get
-// their own runtime entry under their own URL, and only fall back to the
-// shell when they have none.
+// visit to /research/ stored that page's HTML as the shell, and the next
+// offline launch of the app opened a page of prose instead of the timer.
+// Content pages get their own runtime entry under their own URL, and only fall
+// back to the shell when they have none.
 const isShellPath = (p) => p === '/' || p === '/index.html';
 
 async function networkFirstPage(request) {

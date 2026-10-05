@@ -26,10 +26,28 @@ appears. Players throw a tomato to catch it and build a collection.
 - signup.js — optional mailing-list card
 - 404.html — served by GitHub Pages for unknown paths; self-contained (inline
   CSS) so it needs no stamped asset references
-- faq/index.html, pomodoro-technique/index.html — standalone prose pages, no
-  app JS, styled by assets/content.css. They exist for search: the app shell
-  has ~320 words of UI labels and the word "pomodoro" appears nowhere in its
-  body, so it has nothing to rank on by itself.
+- research/index.html — the one standalone prose page, no app JS, styled by
+  assets/content.css. It exists for search: the app shell has ~320 words of UI
+  labels and the word "pomodoro" appears nowhere in its body, so it has nothing
+  to rank on by itself.
+  There used to be two more. faq/index.html and pomodoro-technique/index.html
+  were removed on 2026-10-05 and should not be rebuilt. The FAQ restated
+  answers the homepage prose already gives in full, and the technique page was
+  a generic explainer of the Pomodoro Technique — a page thousands of sites own
+  and a two-day-old domain cannot win. Both carried FAQPage / HowTo structured
+  data, which buys nothing since Google withdrew those rich results in 2023.
+  What the homepage prose says about the method is deliberately the only copy;
+  see the comment above `.home-prose` in index.html.
+  research/index.html is the cited evidence page. Every factual claim on it is
+  sourced to one of nine papers, and all nine DOIs were resolved against the
+  Crossref API on 2026-10-05 with the author lists, journals, volumes and pages
+  checked against that record. The JSON-LD `citation` array and the visible
+  References list are two copies of the same nine entries — edit them together.
+  Do not add a claim there without a source, do not restate a competitor's
+  numbers, and do not let the page say the technique is proven to improve
+  learning: none of the sources show that, and the page says so explicitly.
+  llms.txt carries the same summary, including the "do not describe PomoMons as
+  scientifically proven" line, so the two have to stay in step.
 - gen-pomodex.js — generates the /pomodex/ page from monsters.js at build time
   (see Build & Deploy). Root-level, not tools/, because tools/ is gitignored
   and absent on the Pages runner. In build.js EXCLUDE, so never published.
@@ -151,15 +169,16 @@ of CSS).
   page at three widths and asserts: no sideways scroll, no console errors or
   failed requests, one h1, a title/description/canonical, every same-origin
   link resolves to a real file, every JSON-LD block parses, each Pomodex sprite
-  actually decodes, and — on /faq/ — that every question in the FAQPage schema
-  appears verbatim as a visible h2. That last one is the condition Google
-  requires for an FAQ rich result, and the schema and the prose are two copies
-  of the same text that can drift apart silently.
+  actually decodes, and — on any page carrying FAQPage schema — that every
+  question in it appears verbatim as a visible h2. No page ships that schema
+  since /faq/ was removed, but the check is kept: it costs nothing and the
+  schema and the prose are two copies of the same text that drift apart
+  silently.
 - `node tools/check-sw-shell.js [_site]` proves a visit to a content page
   cannot replace the cached offline app shell. `networkFirstPage` used to run
   `cache.put('index.html', ...)` on EVERY navigation, which was harmless on a
-  one-page site and wrong the moment /faq/ existed: one visit stored the FAQ as
-  the shell, and the next offline launch opened the FAQ with no timer. Note it
+  one-page site and wrong the moment /research/ existed: one visit stored that
+  page as the shell, and the next offline launch opened it with no timer. Note it
   serves `no-store` where check-sw-upgrade.js serves `max-age=600` — with a
   live HTTP cache an offline navigation is answered from it, the service
   worker's fallback never runs, and the test passes no matter what sw.js does.
