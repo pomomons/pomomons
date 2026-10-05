@@ -109,7 +109,13 @@ straight to the collection).
 - `palExpThreshold(level) = Math.round(30 * 1.3^(level-1))`.
 - Smoothies grant +1 pal level instantly (drag onto a mon card in My Mons).
 - Evolutions fire at per-mon `atLevel` thresholds (see monsters.md) via the
-  `EvolutionScreen` overlay.
+  `EvolutionScreen` overlay. STOP there records the threshold in the record's
+  `evoDeclined` (getMonStage skips it forever otherwise) — but a decline isn't
+  permanent: every `EVOLUTION_REPROMPT_LEVELS` (5) levels past that threshold,
+  `pendingDeclinedEvolution` (monsters.js) flags it again and the screen
+  re-offers it, from both `savePalExp` (timer sessions) and `applySmootie`
+  (smoothies). Taking the re-offer calls `Collection.acceptEvolution` to clear
+  the decline; declining it again just waits for the next +5 boundary.
 
 ---
 

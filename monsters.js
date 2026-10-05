@@ -445,3 +445,25 @@ function getMonStage(mon, palLevel, declined) {
   }
   return result;
 }
+
+// A declined evolution is skipped by getMonStage forever — nothing re-checks
+// it on its own. This is what makes a stale decline findable again: every
+// EVOLUTION_REPROMPT_LEVELS levels past its own threshold, the evolution
+// screen offers it once more, same accept/STOP choice as the first time.
+//
+// Only the most advanced evolution the pal's level currently reaches is ever
+// "pending" — if a later stage in the same line was reached and accepted
+// since, that later stage is what getMonStage shows, and the earlier decline
+// is moot. (Matches the existing rule that refusing one stage never blocks a
+// later one — see getMonStage's callers in monsters.js above.)
+const EVOLUTION_REPROMPT_LEVELS = 5;
+
+function pendingDeclinedEvolution(mon, palLevel, declined) {
+  if (!mon.evolutions || !mon.evolutions.length) return null;
+  if (!Array.isArray(declined) || !declined.length) return null;
+  let latest = null;
+  for (const evo of mon.evolutions) {
+    if (palLevel >= evo.atLevel) latest = evo;
+  }
+  return (latest && declined.includes(latest.atLevel)) ? latest : null;
+}

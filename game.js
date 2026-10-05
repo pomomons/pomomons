@@ -2609,7 +2609,12 @@ const EvolutionScreen = (() => {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     hideStop();
     overlay.classList.remove('active');
-    const finish = () => { if (typeof onDone === 'function') onDone(); };
+    // Told apart by phase, the same way stop() itself is guarded: 'stopped'
+    // only ever gets there through stop(). A caller that re-offers a declined
+    // evolution needs to know which of the two happened — accepting has to
+    // undo the decline, and only when the player didn't just repeat it.
+    const wasStopped = st.phase === 'stopped';
+    const finish = () => { if (typeof onDone === 'function') onDone(wasStopped); };
     // onDone re-renders My Mons and the companion box, both of which read the
     // record. Waiting on the decline write means they can't repaint the form
     // the player just refused. The localStorage mirror is synchronous, so only

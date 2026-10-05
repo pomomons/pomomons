@@ -357,6 +357,40 @@ const Collection = (() => {
     } catch (e) { return []; }
   }
 
+  // ── Public: acceptEvolution — the reverse of declineEvolution
+  // A previously declined evolution is re-offered every EVOLUTION_REPROMPT_LEVELS
+  // levels (see pendingDeclinedEvolution in monsters.js). Taking the re-offer —
+  // dismissing the evolution screen without hitting STOP — has to remove the
+  // threshold from evoDeclined, or the form stays stuck at its old stage even
+  // though the player just watched it evolve. Mirrors declineEvolution's shape
+  // exactly, just subtracting from the list instead of adding to it.
+  function acceptEvolution(recKey, atLevel) {
+    if (!atLevel) return Promise.resolve();
+
+    const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
+    const key = recKey != null ? recKey : activeKey;
+
+    if (key != null && key === activeKey) {
+      const cur = activeDeclinedLevels().filter(lv => lv !== atLevel);
+      localStorage.setItem('pm_active_evo_declined', JSON.stringify(cur));
+    }
+
+    if (!db || key == null) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req   = store.get(key);
+      req.onsuccess = () => {
+        const rec = req.result;
+        if (!rec) { resolve(); return; }
+        const list = declinedOf(rec).filter(lv => lv !== atLevel);
+        store.put(Object.assign({}, rec, { evoDeclined: list }), key);
+        tx.oncomplete = resolve;
+      };
+      tx.onerror = () => reject(tx.error);
+    }).catch(() => {});
+  }
+
   // ── Internal: addSmoothieItem — persists a smoothie to pm_items
   function addSmoothieItem(monName, rarity) {
     const items = JSON.parse(localStorage.getItem('pm_items') || '[]');
@@ -501,12 +535,38 @@ const Collection = (() => {
     const toMon   = stageAt(newLevel);
     const evolved = fromMon.name !== toMon.name;
 
+    // Same re-offer as savePalExp in app.js, and for the same reason: a
+    // declined evolution is skipped forever otherwise. +1 level per smoothie
+    // makes the boundary check simpler here — there is only ever one level to
+    // have crossed.
+    let pendingAtLevel = null;
+    if (!evolved && typeof pendingDeclinedEvolution === 'function') {
+      const pending = pendingDeclinedEvolution(mon, newLevel, declined);
+      if (pending &&
+          Math.floor((newLevel - pending.atLevel) / EVOLUTION_REPROMPT_LEVELS) >
+          Math.floor((oldLevel - pending.atLevel) / EVOLUTION_REPROMPT_LEVELS)) {
+        pendingAtLevel = pending.atLevel;
+      }
+    }
+
     if (evolved && typeof EvolutionScreen !== 'undefined') {
       // This path knows exactly which record is levelling, so it hands the key
       // over rather than letting declineEvolution fall back to the active
       // companion — a smoothie can be fed to any pal, not just that one.
       EvolutionScreen.start(
         { evolved, fromMon, toMon, newLevel }, () => renderMyMons(),
+        (atLevel) => declineEvolution(rec._key, atLevel));
+    } else if (pendingAtLevel && typeof EvolutionScreen !== 'undefined') {
+      const accepted = {
+        ...getMonStage(mon, newLevel, declined.filter(lv => lv !== pendingAtLevel)),
+        ...variant,
+      };
+      EvolutionScreen.start(
+        { fromMon: toMon, toMon: accepted },
+        (wasStopped) => {
+          if (wasStopped) { renderMyMons(); return; }
+          Promise.resolve(acceptEvolution(rec._key, pendingAtLevel)).then(() => renderMyMons());
+        },
         (atLevel) => declineEvolution(rec._key, atLevel));
     } else {
       renderMyMons();
@@ -1414,5 +1474,5 @@ const Collection = (() => {
     return names;
   }
 
-  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail, cancelBlendTap, declineEvolution, activeDeclinedLevels };
+  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail, cancelBlendTap, declineEvolution, acceptEvolution, activeDeclinedLevels };
 })();
