@@ -1327,8 +1327,8 @@ const EncounterScreen = (() => {
 
   // DOM refs (resolved on first start() call)
   let overlay, canvas, ctx,
-      elMsg, elSub, elRarity, elTags, elLevel, elControls, elMonName, elShareMsg,
-      elMonNameText, elNameTomato, elDexProg, elDexCount,
+      elMsg, elMsgText, elSub, elRarity, elTags, elLevel, elControls, elMonName,
+      elShareMsg, elMonNameText, elNameTomato, elDexProg, elDexCount,
       btnThrow, btnFlee, btnCatchNext, btnCatchDex, btnCatchShare;
 
   // Total number of Pomodex entries (base mons + every evolution stage) —
@@ -1709,7 +1709,7 @@ const EncounterScreen = (() => {
         SFX.play('fanfare');
 
         // Update encounter overlay to show congratulations
-        elMsg.textContent = 'CONGRATULATIONS!';
+        elMsgText.textContent = 'CONGRATULATIONS!';
         elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
         elSub.style.color = '#fff';
 
@@ -1865,6 +1865,10 @@ const EncounterScreen = (() => {
       elMsg       = document.getElementById('encounter-msg');
       elSub       = document.getElementById('encounter-sub');
       elRarity    = document.getElementById('encounter-rarity');
+      // The headline holds the rarity banner as a child, so the sentence gets
+      // its own span. Writing elMsg.textContent, which is what this used to
+      // do, would delete the banner along with the old sentence.
+      elMsgText   = document.getElementById('encounter-msg-text');
       elTags      = document.getElementById('encounter-tags');
       elLevel     = document.getElementById('encounter-level');
       elControls  = document.getElementById('encounter-controls');
@@ -1940,7 +1944,7 @@ const EncounterScreen = (() => {
     st.monLevel   = Math.max(loLevel, Math.min(hiLevel, rolled));
 
     // Populate UI
-    elMsg.textContent = 'A WILD MON APPEARED!';
+    elMsgText.textContent = 'A WILD MON APPEARED!';
     if (elMonName) {
       if (elMonNameText) elMonNameText.textContent = mon.name;
       else elMonName.textContent = mon.name;
@@ -1960,6 +1964,10 @@ const EncounterScreen = (() => {
     const isDark  = mon.dark  || false;
     elRarity.textContent = isDark ? 'DARK' : isShiny ? 'SHINY' : '';
     elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : ''}`;
+    // The banner is display:block, so an empty-but-present span would still
+    // take a line and push the stage down on ordinary encounters. `hidden`
+    // rather than a class: className is rewritten on the line above.
+    elRarity.hidden = !(isDark || isShiny);
     if (elTags) {
       elTags.innerHTML = '';
       // Show only the mon's normal type badge(s) — shiny/dark status is shown in the rarity slot.
@@ -2415,19 +2423,27 @@ const EncounterScreen = (() => {
 const EvolutionScreen = (() => {
   const SIZE = 200;
 
-  let overlay, canvas, ctx, elMsg, elSub, btnDismiss;
-  let rafId = null, onDone = null, autoDismissTimer = null;
+  let overlay, canvas, ctx, elMsg, elSub, elHint, btnDismiss, btnStop,
+      wrapDismiss, wrapStop;
+  let rafId = null, onDone = null, onCancel = null, autoDismissTimer = null;
+  let cancelPending = null;   // in-flight decline write; dismiss waits on it
 
   const clock = frameClock();
 
   const st = {
-    phase:    'idle',  // blackin|text1|silhouette|flash|reveal|done
+    phase:    'idle',  // blackin|text1|silhouette|flash|reveal|stopped|done
     frame:    0,       // phase clock in 60fps frames
     bobFrame: 0,
     fromMon:  null,   // base stage (before evolution)
     toMon:    null,   // new stage (after evolution)
+    atLevel:  null,   // the evolution's own threshold — what a STOP records
     dpr:      1,
   };
+
+  // STOP is offered up to the reveal and no further. Once the new form is on
+  // screen with its name under it, taking it away again would read as the game
+  // changing its mind rather than the player stopping something.
+  const STOPPABLE = { blackin: 1, text1: 1, silhouette: 1, flash: 1 };
 
   // Shiny and dark are recoloured with a canvas filter over the same PNG, and
   // that filter is only applied when drawOnCtx is told about it. Neither draw
@@ -2497,7 +2513,10 @@ const EvolutionScreen = (() => {
       // Rapidly alternate old / new silhouette (4-frame intervals)
       const useNew = Math.floor(f / 4) % 2 === 1;
       drawSilhouette(useNew ? st.toMon : st.fromMon, 1);
-      if (f >= 64) { st.phase = 'reveal'; st.frame -= 64; }
+      // Last chance to stop it goes with the handover into 'reveal' — the same
+      // place every other phase change does its UI work, so it can't be missed
+      // by a clock that steps over an exact frame number.
+      if (f >= 64) { st.phase = 'reveal'; st.frame -= 64; hideStop(); }
 
     } else if (st.phase === 'reveal') {
       const bobY = Math.sin(st.bobFrame / 22) * 8;
@@ -2519,34 +2538,103 @@ const EvolutionScreen = (() => {
         st.phase = 'done';
         st.frame -= 120;
         SFX.play('levelUp');
-        btnDismiss.style.opacity      = '1';
-        btnDismiss.style.pointerEvents = 'auto';
+        showDismiss('AWESOME!');
         autoDismissTimer = setTimeout(dismiss, 4000);
       }
 
     } else if (st.phase === 'done') {
       drawColored(st.toMon, Math.sin(st.bobFrame / 22) * 8);
+
+    } else if (st.phase === 'stopped') {
+      // The pal that is staying as it is, in full colour and still bobbing —
+      // the point being that nothing bad happened to it.
+      drawColored(st.fromMon, Math.sin(st.bobFrame / 22) * 8);
     }
 
     rafId = requestAnimationFrame(tick);
   }
 
+  // Hiding the WRAPPER, not the button. .pxb paints the button's frame with
+  // its own background showing through its padding, so a transparent button
+  // inside a visible wrapper leaves the frame drawn — and because the two
+  // wrappers are stacked in one grid cell, that frame lands across the button
+  // underneath and eats the clicks meant for it.
+  function hideStop() {
+    if (wrapStop) wrapStop.hidden = true;
+    if (btnStop)  btnStop.style.pointerEvents = 'none';
+    if (elHint)   elHint.hidden = true;
+  }
+
+  function showDismiss(label) {
+    btnDismiss.textContent         = label;
+    btnDismiss.style.pointerEvents = 'auto';
+    if (wrapDismiss) wrapDismiss.hidden = false;
+  }
+
+  // Stops the evolution. The pal keeps the level it just earned and stays in
+  // the form it is in; the refusal is persisted by the caller's onCancel, which
+  // is handed the evolution's own threshold level.
+  //
+  // Guarded on the phase rather than on the button's own state: pointer-events
+  // is a style, and a double-tap or a stray keyboard activation can land after
+  // the reveal has begun. Stopping then would undo an evolution the player has
+  // already been shown and congratulated for.
+  function stop() {
+    if (!STOPPABLE[st.phase]) return;
+    if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
+
+    st.phase = 'stopped';
+    st.frame = 0;
+    hideStop();
+
+    elMsg.textContent   = `${st.fromMon.name.toUpperCase()} STOPPED EVOLVING!`;
+    elMsg.style.opacity = '1';
+    elSub.textContent   = `IT STAYS A ${st.fromMon.name.toUpperCase()}.`;
+    elSub.style.opacity = '1';
+    SFX.play('select');
+
+    // Fired here, not in dismiss(): dismiss() can be reached by the 4s
+    // auto-timer, and the write has to be in flight before onDone re-renders
+    // any screen that derives the form from the level.
+    cancelPending = typeof onCancel === 'function'
+      ? Promise.resolve(onCancel(st.atLevel)).catch(() => {})
+      : null;
+
+    showDismiss('OK');
+    autoDismissTimer = setTimeout(dismiss, 4000);
+  }
+
   function dismiss() {
     if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    hideStop();
     overlay.classList.remove('active');
-    if (typeof onDone === 'function') onDone();
+    const finish = () => { if (typeof onDone === 'function') onDone(); };
+    // onDone re-renders My Mons and the companion box, both of which read the
+    // record. Waiting on the decline write means they can't repaint the form
+    // the player just refused. The localStorage mirror is synchronous, so only
+    // the IDB write is ever actually outstanding.
+    if (cancelPending) { const p = cancelPending; cancelPending = null; p.then(finish); }
+    else finish();
   }
 
-  // params: { fromMon, toMon }   doneCb: called after dismiss
-  function start(params, doneCb) {
+  // params: { fromMon, toMon, atLevel }   doneCb: called after dismiss
+  // cancelCb: called with the evolution's threshold level if the player stops
+  // it. May return a promise; dismiss waits on it before doneCb runs. Omit it
+  // and the STOP button is not offered — a caller that cannot persist the
+  // refusal must not show a button that silently does nothing.
+  function start(params, doneCb, cancelCb) {
     if (!overlay) {
       overlay    = document.getElementById('evolution-overlay');
       canvas     = document.getElementById('evolution-canvas');
       ctx        = canvas.getContext('2d');
       elMsg      = document.getElementById('evolution-msg');
       elSub      = document.getElementById('evolution-sub');
+      elHint     = document.getElementById('evolution-hint');
       btnDismiss = document.getElementById('btn-evo-dismiss');
+      btnStop    = document.getElementById('btn-evo-stop');
+      wrapDismiss = document.getElementById('evo-dismiss-wrap');
+      wrapStop    = document.getElementById('evo-stop-wrap');
 
       st.dpr = window.devicePixelRatio || 1;
       if (st.dpr !== 1) {
@@ -2561,11 +2649,19 @@ const EvolutionScreen = (() => {
       }
 
       btnDismiss.addEventListener('click', dismiss);
+      if (btnStop) btnStop.addEventListener('click', stop);
     }
 
     onDone        = doneCb;
+    onCancel      = typeof cancelCb === 'function' ? cancelCb : null;
+    cancelPending = null;
     st.fromMon    = params.fromMon;
     st.toMon      = params.toMon;
+    // The threshold this evolution starts at, which is what a refusal records.
+    // getMonStage returns the base spread with the evolution's fields over it,
+    // so toMon carries its own atLevel; params.atLevel is there for a caller
+    // that builds the stages some other way.
+    st.atLevel    = params.atLevel || (params.toMon && params.toMon.atLevel) || null;
     st.phase      = 'blackin';
     st.frame      = 0;
     st.bobFrame   = 0;
@@ -2576,8 +2672,16 @@ const EvolutionScreen = (() => {
     elMsg.style.opacity = '0';
     elSub.textContent  = '';
     elSub.style.opacity = '0';
-    btnDismiss.style.opacity      = '0';
+    btnDismiss.textContent         = 'AWESOME!';
     btnDismiss.style.pointerEvents = 'none';
+    if (wrapDismiss) wrapDismiss.hidden = true;
+
+    // No threshold to record means no way to make a refusal stick, so the
+    // button stays down rather than lying about what it does.
+    const canStop = !!(onCancel && st.atLevel);
+    if (wrapStop) wrapStop.hidden = !canStop;
+    if (btnStop)  btnStop.style.pointerEvents = canStop ? 'auto' : 'none';
+    if (elHint)   elHint.hidden = !canStop;
 
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);

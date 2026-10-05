@@ -1403,14 +1403,12 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   padding: 0 4px;
 }
 
-/* Pin each to its own column so the type stays on the right even when the
-   rarity is hidden (a hidden rarity would otherwise let the type slide left). */
+/* Pin each to its own column so the type stays on the right. The centre column
+   is deliberately empty — the rarity label used to live there and now rides in
+   the floating name (see index.html). `auto` collapses it to nothing, so the
+   two badges sit exactly where they always did. */
 .encounter-topbar .encounter-level  { grid-column: 1; justify-self: start; transform: translateX(14px); }
-.encounter-topbar .encounter-rarity { grid-column: 2; justify-self: center; }
 .encounter-topbar .encounter-tags   { grid-column: 3; justify-self: end; transform: translateX(-14px); }
-
-/* Rarity only shows when it's noteworthy (uncommon / rare / dark / shiny) — hidden for common */
-.encounter-rarity.common { display: none; }
 
 /* Type badge — same shallow corner as every other type badge in the app
    (My Mons / Dex cards, mon-detail, evolution chain). The deeper
@@ -1427,8 +1425,15 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 }
 
 
+/* A banner line of its own inside .encounter-msg, above the sentence. Sized in
+   em so it rides the headline, which the phone tiers take down to 18px and
+   15px — a px size here would be the one line that didn't. `hidden` on the
+   span is what removes it on an ordinary encounter; game.js sets that, because
+   it also rewrites className and would wipe a class doing the same job. */
 .encounter-rarity {
-  font-size: 10px;
+  display: block;
+  font-size: .8em;
+  margin-bottom: .35em;
   letter-spacing: .15em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -2153,6 +2158,42 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   font-size: 12px;
   color: var(--gold);
   letter-spacing: .06em;
+  text-align: center;
+  min-height: 1.5em;
+  transition: opacity .25s;
+}
+
+/* STOP and AWESOME! share a row and are never both live: STOP is the only one
+   up during the animation, AWESOME! the only one after it. Two buttons rather
+   than one with a swapped label, so the button under the pointer at the end is
+   not the one that was a cancel a moment earlier.
+
+   They are STACKED in a single grid cell, not laid out side by side. Side by
+   side, the one that is faded out still takes its width, which pushed the live
+   button off centre — the whole overlay is one centred column, so an off-centre
+   button reads as a mistake. Stacking also keeps the row's height constant, so
+   the canvas above never jumps when they swap. Overlapping is safe because the
+   faded one always has pointer-events: none. */
+.evolution-actions {
+  display: grid;
+  grid-template-areas: "cta";
+  justify-items: center;
+  align-items: center;
+  min-height: 48px;
+}
+
+.evolution-actions > .pxb { grid-area: cta; }
+
+/* .pxb sets its own `display`, and a class rule beats the user-agent's
+   [hidden] rule — so the hidden wrapper stayed laid out, kept painting its
+   frame over the live button and kept intercepting its clicks. */
+.evolution-actions > .pxb[hidden] { display: none; }
+
+.evolution-hint {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: .08em;
   text-align: center;
   min-height: 1.5em;
   transition: opacity .25s;

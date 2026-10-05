@@ -420,11 +420,26 @@ function makeTypeBadges(type, opts) {
 // Returns the current evolution stage of a mon based on its pal level.
 // Returns the base mon merged with all fields from the highest unlocked evolution
 // (name, color, accent, and optionally sprite/spriteFrames/etc.).
-function getMonStage(mon, palLevel) {
+//
+// `declined` is the list of evolution levels this particular pal was stopped
+// at — the player pressed STOP on the evolution screen. A caught record stores
+// only a species id and a level, and the form is derived here, so refusing an
+// evolution cannot be recorded by leaving the level alone: the pal has earned
+// the level and keeps it. It is recorded as "skip the stage that starts at 16"
+// instead, which is why this takes levels rather than a boolean. Each stage is
+// refused independently, so a Tomotot kept out of Marinaro is still offered
+// Strangletti at 36.
+//
+// Every caller that renders or names a pal has to pass it, or that pal reverts
+// to its evolved form the moment some other screen draws it. The declines live
+// on the IDB record (`evoDeclined`) and, for the active companion, are mirrored
+// into `pm_active_evo_declined`.
+function getMonStage(mon, palLevel, declined) {
   if (!mon.evolutions || mon.evolutions.length === 0) return mon;
+  const skip = Array.isArray(declined) ? declined : null;
   let result = mon;
   for (const evo of mon.evolutions) {
-    if (palLevel >= evo.atLevel) {
+    if (palLevel >= evo.atLevel && !(skip && skip.includes(evo.atLevel))) {
       result = { ...mon, ...evo };
     }
   }

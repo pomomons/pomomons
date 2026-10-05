@@ -500,13 +500,13 @@ feature was built and then removed at the user's request — don't re-suggest it
   the send fails, the signup is still recorded, and that person never gets a
   backup code. A Product Hunt spike is the one realistic way to hit that.
 
-**BUG — the SHINY/DARK label collides with the mon name (found 2026-10-04,
-NOT fixed):** on an encounter, `#encounter-rarity` sits at a fixed y, but the
-mon name `#encounter-mon-name` is a floating caption positioned off the sprite
-(`layoutName()` in game.js), so its y varies by how tall the mon is. On the
-five tallest forms the name rides up into the label and the two overlap:
+**FIXED 2026-10-04 — the SHINY/DARK label collided with the mon name.**
+`#encounter-rarity` sat in `.encounter-topbar`'s centre column, pinned to a
+fixed 2% from the top of the stage, while the mon name is a floating caption
+positioned off the *top of the sprite's art* — so its y varies with how tall
+the mon is. On the tallest forms the name rode up into the label:
 
-| Form | Overlap |
+| Form | Overlap (desktop) |
 |---|---|
 | Soursquad | 58 x 8 px |
 | Ghostpepper | 58 x 6 px |
@@ -515,24 +515,85 @@ five tallest forms the name rides up into the label and the two overlap:
 | Idabro | 58 x 1 px |
 
 Found by shooting a shiny Ghostpepper for a directory listing and reading the
-result. Two reasons it is worth fixing despite being 5 of 30 forms:
+result. It mattered out of proportion to "5 of 30 forms" because **it only
+happened on a shiny or dark encounter** — the label is empty otherwise and
+`display:none` collapsed the column to nothing — so the collision was
+exclusive to the ~1.2% of encounters players screenshot and share. It had gone
+unnoticed because reproducing it needs a rare variant of one of five specific
+mons.
 
-1. **It only happens on a shiny or dark encounter.** When neither applies the
-   rarity element is empty and collapses to zero size, so nothing collides.
-   The collision is therefore exclusive to the ~1.2% of encounters that are
-   the most memorable and the most likely to be screenshotted and shared.
-2. It had gone unnoticed, which makes sense — reproducing it needs a rare
-   variant of one of five specific mons.
+**What the fix is, and why it is not a nudge.** Neither box could move. On
+Strangletti the caption is already 4px from the top of the stage and the mon's
+head is level with the topbar, so flooring the caption under the label would
+print the name across the sprite's face. Measured, not guessed: the sky above
+a tall mon has no spare room at all.
 
-The fix is not simply moving the label: the caption's whole point is to track
-the sprite. Either the rarity row needs to reserve space the caption treats as
-occupied, or `layoutName()` needs the label's box as one more thing it floors
-against — the same shape as the LV/XP overlap it already handles. Note the
-caption's position is cached and recomputed only on invalidation, so a new
-input has to be marked dirty there or it will not update.
+So the label left the sky. It is now a banner line inside `.encounter-msg`,
+above the headline — normal flow, so it has room by construction, it wraps
+rather than overflowing a 320px screen, and it reads as part of the sentence
+announcing the encounter. The topbar's centre column is now permanently empty;
+`grid-template-columns: 1fr auto 1fr` collapses it, so the LV badge and the
+type badges are exactly where they were.
 
-Reproduce: `tools/listing-shots.js` forces a species and a shiny roll; the
-scan that produced the table above does the same across all 30 forms.
+An intermediate version put the label inline *inside* the caption. Rejected on
+measurement: on a 390px phone `PORTOBELLORD SHINY` is wider than the 298px
+stage and `white-space: nowrap` plus the caption's 12px font floor meant it
+could not shrink out of it — it overflowed the stage by 18px. Worth recording
+because it looks like the obvious fix and fails only at phone widths.
+
+Guarded by `node tools/check-encounter-labels.js` — all 30 forms x
+plain/shiny/dark x three viewports, asserting the caption clears the topbar,
+the headline and both edges of the stage. The earlier throwaway version of that
+scan reported zero collisions *while the bug was live*, for two reasons worth
+not repeating: it reused one page and fled between encounters, and it measured
+before `positionMonName()` had placed the caption, so it read the CSS default
+`top: 26%` instead. Wait on `#encounter-mon-name` reaching `opacity: 1` — that
+is the signal that the sprite size is known and the caption has been placed.
+
+**OPEN — the mon name also overlaps the LV badge and the type badges.**
+Found while verifying the fix above, and *not* caused by it: measured on both
+sides of that change at 1440px and 390px and found identical. It needs a long
+name and a tall form, so it is worst on a phone, and unlike the label collision
+it happens on **ordinary encounters** — every one, not 1.2% of them.
+
+19 form/viewport pairs are affected; `tools/check-encounter-labels.js` holds the
+exact list in `KNOWN_BADGE_OVERLAP` and fails if another joins it. The worst are
+at phone width: Ghostpepper, Soursquad and Idabro overlap by 20px, Portobellord
+by 17, Strangletti by 15. At 1440px only Strangletti, Guacamonger and
+Portobellord are affected.
+
+Not fixed because it is a different bug with a different shape. The label could
+be moved out of the sky; the LV badge and the type badges cannot — they are the
+encounter's HUD and belong at the top.
+
+The fix already exists, on the other canvas. `readTopReserve()` (the
+CompanionCanvas module in game.js) measures the furniture sitting over the mon's
+column and clamps the sprite to `GROUND_Y - _topReserve` so it cannot grow into
+it. The encounter canvas has **no equivalent at all** — `monDrawSize()` is a
+bare `MonSprite.displaySize(srcW, MON_BOX)` with `MON_BOX = 245` and no reserve
+term, so a tall form grows until its head is level with the topbar and the
+caption gets pushed into the badges. Giving the encounter stage its own measured
+reserve is the right fix and it changes how large every mon is drawn on a phone:
+a visual change to all 30 forms, so it wants a decision rather than a patch.
+
+**Evolutions can be stopped (added 2026-10-04).** A STOP button runs on the
+evolution screen from the first frame until the new form is revealed, and the
+pal keeps the level it just earned while staying in its current form.
+
+The part that needed designing: a caught record stores a species id and a pal
+level, and `getMonStage()` derives the form from the level. So a refusal cannot
+be stored by holding the level back, and is stored as the set of thresholds the
+pal was stopped at — `evoDeclined: [16]` on the record, mirrored to
+`pm_active_evo_declined` for the companion, which is what the timer screen
+reads. Each threshold is refused on its own, so a Tomotot kept out of Marinaro
+is still offered Strangletti at 36.
+
+That makes it a feature with one writer and many readers: My Mons, the mon
+detail card, the Pomodex tally, the companion box and the next evolution all
+derive the form independently, and missing one means that screen quietly
+re-evolves the pal — nothing errors. `node tools/check-evolution-stop.js`
+asserts each of them separately, after a reload, and that a STOP landing after
+the reveal is inert.
 
 **Open (P1):**
 - Streaks / completion count.

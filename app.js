@@ -479,7 +479,16 @@ function onSessionEnd() {
       };
 
       if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
-        EvolutionScreen.start(palResult, backOnTimer);
+        // Third argument is the STOP handler. Collection resolves "the active
+        // companion" from pm_active_rec_key itself, which is why there is no
+        // record key to pass from here.
+        EvolutionScreen.start(palResult, backOnTimer, (atLevel) => {
+          const p = (typeof Collection !== 'undefined' && Collection.declineEvolution)
+            ? Collection.declineEvolution(null, atLevel) : Promise.resolve();
+          // The companion box is rebuilt from the mirror, which
+          // declineEvolution has already written by the time this returns.
+          return Promise.resolve(p).then(() => updateCompanionDisplay());
+        });
       } else {
         backOnTimer();
       }
@@ -825,6 +834,16 @@ function palExpThreshold(level) {
   return roundNiceXp(30 * Math.pow(1.12, level - 1));
 }
 
+// The active companion's refused evolution levels. Collection owns the stored
+// form; this is the one place app.js reads it, and it tolerates Collection not
+// being loaded the same way every other cross-file call here does.
+function activeEvoDeclined() {
+  if (typeof Collection !== 'undefined' && Collection.activeDeclinedLevels) {
+    return Collection.activeDeclinedLevels();
+  }
+  return [];
+}
+
 function getPalState() {
   const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
   const exp   = parseInt(localStorage.getItem('pm_active_pal_exp')   || '0', 10);
@@ -850,8 +869,12 @@ function savePalExp(speciesId, delta) {
     shiny: localStorage.getItem('pm_active_shiny') === '1',
     dark:  localStorage.getItem('pm_active_dark')  === '1',
   };
+  // Evolutions this pal was stopped at. Same shape as the variant flags above
+  // and for the same reason: they belong to the individual record, and the
+  // timer screen reads the mirror of it rather than IDB.
+  const declined = activeEvoDeclined();
   const stageAt = (lv) => ({
-    ...(typeof getMonStage === 'function' ? getMonStage(mon, lv) : mon),
+    ...(typeof getMonStage === 'function' ? getMonStage(mon, lv, declined) : mon),
     ...variant,
   });
 
@@ -906,7 +929,8 @@ function updateCompanionDisplay() {
   const level = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
   const shiny = localStorage.getItem('pm_active_shiny') === '1';
   const dark  = localStorage.getItem('pm_active_dark') === '1';
-  const stage = typeof getMonStage === 'function' ? getMonStage(mon, level) : mon;
+  const stage = typeof getMonStage === 'function'
+    ? getMonStage(mon, level, activeEvoDeclined()) : mon;
   const nameEl = document.getElementById('companion-name');
   const lvlEl  = document.getElementById('companion-level');
   if (nameEl) nameEl.textContent = stage.name;

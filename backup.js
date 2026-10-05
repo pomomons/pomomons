@@ -25,6 +25,11 @@ const Backup = (() => {
     'pm_level', 'pm_exp',
     'pm_active', 'pm_active_rec_key', 'pm_active_pal_level',
     'pm_active_pal_exp', 'pm_active_shiny', 'pm_active_dark',
+    // The mirror of the active companion's refused evolutions. The records
+    // themselves carry `evoDeclined` and travel with the collection, so this
+    // is only here to stop the companion box drawing the evolved form for the
+    // instant before the next equip refreshes the mirror.
+    'pm_active_evo_declined',
     'pm_total_sessions', 'pm_total_minutes', 'pm_total_catches',
     'pm_today_sessions', 'pm_today_minutes', 'pm_today_catches', 'pm_today_date',
     'pm_history',

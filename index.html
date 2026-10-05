@@ -414,7 +414,20 @@
            busy photo behind it, with the corner boundary flickering where
            the translucent fill met the picture with no border anchoring it. -->
       <div class="pxb-panel encounter-arena-wrap"><div class="panel-rail"><div class="encounter-arena">
-        <h2 class="encounter-msg" id="encounter-msg">A WILD ??? APPEARED!</h2>
+        <!-- SHINY / DARK is a banner line above the headline. It used to float
+             in the topbar over the mon, in the centre column — directly above
+             the mon's name, which is positioned off the TOP OF THE ART and so
+             sits at a different height for every species. On the five tallest
+             forms the name rose into it. It showed up on shiny and dark
+             encounters only, because the label is empty otherwise and the
+             column collapsed to nothing: ~1.2% of encounters, and exactly the
+             ones a player screenshots.
+             Neither box could move to fix it — on Strangletti the mon's head is
+             already level with the topbar, so the sky has no spare room at all.
+             In normal flow above the stage it has room by construction, it
+             wraps instead of overflowing a narrow screen, and it reads as part
+             of the sentence announcing the encounter. -->
+        <h2 class="encounter-msg" id="encounter-msg"><span class="encounter-rarity" id="encounter-rarity" hidden></span><span id="encounter-msg-text">A WILD ??? APPEARED!</span></h2>
 
         <div class="encounter-stage">
           <canvas id="encounter-canvas" width="480" height="380" aria-label="Wild Pomomon"></canvas>
@@ -425,7 +438,6 @@
                  is what traces the notched corners. Identical to the companion
                  LV button on the timer screen. -->
             <div class="lv-frame encounter-level-frame"><p class="encounter-level" id="encounter-level">LV 1</p></div>
-            <p class="encounter-rarity" id="encounter-rarity">COMMON</p>
             <div class="encounter-tags" id="encounter-tags"></div>
           </div>
         </div>
@@ -704,7 +716,22 @@
     <p class="evolution-msg" id="evolution-msg"></p>
     <canvas id="evolution-canvas" width="200" height="200" aria-label="Evolving Pomomon"></canvas>
     <p class="evolution-sub" id="evolution-sub"></p>
-    <div class="pxb"><button class="btn btn-primary" id="btn-evo-dismiss" style="opacity:0;pointer-events:none">AWESOME!</button></div>
+    <!-- The two buttons are never live at once and are stacked in one grid
+         cell (see .evolution-actions). The WRAPPER is what gets hidden, not the
+         button: .pxb draws the button's frame with its own background showing
+         through its padding, so fading only the button left STOP's gold frame
+         painted across the OK button underneath it, and left the wrapper
+         swallowing the clicks meant for it. -->
+    <div class="evolution-actions">
+      <div class="pxb" id="evo-dismiss-wrap" hidden><button class="btn btn-primary" id="btn-evo-dismiss">AWESOME!</button></div>
+      <!-- STOP is live from the moment the animation starts until the new form
+           is revealed, mirroring where B works in the games it is borrowed
+           from. It is a real decision, not a skip button: the pal keeps the
+           level it just earned and stays in its current form, which is
+           recorded on its own record so no other screen evolves it back. -->
+      <div class="pxb" id="evo-stop-wrap" hidden><button class="btn btn-timer-dark" id="btn-evo-stop">STOP</button></div>
+    </div>
+    <p class="evolution-hint" id="evolution-hint">PRESS STOP TO KEEP IT AS IT IS</p>
   </div>
 
   <!-- ── Stats Strip ────────────────────────────────────── -->

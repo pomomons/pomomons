@@ -112,6 +112,7 @@ const Collection = (() => {
           localStorage.removeItem('pm_active_pal_exp');
           localStorage.removeItem('pm_active_shiny');
           localStorage.removeItem('pm_active_dark');
+          localStorage.removeItem('pm_active_evo_declined');
           if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
         }
 
@@ -291,6 +292,71 @@ const Collection = (() => {
     return updateRecord(key, { palLevel: newLevel, palExp: exp });
   }
 
+  // ── Evolutions the player stopped ────────────────────────────
+  // A record stores a species id and a level; getMonStage derives the form from
+  // the level. So "this pal is not evolving" cannot be stored by holding its
+  // level back — it has earned the level — and is stored as the set of
+  // evolution thresholds it was stopped at instead. Every read of a record's
+  // form has to pass these through, or the next screen to draw that pal
+  // evolves it anyway.
+  function declinedOf(rec) {
+    return Array.isArray(rec && rec.evoDeclined) ? rec.evoDeclined : [];
+  }
+
+  // ── Public: declineEvolution — records a STOP from the evolution screen
+  // recKey may be null, meaning "the active companion", which is the path the
+  // timer takes: app.js knows the companion's level but not its record key.
+  // Returns a promise so the evolution screen can hold its dismiss until the
+  // write lands — otherwise the re-render it triggers can still read the old
+  // record and show the form the player just refused.
+  function declineEvolution(recKey, atLevel) {
+    if (!atLevel) return Promise.resolve();
+
+    const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
+    const key = recKey != null ? recKey : activeKey;
+
+    // The companion box and the timer screen read this mirror, not IDB, and
+    // they repaint synchronously — so write it first and the refusal is
+    // already in effect by the time anything looks.
+    if (key != null && key === activeKey) {
+      const cur = activeDeclinedLevels();
+      if (!cur.includes(atLevel)) {
+        cur.push(atLevel);
+        localStorage.setItem('pm_active_evo_declined', JSON.stringify(cur));
+      }
+    }
+
+    if (!db || key == null) return Promise.resolve();
+    // Read-modify-write inside ONE transaction. Doing it as a read followed by
+    // updateRecord would reopen the store between the two halves, and the list
+    // being appended to is the thing being read — so a second decline landing
+    // in that gap would overwrite the first rather than join it.
+    return new Promise((resolve, reject) => {
+      const tx    = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req   = store.get(key);
+      req.onsuccess = () => {
+        const rec = req.result;
+        if (!rec) { resolve(); return; }
+        const list = declinedOf(rec);
+        if (list.includes(atLevel)) { resolve(); return; }
+        store.put(Object.assign({}, rec, { evoDeclined: list.concat(atLevel) }), key);
+        tx.oncomplete = resolve;
+      };
+      tx.onerror = () => reject(tx.error);
+    }).catch(() => {});
+  }
+
+  // The active companion's declines, mirrored out of its record into
+  // localStorage by setActiveCompanion. Shared with app.js through the module's
+  // public surface so there is one parser for the stored JSON.
+  function activeDeclinedLevels() {
+    try {
+      const v = JSON.parse(localStorage.getItem('pm_active_evo_declined') || '[]');
+      return Array.isArray(v) ? v.filter((n) => Number.isInteger(n)) : [];
+    } catch (e) { return []; }
+  }
+
   // ── Internal: addSmoothieItem — persists a smoothie to pm_items
   function addSmoothieItem(monName, rarity) {
     const items = JSON.parse(localStorage.getItem('pm_items') || '[]');
@@ -426,8 +492,9 @@ const Collection = (() => {
     // being levelled so the evolution animation draws this mon, not a plain
     // one of its kind.
     const variant = { shiny: !!rec.shiny, dark: !!rec.dark };
+    const declined = declinedOf(rec);
     const stageAt = (lv) => ({
-      ...(typeof getMonStage === 'function' ? getMonStage(mon, lv) : mon),
+      ...(typeof getMonStage === 'function' ? getMonStage(mon, lv, declined) : mon),
       ...variant,
     });
     const fromMon = stageAt(oldLevel);
@@ -435,7 +502,12 @@ const Collection = (() => {
     const evolved = fromMon.name !== toMon.name;
 
     if (evolved && typeof EvolutionScreen !== 'undefined') {
-      EvolutionScreen.start({ evolved, fromMon, toMon, newLevel }, () => renderMyMons());
+      // This path knows exactly which record is levelling, so it hands the key
+      // over rather than letting declineEvolution fall back to the active
+      // companion — a smoothie can be fed to any pal, not just that one.
+      EvolutionScreen.start(
+        { evolved, fromMon, toMon, newLevel }, () => renderMyMons(),
+        (atLevel) => declineEvolution(rec._key, atLevel));
     } else {
       renderMyMons();
     }
@@ -575,11 +647,18 @@ const Collection = (() => {
       localStorage.setItem('pm_active_pal_exp',   rec.palExp   || 0);
       localStorage.setItem('pm_active_shiny',     rec.shiny ? '1' : '0');
       localStorage.setItem('pm_active_dark',      rec.dark  ? '1' : '0');
+      // Same reasoning as the variant flags: the evolutions this particular pal
+      // was stopped at live on its record, and the timer screen reads the
+      // mirror rather than IDB. Without this the new companion inherits the
+      // previous one's refusals and renders as the wrong form.
+      localStorage.setItem('pm_active_evo_declined',
+        JSON.stringify(declinedOf(rec)));
     } else {
       // Lookup failed (no record, or the store threw). Clear the variant
       // rather than let the outgoing companion's flags stick to this one.
       localStorage.setItem('pm_active_shiny', '0');
       localStorage.setItem('pm_active_dark',  '0');
+      localStorage.removeItem('pm_active_evo_declined');
     }
 
     // updateCompanionDisplay is defined in app.js (loads after collection.js)
@@ -763,7 +842,8 @@ const Collection = (() => {
   // ── Internal: buildIndividualCard — one record per catch ─────
   function buildIndividualCard(mon, rec, activeRecKey) {
     const palLevel  = rec.palLevel || 1;
-    const stageMon  = typeof getMonStage === 'function' ? getMonStage(mon, palLevel) : mon;
+    const stageMon  = typeof getMonStage === 'function'
+      ? getMonStage(mon, palLevel, declinedOf(rec)) : mon;
     const isActive  = rec._key === activeRecKey;
 
     const card = document.createElement('div');
@@ -969,7 +1049,8 @@ const Collection = (() => {
     const rec      = detailRec;
     const mon      = detailMon;
     const palLevel = rec.palLevel || 1;
-    const stageMon = typeof getMonStage === 'function' ? getMonStage(mon, palLevel) : mon;
+    const stageMon = typeof getMonStage === 'function'
+      ? getMonStage(mon, palLevel, declinedOf(rec)) : mon;
 
     const dark  = !!rec.dark;
     const shiny = !!rec.shiny;
@@ -1320,13 +1401,18 @@ const Collection = (() => {
       if (!base) continue;
       names.add(base.name);
       if (base.evolutions) {
+        // A stage this pal was stopped at has never existed, so it is not in
+        // the Pomodex. Another record of the same species that did evolve
+        // still adds it — the Set is unioned across every record.
+        const declined = declinedOf(rec);
         for (const evo of base.evolutions) {
-          if ((rec.palLevel || 1) >= evo.atLevel) names.add(evo.name);
+          if ((rec.palLevel || 1) >= evo.atLevel &&
+              !declined.includes(evo.atLevel)) names.add(evo.name);
         }
       }
     }
     return names;
   }
 
-  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail, cancelBlendTap };
+  return { init, addCaught, clearAll, exportRecords, importRecords, renderDex, renderMyMons, updateActivePalLevel, getCaughtNames, openMonDetail, openActiveMonDetail, cancelBlendTap, declineEvolution, activeDeclinedLevels };
 })();

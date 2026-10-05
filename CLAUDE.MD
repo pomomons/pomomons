@@ -129,6 +129,24 @@ of CSS).
   catches one mon and is given another. Run it after touching `getRandomMon`,
   `spawnableForms`, the level maths in `game.js` `start()`, or any
   `evolutions[].atLevel`.
+- `node tools/check-encounter-labels.js [_site]` drives a real encounter for
+  all 30 forms x plain/shiny/dark x three viewports and asserts the floating
+  mon name clears the topbar, the headline and both edges of the stage. The
+  name is positioned off the top of the sprite's ART, so its height is a
+  property of each species, not of the layout — which is how the SHINY/DARK
+  label shipped overlapping it on the five tallest forms. Wait on
+  `#encounter-mon-name` reaching `opacity: 1` before measuring: that is the
+  signal `positionMonName()` has run, and anything earlier reads the CSS
+  default `top: 26%`, which is not where the caption ever renders. Run it after
+  touching the encounter topbar, the caption, or any sprite's art bounds.
+- `node tools/check-evolution-stop.js [_site]` covers the STOP button on the
+  evolution screen. A record stores a species id and a level and `getMonStage`
+  derives the form, so a refused evolution is stored as the threshold it was
+  stopped at (`evoDeclined`, mirrored to `pm_active_evo_declined` for the
+  companion) and EVERY reader has to pass it through — My Mons, the mon detail
+  card, `getCaughtNames`, the companion box. Miss one and that screen silently
+  shows the form the player refused. Run it if you add a screen that renders a
+  pal's form.
 - `node tools/check-content-pages.js [_site]` renders 404.html and each prose
   page at three widths and asserts: no sideways scroll, no console errors or
   failed requests, one h1, a title/description/canonical, every same-origin
