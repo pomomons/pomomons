@@ -387,7 +387,7 @@ body.run-focus {
   --bezel:      #7f514d;
   --btn-dark:   rgba(100,20,18,.46);
   --btn-edge:   rgba(175,55,48,.38);
-  --strip-bg:   #2f1715;
+  --strip-bg:   #591715;
   --strip-rail: #4a2e2c;
   /* Eased back one notch from the punchy crimson pass — same colour family,
      lighter and less opaque so it stays a rich red without going quite as
