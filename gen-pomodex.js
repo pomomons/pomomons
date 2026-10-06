@@ -114,26 +114,6 @@ const tableRows = rows.map((r) => `
           <td>${esc(r.line)}</td>
         </tr>`).join('');
 
-// One <h2> per evolution line, so the page has real headings to rank on rather
-// than a bare table, and each line reads as a unit.
-const lines = MONS.map((m) => {
-  const chain = [m, ...(m.evolutions || [])];
-  const names = chain.map((c, i) =>
-    i === 0 ? `<strong>${esc(c.name)}</strong>`
-            : `<strong>${esc(c.name)}</strong> (level ${c.atLevel})`).join(' &rarr; ');
-  const types = [...new Set(chain.map((c) => c.type))];
-  return `
-    <h3>${esc(m.name)} (#${String(m.dexNum).padStart(2, '0')}${chain.length > 1 ? `–#${String(chain[chain.length - 1].dexNum).padStart(2, '0')}` : ''})</h3>
-    <p>
-      ${names}.
-      ${types.length > 1
-        ? `Starts as ${esc(types[0])} and ends as ${esc(types[types.length - 1])}.`
-        : `${esc(types[0])} type throughout.`}
-      ${m.rarity === 'common' ? 'Common encounter.' : `Rarity: ${esc(m.rarity)}.`}
-      ${chain.length === 1 ? 'Does not evolve.' : ''}
-    </p>`;
-}).join('');
-
 const page = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,12 +179,10 @@ const page = `<!DOCTYPE html>
   <main id="main">
     <h1>The Pomodex</h1>
     <p class="standfirst">
-      All ${formCount} Pomomon forms across ${baseCount} base species. You meet
-      one at the end of a focus session, and ${formCount - baseCount} of them
-      are evolutions you reach by levelling a Pomomon you already caught.
+      All ${formCount} Pomomon forms across ${baseCount} base species, in the
+      order you meet them.
     </p>
 
-    <h2>Every Pomomon</h2>
     <div class="dex-wrap">
       <table>
         <caption>Pomodex #01&ndash;#${String(formCount).padStart(2, '0')}. Evolution levels are the level the previous form evolves at.</caption>
@@ -223,32 +201,14 @@ const page = `<!DOCTYPE html>
       </table>
     </div>
 
-    <h2>How catching and evolving work</h2>
     <p>
-      A wild Pomomon appears when a focus session ends, and you throw a tomato
-      to catch it. The catch always succeeds. Caught Pomomons gain levels as you
-      complete more sessions, and evolve on their own at level 16, 20 or 36
-      depending on the line.
+      A wild Pomomon appears at the end of every focus session and the catch
+      always succeeds. Caught Pomomons evolve on their own at level 16, 20 or
+      36 depending on the line, and evolved forms start turning up in the wild
+      once your own level is within two of that. Any encounter can also be a
+      <strong>shiny</strong> (about 1 in 500) or a <strong>dark</strong>
+      Pomomon (about 1 in 100).
     </p>
-    <p>
-      Evolved forms appear in the wild too, once your own level is within two of
-      the level they evolve at: a Marinaro starts turning up at player level
-      14. Base forms never stop appearing, so levelling widens what you can
-      meet rather than replacing it.
-    </p>
-    <p>
-      Two rare variants can turn up on any encounter: a <strong>shiny</strong>
-      Pomomon, gold-tinted with sparkles, at roughly 0.2% (about 1 in 500),
-      and a <strong>dark</strong> Pomomon, near-black, at about 1%. The
-      other 98.8% are normal. Shiny is rolled first and wins outright, so no
-      Pomomon is ever both.
-    </p>
-
-    <h2>Evolution lines</h2>
-    <p>
-      The ${baseCount} lines in full, in Pomodex order.
-    </p>
-    ${lines}
   </main>
 
   <footer class="site-foot">

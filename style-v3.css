@@ -3660,6 +3660,10 @@ html::after,
    it the first screen gives no sign the page continues, and a section only a
    crawler reads is half wasted.
 
+   Only shown while the Timer screen is active (sibling selector below) —
+   it's meant as a first-screen nudge, and on My Mons it sat at the same
+   bottom-center spot as the RESTORE button (.mymons-restore) and covered it.
+
    Absolute inside .app-viewport, so it scrolls away with the app. Its offset
    rides --stats-reserve, the strip's real measured height, which app.js keeps
    current — the strip's own height is auto in this skin and changes as the
@@ -3670,12 +3674,12 @@ html::after,
    (100+), so an encounter, a modal or the strip itself covers it with no
    JavaScript and no state class to keep in sync. */
 .scroll-cue {
+  display: none;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(var(--stats-reserve, 160px) + 6px);
   z-index: 40;
-  display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px 14px;
@@ -3683,6 +3687,8 @@ html::after,
   text-decoration: none;
   animation: cue-bob 2.4s ease-in-out infinite;
 }
+
+#screen-timer.active ~ .scroll-cue { display: flex; }
 
 /* A bare chevron, no caption. It started as a labelled "WHAT IS THIS?" button
    and there is simply no room for one: the band between the panel's bottom
