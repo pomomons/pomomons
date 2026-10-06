@@ -69,22 +69,30 @@
     }
     .cta:hover, .cta:focus-visible { background: #f0bc4d; }
     .cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #0d1c13; }
-    small { color: #8fae9b; }
+    /* #8fae9b against this page's #2b5343 background is 3.59:1 — under the
+       4.5:1 this needs at 13px. Same fix as --ink-faint in content.css. */
+    small { color: #a9c1b2; }
+    /* display:contents keeps this a true landmark for assistive tech without
+       becoming a flex item itself — body's flex layout still applies
+       directly to the elements below, exactly as if main weren't here. */
+    main { display: contents; }
   </style>
 </head>
 <body>
-  <img class="tomato" src="/assets/sprites/Tomato/Tomato.png"
-       alt="A pixel-art tomato, the ball you throw to catch a Pomomon.">
+  <main>
+    <img class="tomato" src="/assets/sprites/Tomato/Tomato.png"
+         alt="A pixel-art tomato, the ball you throw to catch a Pomomon.">
 
-  <h1>This page ran away.</h1>
+    <h1>This page ran away.</h1>
 
-  <p>
-    There's no page at that address — but your focus timer and your Pomodex are
-    exactly where you left them.
-  </p>
+    <p>
+      There's no page at that address — but your focus timer and your Pomodex are
+      exactly where you left them.
+    </p>
 
-  <a class="cta" href="/">BACK TO THE TIMER</a>
+    <a class="cta" href="/">BACK TO THE TIMER</a>
 
-  <p><small>PomoMons — focus &middot; catch &middot; collect</small></p>
+    <p><small>PomoMons — focus &middot; catch &middot; collect</small></p>
+  </main>
 </body>
 </html>

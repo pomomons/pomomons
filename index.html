@@ -305,9 +305,8 @@
              its own because .mymons-top is pinned — a new row there would
              cost the grid that height permanently. -->
         <div class="pxb pxb-sort"><button class="btn btn-ghost btn-sm" id="btn-mymons-sort"
-                aria-haspopup="true" aria-expanded="false"
-                aria-label="Sort your mons"><span class="sort-label"
-                id="mymons-sort-label">NEWEST</span><span class="mode-caret">▼</span></button></div>
+                aria-haspopup="true" aria-expanded="false"><span class="sr-only">Sort by </span><span class="sort-label"
+                id="mymons-sort-label">NEWEST</span><span class="mode-caret" aria-hidden="true">▼</span></button></div>
       </div>
     </div>
 
@@ -337,7 +336,7 @@
          bounded above by .mymons-top and below (via margin-bottom, see
          style-v3.css) by the fixed stats-strip footer, so cards can never
          render behind either — no reliance on sticky/opaque stacking. -->
-    <div class="mymons-scroll">
+    <div class="mymons-scroll" tabindex="0">
     <div class="collection-grid" id="mymons-grid">
       <p class="empty-state">COMPLETE A FOCUS SESSION TO CATCH YOUR FIRST POMOMON!</p>
     </div>
@@ -392,7 +391,7 @@
     <!-- True scroll clip: same fix as My Mons — bounded above by .mymons-top
          and below (via margin-bottom, see style-v3.css) by the fixed
          stats-strip footer, so cards can never render behind either. -->
-    <div class="mymons-scroll">
+    <div class="mymons-scroll" tabindex="0">
     <div class="collection-grid" id="dex-grid"></div>
     </div>
   </main>
@@ -816,10 +815,10 @@
 
        Every number here is taken from the code, not from the docs — the docs
        said the default session was 25 minutes for weeks after it became 30. -->
-  <section class="home-prose" id="about">
+  <section class="home-prose" id="about" aria-labelledby="about-heading">
     <div class="prose-col">
 
-      <h2>A Pomodoro timer with a mon to catch at the end of every session</h2>
+      <h2 id="about-heading">A Pomodoro timer with a mon to catch at the end of every session</h2>
       <p>
         PomoMons is a free Pomodoro timer with a creature collector attached.
         Start a focus session, work until it ends, and a wild Pomomon turns up.
@@ -883,26 +882,19 @@
 
       <h2>Why the reward helps</h2>
       <p>
-        Fixed, timed blocks are the best-tested way to work. In a trial of 87
-        students, the group on a set schedule finished the same amount of work
-        in less time, with less fatigue and better concentration, than the
-        group taking breaks whenever they felt like it. No study shows a timer
-        makes you learn more, though, and finishing a session on a plain timer
-        gives you nothing back but silence.
+        Fixed, timed blocks are the best-tested way to work. In a 2023 trial
+        of 87 students by researchers at Maastricht University, the group on
+        a set schedule finished the same amount of work in less time, with
+        less fatigue and better concentration, than the group taking breaks
+        whenever they felt like it.
       </p>
       <p>
         The game is the half with the better evidence. Four separate
-        meta-analyses have found that game elements improve learning outcomes,
-        with effect sizes rated medium to large. That is a stronger result than
-        the timer itself can claim.
+        meta-analyses (Sailer &amp; Homner, 2020; Bai et al., 2020; Zeng et
+        al., 2024; Li et al., 2023) have found that game elements improve
+        learning outcomes, with effect sizes rated medium to large. That is a
+        stronger result than the timer itself can claim.
         <a href="/research/">The nine studies, including the two that disagree with us</a>.
-      </p>
-      <p>
-        A mon takes about ten seconds and arrives where you were going to stop
-        anyway. It will not fix a task you are avoiding for a real reason, and
-        if timers have never worked for you, this will not change that. What it
-        does is make the fourth session of the afternoon easier to start than
-        the fourth session of a plain timer.
       </p>
 
       <h2>Free, no account, works offline</h2>
@@ -948,6 +940,8 @@
         <nav class="foot-nav" aria-label="Site">
           <a href="/pomodex/">All 30 Pomomons</a>
           <a href="/research/">The research</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
           <a href="https://discord.gg/bXnKR8FeG" rel="noopener">Discord</a>
         </nav>
       </div>
@@ -1087,58 +1081,12 @@
          never ask for itself. The box is a mirror of the browser's answer,
          kept in step by app.js; when a tick fails to take, #notify-modal
          explains where the real switch is. -->
-    <label class="settings-row settings-row--toggle">
-      <input type="checkbox" id="toggle-notify">
+    <button type="button" class="settings-row settings-row--toggle" id="toggle-notify"
+            role="menuitemcheckbox" aria-checked="false">
+      <span class="toggle-box" aria-hidden="true"></span>
       <span class="settings-label">Notify when timer ends</span>
-    </label>
+    </button>
 
-    <!-- ── Standalone pages ──────────────────────────────────
-         The two prose pages (/pomodex/ and /research/) live outside the app
-         shell and nothing in the app linked to them, which left them reachable
-         only from sitemap.xml. These rows are both the human route to them and
-         the crawl path: a page a search engine can only find in the sitemap is
-         indexed far more reluctantly than one the site actually links to.
-
-         Plain same-tab links, unlike the Discord row above — they are part of
-         this site, so opening a new tab for them would be wrong. Each carries
-         a one-word pixel glyph rather than borrowing another row's icon, so
-         the menu still reads as a single column of labelled rows. -->
-    <hr class="settings-sep" aria-hidden="true">
-
-    <a class="settings-row" href="/pomodex/" role="menuitem">
-      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
-           xmlns="http://www.w3.org/2000/svg"
-           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
-        <!-- Open book: two pages and a spine -->
-        <rect x="0" y="1" width="4" height="1" fill="currentColor"/>
-        <rect x="6" y="1" width="4" height="1" fill="currentColor"/>
-        <rect x="0" y="2" width="1" height="6" fill="currentColor"/>
-        <rect x="4" y="2" width="1" height="6" fill="currentColor"/>
-        <rect x="5" y="2" width="1" height="6" fill="currentColor"/>
-        <rect x="9" y="2" width="1" height="6" fill="currentColor"/>
-        <rect x="1" y="4" width="3" height="1" fill="currentColor"/>
-        <rect x="6" y="4" width="3" height="1" fill="currentColor"/>
-        <rect x="1" y="6" width="3" height="1" fill="currentColor"/>
-        <rect x="6" y="6" width="3" height="1" fill="currentColor"/>
-        <rect x="0" y="8" width="4" height="1" fill="currentColor"/>
-        <rect x="6" y="8" width="4" height="1" fill="currentColor"/>
-      </svg>
-      <span class="settings-label">All Pomomons</span>
-    </a>
-
-    <a class="settings-row" href="/research/" role="menuitem">
-      <svg class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
-           xmlns="http://www.w3.org/2000/svg"
-           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
-        <!-- Bar chart: two axes and three rising bars -->
-        <rect x="0" y="0" width="1" height="9" fill="currentColor"/>
-        <rect x="0" y="9" width="10" height="1" fill="currentColor"/>
-        <rect x="2" y="5" width="2" height="4" fill="currentColor"/>
-        <rect x="5" y="3" width="2" height="6" fill="currentColor"/>
-        <rect x="8" y="1" width="2" height="8" fill="currentColor"/>
-      </svg>
-      <span class="settings-label">The research</span>
-    </a>
   </div>
 
   <!-- ── Mailing-list card ─────────────────────────────
@@ -1176,6 +1124,7 @@
         <input type="checkbox" id="signup-updates" class="signup-check">
         <span>Also send me occasional updates and polls on which mon to make next</span>
       </label>
+      <p class="signup-legal">By continuing you agree to our <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</p>
     </form>
   </div>
 

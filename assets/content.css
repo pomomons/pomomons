@@ -21,10 +21,16 @@
 :root {
   --ink:        #f4ecd8;   /* cream, body text          */
   --ink-dim:    #b8d8c2;   /* frame green, secondary    */
-  --ink-faint:  #8fae9b;
+  /* #8fae9b against --ground is 3.59:1 — fails WCAG AA's 4.5:1 for normal
+     text (used at caption/.asof/.dex-num size). Lightened just enough to
+     clear it; still reads as the same dim, de-emphasized green. */
+  --ink-faint:  #a9c1b2;
   --ground:     #2b5343;   /* mode-bg                   */
   --panel:      #3d6b57;   /* panel-bg                  */
-  --gold:       #e5ac35;
+  /* #e5ac35 against --ground is 4.24:1 — also fails 4.5:1 at the sizes it's
+     set in here (table headers, h3, body links). Nudged lighter; the app's
+     own --gold in style-v3.css is unaffected; see that file's comment. */
+  --gold:       #e7b345;
   --gold-lt:    #f0bc4d;
   --outline:    #0d1c13;
   --strip:      #152f29;
@@ -276,7 +282,9 @@ td .sprite {
 .chip-savory { background: #8c3a32; }
 .chip-sweet  { background: #8a5a86; }
 .chip-spicy  { background: #9c3a1e; }
-.chip-sour   { background: #6d7524; }
+/* Darkened slightly from #6d7524 — the only one of the five below 4.5:1
+   against the cream chip text (was 4.23:1). */
+.chip-sour   { background: #697023; }
 .chip-bitter { background: #5e4722; }
 
 /* ── Footer ────────────────────────────────────────────────── */

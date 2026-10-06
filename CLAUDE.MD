@@ -48,6 +48,22 @@ appears. Players throw a tomato to catch it and build a collection.
   learning: none of the sources show that, and the page says so explicitly.
   llms.txt carries the same summary, including the "do not describe PomoMons as
   scientifically proven" line, so the two have to stay in step.
+- privacy/index.html, terms/index.html — added 2026-10-05, same pattern and
+  stylesheet as research/index.html. Privacy names everything the site
+  collects (GoatCounter's anonymous counts; an email address only if someone
+  signs up, which goes to a Google Sheet and Brevo — see
+  agent_docs/email-signups.md) and how to ask for an address to be deleted.
+  Terms covers no-warranty/no-liability, that the research page isn't
+  professional advice, and that the Pomomons are original work with no
+  affiliation to any other franchise. Both are linked from the home footer,
+  every standalone page's own footer, and the signup card's small print — a
+  page added to sitemap.xml without a visible link gets indexed far more
+  reluctantly than one the site actually links to (see the comment on the
+  home footer below). Not from the settings menu: that's for app controls,
+  and legal pages belong in a footer, not mixed in with Sound/Notify/Sort.
+  Keep both in step with what signup.js
+  and the Apps Script in agent_docs/email-signups.md actually do; don't let
+  the policy describe a data flow that changed and the page didn't.
 - gen-pomodex.js — generates the /pomodex/ page from monsters.js at build time
   (see Build & Deploy). Root-level, not tools/, because tools/ is gitignored
   and absent on the Pages runner. In build.js EXCLUDE, so never published.
@@ -100,9 +116,13 @@ of CSS).
   never type a date in by hand. build.js also asserts every `<loc>` resolves to
   a page in `_site/`, so add the page before adding the URL.
 - When adding a standalone page, add it to `sitemap.xml`, link to it from the
-  settings menu in index.html, and add it to the `PAGES` list in
+  home footer (`.home-foot` in index.html) and from `.site-foot` on every
+  other standalone page, and add it to the `PAGES` list in
   `tools/check-content-pages.js`. A page reachable only from the sitemap gets
-  indexed far more reluctantly than one the site actually links to.
+  indexed far more reluctantly than one the site actually links to. The
+  settings menu used to carry these links too, removed 2026-10-05 at the
+  owner's request: it's for app controls (sound, notifications, sort order),
+  not site navigation. Don't put a new standalone page back in there.
 - Never minify a source file in place.
 - build.js stamps `?v=<content hash>` onto every stylesheet and script
   reference in index.html and sw.js, and stamps CACHE_VERSION from those
@@ -184,6 +204,23 @@ of CSS).
   since /faq/ was removed, but the check is kept: it costs nothing and the
   schema and the prose are two copies of the same text that drift apart
   silently.
+- `node tools/check-accessibility.js [_site]` (added 2026-10-05, needs
+  `npm install --no-save axe-core` in tools/ first — not in tools/package.json
+  because tools/ is a dev scratch dir with no lockfile discipline) runs
+  axe-core's WCAG ruleset against every standalone page plus the app's main
+  interactive states (settings menu, mode dropdown, signup card, history
+  modal, My Mons and Pomodex screens). Fails on serious/critical findings
+  only; moderate/minor print but don't block. One moderate finding is left
+  unfixed on purpose: the anchored dropdown/modal menus sit outside
+  `<main>`/`<header>`/`<footer>` by design (they're positioned by JS, not in
+  document flow where they're declared) and axe's `region` rule wants all
+  content inside a landmark regardless. They already carry
+  `role="menu"`/`role="dialog"` + `aria-label`, which is what assistive tech
+  actually needs; landmark-wrapping a transient popup isn't standard practice
+  and isn't worth the structural change. Run this after touching the settings
+  menu, any dropdown/modal, or a shared color token in style-v3.css or
+  assets/content.css — the contrast checks catch what eyeballing a screenshot
+  doesn't.
 - `node tools/check-sw-shell.js [_site]` proves a visit to a content page
   cannot replace the cached offline app shell. `networkFirstPage` used to run
   `cache.put('index.html', ...)` on EVERY navigation, which was harmless on a
