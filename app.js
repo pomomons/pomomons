@@ -721,14 +721,17 @@ btnStart.addEventListener('click', () => {
 btnReset.addEventListener('click', resetTimer);
 
 // ── Notifications toggle ──────────────────────────────────
-// The checkbox is a mirror of the browser, not a setting of our own: ticked
+// aria-checked is a mirror of the browser, not a setting of our own: checked
 // means a notification will genuinely appear when a timer ends. Only the
 // browser can grant that, and once a player has blocked it nothing on the
 // page may ask again — so a tick that fails to take opens the help card
-// naming the switch to reach for, and the box goes back to unticked rather
+// naming the switch to reach for, and the box goes back to unchecked rather
 // than sitting there claiming something untrue. Turning it off is the one
 // direction that is ours to honour: the browser keeps its permission and
 // pm_notify remembers that we should stop using it.
+//
+// This is a <button role="menuitemcheckbox">, not a native checkbox input —
+// see the comment on .toggle-box in style-v3.css for why.
 const notifyToggle = document.getElementById('toggle-notify');
 const notifyModal  = document.getElementById('notify-modal');
 const notifyIntro  = document.getElementById('notify-intro');
@@ -737,7 +740,8 @@ const notifySteps  = document.getElementById('notify-steps');
 function syncNotifyUI() {
   if (!notifyToggle) return;
   notifyToggle.disabled = !Notify.supported;
-  notifyToggle.checked  = Notify.supported && notifyEnabled() && Notify.permission === 'granted';
+  const on = Notify.supported && notifyEnabled() && Notify.permission === 'granted';
+  notifyToggle.setAttribute('aria-checked', String(on));
   // Permission arriving while the card is up means the player has just fixed
   // it in the browser and does not need telling how any more.
   if (Notify.permission === 'granted') closeNotifyHelp();
@@ -790,10 +794,13 @@ document.addEventListener('keydown', e => {
 });
 
 if (notifyToggle) {
-  notifyToggle.addEventListener('change', async () => {
+  // A <button> gives Space/Enter and native disabled-state handling for
+  // free, same as #btn-audio — no separate keydown wiring needed.
+  notifyToggle.addEventListener('click', async () => {
     SFX.play('click');
-    localStorage.setItem(NOTIFY_KEY, notifyToggle.checked ? '1' : '0');
-    if (notifyToggle.checked) {
+    const next = notifyToggle.getAttribute('aria-checked') !== 'true';
+    localStorage.setItem(NOTIFY_KEY, next ? '1' : '0');
+    if (next) {
       const result = await Notify.request();
       if (result !== 'granted') openNotifyHelp(result);
     }

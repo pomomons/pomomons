@@ -22,6 +22,12 @@
   --mode-bg:      #2b5343;
   --panel-bg:     #3d6b57;   /* lighter than the ground, so dark digits read */
 
+  /* Deliberately NOT the same hex as assets/content.css's --gold: this one
+     is never set as small text directly on --ground in the app (it's mostly
+     glyphs, borders and pixel-face headings at display sizes), so it never
+     hit the 4.5:1 failure content.css's copy did on body-text-sized links
+     and table headers. Don't "fix" this back in step with that file without
+     re-checking contrast at the sizes each is actually used at. */
   --gold:         #e5ac35;   /* warmer, less acid than #ffd600 */
   --gold-dk:      #a3761a;
 
@@ -1486,16 +1492,6 @@ html::after {
   cursor: pointer;
 }
 .settings-row:last-child { border-bottom: none; }
-
-/* Divider between the app's own controls and the links out to the standalone
-   pages. Heavier than the hairline each row already carries on its bottom
-   edge, so the menu reads as two groups rather than one long list. */
-.settings-sep {
-  height: 0;
-  margin: 0;
-  border: none;
-  border-top: 2px solid rgba(255,255,255,.22);
-}
 .settings-row:hover,
 .settings-row:focus-visible { background: rgba(255,255,255,.1); color: var(--text); outline: none; }
 
@@ -1508,21 +1504,38 @@ html::after {
 
 .settings-label { flex: 1 1 auto; }
 
-/* Toggle row: checkbox on the left, then the label.
-   The checkbox leads the row, in the slot the other rows fill with a
-   .settings-ico. It stays a 16px square — a native checkbox fills whatever box
-   it is given, so widening it to the icon's 20px would stretch it into a
-   rectangle — and 2px of margin either side makes up the difference instead.
-   The row's own 12px gap then carries it to the label, so every label in the
-   menu starts at the same x. space-between is gone with it: that is what used
-   to throw the checkbox to the far right, past the end of the text. */
-.settings-row--toggle input {
+/* Toggle row: a drawn box on the left, then the label.
+   This used to be a native <input type="checkbox"> inside a <label>. A real
+   form control doesn't have a role the role="menu" on #settings-menu is
+   allowed to contain (WAI-ARIA's menu pattern expects menuitem/
+   menuitemcheckbox/menuitemradio/group/separator only), and every way of
+   papering over that — role="presentation" on the input, tabindex tricks —
+   just traded one axe violation for another (nested-interactive,
+   presentation-role-conflict). #btn-audio above already solves this the
+   right way: a real <button role="menuitemcheckbox">, state carried by
+   aria-checked, no native form control involved. This row now matches it.
+   The box stays a 16px square — 2px of margin either side makes up the
+   difference to the icon column's 20px, same as the native checkbox did. */
+.toggle-box {
   flex: 0 0 auto;
   width: 16px;
   height: 16px;
   margin: 0 2px;
-  accent-color: var(--gold);
-  cursor: pointer;
+  border: 2px solid var(--gold);
+  box-sizing: border-box;
+  position: relative;
+}
+.settings-row--toggle[aria-checked="true"] .toggle-box { background: var(--gold); }
+.settings-row--toggle[aria-checked="true"] .toggle-box::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: -1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--outline);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 /* Tighter companion box (less padding around the stage) and a bigger gap
@@ -3010,6 +3023,21 @@ html::after,
    repeat-backup path hides this row by setting .hidden. */
 .signup-consent[hidden] { display: none; }
 
+/* Same color/opacity as .signup-consent above, not --gold: --gold is only
+   2.99:1 against --panel-bg in focus mode, well under the 4.5:1 this text
+   needs at 10px. White at .82 opacity clears 4.5:1 against both panel
+   colors (focus green and break red) — the link is marked by its underline,
+   not a color change, which also sidesteps relying on color alone. */
+.signup-legal {
+  font-size: 10px;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: .02em;
+  color: var(--text);
+  opacity: .82;
+}
+.signup-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
 .signup-check {
   flex: 0 0 auto;
   width: 17px;
@@ -3103,6 +3131,18 @@ html::after,
   white-space: nowrap;
 }
 
+/* Same pattern, generic name — for screen-reader-only text anywhere else
+   that isn't part of the signup card. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .signup-card,
   .signup-backdrop { transition: opacity .01s; }
@@ -3129,6 +3169,7 @@ html::after,
   /* The consent line stays — it is the record of what was agreed to, so it
      cannot be the thing that gets dropped to save height. */
   .signup-consent { font-size: 9px; line-height: 1.5; }
+  .signup-legal { font-size: 9px; line-height: 1.4; }
 }
 
 
@@ -3598,7 +3639,8 @@ html::after,
   font-family: var(--font-pixel);
   font-size: .5625rem;
   letter-spacing: .04em;
-  color: rgba(232,240,230,.5);
+  /* .5 alpha was 4.24:1 against --strip-bg — just under 4.5:1. */
+  color: rgba(232,240,230,.53);
   margin: 0;
 }
 

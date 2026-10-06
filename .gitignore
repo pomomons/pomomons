@@ -15,3 +15,11 @@ node_modules/
 # OS junk
 Thumbs.db
 .DS_Store
+
+# Drawing reference images (downloaded photos, AI-generated concept art) kept
+# locally for the artist's own use. Untracked 2026-10-05: this repo is
+# public, and unlike art-source/piskel/ (the actual sprite source files),
+# nothing here needs to be public or is needed to build the site. Still on
+# disk, still in git history before this commit — see CLAUDE.md if that
+# history ever needs scrubbing too.
+art-source/reference/
