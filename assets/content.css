@@ -236,9 +236,8 @@ td .sprite {
 }
 .evidence tbody td:first-child { white-space: nowrap; }
 
-/* The "last reviewed" dateline, directly under the standfirst. */
+/* The "last reviewed" dateline, directly under the h1. */
 .asof {
-  margin-top: -1.75rem;
   margin-bottom: 2.5rem;
   font-size: 0.875rem;
   color: var(--ink-faint);
