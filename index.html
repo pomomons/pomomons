@@ -342,10 +342,12 @@
     </div>
     </div>
 
-    <!-- RESTORE opens #save-code in restore-only mode (see backup.js) — it can
-         paste a code in, but never builds or shows one, so it can't be used to
-         get a save code without going through Save in the settings menu
-         (#btn-signup), which requires an email address.
+    <!-- Always opens #save-code in request-code mode (see backup.js): email
+         is optional, and submitting — with or without one — builds and shows
+         a code right there. No separate "Save" step and no email requirement
+         gate it anymore; the periodic nudge toward doing this lives on the
+         timer screen instead (the mailing-list card, #signup-card), so this
+         button doesn't also need to pop up its own reminder.
 
          Deliberately a SIBLING of .mymons-scroll, not a child: as a child it
          scrolled away the moment the grid was tall enough to scroll, so the
@@ -353,24 +355,7 @@
          it. Out here it's a fixed row that always sits between the bottom of
          the scroll box and the stats strip. -->
     <div class="mymons-restore">
-      <!-- Save-code reminder. Lives inside this row rather than getting one of
-           its own because .mymons-restore's bottom margin is measured against
-           the stats strip (see the long comment on it in style-v3.css) and a
-           second row would have to repeat that maths. As a flex column with
-           only RESTORE visible this renders exactly as the old single
-           centered button did.
-
-           Shown/hidden and worded by Backup.refreshNudge(), which My Mons
-           calls with the collection size. -->
-      <div class="save-nudge" id="save-nudge" hidden>
-        <p class="save-nudge-text" id="save-nudge-text"></p>
-        <div class="save-nudge-btns">
-          <button class="btn btn-sm save-nudge-go" id="btn-save-nudge">GET A SAVE CODE</button>
-          <button class="btn btn-ghost btn-sm" id="btn-save-nudge-later">LATER</button>
-        </div>
-      </div>
-      <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code"
-              aria-label="Restore your collection from a save code">RESTORE</button>
+      <button class="btn btn-ghost btn-sm btn-save-code" id="btn-save-code">DON'T LOSE YOUR MONS!</button>
     </div>
   </main>
 
@@ -488,28 +473,40 @@
   <!-- ── Save Code Modal ──────────────────────────────── -->
   <!-- There are no accounts, so this is the only way a collection outlives the
        browser it was caught in. Opened two ways, and backup.js tells them
-       apart with the restoreOnly flag on open():
-         • #btn-save-code (My Mons, "RESTORE") — restore-only. .save-code-export
-           stays hidden and codeBox is never filled, so this path can paste a
-           code in but can never produce one — getting a fresh code still
-           requires Save in the settings menu, which asks for an email.
-         • a #restore= link out of the backup email — shows both halves, same
-           as before. That link only exists because an email already went out,
-           so showing this browser's own current code alongside it isn't a
-           free-code path. -->
+       apart with the requestMode flag on open():
+         • #btn-save-code (My Mons, "DON'T LOSE YOUR MONS!") — request mode.
+           .save-code-request (email + SUBMIT) shows instead of the code, and
+           submitting is what builds and reveals it — with or without an
+           email. An email, if given, also gets it sent via Signup.sendBackupCode
+           (signup.js), reusing the same Apps Script endpoint the mailing-list
+           card posts to.
+         • a #restore= link out of the backup email — the old behaviour:
+           shows this browser's current code immediately, no email step,
+           alongside the paste-in half below. That link only exists because an
+           email already went out, so asking for another one here would be
+           redundant. -->
   <div id="save-code" class="blender-confirm save-code" role="dialog" aria-modal="true"
        aria-labelledby="save-code-title" aria-hidden="true">
     <div class="blender-confirm-box save-code-box">
       <div class="save-code-export">
         <p class="blender-confirm-title" id="save-code-title">YOUR SAVE CODE</p>
-        <p class="blender-confirm-body save-code-body">
+        <p class="blender-confirm-body save-code-body" id="save-code-body">
           YOUR MONS LIVE IN THIS BROWSER ONLY.<br>
           KEEP THIS CODE TO BRING THEM BACK ANYWHERE.
         </p>
 
+        <!-- Request-mode only (see backup.js open()): hidden by default so the
+             #restore= link path still lands straight on the code, unchanged. -->
+        <form class="save-code-request" id="save-code-request" novalidate hidden>
+          <label class="signup-sr" for="save-code-email">Email address (optional)</label>
+          <input type="email" id="save-code-email" class="save-code-email"
+                 placeholder="EMAIL (OPTIONAL)" autocomplete="email">
+          <div class="blend-confirm-frame"><button type="submit" class="blend-confirm-btn" id="btn-get-code">SUBMIT</button></div>
+        </form>
+
         <textarea class="save-code-text" id="save-code-text" readonly rows="3"
                   aria-label="Your save code" spellcheck="false"></textarea>
-        <div class="save-code-row">
+        <div class="save-code-row" id="save-code-copy-row">
           <div class="blend-confirm-frame"><button class="blend-confirm-btn" id="btn-copy-code">COPY</button></div>
           <span class="save-code-msg" id="save-code-msg" role="status" aria-live="polite"></span>
         </div>

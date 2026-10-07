@@ -1365,12 +1365,6 @@ const Collection = (() => {
 
     setMyMonsTabCount(allCaught.length);
 
-    // Save-code reminder. Placed before the empty-collection return so an
-    // empty collection still hides it rather than leaving a stale message up.
-    if (typeof Backup !== 'undefined' && Backup.refreshNudge) {
-      Backup.refreshNudge(allCaught.length);
-    }
-
     if (allCaught.length === 0) {
       grid.innerHTML = '<p class="empty-state">Catch your first Pomomon to see it here!</p>';
       return;

@@ -49,32 +49,6 @@ const Backup = (() => {
   // can still be in circulation.
   const PURGE_FLAG = 'pm_seed_purged';
 
-  // ── Save-code reminder ──────────────────────────────────────
-  // Deliberately NOT in KEYS above, for the same reason pm_email_* isn't:
-  // "there is a code for this collection written down somewhere" is a fact
-  // about a browser, not about a player. Carrying it inside a code would
-  // silence the reminder on a device that has never saved anything.
-  const SAVED_AT    = 'pm_code_saved_at';
-  const SAVED_COUNT = 'pm_code_saved_count';
-  const SNOOZE_AT   = 'pm_code_nudge_snoozed';
-
-  // FIRST_NUDGE_AT is "a handful": late enough that a brand-new player isn't
-  // asked to back up an empty box, early enough that the collection still at
-  // risk is small. GROWN_BY re-asks once a saved code is meaningfully stale —
-  // a code from 3 mons ago restores you to 3 mons ago.
-  const FIRST_NUDGE_AT = 3;
-  const GROWN_BY       = 5;
-  const SNOOZE_DAYS    = 7;
-
-  // Set by create() so copy() knows how many mons the code it just built
-  // actually holds, without exporting the collection a second time.
-  let builtCount = null;
-  let lastKnownCount = null;
-
-  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
-  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-  const lsNum = k => Number(lsGet(k)) || 0;
-
   // ── Code format ─────────────────────────────────────────────
   // PMZ1.<base64url>.<check>   Z = gzipped, B = plain
   // The check digit is what makes a truncated paste fail loudly. Codes get
@@ -129,8 +103,6 @@ const Backup = (() => {
       const v = localStorage.getItem(k);
       if (v !== null) state[k] = v;
     }
-
-    builtCount = records.length;
 
     const payload = { v: VERSION, t: Date.now(), s: state, m: records };
     const raw = new TextEncoder().encode(JSON.stringify(payload));
@@ -212,17 +184,13 @@ const Backup = (() => {
     }
     localStorage.setItem(PURGE_FLAG, '1');
 
-    // Restoring proves this person has a working code in hand, so it counts
-    // as having saved — otherwise the reminder would greet them immediately
-    // after a successful restore, which reads as "that didn't work".
-    markSaved(Array.isArray(payload.m) ? payload.m.length : null);
-
     return summarise(payload);
   }
 
   // ── UI ──────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
-  let modal, codeBox, restoreBox, copyMsg, restoreMsg, pending = null;
+  let modal, codeBox, copyRow, restoreBox, copyMsg, restoreMsg, pending = null;
+  let titleEl, bodyEl, requestForm, emailInput, getCodeBtn;
 
   function say(el, text, bad) {
     if (!el) return;
@@ -230,26 +198,41 @@ const Backup = (() => {
     el.classList.toggle('is-bad', !!bad);
   }
 
-  // restoreOnly is how #btn-save-code (My Mons' RESTORE button) reaches this:
-  // it never builds or shows a code, only the paste-a-code-in form. The
-  // #restore= link out of the backup email calls open() without it, so that
-  // path still shows both halves, same as always.
-  async function open(prefill, restoreOnly) {
+  // Deliberately loose, same reasoning and same pattern as signup.js's own
+  // check: an empty field is fine here (the email is optional), so this only
+  // ever runs against a non-empty value.
+  function looksLikeEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  }
+
+  // requestMode is how #btn-save-code (My Mons' "DON'T LOSE YOUR MONS!"
+  // button) reaches this: the code stays hidden behind .save-code-request
+  // (email + SUBMIT) until requestCode() below builds one. The #restore=
+  // link out of the backup email calls open() without it, so that path still
+  // lands straight on this browser's current code, same as always.
+  async function open(prefill, requestMode) {
     if (!modal) return;
     modal.classList.add('active');
-    modal.classList.toggle('restore-only', !!restoreOnly);
     modal.setAttribute('aria-hidden', 'false');
-    modal.setAttribute('aria-labelledby', restoreOnly ? 'save-code-sub-title' : 'save-code-title');
+    modal.setAttribute('aria-labelledby', 'save-code-title');
     say(copyMsg, ''); say(restoreMsg, '');
 
-    if (codeBox) {
-      if (restoreOnly) {
-        codeBox.value = '';
-      } else {
-        codeBox.value = 'BUILDING…';
-        try { codeBox.value = await create(); }
-        catch (e) { codeBox.value = ''; say(copyMsg, "Couldn't build a code.", true); }
-      }
+    if (titleEl) titleEl.textContent = requestMode ? "DON'T LOSE YOUR MONS!" : 'YOUR SAVE CODE';
+    if (bodyEl) bodyEl.innerHTML = requestMode
+      ? 'GET A CODE THAT BRINGS YOUR MONS BACK ANYWHERE.<br>ADD YOUR EMAIL TO ALSO GET IT BY MAIL — OR LEAVE IT BLANK.'
+      : 'YOUR MONS LIVE IN THIS BROWSER ONLY.<br>KEEP THIS CODE TO BRING THEM BACK ANYWHERE.';
+
+    if (requestForm) requestForm.hidden = !requestMode;
+    if (emailInput) emailInput.value = '';
+    if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = 'SUBMIT'; }
+
+    if (codeBox) codeBox.hidden = !!requestMode;
+    if (copyRow) copyRow.hidden = !!requestMode;
+
+    if (!requestMode && codeBox) {
+      codeBox.value = 'BUILDING…';
+      try { codeBox.value = await create(); }
+      catch (e) { codeBox.value = ''; say(copyMsg, "Couldn't build a code.", true); }
     }
     if (prefill && restoreBox) {
       restoreBox.value = prefill;
@@ -262,6 +245,49 @@ const Backup = (() => {
     modal.classList.remove('active');
     modal.setAttribute('aria-hidden', 'true');
     pending = null;
+  }
+
+  // Request-mode submit: builds and reveals a code unconditionally, then —
+  // only if an email was actually given — also hands it to Signup.sendBackupCode
+  // so a copy goes out by mail too. A bad address blocks the build (so a typo
+  // is caught before it's acted on); a blank one is never a reason to refuse.
+  async function requestCode(e) {
+    e.preventDefault();
+    const email = (emailInput ? emailInput.value : '').trim();
+    if (email && !looksLikeEmail(email)) {
+      say(copyMsg, 'That address looks off — fix it, or leave it blank.', true);
+      return;
+    }
+
+    if (getCodeBtn) { getCodeBtn.disabled = true; getCodeBtn.textContent = 'BUILDING…'; }
+
+    let code = '';
+    try { code = await create(); }
+    catch (e2) { code = ''; }
+
+    if (!code) {
+      say(copyMsg, "Couldn't build a code — try again in a moment.", true);
+      if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = 'SUBMIT'; }
+      return;
+    }
+
+    if (requestForm) requestForm.hidden = true;
+    if (codeBox) { codeBox.hidden = false; codeBox.value = code; }
+    if (copyRow) copyRow.hidden = false;
+
+    let emailed = false;
+    if (email) {
+      try {
+        if (typeof Signup !== 'undefined' && Signup.sendBackupCode) {
+          await Signup.sendBackupCode(email, code);
+          emailed = true;
+        }
+      } catch (e3) { emailed = false; }
+    }
+
+    say(copyMsg, emailed ? 'Code ready below — also emailed to you.'
+      : (email ? "Code ready below. Couldn't email it — copy it instead."
+                : 'Code ready below — copy it.'));
   }
 
   async function doRestore() {
@@ -302,76 +328,30 @@ const Backup = (() => {
     try {
       await navigator.clipboard.writeText(codeBox.value);
       say(copyMsg, 'Copied.');
-      markSaved(builtCount);
     } catch (e) {
       // Clipboard access is refused on insecure origins and in some browsers;
-      // selecting the text is still a working answer. Not counted as saved:
-      // the code is on screen but we have no evidence it went anywhere.
+      // selecting the text is still a working answer.
       codeBox.focus(); codeBox.select();
       say(copyMsg, 'Press Ctrl+C to copy.');
     }
   }
 
-  // ── Reminder ────────────────────────────────────────────────
-  // Records that a code for this collection now exists somewhere outside the
-  // browser. Called when a code is copied, and after a successful restore.
-  function markSaved(count) {
-    lsSet(SAVED_AT, String(Date.now()));
-    if (typeof count === 'number' && isFinite(count)) {
-      lsSet(SAVED_COUNT, String(count));
-      lastKnownCount = count;
-    }
-    try { localStorage.removeItem(SNOOZE_AT); } catch (e) {}
-    refreshNudge();
-  }
-
-  function shouldNudge(count) {
-    if (typeof count !== 'number' || count < FIRST_NUDGE_AT) return false;
-
-    const snoozed = lsNum(SNOOZE_AT);
-    if (snoozed && Date.now() - snoozed < SNOOZE_DAYS * 864e5) return false;
-
-    if (!lsNum(SAVED_AT)) return true;                  // never saved one
-    return count - lsNum(SAVED_COUNT) >= GROWN_BY;      // saved one is stale
-  }
-
-  // Safe to call repeatedly — renderMyMons re-runs itself once sprites load.
-  function refreshNudge(count) {
-    if (typeof count === 'number') lastKnownCount = count;
-
-    const box = $('save-nudge');
-    if (!box) return;
-
-    const n = lastKnownCount;
-    const show = shouldNudge(n);
-    box.hidden = !show;
-    if (!show) return;
-
-    const txt = $('save-nudge-text');
-    if (!txt) return;
-    const plural = n === 1 ? 'mon' : 'mons';
-    txt.textContent = lsNum(SAVED_AT)
-      ? `Your save code is out of date — it only holds ${lsNum(SAVED_COUNT)} of your ${n} ${plural}.`
-      : `Your ${n} ${plural} live only in this browser. Clearing your browsing data erases them.`;
-  }
-
   function init() {
-    modal      = $('save-code');
-    codeBox    = $('save-code-text');
-    restoreBox = $('restore-code-text');
-    copyMsg    = $('save-code-msg');
-    restoreMsg = $('restore-msg');
+    modal       = $('save-code');
+    codeBox     = $('save-code-text');
+    copyRow     = $('save-code-copy-row');
+    restoreBox  = $('restore-code-text');
+    copyMsg     = $('save-code-msg');
+    restoreMsg  = $('restore-msg');
+    titleEl     = $('save-code-title');
+    bodyEl      = $('save-code-body');
+    requestForm = $('save-code-request');
+    emailInput  = $('save-code-email');
+    getCodeBtn  = $('btn-get-code');
     if (!modal) return;
 
     $('btn-save-code')?.addEventListener('click', () => open(null, true));
-
-    // The reminder's own button opens the FULL panel, not restore-only — it
-    // exists to hand someone a code, which is the half #btn-save-code hides.
-    $('btn-save-nudge')?.addEventListener('click', () => open(null, false));
-    $('btn-save-nudge-later')?.addEventListener('click', () => {
-      lsSet(SNOOZE_AT, String(Date.now()));
-      refreshNudge();
-    });
+    requestForm?.addEventListener('submit', requestCode);
     $('btn-save-code-close')?.addEventListener('click', close);
     $('btn-copy-code')?.addEventListener('click', copy);
     $('btn-restore-code')?.addEventListener('click', doRestore);
@@ -396,5 +376,5 @@ const Backup = (() => {
     init();
   }
 
-  return { create, decode, restore, summarise, open, refreshNudge, markSaved, KEYS, VERSION };
+  return { create, decode, restore, summarise, open, KEYS, VERSION };
 })();

@@ -190,7 +190,8 @@ function sendBackup(email, code, origin) {
     'computers, or use a different browser, this code is how you get your\n' +
     'mons back.\n\n' +
     'One-click restore:\n' + link + '\n\n' +
-    'Or open PomoMons, go to MY MONS, press SAVE CODE, and paste this in:\n\n' +
+    'Or open PomoMons, go to MY MONS, press "DON\'T LOSE YOUR MONS!", and\n' +
+    'paste this in:\n\n' +
     code + '\n\n' +
     'Keep this email. Catch more mons and send yourself a fresh code any\n' +
     'time from the envelope button — this one only covers the mons you had\n' +
