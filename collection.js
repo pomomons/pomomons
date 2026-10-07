@@ -99,7 +99,7 @@ const Collection = (() => {
         addSmoothieItem(displayName, rarity);
         renderSmoothieCount();
         SFX.play('blend');
-        showBlendResult(displayName);
+        showBlendResult();
 
         // Clear active companion if the blended record was active, or no species records remain
         const activeRecKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10);
@@ -409,14 +409,14 @@ const Collection = (() => {
   }
 
   // ── Internal: showBlendResult — brief gold flash message after blending
-  function showBlendResult(monName) {
+  function showBlendResult() {
     const msg = document.createElement('div');
     msg.className = 'blend-result-flash';
     const icon = document.createElement('img');
     icon.src = 'assets/sprites/Smoothie/Smoothie.png';
     icon.className = 'blend-result-icon';
     msg.appendChild(icon);
-    msg.appendChild(document.createTextNode(` ${monName} SMOOTHIE OBTAINED!`));
+    msg.appendChild(document.createTextNode(' SMOOTHIE OBTAINED!'));
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 2700);
   }
