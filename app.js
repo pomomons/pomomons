@@ -1266,3 +1266,16 @@ fitTimerScreen();
 // The markup ships the desktop labels; correct them once on load in case the
 // page opened on a phone.
 syncModeLabels();
+
+// Footer links navigate away from this page entirely. `running`/`endTime` are
+// in-memory only (see startTimer), so leaving mid-focus-session abandons it
+// silently: no stats credit, no encounter. A break running has nothing at
+// stake, so this only fires for an active focus session.
+document.querySelectorAll('.home-foot .foot-nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    if (running && currentMode === 'focus') {
+      const ok = confirm("You're mid focus session — leaving now won't save it. Leave anyway?");
+      if (!ok) e.preventDefault();
+    }
+  });
+});
