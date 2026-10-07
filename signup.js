@@ -237,6 +237,25 @@ const Signup = (() => {
     setTimeout(close, 2200);
   }
 
+  // ── Backup-code email (called by backup.js) ──────────────
+  // The "DON'T LOSE YOUR MONS!" button on My Mons already builds and shows a
+  // code with no email required; this is only the optional extra mile when
+  // someone types one in there. Reuses this file's own ENDPOINT/post() rather
+  // than duplicating the fetch, but skips the card's state entirely — this
+  // isn't a signup, so it never touches pm_email_state or the mailing list.
+  async function sendBackupCode(email, code) {
+    if (!ENDPOINT) return;
+    await post({
+      email,
+      source:   'restore-panel',
+      sessions: num('pm_total_sessions'),
+      catches:  num('pm_total_catches'),
+      at:       new Date().toISOString(),
+      code,
+      origin:   location.origin + location.pathname,
+    });
+  }
+
   // ── Auto-prompt ─────────────────────────────────────────
   function shouldPrompt() {
     if (!ENDPOINT) return false;
@@ -335,7 +354,7 @@ const Signup = (() => {
     flushQueue();
   }
 
-  return { init, open, maybePrompt, noteRareCatch, event };
+  return { init, open, maybePrompt, noteRareCatch, event, sendBackupCode };
 })();
 
 if (document.readyState === 'loading') {
