@@ -3657,7 +3657,7 @@ html::after,
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--stats-reserve, 160px) + 2px);
+  bottom: calc(var(--stats-reserve, 160px) - 6px);
   z-index: 40;
   align-items: center;
   justify-content: center;
