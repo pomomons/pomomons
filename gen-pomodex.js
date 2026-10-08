@@ -126,7 +126,7 @@ const page = `<!DOCTYPE html>
        Run \`node tools/gen-pomodex.js\` after changing the roster; build.js
        runs \`--check\` and fails if this file is out of date. -->
 
-  <meta name="description" content="Every Pomomon in PomoMons: all ${formCount} forms across ${baseCount} base species, with their flavour types, evolution levels and Pomodex numbers.">
+  <meta name="description" content="Every Pomomon in PomoMons: all ${formCount} forms across ${baseCount} base species, with their flavor types, evolution levels and Pomodex numbers.">
   <link rel="canonical" href="https://pomomons.io/pomodex/">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#2b5343">
@@ -134,7 +134,7 @@ const page = `<!DOCTYPE html>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="PomoMons">
   <meta property="og:title" content="Pomodex: All ${formCount} Pomomons and Their Evolutions">
-  <meta property="og:description" content="All ${formCount} Pomomon forms across ${baseCount} base species, with flavour types and evolution levels.">
+  <meta property="og:description" content="All ${formCount} Pomomon forms across ${baseCount} base species, with flavor types and evolution levels.">
   <meta property="og:url" content="https://pomomons.io/pomodex/">
   <meta property="og:image" content="https://pomomons.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -185,7 +185,7 @@ const page = `<!DOCTYPE html>
 
     <div class="dex-wrap">
       <table>
-        <caption>Pomodex #01&ndash;#${String(formCount).padStart(2, '0')}. Evolution levels are the level the previous form evolves at.</caption>
+        <caption>Pomodex #01&ndash;#${String(formCount).padStart(2, '0')}. Evolution levels are the level at which the previous form evolves.</caption>
         <thead>
           <tr>
             <th scope="col">No.</th>
@@ -216,6 +216,8 @@ const page = `<!DOCTYPE html>
       <span>PomoMons &mdash; focus &middot; catch &middot; collect</span>
       <nav aria-label="Footer">
         <a href="/research/">Research</a>
+        <a href="/privacy/">Privacy</a>
+        <a href="/terms/">Terms</a>
         <a href="https://discord.gg/bXnKR8FeG" rel="noopener">Discord</a>
       </nav>
     </div>
