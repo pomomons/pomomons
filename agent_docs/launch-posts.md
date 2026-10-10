@@ -199,11 +199,27 @@ not enter 0 into a "starting price" box, which some directories render as
 
 ---
 
-## 2. itch.io — the game framing
+## 2. itch.io — DONE 2026-10-09, listing is live (as a click-through "PLAY NOW" page, not embedded — see the note below)
 
 itch.io takes browser games, and the game layer is the genuinely novel part.
-Create a new project, kind "HTML", and link out rather than uploading a build
-(the app needs its own origin for the service worker and saved collections).
+
+**How the embed actually works, found out the hard way 2026-10-09:** itch's
+"HTML" kind requires an uploaded file — there's no field to just link out to
+an external URL. A `<meta refresh>`/`location.href` redirect run from inside
+itch's embed iframe stays trapped in that iframe (it navigates the iframe,
+not the real browser tab), so pomomons.io rendered squeezed into whatever
+small embed box itch defaulted to. Fixed by uploading a one-file HTML stub
+(`index.html`) that's just a "▶ PLAY NOW" button with `target="_blank"
+rel="noopener"` — a real link click reliably escapes the iframe into a proper
+new tab, where the app gets a normal full-size window. The stub itself is not
+in the repo (it's static boilerplate, zipped and uploaded directly to itch).
+
+This also sidesteps a real risk of embedding the live app directly in itch's
+iframe: some browsers (Chrome's storage partitioning, Safari ITP) treat a
+cross-origin iframe's storage as separate from a direct visit to the same
+site, so a player's saved collection and the installable/offline PWA features
+could behave differently — or not persist — inside the embed versus visiting
+pomomons.io normally. Opening in a real new tab avoids that entirely.
 
 **Title:** PomoMons
 
