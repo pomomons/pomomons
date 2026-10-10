@@ -172,6 +172,7 @@ const page = `<!DOCTYPE html>
         <a href="/">Timer</a>
         <a href="/pomodex/" aria-current="page">Pomodex</a>
         <a href="/research/">Research</a>
+        <a href="/focus-friend-alternative/">Focus Friend Alternative</a>
       </nav>
     </div>
   </header>
@@ -216,6 +217,7 @@ const page = `<!DOCTYPE html>
       <span>PomoMons &mdash; focus &middot; catch &middot; collect</span>
       <nav aria-label="Footer">
         <a href="/research/">Research</a>
+        <a href="/focus-friend-alternative/">Focus Friend Alternative</a>
         <a href="/privacy/">Privacy</a>
         <a href="/terms/">Terms</a>
         <a href="https://discord.gg/bXnKR8FeG" rel="noopener">Discord</a>

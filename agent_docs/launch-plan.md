@@ -21,15 +21,19 @@ several sessions.
 (recommended as the weekend slot with the best odds of the #1 Product of the
 Day badge for a consumer/fun app).
 
-**Distribution kit — user asked to be reminded to start this (2026-09-06),
-not yet begun.** All prior work is product polish; there is still zero
-distribution planning. Scope offered: demo GIF/video, PH gallery
-screenshots, PH "coming soon" teaser page (~Oct 11), an engagement group of
-30-50 people, migrate the mailing list off Apps Script to Buttondown/Kit
-before mailing. PH listing copy + launch-day messages were already drafted
-in the 2026-09-06 session (Discord post, mailing-list email w/ subject
-options, Show HN / Reddit post, tagline "A Pomodoro timer where focus
-sessions catch monsters").
+**Distribution kit — superseded 2026-10-09, see `agent_docs/backlink-plan.md`.**
+User decided to build a following BEFORE the PH launch rather than launch
+first — PH is now the capstone, not the starting gate, and the Oct 18 date is
+expected to slip. Also: PH's "Coming Soon" teaser page was discontinued by
+Product Hunt around Aug 2025 and no longer exists — don't plan around it.
+AlternativeTo and itch.io listings are DONE (2026-10-09, see
+`launch-posts.md`) — do not re-raise either. Mailing-list migration off Apps
+Script to Buttondown/Kit is still a "when the list is worth it" item, not
+urgent. PH listing copy + launch-day messages were already drafted in the
+2026-09-06 session (Discord post, mailing-list email w/ subject options, Show
+HN / Reddit post, tagline "A Pomodoro timer where focus sessions catch
+monsters") — see `launch-posts.md`, still valid for whenever PH launch
+actually happens.
 
 **Done:**
 - Backup-code emails now send via Brevo (transactional API) from
@@ -432,10 +436,12 @@ Shipped:
 and nothing saying the method is proven to improve learning. The sources do not
 support it and the page says so out loud. See CLAUDE.md for the editing rules.
 
-**Still not built from `keyword-strategy.md`:** the "alternative to" pages
-(rated the single best opportunity, still zero built), the ADHD page, and the
-per-mon pages. And the distribution push is still the gate — AlternativeTo is
-drafted, fact-checked and has images ready, and has not been filed.
+**Still not built from `keyword-strategy.md`:** the ADHD page and the per-mon
+pages. The "alternative to" pages (rated the single best opportunity) are
+started — see the 2026-10-10 entry below: `/focus-friend-alternative/` is
+live, 2 or 3 more sites + the flagship category page are still open per
+keyword-strategy.md §2. (AlternativeTo/itch.io listings are long done — see
+`launch-posts.md`; don't re-raise either.)
 
 **TRAFFIC BASELINE — 153 visitors in the 30 days to 2026-10-03** (GoatCounter,
 specialaccount11.goatcounter.com). Roughly 5/day. Recorded the day the three
@@ -652,6 +658,27 @@ derive the form independently, and missing one means that screen quietly
 re-evolves the pal — nothing errors. `node tools/check-evolution-stop.js`
 asserts each of them separately, after a reload, and that a STOP landing after
 the reveal is inert.
+
+**`/focus-friend-alternative/` shipped (2026-10-10), uncommitted.** First of the
+"alternative to" pages from keyword-strategy.md §2 — chosen because the doc
+ranks Focus Friend as the single best target (Google Play App of the Year,
+#1 on the App Store, 60+ AlternativeTo listings against it with not one
+browser-based creature collector among them). Every claim about Focus Friend
+is limited to the slow-changing category the doc requires (platform, account,
+offline behaviour) and was checked against three independent sources
+(TechCrunch, NBC News, an app-guide site) on 2026-10-10, not assumed from the
+project's own earlier notes — one assumption from those notes (that PomoMons'
+offline support is a point of difference) turned out to be false: Focus Friend
+also works offline day-to-day, so the comparison table states that as a tie,
+not an advantage. No price or monetization claim made about either app.
+Added to sitemap.xml, the header nav + footer on every other standalone page
+and gen-pomodex.js, the home footer, and `tools/check-content-pages.js` /
+`tools/check-accessibility.js`. `node build.js`, `check-content-pages.js` and
+`check-accessibility.js` all pass clean (one pre-existing moderate finding
+only, the documented settings-menu landmark one).
+Still open from keyword-strategy.md §2: 2-3 more named-competitor pages
+(Forest/Study Bunny are next) and the flagship "every app in this category is
+a phone app" category page.
 
 **Open (P1):**
 - Streaks / completion count.
