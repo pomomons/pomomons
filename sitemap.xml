@@ -24,6 +24,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://pomomons.io/focus-friend-alternative/</loc>
+    <lastmod>2026-10-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://pomomons.io/privacy/</loc>
     <lastmod>2026-10-03</lastmod>
     <changefreq>yearly</changefreq>
