@@ -14,7 +14,7 @@ timing pressure), then Product Hunt (one shot, pick the day), then Reddit
 
 ---
 
-## 1. AlternativeTo — lowest risk, do this first
+## 1. AlternativeTo — DONE 2026-10-09, listing is live
 
 A directory listing rather than a post. No timing pressure, no karma
 requirement, and the link is permanent. alternativeto.net, "Add application".
