@@ -38,7 +38,7 @@ let focusMins = clampMins(parseInt(localStorage.getItem('pm_focus_mins') || '30'
 let shortMins = clampMins(parseInt(localStorage.getItem('pm_short_mins') || '5',  10) || 5,  MIN_BREAK, MAX_BREAK);
 let longMins  = clampMins(parseInt(localStorage.getItem('pm_long_mins')  || '15', 10) || 15, MIN_BREAK, MAX_BREAK);
 // ── TESTING ONLY — short-circuit session durations ────────
-// Set to a number of seconds (e.g. 5) to make sessions fire almost
+// Set to a number of seconds (e.g. 2) to make sessions fire almost
 // immediately; null uses the normal minute-based durations.
 // Note: while these are set, the ▲▼ steppers are inert — setCurrentModeMins()
 // also routes through these helpers. Always return them to null before shipping.

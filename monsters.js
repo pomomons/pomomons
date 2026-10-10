@@ -43,7 +43,7 @@ const MONS = [
     evolutions: [
       { atLevel: 20, dexNum: 8,  name: 'Scorchpepper', type: 'Spicy',           color: '#e55b00', accent: '#b33000',
         sprite: 'assets/sprites/Scorchpepper/Scorchpepper.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1000 },
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
       { atLevel: 36, dexNum: 9,  name: 'Ghostpepper',  type: 'Spicy',           color: '#a8c8d8', accent: '#6a9ab0',
         sprite: 'assets/sprites/GhostPepper/ghostpepper.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
