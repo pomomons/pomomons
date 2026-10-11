@@ -1103,7 +1103,13 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, 1fr), not bare 1fr: a bare `fr` track's floor is `auto`, i.e.
+     the widest child's own min-content width, not 0. The 64px sprite
+     canvas below has no max-width, so on the narrowest real phones (320px)
+     three of those plus gaps want more room than the screen has, and the
+     grid pushed the third column's cards off the right edge instead of
+     shrinking them. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   width: 100%;
 }
@@ -1145,6 +1151,11 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 .mon-card canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  /* The element is drawn at a fixed 64x64 (collection.js); without a cap it
+     renders at that intrinsic size regardless of how narrow the card is,
+     which is what set the grid's min-content floor above. */
+  max-width: 100%;
+  height: auto;
 }
 
 .mon-card-dexnum {

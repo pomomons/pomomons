@@ -129,9 +129,15 @@ Full-screen. Layout top→bottom:
   swung from 21px down to the button sitting behind the strip depending on the
   viewport. `node tools/measure-mymons-gaps.js` prints both gaps across
   viewports; they now read 16px everywhere.
-- **Blender toolbar** (desktop only; hidden < 480px): two horizontal dashed
-  cards — BLEND (drop target) and SMOOTHIES (drag source, count as a lowercase
-  `x N` badge on the icon's corner).
+- **Blender toolbar** (always visible, all widths — not desktop-only; that
+  was true of an earlier version but the toolbar was never actually hidden
+  below 480px in CSS): two horizontal dashed cards — BLEND (drop target) and
+  SMOOTHIES (drag source, count as a lowercase `x N` badge on the icon's
+  corner). Drag-and-drop is the pointer-device interaction; on a touch device
+  (`tapMQ` in collection.js, a `pointer: coarse` match) tapping BLEND or
+  SMOOTHIES arms a "pick a mon" mode instead and the hint text swaps to match
+  ("TAP, THEN PICK A MON" / "PICK A MON · TAP TO CANCEL") — see
+  `applyTapUI()` in collection.js.
 - **Grid**: 3 columns. My Mons cards: sprite, name, LVL, type badge(s), and a
   SHINY/DARK label only for variant records; active companion gets a green
   border + ★. Cards are drag sources for blending. Dex cards: unseen entries

@@ -2200,6 +2200,37 @@ html::after {
 @media (max-height: 520px) and (orientation: landscape) {
   :root { --stats-h: 96px; }
 
+  /* Nothing else in the file sizes .timer-display for a landscape phone
+     wider than 479px (the vw-based rule above tops out at 659px wide, the
+     height-based ladder further down needs min-height:521px) — so without
+     this it falls through to style-v2's unconditional 88px and "30:00"
+     (~5.1x the font size, see the comment on the 14.5vw rule above) runs
+     past the panel's right edge, clipped by its own overflow. vw caps it to
+     the panel's share of a landscape screen; vh backs it off further on the
+     shortest windows, same two-axis approach as the portrait version. */
+  .timer-display { font-size: clamp(28px, min(7vw, 9vh), 50px); padding: 6px 38px 6px 10px; letter-spacing: 0; }
+  .btn-adjust { min-width: 28px; min-height: 28px; font-size: 10px; padding: 3px; }
+  .time-adjust { right: 4px; gap: 3px; }
+
+  /* .combined-timer-wrap is flex:0 0 auto UNCONDITIONALLY (style-v3.css,
+     "neither one flexes" — the base sheet's own old fix for this exact
+     landscape-short case used flex:1 1 auto; min-width:0 instead, but that
+     rule is equal specificity and loads earlier, so v3's unconditional one
+     silently wins regardless of which media query matches). At flex:0 0
+     auto the box takes its content's natural (shrink-to-fit) width — which
+     FOCUS SESSION's button text sets north of 600px at the base desktop
+     button size — instead of the width the row actually has next to the
+     companion panel, so the whole timer box (digits included) rendered
+     past the right edge of the screen. Letting it flex and shrink here is
+     what actually fixes that; the smaller font/padding below then keeps
+     FOCUS SESSION / RESET / START / POMODEX readable at the width it's
+     given instead of just clipping. */
+  #screen-timer .combined-timer-wrap { flex: 1 1 auto; min-width: 0; }
+  .btn { font-size: 11px; padding: 10px 12px; }
+  .controls-group { padding: 8px 12px; gap: 4px; }
+  .timer-controls,
+  .timer-bottom-row { gap: 4px; }
+
   /* The tagline is hidden at this height, so there is no gap to match, and
      the arena + controls are taller than the window either way. Keep the old
      centring: top-anchoring them here sent THROW! / RUN AWAY 160px below the
@@ -3321,8 +3352,12 @@ html::after,
      buys it back and holds even at a four-digit count. They move together
      because this row sizes them identically on purpose: leaving BACK a step
      larger than the tabs beside it reads as a mistake. */
+  /* Vertical padding only, not horizontal — widening these would reopen the
+     one-line-wrap risk the comment above describes. 13px top/bottom gets the
+     tap target close to a comfortable thumb size (~38px tall) without
+     touching how much width the row needs. */
   .pxb-back .btn,
-  .collection-tab { font-size: 9px; padding: 8px 10px; }
+  .collection-tab { font-size: 9px; padding: 13px 10px; }
   .collection-tab--count { padding-left: 8px; padding-right: 8px; }
 
   /* .collection-header-end now holds only the sort button — the My Mons count
