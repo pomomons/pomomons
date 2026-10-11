@@ -2172,14 +2172,33 @@ const EncounterScreen = (() => {
     // Ground platform + mon, same art as the encounter screen itself.
     shadow(false);
     const stageCX = W / 2, stageCY = 640;
+    let standY = stageCY; // falls back to the old fixed spot if the ground art isn't ready
     if (_groundImg.complete && _groundImg.naturalWidth) {
       const pw = W * 0.82, ph = pw * (230 / 460);
       c.imageSmoothingEnabled = false;
-      c.drawImage(_groundImg, stageCX - pw / 2, stageCY + 55 - ph / 2, pw, ph);
+      const groundTop = stageCY + 55 - ph / 2;
+      c.drawImage(_groundImg, stageCX - pw / 2, groundTop, pw, ph);
+      // The oval's widest row — the depth that reads as the middle of the
+      // platform rather than its back lip or front edge — sits 45% down
+      // Ground2.png's own art. Same derivation as ENC_GROUND_Y above, same
+      // source art, so the same fraction applies here.
+      standY = groundTop + ph * 0.45;
     }
     const shiny = (mon.shiny && !mon.dark) || false;
     const scale = MonSprite.sizeScale(mon, 460, 2.2, shiny);
-    MonSprite.drawOnCtx(c, mon, stageCX, stageCY, { scale, shiny: mon.shiny || false, dark: mon.dark || false });
+    // Bottom-anchor on the mon's actual ART, not the centre of its sprite box.
+    // Sheets carry wildly different amounts of transparent padding per
+    // species (see artBottomFraction), so centring every mon on one fixed
+    // point left tall/padded forms — Strangletti, Guacamonger, Cocokong,
+    // Portobellord, Pikeapple, Idabro — with their feet buried in the
+    // treeline below the platform instead of standing on it. Mirrors
+    // EncounterScreen's monRestY(), the fix already applied there.
+    const srcW = MonSprite.nativeFrameW(mon, shiny);
+    const monSize = srcW !== null ? MonSprite.displaySize(srcW, 460) : null;
+    const monY = monSize
+      ? standY + monSize / 2 - MonSprite.artBottomFraction(mon, shiny) * monSize
+      : stageCY;
+    MonSprite.drawOnCtx(c, mon, stageCX, monY, { scale, shiny: mon.shiny || false, dark: mon.dark || false });
 
     // Caption + footer
     c.textBaseline = 'alphabetic';

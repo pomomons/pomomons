@@ -97,10 +97,28 @@ const MONS = [
   // untouched by that — they store id, and no id moved.
   { id: 10, dexNum: 17, name: 'Purrplant', type: 'Savory', color: '#8e44ad', accent: '#5b2c6f', rarity: 'uncommon',
     sprite: 'assets/sprites/Purrplant/Purrplant.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-  { id: 11, dexNum: 18, name: 'Chillcone', type: 'Sweet', color: '#f5e6c8', accent: '#c8a060', rarity: 'common',
-    sprite: 'assets/sprites/Chillcone/Chillcone.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames (64x128 file, two stacked) — the final-evolution tier, so
+      // Vileplum draws at full box size against Purrplant's 48px basic.
+      // atLevel 20, the threshold every other two-stage line uses. Blink
+      // timing copied from Guacamonger (6000/900) at the owner's request —
+      // same final-evolution glowing-eyes read, slower and longer than a
+      // basic's 3000/150. Colours sampled from the sprite: the hood's lit
+      // purple (#77156b, 9.9% of opaque pixels) and the darker purple it is
+      // shaded with (#300730, 20.6% — the hood's interior shadow, the single
+      // biggest non-outline colour in the sheet).
+      { atLevel: 20, dexNum: 18, name: 'Vileplum', type: 'Savory', color: '#77156b', accent: '#300730',
+        sprite: 'assets/sprites/Vileplum/Vileplum.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
+  // id 11 and dexNum 18 were Chillcone, removed from the roster 2026-10-11 at
+  // the owner's request. The id stays retired — caught records store the
+  // species id, same reason 2 and 9 stayed skipped. dexNum 18 didn't have to:
+  // nothing persists it, and Vileplum (Purrplant's new evolution, directly
+  // above) takes it immediately, so the dex stays 1-30 with no hole and
+  // nothing else below it had to shift.
   { id: 12, dexNum: 19, name: 'Cocokid',   type: 'Sweet', color: '#8b5a2b', accent: '#5c3a17', rarity: 'common',
     sprite: 'assets/sprites/Cocokid/Cocokid.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
