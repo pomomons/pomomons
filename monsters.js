@@ -49,15 +49,10 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 1350 },
     ]
   },
-  { id: 8, dexNum: 15, name: 'Marshpuff',  type: 'Sweet', color: '#ecf0f1', accent: '#bdc3c7', rarity: 'common',
-    sprite: 'assets/sprites/Marshpuff/Marshpuff.png', spriteFrames: 2, spriteAxis: 'y',
-    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
-    evolutions: [
-      { atLevel: 20, dexNum: 16, name: 'Marshmelt', type: 'Sweet', color: '#c8a060', accent: '#8b6530',
-        sprite: 'assets/sprites/Marshmelt/Marshmelt.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
-    ]
-  },
+  // Marshpuff/Marshmelt removed from the roster 2026-10-11, owner's call.
+  // id 8 stays retired (caught records store it) and dex 15/16 are reused
+  // below by Manglet/Mambango rather than left as a hole — nothing persists
+  // dexNum, so that reuse is free. See the id-2/id-9 precedent above.
   { id: 7, dexNum: 13, name: 'Pumplet',    type: 'Savory', color: '#e67e22', accent: '#d35400', rarity: 'common',
     sprite: 'assets/sprites/Pumplet/Pumplet.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
@@ -160,8 +155,8 @@ const MONS = [
   // Chillcone, which are basics too, so this sits in the roster at a normal
   // size rather than towering the way Soursquad does.
   //
-  // Evolves once, at 20, the level every other two-stage line uses (Marshpuff,
-  // Pumplet, Bluble); the three-stage lines are the only ones that go to 36.
+  // Evolves once, at 20, the level every other two-stage line uses (Pumplet,
+  // Bluble, Manglet); the three-stage lines are the only ones that go to 36.
   // Portobellord keeps Savory and steps up to 64px frames, the final-evolution
   // tier, so it reads as a proper growth from Mushkin's 48. Its colours are
   // sampled the same way: the portobello cap's brown and its shade, which is
@@ -265,6 +260,25 @@ const MONS = [
       // and longer than the 3000/150 basics, so the bigger mon reads heavier.
       { atLevel: 20, dexNum: 30, name: 'Pikeapple', type: 'Sweet', color: '#fee22c', accent: '#fa8302',
         sprite: 'assets/sprites/Pikeapple/Pikeapple.png', spriteFrames: 2, spriteAxis: 'y',
+        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+    ]
+  },
+  // Mango. Evolves once, into Mambango. Sweet, alongside the roster's other
+  // fruit lines (Pinapip, Pitapal). id 19 — next free id. dexNum 15/16 reused
+  // from the removed Marshpuff/Marshmelt line rather than appended at the
+  // end, so the dex stays 1-30 with no hole.
+  //
+  // 32px frames (32x64 file, two stacked), the basic-mon size tier.
+  {
+    id: 19, dexNum: 15, name: 'Manglet', type: 'Sweet', color: '#f7a93b', accent: '#d35400', rarity: 'common',
+    sprite: 'assets/sprites/Manglet/Manglet.png', spriteFrames: 2, spriteAxis: 'y',
+    spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150,
+    evolutions: [
+      // 64px frames — the final-evolution tier, so it draws at full box size
+      // against Manglet's 32px basic. One jump with no 48px middle step, the
+      // same shape as Spud -> Idabro and Pinapip -> Pikeapple.
+      { atLevel: 20, dexNum: 16, name: 'Mambango', type: 'Sweet', color: '#f5901e', accent: '#c0392b',
+        sprite: 'assets/sprites/Mambango/Mambango.png', spriteFrames: 2, spriteAxis: 'y',
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },

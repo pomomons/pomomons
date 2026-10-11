@@ -46,10 +46,12 @@ unlocked evolution's fields.
 
 Dex numbers run 1-30 with no gaps. #17 used to be a hole — Wedgling was
 removed and its number retired — and was closed by shifting every entry above
-it down one; Purrplant holds 17 now. The *id* 9 Wedgling used stays retired,
-as does id 2, because caught records store the id and reusing one would
-re-label an existing catch. dexNum carries no such risk: nothing persists it,
-so it can be renumbered freely.
+it down one; Purrplant holds 17 now. Dex 15/16 were Marshpuff/Marshmelt,
+removed 2026-10-11; rather than close that gap by shifting, Manglet/Mambango
+were added straight into the vacated 15/16 slots. The *id*s 9 (Wedgling) and
+8 (Marshpuff) stay retired, as does id 2, because caught records store the id
+and reusing one would re-label an existing catch. dexNum carries no such
+risk: nothing persists it, so it can be renumbered freely.
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
 is a food, so a taste axis fits better than borrowed elemental types. A
@@ -67,7 +69,7 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 6  | 10  | Donot      | Sweet   | —                                                    |
 | 5  | 11  | Bluble     | Sweet   | 20 → Bluebeary #12 (Sweet)                           |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
-| 8  | 15  | Marshpuff  | Sweet   | 20 → Marshmelt #16 (Sweet)                           |
+| 19 | 15  | Manglet    | Sweet   | 20 → Mambango #16 (Sweet)                            |
 | 10 | 17  | Purrplant  | Savory  | —                                                    |
 | 11 | 18  | Chillcone  | Sweet   | —                                                    |
 | 12 | 19  | Cocokid    | Sweet   | 20 → Cocokong #20 (Sweet)                            |
