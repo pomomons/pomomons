@@ -30,11 +30,19 @@ not a nice-to-have.
    highest-leverage following-builder for this product specifically — the
    catch/shiny-reveal animation already IS short-form content, no new asset
    needed. Make the 5 calls and start posting.
-2. **Pick 2-3 pre-launch audience sites and submit now.** These exist
+2. **Pick pre-launch audience sites and submit now.** These exist
    specifically to fill the gap PH's Coming Soon used to cover — a following
-   *before* the real launch, plus a backlink each: **BetaList**, **Uneed**,
-   **Fazier**, **SaaSHub**. Low effort, no timing pressure, stack with
-   AlternativeTo/itch.io (already done).
+   *before* the real launch, plus a backlink each: **Fazier** (free tier:
+   listed within 30 days, requires a Fazier badge/link in the footer) and
+   **SaaSHub** (free submission, paid tier is only an optional featured
+   upgrade). Low effort, no timing pressure, stack with AlternativeTo/itch.io
+   (already done).
+   - **Dropped 2026-10-10, both paywalled now:** **BetaList** — free
+     submission goes into an unpredictable review queue; getting an actual
+     launch slot requires a paid plan. **Uneed** — submission itself is free,
+     but Uneed closed its free waiting line on 2026-08-17, so picking an
+     actual launch date now costs $14.99 (fast-track) or $29.99 (pick your
+     own date). Don't re-raise either unless their pricing changes.
 
 ## Phase 1 — weeks 1-3, running in parallel
 
