@@ -1695,7 +1695,7 @@ const EncounterScreen = (() => {
       if (crossed(60) || crossed(120)) SFX.play('shake');
       if (st.frame >= 161) {
         saveCaught();
-        if (typeof saveExp === 'function') saveExp(25);
+        if (typeof saveExp === 'function') saveExp(35);
         st.phase = 'locked';
         st.frame -= 161;
       }
@@ -2054,7 +2054,7 @@ const EncounterScreen = (() => {
 
   function flee() {
     if (st.phase !== 'idle') return;
-    if (typeof saveExp === 'function') saveExp(5);
+    if (typeof saveExp === 'function') saveExp(7);
     elSub.textContent = 'YOU FLED SAFELY.';
     close();
   }

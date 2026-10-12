@@ -468,7 +468,7 @@ function onSessionEnd() {
     EncounterScreen.start(() => {
       // Award pal XP after encounter resolves; trigger evolution screen if needed
       const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
-      const palResult = activeId ? savePalExp(activeId, 25) : null;
+      const palResult = activeId ? savePalExp(activeId, 35) : null;
 
       // Once the encounter (and any evolution) has played out, apply whatever
       // the player chose on the info card — or, if they never saw it, the
@@ -820,9 +820,15 @@ try {
 } catch (_) { /* older browsers throw on an unknown permission name */ }
 
 // ── Player state (localStorage) ───────────────────────────
+// Cost keeps climbing up to level 36 — the highest `atLevel` any evolution
+// uses, so every species has finished unlocking into the spawn pool by then
+// (see spawnableForms in monsters.js). Past it nothing new happens, so the
+// cost stops climbing too: uncapped, level 100 would cost 5,000+ sessions.
+const PLAYER_LEVEL_SCALING_CAP = 36;
 function expThreshold(level) {
-  // Linear curve: 100, 150, 200, ... — keeps every reward level reachable.
-  return 100 + 50 * (level - 1);
+  // Linear curve: 80, 115, 150, ... — keeps every reward level reachable.
+  const scaled = Math.min(level, PLAYER_LEVEL_SCALING_CAP);
+  return 80 + 35 * (scaled - 1);
 }
 
 function loadPlayerState() {
@@ -850,12 +856,16 @@ function roundNiceXp(n) {
   return Math.round(n / 10000) * 10000;
 }
 
-// Growth is 1.12x per level. The original 1.3x compounded so hard that the
-// level-36 evolution cost 291,836 XP — about 50,000 focus sessions, or three
-// years of solid focusing, so nobody would ever have seen a final form.
-// At 1.12x and 25 XP/session: evolution at lv20 ~87 sessions, lv36 ~580.
+// Growth is 1.10x per level, capped at level 36 — the highest `atLevel` any
+// evolution uses. The original 1.3x (uncapped) compounded so hard that the
+// level-36 evolution cost 291,836 XP on its own; even 1.10x uncapped made
+// level 100 cost 107,000+ XP (tens of years of focusing) for a level with no
+// evolution to reach. Past 36 the cost just holds at the level-36 rate.
+// At 1.10x and 35 XP/session: evolution at lv20 ~45 sessions, lv36 ~233.
+const PAL_LEVEL_SCALING_CAP = 36;
 function palExpThreshold(level) {
-  return roundNiceXp(30 * Math.pow(1.12, level - 1));
+  const scaled = Math.min(level, PAL_LEVEL_SCALING_CAP);
+  return roundNiceXp(30 * Math.pow(1.10, scaled - 1));
 }
 
 // The active companion's refused evolution levels. Collection owns the stored

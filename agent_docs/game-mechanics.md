@@ -96,17 +96,24 @@ straight to the collection).
 ## XP & Leveling
 
 **Player** (`pm_level` / `pm_exp` in localStorage):
-- +25 XP per catch (`saveExp(25)` in game.js when the ball locks).
-- Threshold is LINEAR: `expThreshold(level) = 100 + 50 * (level - 1)`.
+- +35 XP per catch (`saveExp(35)` in game.js when the ball locks); +7 XP for
+  fleeing instead (`saveExp(7)`).
+- Threshold is LINEAR: `expThreshold(level) = 80 + 35 * (level - 1)`, capped
+  at level 36 (`PLAYER_LEVEL_SCALING_CAP`) — the cost stops climbing past
+  the level every species has finished unlocking by.
 - Overflow carries. Level-up shows a banner + SFX.
 - **Leveling currently grants nothing else.** The level-rewards / missions-map
   system was removed for launch (see git history: `LEVEL_REWARDS`,
   `renderProgress`, `updateRewardDot`, `#screen-progress`, `btn-map-icon`).
 
 **Companion / pal** (per caught record in IndexedDB):
-- The active companion gains +25 pal XP per completed focus session
+- The active companion gains +35 pal XP per completed focus session
   (`savePalExp` in app.js, called from the encounter-done callback).
-- `palExpThreshold(level) = Math.round(30 * 1.3^(level-1))`.
+- `palExpThreshold(level) = Math.round(30 * 1.10^(level-1))`, capped at
+  level 36 (`PAL_LEVEL_SCALING_CAP`) — same reasoning as the player cap
+  above. Uncapped, 1.10x still made level 100 cost 107,000+ XP; capped, the
+  cost holds at the level-36 rate past that (see the sizing note above
+  `palExpThreshold` in app.js — tuned 2026-10-12).
 - Smoothies grant +1 pal level instantly (drag onto a mon card in My Mons).
 - Evolutions fire at per-mon `atLevel` thresholds (see monsters.md) via the
   `EvolutionScreen` overlay. STOP there records the threshold in the record's
