@@ -108,14 +108,22 @@ game-mechanics.md. These were documented here as 1% and 5%, which never matched
 
 ## Cries
 
-Each dex entry gets a short synthesized "cry" (`SFX.cry(dexNum)` in audio.js),
-styled after the original Game Boy games: a handful of shared templates
-retuned per species, not one bespoke sound each. `getCryTier(dexNum)` (this
-file) maps a dex entry to one of 3 tiers purely from its position in the
-evolution chain — base/no evolution = tier 1 (high, short chirp), a mid
-evolution = tier 2, a final evolution = tier 3 (low, longer, growling with a
-touch of noise). This is derived from `MONS` automatically, same as the
-Pomodex page — there is no `cry`/`cryTier` field to set when adding a mon.
+Each dex entry gets a short synthesized "cry" (`SFX.cry(dexNum)` in audio.js).
+`getCryTier(dexNum)` (this file) maps a dex entry to one of 3 tiers purely
+from its position in the evolution chain — base/no evolution = tier 1 (high,
+thin, short), a mid evolution = tier 2, a final evolution = tier 3 (low, fat,
+longer). This is derived from `MONS` automatically, same as the Pomodex page
+— there is no `cry`/`cryTier` field to set when adding a mon.
+
+The tier only sets the pitch/duty-cycle/length RANGE. dexNum then seeds its
+own note count (3-6), one of several contour shapes (steady climb, falling
+growl, a repeated near-flat note, a zigzag warble, two short calls with a
+gap...), and whether a noise layer plays at all — modeled on the real Gen 1
+cries, where shape varies by species far more than pitch does (decoded from
+the pokered disassembly's `audio/sfx/cry*.asm`: note count and contour don't
+track body size at all — Mew's cry has 8 notes, Gyarados's has 4). So two
+mons in the same tier land in the same register but essentially never play
+the same tune.
 
 ## Adding a New Mon
 

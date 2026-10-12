@@ -48,14 +48,86 @@ const SFX = (() => {
     if (end > scheduledUntil) scheduledUntil = end;
   }
 
-  // Deterministic pseudo-random float in [0, 1) from an integer seed (the
-  // standard GLSL sine-hash trick). Mon cries use this instead of
-  // Math.random() so a given dexNum always sounds the same — the whole
-  // point of a species having "its own cry" rather than a random noise.
-  function seedFrac(n) {
-    const x = Math.sin(n * 12.9898) * 43758.5453;
-    return x - Math.floor(x);
+  // Deterministic PRNG (a classic linear congruential generator) seeded by
+  // dexNum — mon cries use this instead of Math.random() so a given species
+  // always sounds the same, but can still draw as many independent random
+  // values as a cry needs (note count, shape, per-note jitter, whether
+  // there's a noise layer...) rather than just one or two pitch offsets.
+  function makeRng(seed) {
+    let s = (seed * 9301 + 49297) % 233280;
+    if (s <= 0) s += 233280;
+    return function () {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
   }
+  const lerp = (r, [lo, hi]) => lo + r * (hi - lo);
+
+  // Cry CONTOUR shapes — the actual Gen 1 cries (decoded from the
+  // disassembly's audio/sfx/cry*.asm) turn out to vary far more in SHAPE
+  // than in pitch: some are a steady climb (Eeveelutions), some a flat
+  // climb-then-fall (most "normal" cries), some a near-flat repeated note
+  // (Krabby/Kingler's clack-clack-clack), some a zigzagging warble
+  // (Ponyta), some two short phrases with a gap (Psyduck's "psy? psy?"),
+  // some a quick multi-step trill (Mew). Each shape below takes a note
+  // count and the per-mon rng and returns one freqMul per note; 'double'
+  // also marks a gapIndex — a near-silent "breath" note instead of a sung
+  // one. Picking a SHAPE independently of size/tier is deliberate: in the
+  // real data, note count and contour don't track body size at all (Mew's
+  // cry has 8 notes, Gyarados's has 4) — size only governs pitch/duty/length
+  // range, never the shape riding on top of it.
+  const SHAPES = {
+    rise(n, rng) {   // smooth climb, settles back down on the last note
+      const start = 0.82 + rng() * 0.10, peak = 1.25 + rng() * 0.25;
+      const freqMuls = Array.from({ length: n }, (_, i) => start + (peak - start) * (i / (n - 1)));
+      freqMuls[n - 1] *= 0.85;
+      return { freqMuls, gapIndex: -1 };
+    },
+    fall(n, rng) {   // a roar losing steam — starts up, steps down throughout
+      const start = 1.15 + rng() * 0.25, end = 0.5 + rng() * 0.15;
+      const freqMuls = Array.from({ length: n }, (_, i) => start + (end - start) * (i / (n - 1)));
+      return { freqMuls, gapIndex: -1 };
+    },
+    arc(n, rng) {    // rises to a peak partway through, then falls away
+      const base = 0.85 + rng() * 0.10, peak = 1.2 + rng() * 0.3;
+      const peakIdx = Math.max(1, Math.min(n - 2, Math.floor(n * 0.4)));
+      const freqMuls = Array.from({ length: n }, (_, i) => {
+        const t = i <= peakIdx ? i / peakIdx : 1 - (i - peakIdx) / Math.max(1, n - 1 - peakIdx);
+        return base + (peak - base) * t;
+      });
+      return { freqMuls, gapIndex: -1 };
+    },
+    stutter(n, rng) { // near-flat, same note repeated with tiny jitter
+      const base = 0.95 + rng() * 0.10;
+      const freqMuls = Array.from({ length: n }, () => base + (rng() - 0.5) * 0.06);
+      return { freqMuls, gapIndex: -1 };
+    },
+    warble(n, rng) { // zigzags up/down note to note — a discrete vibrato
+      const base = 0.95 + rng() * 0.15, depth = 0.08 + rng() * 0.10;
+      const freqMuls = Array.from({ length: n }, (_, i) => base + (i % 2 === 0 ? depth : -depth));
+      return { freqMuls, gapIndex: -1 };
+    },
+    double(n, rng) { // two short calls with a near-silent gap between them
+      const half  = Math.max(1, Math.floor((n - 1) / 2));
+      const start = 0.95 + rng() * 0.20;
+      const freqMuls = [];
+      for (let i = 0; i < half; i++) freqMuls.push(start - i * 0.05);
+      const gapIndex = freqMuls.length;
+      freqMuls.push(start * 0.9);
+      for (let i = 0; i < n - half - 1; i++) freqMuls.push(start * 1.05 - i * 0.05);
+      return { freqMuls, gapIndex };
+    },
+  };
+  const SHAPE_NAMES = Object.keys(SHAPES);
+
+  // Size/stage tiers (see getCryTier, monsters.js) — the axis that pitch,
+  // duty cycle and overall length ride on. Tier never touches shape/note
+  // count; see the comment on SHAPES above for why.
+  const CRY_TIERS = {
+    1: { freq: [760, 1140], dur: [0.16, 0.30], duty: [0.10, 0.22], detune: [1.006, 1.016], peakBase: 0.24, noiseChance: 0.35, noiseAmt: [0.006, 0.020], sub: false },
+    2: { freq: [300, 520],  dur: [0.26, 0.46], duty: [0.28, 0.46], detune: [1.006, 1.016], peakBase: 0.25, noiseChance: 0.55, noiseAmt: [0.018, 0.045], sub: false },
+    3: { freq: [85, 160],   dur: [0.38, 0.62], duty: [0.48, 0.72], detune: [1.004, 1.012], peakBase: 0.27, noiseChance: 0.85, noiseAmt: [0.045, 0.095], sub: true  },
+  };
 
   // A true pulse wave at a given duty cycle (0-1), via its Fourier series —
   // NOT the same as OscillatorNode's built-in 'square', which is fixed at
@@ -106,19 +178,13 @@ const SFX = (() => {
     return end;
   }
 
-  // Mon cry — three size/stage tiers, tier looked up by dexNum from
-  // monsters.js's getCryTier (derived from evolution stage: base, mid,
-  // final). The shape itself is modeled on the real Gen 1 cries rather than
-  // guessed: two detuned pulse-wave voices (the disassembly runs cries on
-  // two square channels a few Hz apart, for a thicker, slightly chorused
-  // tone) playing a short 3-note contour — pickup, loud sustain, tail — plus
-  // a noise-channel burst under the sustain note for grit. Small/base forms
-  // use a thin duty cycle, a short rising contour and almost no noise
-  // (bright, clean, squeaky); final evolutions use a fat duty cycle, a
-  // falling contour, a sub-octave layer and a heavier noise burst (low,
-  // long, growling). dexNum seeds a deterministic pitch/length/duty offset
-  // within the tier so every form in a tier sounds related but not
-  // identical — the same trick the original 38-base-cry roster used.
+  // Mon cry. Tier (size/stage — see CRY_TIERS above) sets the pitch/duty/
+  // length RANGE; dexNum's rng then independently rolls a note count (3-6),
+  // one of SHAPES, per-note jitter, and whether a noise layer plays at all —
+  // so two mons in the same tier land in the same register but almost never
+  // land on the same tune. Two detuned pulse-wave voices throughout (the
+  // disassembly runs cries on two square channels a few Hz apart, for a
+  // thicker, chorused tone).
   // opts.after — like play()'s { after: true }, but always pads an extra
   // beat (CRY_AFTER_PAD) on top of however long is left to ring out, rather
   // than landing right on the tail of it. play()'s version waits exactly
@@ -146,66 +212,61 @@ const SFX = (() => {
   const CRY_VOLUME = 0.55;
 
   function cryImpl(dexNum) {
-    const tier  = (typeof getCryTier === 'function') ? getCryTier(dexNum) : 1;
-    const seedA = seedFrac(dexNum * 7.13);
-    const seedB = seedFrac(dexNum * 3.71 + 1);
-    const ac = getCtx();
-    const t0 = ac.currentTime;
+    const tier = (typeof getCryTier === 'function') ? getCryTier(dexNum) : 1;
+    const T    = CRY_TIERS[tier] || CRY_TIERS[1];
+    const rng  = makeRng(dexNum);
+    const ac   = getCtx();
+    const t0   = ac.currentTime;
 
-    let baseFreq, dur, duty, detune, notesSpec, noise;
-    if (tier === 1) {
-      // Base/small — bright, thin, quick: pickup note, a brighter peak, a
-      // short settle. Pitch RISES into the peak note — the "cute" contour.
-      baseFreq = 760 + seedA * 380;      // 760-1140 Hz
-      dur      = 0.18 + seedB * 0.12;    // 180-300ms
-      duty     = 0.12 + seedA * 0.10;    // thin/nasal
-      detune   = 1.012;
-      notesSpec = [
-        { f: 0.90, s: 0.00, e: 0.22, peak: 0.22, decayTo: 0.70 },
-        { f: 1.30, s: 0.22, e: 0.70, peak: 0.26, decayTo: 0.60 },
-        { f: 1.05, s: 0.70, e: 1.00, peak: 0.19, decayTo: 0.02 },
-      ];
-      noise = { amt: 0.010, s: 0.22, e: 0.55 };
-    } else if (tier === 2) {
-      // Mid evolution — lower, a touch longer, pitch levels off instead of
-      // rising: no longer "cute," not yet a growl.
-      baseFreq = 300 + seedA * 200;      // 300-500 Hz
-      dur      = 0.30 + seedB * 0.14;    // 300-440ms
-      duty     = 0.30 + seedA * 0.15;
-      detune   = 1.012;
-      notesSpec = [
-        { f: 0.95, s: 0.00, e: 0.22, peak: 0.23, decayTo: 0.65 },
-        { f: 1.15, s: 0.22, e: 0.68, peak: 0.26, decayTo: 0.55 },
-        { f: 0.80, s: 0.68, e: 1.00, peak: 0.20, decayTo: 0.02 },
-      ];
-      noise = { amt: 0.030, s: 0.18, e: 0.75 };
-    } else {
-      // Final evolution — low, long, FALLING contour (a roar losing steam
-      // rather than a chirp finding one), fat duty cycle, a sub-octave
-      // layer for weight, and the heaviest noise burst.
-      baseFreq = 90 + seedA * 70;        // 90-160 Hz
-      dur      = 0.42 + seedB * 0.18;    // 420-600ms
-      duty     = 0.50 + seedA * 0.20;
-      detune   = 1.008;
-      notesSpec = [
-        { f: 1.15, s: 0.00, e: 0.20, peak: 0.24, decayTo: 0.80 },
-        { f: 0.85, s: 0.20, e: 0.62, peak: 0.27, decayTo: 0.60 },
-        { f: 0.55, s: 0.62, e: 1.00, peak: 0.22, decayTo: 0.02 },
-      ];
-      noise = { amt: 0.070, s: 0.15, e: 0.85 };
+    const baseFreq = lerp(rng(), T.freq);
+    const dur      = lerp(rng(), T.dur);
+    const duty     = lerp(rng(), T.duty);
+    const detune   = lerp(rng(), T.detune);
+
+    const noteCount = 3 + Math.floor(rng() * 4);               // 3-6 notes
+    const shapeName = SHAPE_NAMES[Math.floor(rng() * SHAPE_NAMES.length)];
+    const shape     = SHAPES[shapeName](noteCount, rng);
+
+    // How much each note holds before dipping toward the next one. 'fall'
+    // leans toward holding longer (a sustained roar); 'stutter' leans
+    // toward cutting short (a clipped re-attack on every note).
+    let sustain = 0.45 + rng() * 0.35;
+    if (shapeName === 'fall')    sustain = Math.min(0.88, sustain + 0.10);
+    if (shapeName === 'stutter') sustain = Math.max(0.25, sustain - 0.15);
+
+    // Note lengths: randomized weights (the gap note in 'double' always
+    // short) normalized against the cry's total duration.
+    const weights = Array.from({ length: noteCount }, (_, i) =>
+      i === shape.gapIndex ? 0.35 : 0.7 + rng() * 0.9);
+    const wSum = weights.reduce((a, b) => a + b, 0);
+
+    const notes = [];
+    let tCursor = 0;
+    for (let i = 0; i < noteCount; i++) {
+      const tStart = tCursor;
+      const tEnd   = tCursor + (weights[i] / wSum) * dur;
+      tCursor = tEnd;
+
+      const isLast = i === noteCount - 1;
+      const isGap  = i === shape.gapIndex;
+      let peak = T.peakBase * (1 - 0.12 * i / Math.max(1, noteCount - 1)) + (rng() - 0.5) * 0.02;
+      if (isGap) peak *= 0.18; // a breath, not a note
+
+      notes.push({
+        freqMul: shape.freqMuls[i],
+        tStart, tEnd,
+        peak: peak * CRY_VOLUME,
+        decayTo: isLast ? 0.02 + rng() * 0.04 : sustain,
+      });
     }
 
-    const notes = notesSpec.map(n => ({
-      freqMul: n.f, tStart: n.s * dur, tEnd: n.e * dur, peak: n.peak * CRY_VOLUME, decayTo: n.decayTo,
-    }));
-
     const wave = pulseWave(ac, duty);
-    const end1 = cryVoice(ac, wave, notes, baseFreq, 1,      1,    t0);
-    const end2 = cryVoice(ac, wave, notes, baseFreq, detune, 0.50, t0);
+    const end1 = cryVoice(ac, wave, notes, baseFreq, 1,      1,               t0);
+    const end2 = cryVoice(ac, wave, notes, baseFreq, detune, 0.45 + rng() * 0.15, t0);
 
     // Final-form sub layer — triangle an octave down, for the body a thin
     // pulse wave can't supply on its own.
-    if (tier === 3) {
+    if (T.sub) {
       const sub    = ac.createOscillator();
       sub.type     = 'triangle';
       const subEnv = ac.createGain();
@@ -219,31 +280,39 @@ const SFX = (() => {
       sub.start(t0); sub.stop(t0 + dur + 0.02);
     }
 
-    // Noise-channel grit, timed over the loud middle note — same
-    // buffer-noise technique as blend()'s scream, at a fraction of the
-    // level (that one is a scream; this is texture).
-    const nStart = t0 + noise.s * dur;
-    const nEnd   = t0 + noise.e * dur;
-    const nDur   = nEnd - nStart;
-    if (nDur > 0.01) {
-      const bufSize = Math.ceil(ac.sampleRate * nDur);
-      const buf  = ac.createBuffer(1, bufSize, ac.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    // Noise-channel grit, under the loudest note — present only some of
+    // the time (see CRY_TIERS' noiseChance): in the real data noise is tied
+    // to a cry's CHARACTER more than its size, so some tier-3 cries get none
+    // and some tier-1 cries get a touch, same buffer-noise technique as
+    // blend()'s scream at a fraction of the level.
+    if (rng() < T.noiseChance) {
+      let loudIdx = 0;
+      for (let i = 1; i < notes.length; i++) if (notes[i].peak > notes[loudIdx].peak) loudIdx = i;
+      const nStart = t0 + notes[loudIdx].tStart;
+      const nEnd   = t0 + notes[Math.min(notes.length - 1, loudIdx + 1)].tEnd;
+      const nDur   = nEnd - nStart;
+      const noiseAmt = lerp(rng(), T.noiseAmt);
 
-      const src  = ac.createBufferSource();
-      src.buffer = buf;
-      const bpf  = ac.createBiquadFilter();
-      bpf.type   = 'bandpass';
-      bpf.Q.value = 0.7;
-      bpf.frequency.setValueAtTime(baseFreq * 5, nStart);
-      bpf.frequency.exponentialRampToValueAtTime(Math.max(120, baseFreq * 1.5), nEnd);
-      const nEnv = ac.createGain();
-      nEnv.gain.setValueAtTime(noise.amt * CRY_VOLUME, nStart);
-      nEnv.gain.exponentialRampToValueAtTime(0.0003, nEnd);
+      if (nDur > 0.01) {
+        const bufSize = Math.ceil(ac.sampleRate * nDur);
+        const buf  = ac.createBuffer(1, bufSize, ac.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
 
-      src.connect(bpf); bpf.connect(nEnv); nEnv.connect(ac.destination);
-      src.start(nStart); src.stop(nEnd + 0.02);
+        const src  = ac.createBufferSource();
+        src.buffer = buf;
+        const bpf  = ac.createBiquadFilter();
+        bpf.type   = 'bandpass';
+        bpf.Q.value = 0.7;
+        bpf.frequency.setValueAtTime(baseFreq * 5, nStart);
+        bpf.frequency.exponentialRampToValueAtTime(Math.max(120, baseFreq * 1.5), nEnd);
+        const nEnv = ac.createGain();
+        nEnv.gain.setValueAtTime(noiseAmt * CRY_VOLUME, nStart);
+        nEnv.gain.exponentialRampToValueAtTime(0.0003, nEnd);
+
+        src.connect(bpf); bpf.connect(nEnv); nEnv.connect(ac.destination);
+        src.start(nStart); src.stop(nEnd + 0.02);
+      }
     }
 
     const end = Math.max(end1, end2, t0 + dur) + 0.02;
