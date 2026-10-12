@@ -48,6 +48,208 @@ const SFX = (() => {
     if (end > scheduledUntil) scheduledUntil = end;
   }
 
+  // Deterministic pseudo-random float in [0, 1) from an integer seed (the
+  // standard GLSL sine-hash trick). Mon cries use this instead of
+  // Math.random() so a given dexNum always sounds the same — the whole
+  // point of a species having "its own cry" rather than a random noise.
+  function seedFrac(n) {
+    const x = Math.sin(n * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  // A true pulse wave at a given duty cycle (0-1), via its Fourier series —
+  // NOT the same as OscillatorNode's built-in 'square', which is fixed at
+  // 50% duty. The real Game Boy's pulse channels could step through four
+  // duty cycles (12.5/25/50/75%), and that thin-vs-fat duty is a big part of
+  // why its cries read as "Game Boy" rather than "generic synth beep": a
+  // thin duty (~15%) is nasal and squeaky, a fat one (~65%) is rounder and
+  // more hollow. Cached per duty so repeat cries don't rebuild it.
+  const pulseWaveCache = new Map();
+  function pulseWave(ac, duty) {
+    const key = Math.round(duty * 48);
+    if (pulseWaveCache.has(key)) return pulseWaveCache.get(key);
+    const d = Math.min(0.9, Math.max(0.08, key / 48));
+    const N = 20;
+    const real = new Float32Array(N);
+    const imag = new Float32Array(N);
+    for (let n = 1; n < N; n++) real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * d);
+    const w = ac.createPeriodicWave(real, imag, { disableNormalization: false });
+    pulseWaveCache.set(key, w);
+    return w;
+  }
+
+  // One pulse-wave voice through a 3-note contour (see cryImpl). Each note
+  // gets its OWN attack + decay rather than one envelope over the whole cry
+  // — that per-note re-attack is what turns "one tone sliding around" into
+  // "three short bleats stitched together," which is what the real cries
+  // (decoded from the Gen 1 disassembly's audio/sfx/cry*.asm — three
+  // square_note events per channel, each with its own volume fade) actually
+  // do. Frequency steps between notes rather than sliding, for the same
+  // reason: the hardware changed the frequency register at each new note,
+  // it didn't glide.
+  function cryVoice(ac, wave, notes, baseFreq, detune, gainScale, t0) {
+    const osc = ac.createOscillator();
+    osc.setPeriodicWave(wave);
+    const env = ac.createGain();
+    osc.connect(env); env.connect(ac.destination);
+
+    env.gain.setValueAtTime(0.0001, t0);
+    for (const n of notes) {
+      osc.frequency.setValueAtTime(baseFreq * n.freqMul * detune, t0 + n.tStart);
+      const attack = Math.min(0.012, Math.max(0.002, (n.tEnd - n.tStart) * 0.25));
+      env.gain.linearRampToValueAtTime(n.peak * gainScale, t0 + n.tStart + attack);
+      env.gain.exponentialRampToValueAtTime(Math.max(0.0005, n.peak * n.decayTo * gainScale), t0 + n.tEnd);
+    }
+    const end = t0 + notes[notes.length - 1].tEnd;
+    osc.start(t0);
+    osc.stop(end + 0.02);
+    return end;
+  }
+
+  // Mon cry — three size/stage tiers, tier looked up by dexNum from
+  // monsters.js's getCryTier (derived from evolution stage: base, mid,
+  // final). The shape itself is modeled on the real Gen 1 cries rather than
+  // guessed: two detuned pulse-wave voices (the disassembly runs cries on
+  // two square channels a few Hz apart, for a thicker, slightly chorused
+  // tone) playing a short 3-note contour — pickup, loud sustain, tail — plus
+  // a noise-channel burst under the sustain note for grit. Small/base forms
+  // use a thin duty cycle, a short rising contour and almost no noise
+  // (bright, clean, squeaky); final evolutions use a fat duty cycle, a
+  // falling contour, a sub-octave layer and a heavier noise burst (low,
+  // long, growling). dexNum seeds a deterministic pitch/length/duty offset
+  // within the tier so every form in a tier sounds related but not
+  // identical — the same trick the original 38-base-cry roster used.
+  // opts.after — like play()'s { after: true }, but always pads an extra
+  // beat (CRY_AFTER_PAD) on top of however long is left to ring out, rather
+  // than landing right on the tail of it. play()'s version waits exactly
+  // until scheduledUntil and no longer, which put the cry right under the
+  // last note of the session-end chime — audible as "during," not "after."
+  const CRY_AFTER_PAD = 0.18;
+  function cry(dexNum, opts) {
+    if (muted || typeof dexNum !== 'number') return;
+
+    if (opts && opts.after) {
+      let wait = CRY_AFTER_PAD;
+      try { wait = Math.max(0, scheduledUntil - getCtx().currentTime) + CRY_AFTER_PAD; } catch (_) { /* keep default */ }
+      lastPlayAt = performance.now();
+      setTimeout(() => cry(dexNum), wait * 1000);
+      return;
+    }
+
+    try { cryImpl(dexNum); lastPlayAt = performance.now(); }
+    catch (_) { /* fail silently if Web Audio is unavailable */ }
+  }
+
+  // Every gain in cryImpl below (note peaks, the sub layer, the noise burst)
+  // is multiplied by this before scheduling. One knob to retune loudness
+  // without having to touch each tier's numbers individually.
+  const CRY_VOLUME = 0.55;
+
+  function cryImpl(dexNum) {
+    const tier  = (typeof getCryTier === 'function') ? getCryTier(dexNum) : 1;
+    const seedA = seedFrac(dexNum * 7.13);
+    const seedB = seedFrac(dexNum * 3.71 + 1);
+    const ac = getCtx();
+    const t0 = ac.currentTime;
+
+    let baseFreq, dur, duty, detune, notesSpec, noise;
+    if (tier === 1) {
+      // Base/small — bright, thin, quick: pickup note, a brighter peak, a
+      // short settle. Pitch RISES into the peak note — the "cute" contour.
+      baseFreq = 760 + seedA * 380;      // 760-1140 Hz
+      dur      = 0.18 + seedB * 0.12;    // 180-300ms
+      duty     = 0.12 + seedA * 0.10;    // thin/nasal
+      detune   = 1.012;
+      notesSpec = [
+        { f: 0.90, s: 0.00, e: 0.22, peak: 0.22, decayTo: 0.70 },
+        { f: 1.30, s: 0.22, e: 0.70, peak: 0.26, decayTo: 0.60 },
+        { f: 1.05, s: 0.70, e: 1.00, peak: 0.19, decayTo: 0.02 },
+      ];
+      noise = { amt: 0.010, s: 0.22, e: 0.55 };
+    } else if (tier === 2) {
+      // Mid evolution — lower, a touch longer, pitch levels off instead of
+      // rising: no longer "cute," not yet a growl.
+      baseFreq = 300 + seedA * 200;      // 300-500 Hz
+      dur      = 0.30 + seedB * 0.14;    // 300-440ms
+      duty     = 0.30 + seedA * 0.15;
+      detune   = 1.012;
+      notesSpec = [
+        { f: 0.95, s: 0.00, e: 0.22, peak: 0.23, decayTo: 0.65 },
+        { f: 1.15, s: 0.22, e: 0.68, peak: 0.26, decayTo: 0.55 },
+        { f: 0.80, s: 0.68, e: 1.00, peak: 0.20, decayTo: 0.02 },
+      ];
+      noise = { amt: 0.030, s: 0.18, e: 0.75 };
+    } else {
+      // Final evolution — low, long, FALLING contour (a roar losing steam
+      // rather than a chirp finding one), fat duty cycle, a sub-octave
+      // layer for weight, and the heaviest noise burst.
+      baseFreq = 90 + seedA * 70;        // 90-160 Hz
+      dur      = 0.42 + seedB * 0.18;    // 420-600ms
+      duty     = 0.50 + seedA * 0.20;
+      detune   = 1.008;
+      notesSpec = [
+        { f: 1.15, s: 0.00, e: 0.20, peak: 0.24, decayTo: 0.80 },
+        { f: 0.85, s: 0.20, e: 0.62, peak: 0.27, decayTo: 0.60 },
+        { f: 0.55, s: 0.62, e: 1.00, peak: 0.22, decayTo: 0.02 },
+      ];
+      noise = { amt: 0.070, s: 0.15, e: 0.85 };
+    }
+
+    const notes = notesSpec.map(n => ({
+      freqMul: n.f, tStart: n.s * dur, tEnd: n.e * dur, peak: n.peak * CRY_VOLUME, decayTo: n.decayTo,
+    }));
+
+    const wave = pulseWave(ac, duty);
+    const end1 = cryVoice(ac, wave, notes, baseFreq, 1,      1,    t0);
+    const end2 = cryVoice(ac, wave, notes, baseFreq, detune, 0.50, t0);
+
+    // Final-form sub layer — triangle an octave down, for the body a thin
+    // pulse wave can't supply on its own.
+    if (tier === 3) {
+      const sub    = ac.createOscillator();
+      sub.type     = 'triangle';
+      const subEnv = ac.createGain();
+      sub.connect(subEnv); subEnv.connect(ac.destination);
+      subEnv.gain.setValueAtTime(0.0001, t0);
+      for (const n of notes) {
+        sub.frequency.setValueAtTime(baseFreq * n.freqMul * 0.5, t0 + n.tStart);
+        subEnv.gain.linearRampToValueAtTime(0.13 * CRY_VOLUME, t0 + n.tStart + 0.015);
+        subEnv.gain.exponentialRampToValueAtTime(Math.max(0.0005, 0.13 * CRY_VOLUME * n.decayTo), t0 + n.tEnd);
+      }
+      sub.start(t0); sub.stop(t0 + dur + 0.02);
+    }
+
+    // Noise-channel grit, timed over the loud middle note — same
+    // buffer-noise technique as blend()'s scream, at a fraction of the
+    // level (that one is a scream; this is texture).
+    const nStart = t0 + noise.s * dur;
+    const nEnd   = t0 + noise.e * dur;
+    const nDur   = nEnd - nStart;
+    if (nDur > 0.01) {
+      const bufSize = Math.ceil(ac.sampleRate * nDur);
+      const buf  = ac.createBuffer(1, bufSize, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+      const src  = ac.createBufferSource();
+      src.buffer = buf;
+      const bpf  = ac.createBiquadFilter();
+      bpf.type   = 'bandpass';
+      bpf.Q.value = 0.7;
+      bpf.frequency.setValueAtTime(baseFreq * 5, nStart);
+      bpf.frequency.exponentialRampToValueAtTime(Math.max(120, baseFreq * 1.5), nEnd);
+      const nEnv = ac.createGain();
+      nEnv.gain.setValueAtTime(noise.amt * CRY_VOLUME, nStart);
+      nEnv.gain.exponentialRampToValueAtTime(0.0003, nEnd);
+
+      src.connect(bpf); bpf.connect(nEnv); nEnv.connect(ac.destination);
+      src.start(nStart); src.stop(nEnd + 0.02);
+    }
+
+    const end = Math.max(end1, end2, t0 + dur) + 0.02;
+    if (end > scheduledUntil) scheduledUntil = end;
+  }
+
   // ── Sound definitions ────────────────────────────────────────
   const sounds = {
 
@@ -545,5 +747,5 @@ const SFX = (() => {
     setTimeout(() => { if (lastPlayAt < at) play('uiClick'); }, 0);
   }, true);
 
-  return { play, toggle, isMuted };
+  return { play, toggle, isMuted, cry };
 })();

@@ -1707,6 +1707,7 @@ const EncounterScreen = (() => {
         st.monBob = 0;
 
         SFX.play('fanfare');
+        SFX.cry(st.mon.dexNum, { after: true });
 
         // Update encounter overlay to show congratulations
         elMsgText.textContent = 'CONGRATULATIONS!';
@@ -2021,6 +2022,11 @@ const EncounterScreen = (() => {
     // stays immediate and keeps the encounter feeling instant.
     if (isShiny || isDark) SFX.play(isShiny ? 'shinyAppear' : 'darkAppear', { after: true });
     else                   SFX.play('encounter');
+    // Always after, even for a plain encounter: that one fires immediately
+    // (so it still cuts through the tail of the session-end chime, see
+    // above), but the cry should land once the chime has actually finished
+    // rather than overlapping it.
+    SFX.cry(mon.dexNum, { after: true });
 
     // Flash transition, then reveal the encounter overlay.
     runFlashTransition(() => {
@@ -2940,6 +2946,11 @@ const MonInfoScreen = (() => {
     // look at, so it keeps GOT IT!; opened after a catch it is the last thing
     // before the timer, so it asks what to do next instead.
     const chooseNext = !!(opts && opts.chooseNext) && typeof NextSession !== 'undefined';
+    // Only play the cry here when this card was opened from the Pokédex —
+    // the post-catch flow (chooseNext) already played it at the fanfare
+    // moment in EncounterScreen, and playing it twice in the same flow would
+    // just be noise on top of noise.
+    if (!chooseNext) SFX.cry(mon.dexNum);
     // Hide the BUTTON, not its .pxb wrapper: .pxb sets display:flex, which
     // outranks the browser's own [hidden] rule, so a hidden wrapper still
     // renders. `.pxb:has(button[hidden])` (style.css) collapses the frame once

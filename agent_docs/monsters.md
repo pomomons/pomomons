@@ -106,6 +106,17 @@ game-mechanics.md. These were documented here as 1% and 5%, which never matched
 
 ---
 
+## Cries
+
+Each dex entry gets a short synthesized "cry" (`SFX.cry(dexNum)` in audio.js),
+styled after the original Game Boy games: a handful of shared templates
+retuned per species, not one bespoke sound each. `getCryTier(dexNum)` (this
+file) maps a dex entry to one of 3 tiers purely from its position in the
+evolution chain — base/no evolution = tier 1 (high, short chirp), a mid
+evolution = tier 2, a final evolution = tier 3 (low, longer, growling with a
+touch of noise). This is derived from `MONS` automatically, same as the
+Pomodex page — there is no `cry`/`cryTier` field to set when adding a mon.
+
 ## Adding a New Mon
 
 1. Drop the sprite at `assets/sprites/<Name>/<Name>.png` (2-frame vertical sheet).

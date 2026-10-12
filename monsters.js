@@ -478,6 +478,33 @@ function getMonStage(mon, palLevel, declined) {
   return result;
 }
 
+// Cry tier per dex entry (1 = base/small, 2 = mid evolution, 3 = final
+// evolution) — read by audio.js's cry() to decide how high/low and how
+// long a mon's cry is. Derived from MONS once, the same way gen-pomodex.js
+// derives the Pomodex from this file, rather than a field hand-written per
+// mon: it already tracks sprite size and blink duration (see the roster
+// convention in agent_docs/monsters.md), so a third thing scaling with
+// evolution stage would drift from those two the first time someone added a
+// mon and forgot it. A base mon with no evolutions stays tier 1 forever
+// (there's nothing to grow into) — same as a non-evolving Pokémon keeping
+// its original cry.
+const CRY_TIER_BY_DEX = (() => {
+  const map = {};
+  for (const mon of MONS) {
+    map[mon.dexNum] = 1;
+    if (mon.evolutions) {
+      mon.evolutions.forEach((evo, i) => {
+        map[evo.dexNum] = (i === mon.evolutions.length - 1) ? 3 : 2;
+      });
+    }
+  }
+  return map;
+})();
+
+function getCryTier(dexNum) {
+  return CRY_TIER_BY_DEX[dexNum] || 1;
+}
+
 // A declined evolution is skipped by getMonStage forever — nothing re-checks
 // it on its own. This is what makes a stale decline findable again: every
 // EVOLUTION_REPROMPT_LEVELS levels past its own threshold, the evolution

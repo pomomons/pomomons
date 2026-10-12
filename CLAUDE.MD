@@ -22,7 +22,12 @@ appears. Players throw a tomato to catch it and build a collection.
 - monsters.js — Pomomon roster data + makeTypeBadges()
 - collection.js — Pokédex screen, active mon selector, IndexedDB
 - backup.js — save-code encode/decode for cross-device restore
-- audio.js — 8-bit sound effects, fully synthesized via Web Audio API (no audio files)
+- audio.js — 8-bit sound effects, fully synthesized via Web Audio API (no audio files).
+  Includes `SFX.cry(dexNum)`, a per-mon "cry" styled after Game Boy-era
+  Pokémon: a small number of templates (here, 3 size/evolution tiers) retuned
+  per species rather than one bespoke sound each. The tier comes from
+  `getCryTier` (monsters.js) — see agent_docs/monsters.md. Played on wild
+  encounter, catch-confirmed, and Pokédex tap (game.js).
 - signup.js — optional mailing-list card
 - 404.html — served by GitHub Pages for unknown paths; self-contained (inline
   CSS) so it needs no stamped asset references
