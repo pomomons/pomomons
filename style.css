@@ -2200,16 +2200,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
    frame over the live button and kept intercepting its clicks. */
 .evolution-actions > .pxb[hidden] { display: none; }
 
-.evolution-hint {
-  font-family: var(--font-pixel);
-  font-size: 9px;
-  color: var(--text-muted);
-  letter-spacing: .08em;
-  text-align: center;
-  min-height: 1.5em;
-  transition: opacity .25s;
-}
-
 #evolution-canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;

@@ -219,7 +219,7 @@ const Backup = (() => {
 
     if (titleEl) titleEl.textContent = requestMode ? "DON'T LOSE YOUR MONS!" : 'YOUR SAVE CODE';
     if (bodyEl) bodyEl.innerHTML = requestMode
-      ? 'GET A CODE THAT BRINGS YOUR MONS BACK ANYWHERE.<br>ADD YOUR EMAIL TO ALSO GET IT BY MAIL — OR LEAVE IT BLANK.'
+      ? 'GET A CODE THAT BRINGS YOUR MONS BACK ANYWHERE.<br>ADD YOUR EMAIL TO ALSO GET IT BY MAIL.'
       : 'YOUR MONS LIVE IN THIS BROWSER ONLY.<br>KEEP THIS CODE TO BRING THEM BACK ANYWHERE.';
 
     if (requestForm) requestForm.hidden = !requestMode;
