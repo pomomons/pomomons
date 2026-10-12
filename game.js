@@ -2867,9 +2867,15 @@ const MonInfoScreen = (() => {
       return span;
     }
 
-    // If this mon has no evolutions, check if it's an evolved form of another base mon
+    // Find the true base species by name, regardless of what mon.evolutions
+    // says. A Pomodex evolution tile (collection.js's allDexEntries) is built
+    // as `{ ...baseMon, ...evo }`, which inherits baseMon's own evolutions
+    // array since the evo record doesn't carry one of its own — so an evolved
+    // form like Vileplum arrives here still holding a non-empty `evolutions`
+    // (pointing at itself). Checking emptiness first used to skip this lookup
+    // for exactly that case and render the evolved form as its own "BASE".
     let rootMon = mon;
-    if ((!mon.evolutions || mon.evolutions.length === 0) && typeof MONS !== 'undefined') {
+    if (typeof MONS !== 'undefined') {
       const parent = MONS.find(m => m.evolutions && m.evolutions.some(e => e.name === mon.name));
       if (parent) rootMon = parent;
     }
