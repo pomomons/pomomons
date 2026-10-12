@@ -179,7 +179,7 @@ a screenshot yet. What exists and is usable as-is:
 | Field | File | Note |
 |---|---|---|
 | Icon | `assets/icons/icon-512.png` | 512x512, already the PWA icon |
-| Social / header | `assets/og-image.png` | 1200x630 |
+| Social / header | `assets/og-image-v3.png` | 1200x630 |
 
 Screenshots still to capture, in this order of usefulness — the catch is the
 whole pitch, so lead with it:

@@ -136,11 +136,11 @@ const page = `<!DOCTYPE html>
   <meta property="og:title" content="Pomodex: All ${formCount} Pomomons and Their Evolutions">
   <meta property="og:description" content="All ${formCount} Pomomon forms across ${baseCount} base species, with flavor types and evolution levels.">
   <meta property="og:url" content="https://pomomons.io/pomodex/">
-  <meta property="og:image" content="https://pomomons.io/assets/og-image.png">
+  <meta property="og:image" content="https://pomomons.io/assets/og-image-v3.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://pomomons.io/assets/og-image.png">
+  <meta name="twitter:image" content="https://pomomons.io/assets/og-image-v3.png">
 
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
