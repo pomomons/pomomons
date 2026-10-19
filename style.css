@@ -341,13 +341,6 @@ h1.logo {
   text-shadow: 2px 2px 0 rgba(0,0,0,.4);
 }
 
-.tagline {
-  font-family: var(--font-pixel);
-  font-size: var(--text-base);
-  color: var(--text-muted);
-  letter-spacing: .12em;
-  margin-top: 4px;
-}
 
 /* ── Screen system ───────────────────────────────────────── */
 .screen {
@@ -2283,7 +2276,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .logo-tomato-img { height: 1.75rem; }
   .logo-icon { font-size: 28px; }
   .logo { gap: 4px; }
-  .tagline { font-size: 8px; letter-spacing: .06em; }
   .timer-display { font-size: 48px; padding: 8px 8px 8px 12px; }
   .screen { padding: 8px 8px calc(var(--stats-h) + 8px); gap: 4px; }
   .companion-area { padding: 12px 8px 8px; }
@@ -2315,7 +2307,6 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
   .logo-pomo, .logo-mons { font-size: 20px; }
   .logo-tomato-img { height: 1.2rem; }
   .logo-icon { font-size: 20px; margin-right: 4px; }
-  .tagline { display: none; }
 
   .screen { padding: 4px 8px calc(var(--stats-h) + 4px); gap: 4px; }
 

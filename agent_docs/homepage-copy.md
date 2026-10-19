@@ -108,7 +108,7 @@ working with no connection at all.
 
 ### What you are collecting
 
-There are **30 Pomomon forms across 16 base species**, numbered #1 to #30 in
+There are **30 Pomomon forms across 15 base species**, numbered #1 to #30 in
 the Pomodex. Only the 16 base forms appear in the wild — the other 14 are
 evolutions, which a Pomomon you have already caught reaches on its own at level
 16, 20 or 36.
@@ -166,7 +166,7 @@ connection. The [FAQ](/faq/) covers the rest.
 
 ### How it compares to other focus timers
 
-Most focus apps with a reward loop are phone apps you install from a store, and
+The best-known focus apps with a reward loop started out as phone apps, and
 most of the browser ones are hobby projects built around characters their
 authors do not own. PomoMons is deliberately neither: it opens in a tab on any
 device, the creatures are original, and nothing is behind a payment or a login.

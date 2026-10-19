@@ -234,7 +234,7 @@ you focus.
 > set a focus session and work. When the timer runs out, a wild Pomomon shows
 > up — a food-themed pixel monster — and you throw a tomato to catch it.
 >
-> - **30 forms across 16 base species**, every one hand-drawn pixel art
+> - **30 forms across 15 base species**, every one hand-drawn pixel art
 > - **Evolutions** at level 16, 20 and 36
 > - **Shiny** (1 in 500) and **dark** (1 in 100) variants
 > - Five flavour types: Savory, Sweet, Spicy, Sour, Bitter
@@ -286,7 +286,7 @@ six hours to answer comments; that is most of what decides how it goes.
 > wild Pomomon turns up — a food-themed pixel monster — and you throw a tomato
 > to catch it. It takes about ten seconds, it happens exactly where you were
 > going to stop anyway, and it gives the end of a session a shape. There are 30
-> forms across 16 species to find, they evolve, and there are shinies at 1 in
+> forms across 15 species to find, they evolve, and there are shinies at 1 in
 > 500 if you are lucky.
 >
 > Underneath it is an honest Pomodoro timer: adjustable focus and break
@@ -342,7 +342,7 @@ of every focus session
 > So I built one that hands you something small at the end. Finish a focus
 > session and a wild "Pomomon" appears — a food-themed pixel monster — and you
 > throw a tomato at it to catch it. It goes in your Pomodex, levels up as you
-> do more sessions, and evolves. 30 forms across 16 species so far, with shiny
+> do more sessions, and evolves. 30 forms across 15 species so far, with shiny
 > variants at 1 in 500.
 >
 > The timer part is real, not a gimmick: adjustable focus and break lengths, a
