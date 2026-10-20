@@ -49,7 +49,7 @@
      font-size it always did on .timer-display; this nudges only the digits
      inside it, so the whole ladder moves together and nothing had to be
      re-tuned tier by tier. */
-  --timer-scale: 1.07;
+  --timer-scale: 0.97;
   /* Teal dulled from 100% to 60% saturation (hue and lightness unchanged) so the
      pure accents — gold, type badges, the sprite — read as figure against it.
      Also puts idle in the same saturation register as focus red's 39%. */

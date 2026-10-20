@@ -1547,7 +1547,7 @@ html::after {
 .companion-stage { transform: translateY(-12px); }
 
 /* ── A2 — the two boxes sit closer together ──────────────── */
-#screen-timer { gap: 12px; padding-top: 44px; }
+#screen-timer { gap: 12px; padding-top: 32px; }
 /* Keeps the encounter arena the same distance below the tagline as the
    timer screen's first box — see .encounter-body in style.css. */
 .encounter-body { padding-top: 44px; }
@@ -2697,7 +2697,7 @@ html::after,
   .app-header { padding-top: clamp(12px, calc(9.17vh - 70px), 18px); }
 
   #screen-timer {
-    padding-top: clamp(16px, calc(11.67vh - 66px), 44px);
+    padding-top: clamp(8px, calc(11.67vh - 78px), 32px);
     gap: clamp(8px, calc(1.67vh - 3.7px), 12px);
   }
 
@@ -2721,7 +2721,7 @@ html::after,
   .encounter-overlay { padding-top: 16px; justify-content: flex-start; overflow-y: auto; }
   .encounter-body {
     justify-content: flex-start;
-    padding-top: clamp(16px, calc(11.67vh - 66px), 44px);  /* = #screen-timer's */
+    padding-top: clamp(8px, calc(11.67vh - 78px), 32px);  /* = #screen-timer's */
     gap: 8px;
   }
   .encounter-arena { padding: 16px 18px 20px; gap: 10px; }
