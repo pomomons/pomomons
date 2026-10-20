@@ -273,12 +273,12 @@ const MONS = [
       //
       // The 36 changed pixels sit in rows 38-43, the eye band, and include the
       // same two white highlights Pinapip carries — a real blink, not a glint
-      // like Idabro's sunglasses. 6000/900 is the timing every other 64px final
-      // evolution uses (Portobellord, Guacamonger, Strangletti, Idabro): slower
-      // and longer than the 3000/150 basics, so the bigger mon reads heavier.
+      // like Idabro's sunglasses. Because it is a real blink it keeps the plain
+      // 3000/150 timing the basics use, not the slow 6000/900 glint timing the
+      // other 64px final evolutions carry.
       { atLevel: 20, dexNum: 30, name: 'Pikeapple', type: 'Sweet', color: '#fee22c', accent: '#fa8302',
         sprite: 'assets/sprites/Pikeapple/Pikeapple.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
     ]
   },
   // Mango. Evolves once, into Mambango. Sweet, alongside the roster's other

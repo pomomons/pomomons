@@ -1092,6 +1092,37 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// ── Resume the clock after the page is closed ─────────────
+// Saves the mode and the seconds left whenever the page is hidden or closed,
+// and puts them back — paused — on the next visit. Paused on purpose: the
+// clock does not run while the page is closed, so closing mid-focus can't be
+// used to bank a session, and the player presses START to carry on. A clock
+// at its full length has nothing to resume, so that clears the entry.
+const TIMER_SAVE_KEY = 'pm_timer_resume';
+function saveTimerState() {
+  try {
+    const left = running ? Math.max(0, Math.round((endTime - Date.now()) / 1000)) : timeLeft;
+    if (left <= 0 || left >= MODES[currentMode]) localStorage.removeItem(TIMER_SAVE_KEY);
+    else localStorage.setItem(TIMER_SAVE_KEY, JSON.stringify({ mode: currentMode, left }));
+  } catch (e) {}
+}
+function restoreTimerState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(TIMER_SAVE_KEY) || 'null');
+    if (!s || !(s.mode in MODES)) return;
+    const left = Math.round(s.left);
+    // Durations may have been changed since; never restore more than a full run.
+    if (!(left > 0) || left >= MODES[s.mode]) return;
+    setMode(s.mode);
+    timeLeft = left;
+    renderTime();
+    updateButtonStates();
+  } catch (e) {}
+}
+window.addEventListener('pagehide', saveTimerState);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveTimerState(); });
+restoreTimerState();
+
 // Spawn-rate info modal
 const spawnInfo = document.getElementById('spawn-info');
 document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
