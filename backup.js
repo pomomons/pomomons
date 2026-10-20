@@ -23,7 +23,7 @@ const Backup = (() => {
   //   pm_caught    migration scratch, emptied into IndexedDB on first run
   const KEYS = [
     'pm_level', 'pm_exp',
-    'pm_active', 'pm_active_rec_key', 'pm_active_pal_level',
+    'pm_active', 'pm_active_none', 'pm_active_rec_key', 'pm_active_pal_level',
     'pm_active_pal_exp', 'pm_active_shiny', 'pm_active_dark',
     // The mirror of the active companion's refused evolutions. The records
     // themselves carry `evoDeclined` and travel with the collection, so this

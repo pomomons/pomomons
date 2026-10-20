@@ -147,8 +147,11 @@ const Collection = (() => {
     if (record.heldItem === undefined) record.heldItem = null;   // no items yet
     if (record.nickname === undefined) record.nickname = null;
 
-    // If the player has no active companion yet, this catch becomes it.
-    const isFirstCatch = !localStorage.getItem('pm_active');
+    // If the player has no active companion yet, this catch becomes it. Not if
+    // they took their companion off on purpose (pm_active_none): that choice
+    // has to outlast the next catch, or UNEQUIP would undo itself.
+    const isFirstCatch = !localStorage.getItem('pm_active')
+                      && !localStorage.getItem('pm_active_none');
 
     // A dark or shiny is a rare pull — flag the backup prompt to offer itself
     // at the next calm moment, regardless of how many catches/sessions in.
@@ -700,6 +703,7 @@ const Collection = (() => {
     }
 
     localStorage.setItem('pm_active', mon.id);
+    localStorage.removeItem('pm_active_none');
 
     if (rec) {
       localStorage.setItem('pm_active_rec_key',   rec._key);
@@ -728,6 +732,35 @@ const Collection = (() => {
       document.getElementById('companion-name').textContent = mon.name;
       CompanionCanvas.setMon(mon);
     }
+    if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
+    if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
+  }
+
+  // ── Internal: unequipCompanion ──────────────────────────────
+  // Leaves the player with no companion at all, rather than swapping to
+  // another. Everything setActiveCompanion writes is cleared, the pal's level
+  // and exp are saved back to its record first (it keeps them for next time),
+  // and pm_active_none records that this was a choice, so the next catch does
+  // not quietly equip itself.
+  async function unequipCompanion() {
+    SFX.play('select');
+
+    const oldKeyStr = localStorage.getItem('pm_active_rec_key');
+    if (oldKeyStr && db) {
+      const oldKey   = parseInt(oldKeyStr, 10);
+      const oldLevel = parseInt(localStorage.getItem('pm_active_pal_level') || '1', 10);
+      const oldExp   = parseInt(localStorage.getItem('pm_active_pal_exp')   || '0', 10);
+      if (oldKey) await updateRecord(oldKey, { palLevel: oldLevel, palExp: oldExp }).catch(() => {});
+    }
+
+    for (const k of ['pm_active', 'pm_active_rec_key', 'pm_active_pal_level',
+                     'pm_active_pal_exp', 'pm_active_shiny', 'pm_active_dark',
+                     'pm_active_evo_declined']) {
+      localStorage.removeItem(k);
+    }
+    localStorage.setItem('pm_active_none', '1');
+
+    if (typeof updateCompanionDisplay === 'function') updateCompanionDisplay();
     if (document.getElementById('screen-dex')?.classList.contains('active'))    renderDex();
     if (document.getElementById('screen-mymons')?.classList.contains('active')) renderMyMons();
   }
@@ -1075,7 +1108,10 @@ const Collection = (() => {
         if (e.key === 'Escape') { e.preventDefault(); closeRename(); }
       });
       document.getElementById('btn-mon-detail-equip').addEventListener('click', async () => {
-        await setActiveCompanion(detailMon, detailRec);
+        // The same button toggles: equipping the pal that is already equipped
+        // takes it off, leaving no companion.
+        if (isEquipped(detailRec)) await unequipCompanion();
+        else await setActiveCompanion(detailMon, detailRec);
         updateEquipButton();
       });
     }
@@ -1220,11 +1256,12 @@ const Collection = (() => {
   function updateEquipButton() {
     const btn = document.getElementById('btn-mon-detail-equip');
     if (!btn || !detailRec) return;
+    btn.textContent = isEquipped(detailRec) ? 'UNEQUIP' : 'SET AS COMPANION';
+  }
+
+  function isEquipped(rec) {
     const activeKey = parseInt(localStorage.getItem('pm_active_rec_key') || '0', 10) || null;
-    const isActive  = detailRec._key === activeKey;
-    btn.textContent = isActive ? 'EQUIPPED' : 'SET AS COMPANION';
-    btn.disabled    = isActive;
-    btn.classList.toggle('is-equipped', isActive);
+    return !!rec && rec._key === activeKey;
   }
 
   // ── My Mons sort order ────────────────────────────────────────
