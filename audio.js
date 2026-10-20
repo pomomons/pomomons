@@ -816,5 +816,9 @@ const SFX = (() => {
     setTimeout(() => { if (lastPlayAt < at) play('uiClick'); }, 0);
   }, true);
 
-  return { play, toggle, isMuted, cry };
+  // Create/resume the AudioContext ahead of the first sound. Call from a user
+  // gesture (pointerdown/keydown) so the first real sound has no setup cost.
+  function warm() { try { getCtx(); } catch (_) {} }
+
+  return { play, toggle, isMuted, cry, warm };
 })();

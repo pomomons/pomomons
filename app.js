@@ -101,6 +101,33 @@ function getBgTicker() {
   } catch (_) { bgTicker = null; }
   return bgTicker;
 }
+// Pay the one-time costs before the first START, not during it: the audio
+// engine on the first touch (needs a gesture), the ticker worker, the red
+// focus background (decoded so it doesn't pop in late) and every mon sprite
+// (so the encounter never waits on the network).
+(function warmUp() {
+  const onFirstTouch = () => { SFX.warm(); };
+  window.addEventListener('pointerdown', onFirstTouch, { once: true, capture: true });
+  window.addEventListener('keydown',     onFirstTouch, { once: true, capture: true });
+
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 800));
+  const run = () => {
+    getBgTicker();
+    try {
+      const red = new Image();
+      red.src = 'assets/backgrounds/redbackground.webp';
+      window.__redBgWarm = red;               // keep a reference so it stays decoded
+      if (red.decode) red.decode().catch(() => {});
+    } catch (_) {}
+    try {
+      if (typeof MonSprite !== 'undefined' && typeof MONS !== 'undefined') {
+        MonSprite.preloadAll(MONS, () => {});
+      }
+    } catch (_) {}
+  };
+  window.addEventListener('load', () => idle(run, { timeout: 3000 }));
+})();
+
 function startTicker() {
   intervalId = setInterval(timerTick, 1000);
   getBgTicker()?.postMessage('start');
@@ -407,12 +434,15 @@ function startTimer() {
   titleOverride = null;
   running = true;
   endTime = Date.now() + timeLeft * 1000;
-  SFX.play('start');
   elColon.style.animationPlayState = 'running';
   updateBackground();
   updateButtonStates();
   renderTime();
   startTicker();
+  // Sound last, and after the next paint: the button and background should
+  // change first, and nothing audio-related (context creation, resume) is
+  // allowed to hold that up.
+  requestAnimationFrame(() => setTimeout(() => SFX.play('start'), 0));
 }
 
 function pauseTimer() {
