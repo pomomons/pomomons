@@ -1042,8 +1042,8 @@ const CompanionCanvas = (() => {
   // move together so the crossfade stays the same share of each species'
   // turn — halving only the hold would leave the fade covering 43% of it and
   // the teaser would read as a blur rather than a cycle.
-  const SILHOUETTE_SHOW_MS = 350;  // how long each species holds before swapping
-  const SILHOUETTE_FADE_MS = 75;   // crossfade duration at the start of each swap
+  const SILHOUETTE_SHOW_MS = 550; // how long each species holds before swapping
+  const SILHOUETTE_FADE_MS = 110;  // crossfade duration at the start of each swap
 
   let silhouettePool  = null; // lazy-built: MONS filtered to sprite-bearing entries
   let silhouetteIndex = -1;
