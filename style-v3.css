@@ -2825,7 +2825,7 @@ html::after,
    and (min-height: 640px) and (max-height: 679px) {
   .logo-pomo, .logo-mons { font-size: 48px; }
   .logo-tomato-img { height: 2.5rem; }
-  .logo-icon { font-size: 27px; }
+  .logo-icon { font-size: 26px; }
 }
 /* Below ~640px tall the timer screen has no slack left to spend on the
    wordmark. Measured against the previous build, even 44px here pushes the
@@ -3721,4 +3721,46 @@ html::after,
   .prose-col { padding-top: 2.5rem; }
   .home-prose { font-size: 1rem; }
   .home-foot .prose-col { justify-content: flex-start; }
+}
+
+/* ── Phone header sizing (last word) ───────────────────────
+   Wordmark up a step, gear down a step, "?" up a step. Kept at the very end
+   of the file so it beats the height-based wordmark rungs above. The wordmark
+   is centred and the gear is pinned top-right, so 26px is about the widest it
+   gets before the "S" runs under the gear at 390px. */
+@media (max-width: 479px) {
+  /* Scales with the screen: the wordmark is centred and the gear pinned to the
+     right, so a fixed px size ran into the gear on some widths (375, 320). */
+  :root { --logo-fs: clamp(18px, calc(9.7vw - 13px), 28px); }
+  .logo-pomo, .logo-mons { font-size: var(--logo-fs); }
+  .logo-tomato-img { height: calc(var(--logo-fs) * 1.015); }
+  .btn-audio { min-width: 40px; min-height: 40px; }
+  .btn-help { min-width: 28px; min-height: 28px; font-size: 11px; }
+}
+
+/* Gear centred on the wordmark's midline. The row is as tall as the wordmark,
+   so pin the gear to half the row's height and pull it up by half its own. */
+@media (max-width: 479px) {
+  /* The header centres its children, so a block row shrinks to the wordmark;
+     stretch it to full width (cancelling the header side padding) so the gear
+     still pins to the screen edge. */
+  .logo-row { position: relative; align-self: stretch; margin-inline: -16px; }
+  .audio-shadow { top: calc(50% - 24px); }
+}
+@media (max-width: 374px) {
+  .audio-shadow { top: calc(50% - 24px); right: 8px; }
+}
+
+@media (max-width: 479px) and (max-height: 700px) and (orientation: portrait) {
+  .logo-row { margin-inline: -12px; }
+}
+
+/* Phone timer: digits down a step, ▲▼ up from a fingertip-hostile 18px. */
+@media (max-width: 479px) {
+  .timer-display { font-size: clamp(34px, 12vw, 52px); }
+  .btn-adjust { min-width: 28px; min-height: 28px; font-size: 11px; padding: 3px; }
+  /* The two buttons stacked are taller than the digit box, so the top one sat
+     3px under its edge. Give the box room and centre the pair in it. */
+  .timer-display { min-height: 84px; }
+  .time-adjust { top: 50%; transform: translateY(-50%); right: 8px; }
 }

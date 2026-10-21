@@ -40,7 +40,7 @@ actually happens.
   hello@pomomons.io instead of the user's personal Gmail. Verified delivered.
 - Mailing-list signup: envelope icon redone as a floppy-disk save icon,
   card redone as a centered popup w/ backdrop, added a Discord link button
-  (https://discord.gg/bXnKR8FeG), header icon layout fixed, My Mons/Pomodex
+  (https://discord.gg/jaWsqRdymV), header icon layout fixed, My Mons/Pomodex
   button-height consistency fixed.
 - Discord button icon redrawn to match the pixel-art Clyde in
   ~/Downloads/discord.png (monochrome silhouette, viewBox 25x19).

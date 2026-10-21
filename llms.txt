@@ -61,4 +61,4 @@ game reward loop attached to their study sessions rather than a plain timer.
 - App: https://pomomons.io/
 - The research, with citations: https://pomomons.io/research/
 - Full creature roster (Pomodex): https://pomomons.io/pomodex/
-- Discord community: https://discord.gg/bXnKR8FeG
+- Discord community: https://discord.gg/jaWsqRdymV

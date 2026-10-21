@@ -190,7 +190,7 @@ stakes on this list.
 
 ## 6. Discord — community
 
-- Invite: `https://discord.gg/bXnKR8FeG`, linked from the settings menu
+- Invite: `https://discord.gg/jaWsqRdymV`, linked from the settings menu
   (`#btn-discord`).
 
 **If this is lost:** the in-app button points at a dead invite, which needs a
