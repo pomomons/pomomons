@@ -1886,6 +1886,41 @@ html::after {
   .stats-strip .stats-row > .stats-inline { flex-wrap: nowrap; }
   .stats-strip .stats-row > .stats-inline .stat-frame--scope { flex: 0 0 auto; }
 
+  /* Roomier strip: more padding and row gap, taller tiles, and captions/numbers
+     a step up from the 8px/13px the tight layout used. Costs ~16px of height
+     (--stats-h below is raised to match). */
+  .stats-strip .stats-row { padding: 10px 10px; row-gap: 12px; gap: 8px; }
+  /* LV badge is a yellow button laid over the left end of the XP bar, centred
+     vertically and TALLER than the bar so it stands proud above and below it. Badge and bar share the "xp" grid cell. The bar's fill starts
+     after a left pad so low XP isn't hidden under the badge. */
+  .stats-strip .stats-row {
+    grid-template-columns: 1fr;
+    grid-template-areas: "xp" "tiles";
+    row-gap: 12px;
+  }
+  .stats-strip .stats-row > .lv-frame {
+    grid-area: xp;
+    justify-self: start;
+    align-self: center;
+    z-index: 1;
+    margin-left: 0;
+    padding: 2px;
+  }
+  .stats-strip .level-badge { font-size: 15px; padding: 12px 14px; }
+  .stats-strip .stats-xp { grid-area: xp; margin-left: 0; }
+  .stats-strip .exp-bar-wrap { height: 20px; box-sizing: border-box; padding-left: calc(var(--lv-w, 64px) - 2px); }
+  /* XP numbers hidden on phones; the bar and LV badge carry it. */
+  .stats-strip .xp-text { display: none; }
+  .stats-strip .stats-inline { gap: 8px; align-items: stretch; }
+  /* Frames stretch to the row's height and their tiles fill them, so MINUTES,
+     CATCHES and the toggle are all the same height. */
+  .stats-strip .stats-inline .stat-frame { display: flex; }
+  .stats-strip .stats-inline .stat-item { flex: 1; justify-content: center; }
+  .stats-strip .stat-item { padding: 8px 4px; }
+  .stats-strip .stat-val { font-size: 15px; }
+  .stats-strip .stat-label { font-size: 9px; }
+  .stats-strip .stat-scope { padding: 8px 8px; font-size: 10px; }
+
   /* The ▲▼ minute steppers sit absolutely positioned over the timer's right
      edge (style-v2.css .time-adjust). .timer-time has white-space:nowrap,
      so past a certain width padding can't help any more — the text is a
@@ -1932,7 +1967,7 @@ html::after {
      phone the way space-between would. --stats-h eases down to give the
      boxes a little more room; the collection grid's gap above the strip
      is re-pinned to match. */
-  :root { --stats-h: 134px; }
+  :root { --stats-h: 150px; }
 
   /* Height-aware, not a flat 234px. The short-portrait tier below drops the
      stage to 110px at exactly 700px of viewport height, and a flat value here
@@ -2010,7 +2045,7 @@ html::after {
     height: 103.5%;
     left: 50%;
     margin-left: -51.75%;
-    top: 2.64%;
+    top: -0.74%;
   }
 
   /* 138% x 78% x 1.035 — same multiplier as the canvas above, so mon and
@@ -2037,7 +2072,9 @@ html::after {
      panel the ground is meant to stop short of. Bottom keeps the standing line
      (45% down the file) at 10.86% above the stage bottom: 71.415 × 0.55 −
      28.42 = 10.86, the same as the old pair gave. */
-  .companion-ground { width: 142.83%; height: 71.415%; bottom: -28.42%; }
+  /* Feet-to-standing-line gap matched to desktop (feet 5.9% of the mon's size
+     below the platform's widest row): mon raised and ground lowered 3.4% each. */
+  .companion-ground { width: 142.83%; height: 71.415%; bottom: -31.8%; }
   /* The readout is offset from the panel now, not from the stage, so it needs
      no per-breakpoint nudging — the base 24px inset already lands it on the
      panel at every phone width. Only the side inset comes in, to match the
@@ -2161,12 +2198,12 @@ html::after {
      stage, the canvas's own 96% line lands there at 102 - (96 x 1.215), and
      the ground's grass line (50% of its box) at 102 - (50 x 1.215), putting
      its bottom edge at 102 + (28 x 1.215). */
-  #companion-canvas { width: 121.5%; height: 121.5%; margin-left: -60.75%; top: -14.64%; }
+  #companion-canvas { width: 121.5%; height: 121.5%; margin-left: -60.75%; top: -18.79%; }
   /* Same rule as the tier above: height is width/2 so the 120×60 art keeps
      square blocks, width stays put (an exact block match wants 200.47%, which
      runs well past the panel), and bottom holds the standing line at 13.54%
      above the stage bottom — 83.835 × 0.55 − 32.57. */
-  .companion-ground { width: 167.67%; height: 83.835%; bottom: -32.57%; }
+  .companion-ground { width: 167.67%; height: 83.835%; bottom: -36.72%; } /* same desktop feet gap, shifted 4.15% each */
 
   /* The tier above widens the caption's box by 40px a side, which is generous
      against its 234px stage but not against the 110px one here — the box came
@@ -2451,9 +2488,11 @@ html::after {
 @media (max-width: 479px) {
   .blender-zone { gap: 6px; }
   .blender-drop,
-  .smoothie-box { padding: 8px 10px; gap: 8px; }
-  .zone-icon-img { width: 40px; height: 40px; }
-  .blender-label { font-size: 10px; }
+  .smoothie-box { padding: 14px 10px; gap: 8px; }
+  .zone-icon-img { width: 52px; height: 52px; transform: none; }
+  /* Label and hint sit centered in the space beside the icon. */
+  .zone-text { flex: 1; align-items: center; text-align: center; }
+  .blender-label { font-size: 10px; text-align: center; }
   .blender-hint,
   .smoothie-hint { font-size: 7px; line-height: 1.5; }
   /* The count moves to the icon's BOTTOM-right here. Its usual top-right
@@ -3192,6 +3231,13 @@ html::after,
   padding: 12px 20px;
   white-space: nowrap;
 }
+/* Yellow with black text, same gold as the active tab. Doubled class beats
+   the .btn-ghost / .btn-ghost.btn-sm fills and their hover colours. */
+.btn-save-code.btn-save-code {
+  background: var(--gold);
+  color: #000;
+}
+.btn-save-code.btn-save-code:hover { background: var(--gold); filter: brightness(1.1); }
 
 /* Taller than the blender modal — two panels stacked — so it has to be able
    to scroll on short viewports rather than overflow off-screen. */
@@ -3357,6 +3403,11 @@ html::after,
   .pxb-back .btn,
   .collection-tab { font-size: 9px; padding: 13px 10px; }
   .collection-tab--count { padding-left: 8px; padding-right: 8px; }
+  /* Tabs share the row evenly and fill it, so they're wider and the label can
+     step up a size. Sort / the Dex tally already wrap to their own line here,
+     so BACK + two tabs is all that's on this one. */
+  .collection-tabs { flex: 1; min-width: 0; }
+  .collection-tab { flex: 1 1 0; min-width: 0; font-size: 10px; text-align: center; }
 
   /* .collection-header-end now holds only the sort button — the My Mons count
      that used to sit beside it moved inside the MY MONS tab label. If the

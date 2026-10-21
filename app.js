@@ -1332,6 +1332,17 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTimerSc
 // XP numbers grow a digit as the player levels.
 if (window.ResizeObserver && statsStrip) new ResizeObserver(fitTimerScreen).observe(statsStrip);
 
+// Phone layout lays the LV badge over the left end of the XP bar (style-v3.css).
+// The bar's fill has to start where the badge ends, so publish the badge's
+// width as --lv-w and let the CSS pad the track by it. Re-measured whenever the
+// badge resizes (level digits changing, fonts loading).
+const lvFrameEl = document.querySelector('.stats-strip .lv-frame');
+if (window.ResizeObserver && statsStrip && lvFrameEl) {
+  new ResizeObserver(() => {
+    statsStrip.style.setProperty('--lv-w', lvFrameEl.offsetWidth + 'px');
+  }).observe(lvFrameEl);
+}
+
 fitTimerScreen();
 
 // The markup ships the desktop labels; correct them once on load in case the
