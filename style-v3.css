@@ -1297,6 +1297,13 @@ html::after {
 .stat-scope:active { filter: brightness(.9); }
 .stat-scope:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
+/* Desktop: the toggle stands as tall as MINUTES / CATCHES beside it, the same
+   stretch the phone layout already does (see the max-width: 479px block). */
+@media (min-width: 660px) {
+  .stats-strip .stats-inline { align-items: stretch; }
+  .stats-strip .stat-frame--scope { display: flex; }
+}
+
 /* ── Tiles drop to their own row before they can overflow ───
    The one-line strip (LV | XP | tiles) needs ~718px of plate width to hold
    the scope toggle plus three tiles, and the plate runs ~78px narrower than
@@ -2522,6 +2529,34 @@ html::after {
   border-color: var(--frame-t);
   border-radius: 0;
   clip-path: var(--pixel-clip-2xs);
+}
+
+/* Desktop: four tiles a row on My Mons and Pomodex. Three left each tile so
+   wide its sprite read oversized; phones keep the base sheet's three. */
+@media (min-width: 660px) {
+  .collection-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mon-card canvas { width: min(128px, 46%); }
+
+  /* Card columns line up with the BLEND / SMOOTHIES boxes above (both grids
+     share the 8px gap). A default scrollbar (~15px on Windows) took its width
+     out of the grid and broke that, so the scroll box reaches 16px into the
+     screen's right padding and parks a fixed 8px bar there: 16 - 8 padding
+     - 8 bar leaves the grid exactly the toolbar's width. scrollbar-gutter
+     keeps the bar's room reserved when the list is too short to scroll. */
+  .mymons-scroll {
+    width: calc(100% + 16px);
+    margin-right: -16px;
+    padding-right: 8px;
+    scrollbar-gutter: stable;
+  }
+  .mymons-scroll::-webkit-scrollbar { width: 8px; }
+  .mymons-scroll::-webkit-scrollbar-track { background: transparent; }
+  .mymons-scroll::-webkit-scrollbar-thumb { background: var(--frame-t); }
+  /* Firefox has no ::-webkit-scrollbar; its thin bar is the nearest fit.
+     Chrome must not see scrollbar-width, which would override the rules above. */
+  @supports not selector(::-webkit-scrollbar) {
+    .mymons-scroll { scrollbar-width: thin; scrollbar-color: var(--frame-t) transparent; }
+  }
 }
 
 .type-badge {

@@ -4,6 +4,10 @@ const Collection = (() => {
   const DB_NAME    = 'pomomons_db';
   const DB_VERSION = 1;
   const STORE_NAME = 'caught';
+  // Backing size of the sprite canvas on My Mons / Pomodex cards. CSS
+  // (.mon-card canvas) sets the on-screen size; this just has to be at least
+  // that big so the sprite is drawn up, never squashed down.
+  const CARD_CANVAS_PX = 128;
 
   let db                 = null;
   let blenderReady       = false;   // event listeners attached once
@@ -792,9 +796,9 @@ const Collection = (() => {
 
     // Canvas thumbnail
     const canvas  = document.createElement('canvas');
-    canvas.width  = 64;
-    canvas.height = 64;
-    MonSprite.draw(canvas, displayMon, { fit: 0.85, shiny: catchData?.hasShiny || false });
+    canvas.width  = CARD_CANVAS_PX;
+    canvas.height = CARD_CANVAS_PX;
+    MonSprite.draw(canvas, displayMon, { fit: 0.85, curve: MonSprite.CARD_SIZE_CURVE, shiny: catchData?.hasShiny || false });
     card.appendChild(canvas);
 
     // Dex number
@@ -846,9 +850,9 @@ const Collection = (() => {
     if (!owned) card.classList.add('unseen');
 
     const canvas  = document.createElement('canvas');
-    canvas.width  = 64;
-    canvas.height = 64;
-    MonSprite.draw(canvas, mon, { fit: 0.85, shiny: false });
+    canvas.width  = CARD_CANVAS_PX;
+    canvas.height = CARD_CANVAS_PX;
+    MonSprite.draw(canvas, mon, { fit: 0.85, curve: MonSprite.CARD_SIZE_CURVE, shiny: false });
     if (!owned) canvas.style.filter = 'brightness(0) opacity(.18)';
     card.appendChild(canvas);
 
@@ -953,9 +957,9 @@ const Collection = (() => {
     }
 
     const canvas  = document.createElement('canvas');
-    canvas.width  = 64;
-    canvas.height = 64;
-    MonSprite.draw(canvas, stageMon, { fit: 0.85, shiny: rec.shiny || false, dark: rec.dark || false });
+    canvas.width  = CARD_CANVAS_PX;
+    canvas.height = CARD_CANVAS_PX;
+    MonSprite.draw(canvas, stageMon, { fit: 0.85, curve: MonSprite.CARD_SIZE_CURVE, shiny: rec.shiny || false, dark: rec.dark || false });
     card.appendChild(canvas);
 
     const nameEl = document.createElement('p');

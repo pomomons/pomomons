@@ -1148,6 +1148,7 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
      renders at that intrinsic size regardless of how narrow the card is,
      which is what set the grid's min-content floor above. */
   max-width: 100%;
+  width: min(128px, 58%);
   height: auto;
 }
 

@@ -184,8 +184,12 @@ const MonSprite = (() => {
   // 0.6 would put 32px at ~66% of 64px instead of 50%. Single knob: every
   // screen sizes its mons through displaySize().
   const SIZE_CURVE = 1;
-  function displaySize(srcW, boxPx) {
-    return Math.round(boxPx * Math.pow(srcW / NATIVE_MAX, SIZE_CURVE));
+  // Grid cards (My Mons, Pomodex) flatten the spread instead, the way a
+  // Pokédex list does: every mon nearly fills its tile, bigger ones only a
+  // little bigger. 32px lands at ~79% of 64px.
+  const CARD_SIZE_CURVE = 0.35;
+  function displaySize(srcW, boxPx, curve = SIZE_CURVE) {
+    return Math.round(boxPx * Math.pow(srcW / NATIVE_MAX, curve));
   }
 
   // Native per-frame width of a mon's sprite, or null if it isn't loaded yet.
@@ -551,7 +555,7 @@ const MonSprite = (() => {
   // the same `canvas * fit`, which made a 32px mon and a 64px one identical
   // in the collection grids — the place the flattening was most obvious,
   // since the cards sit side by side. Overrides scale for PNG mons.
-  function draw(canvas, mon, { scale = 1, shiny = false, dark = false, fit = null } = {}) {
+  function draw(canvas, mon, { scale = 1, shiny = false, dark = false, fit = null, curve = SIZE_CURVE } = {}) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let drawScale = scale;
@@ -563,7 +567,7 @@ const MonSprite = (() => {
           const frames = mon.spriteFrames || 1;
           const srcW   = mon.spriteAxis === 'y' ? img.naturalWidth : img.naturalWidth / frames;
           const boxPx = Math.min(canvas.width, canvas.height) * fit;
-          drawScale = displaySize(srcW, boxPx) / (srcW * 3);
+          drawScale = displaySize(srcW, boxPx, curve) / (srcW * 3);
         }
       }
     }
@@ -571,6 +575,7 @@ const MonSprite = (() => {
   }
 
   return { drawOnCtx, draw, getImage, frameCanvas, preload, preloadAll, fitScale, drawSparkle,
+           CARD_SIZE_CURVE,
            artTopFraction, artTopFractionFor,
            artBottomFraction, artBottomFractionFor,
            displaySize, nativeFrameW, sizeScale };
