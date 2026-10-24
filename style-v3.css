@@ -1058,6 +1058,33 @@ html::after {
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  /* Centring the boxes still leaves the fallback glyph low against the pixel
+     letters. Measured on the ink at 16px and 13px: ▶ sits ~0.22em low, ⏸
+     ~0.28em, so each gets its own lift (same fix as BACK's ◀ below). */
+  position: relative;
+  top: -0.22em;
+}
+#btn-start .btn-ico--pause { top: -0.28em; }
+
+/* BACK's leading ◀ falls back to the same non-pixel font, so it gets the
+   same two-item flex treatment as START. inline-flex, not flex: these sit
+   in rows and must keep their own width. */
+.pxb-back .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.pxb-back .btn-ico {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  /* The fallback font's ◀ sits lower in its box than the pixel letters do in
+     theirs, so centring the boxes still leaves the triangle low — by ~0.2em
+     at every size, measured on the ink (12px header, 9px phone, 8px detail
+     card). In em so one rule centres all three. */
+  position: relative;
+  top: -0.2em;
 }
 
 /* Action-button height scales with the viewport instead of stepping between
@@ -3631,6 +3658,35 @@ html::after,
   gap: 8px;
   white-space: nowrap;
 }
+
+/* BACK and the sort button share the header row with the tabs, so they take
+   the tabs' finish: flat fill, thin 3px lit top / shaded bottom edge, brighten
+   on hover. They stay black rather than the tabs' green. Both were still on
+   style.css's .btn-ghost.btn-sm look, whose 12px gloss bands split the button
+   into a light top half and a dark bottom half. Four classes to beat that
+   rule's .pxb .btn-ghost.btn-sm.
+
+   Same height: BACK is 12px 20px padding and the sort button was .btn-sm's
+   8px 12px, and the two shrink at different breakpoints on a phone. A shared
+   min-height holds them level at every width without touching the padding
+   either one needs to fit its row. 36px = the tabs' 12px font + 2 x 12px. */
+.collection-header .pxb .btn-ghost.btn-sm,
+.pxb.mon-detail-back .btn-ghost.btn-sm {
+  background: #222;
+  color: var(--cream);
+  line-height: 1;
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.1),
+    inset 0 -3px 0 rgba(0,0,0,.22);
+}
+.collection-header .pxb .btn-ghost.btn-sm:hover,
+.pxb.mon-detail-back .btn-ghost.btn-sm:hover {
+  background: #222;
+  filter: brightness(1.15);
+}
+/* Header row only — the mon detail card's BACK is a small corner control and
+   keeps its own size (style.css .mon-detail-back .btn). */
+.collection-header .pxb .btn-ghost.btn-sm { min-height: 36px; }
 
 #btn-mymons-sort .mode-caret {
   font-size: .8em;

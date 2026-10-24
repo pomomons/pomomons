@@ -380,7 +380,7 @@ function updateButtonStates() {
   // with a controlled gap — the ▶ / ⏸ glyphs fall back to a non-pixel font
   // and their wide advance threw the plain "▶ START" string off-centre.
   btnStart.innerHTML = running
-    ? '<span class="btn-ico">⏸</span>PAUSE'
+    ? '<span class="btn-ico btn-ico--pause">⏸</span>PAUSE'
     : '<span class="btn-ico">▶</span>START';
   btnStart.classList.toggle('btn-timer-start', !running);
   btnStart.classList.toggle('btn-timer-pause', running);

@@ -17,9 +17,19 @@ repo: C:\Users\HP\OneDrive\Documents\pomomons). Plan is tracked as a P0 (must-fi
 before launch) / P1 (nice-to-have after) task list, worked through over
 several sessions.
 
-**Launch date: Sunday 18 October 2026** — confirmed by the user 2026-09-06
-(recommended as the weekend slot with the best odds of the #1 Product of the
-Day badge for a consumer/fun app).
+**Launch date: TBD — the Sunday 18 October 2026 date has passed unused.**
+It was confirmed 2026-09-06 (weekend slot, best odds of #1 Product of the Day
+for a consumer/fun app), then deliberately let slip by the 2026-10-09 decision
+below to build a following first. Pick a new date once the audience exists;
+a weekend slot is still the recommendation.
+
+**One launch, not two (decided 2026-10-24).** User asked about launching on PH
+soon and relaunching ~6 months later. PH does allow a relaunch every ~6 months,
+but only for a substantial change (v2, redesign, mobile app — not more mons or
+small features). Advised against: the debut only happens once, the supporter
+network tires on a second ask, and a weak first result stays on the product
+page. User agreed — launch once, when the following is there. Only revisit if a
+genuine v2 is already planned.
 
 **Distribution kit — superseded 2026-10-09, see `agent_docs/backlink-plan.md`.**
 User decided to build a following BEFORE the PH launch rather than launch
