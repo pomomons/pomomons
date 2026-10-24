@@ -1986,12 +1986,9 @@ const EncounterScreen = (() => {
     elSub.style.color = '';
     const isShiny = mon.shiny || false;
     const isDark  = mon.dark  || false;
-    elRarity.textContent = isDark ? 'DARK' : isShiny ? 'SHINY' : '';
-    elRarity.className   = `encounter-rarity ${isDark ? 'pitch-black' : isShiny ? 'ultra-rare' : ''}`;
     // The banner is display:block, so an empty-but-present span would still
-    // take a line and push the stage down on ordinary encounters. `hidden`
-    // rather than a class: className is rewritten on the line above.
-    elRarity.hidden = !(isDark || isShiny);
+    // take a line and push the stage down on ordinary encounters.
+    elRarity.hidden = !fillRarityLabels(elRarity, mon, { shiny: isShiny, dark: isDark });
     if (elTags) {
       elTags.innerHTML = '';
       // Show only the mon's normal type badge(s) — shiny/dark status is shown in the rarity slot.
@@ -2170,13 +2167,14 @@ const EncounterScreen = (() => {
     c.fillStyle = '#ffd600';
     c.fillText('MONS', x, 100);
 
-    // Badges — LV always, SHINY/DARK when it applies. Sized/paired as a
+    // Badges — LV always, RARE/SHINY/DARK when they apply. Sized/paired as a
     // centred group, same trick as the wordmark above.
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.font = `16px ${FONT}`;
     shadow(false);
     const badges = [{ text: `LV ${st.monLevel || 1}`, bg: '#ffd600', fg: '#1a0a00' }];
+    if (mon.rare)       badges.push({ text: 'RARE',  bg: '#d980fa', fg: '#2e0a3d' });
     if (mon.dark)       badges.push({ text: 'DARK',  bg: '#141414', fg: '#fff'    });
     else if (mon.shiny) badges.push({ text: 'SHINY', bg: '#f1c40f', fg: '#5c4400' });
     const gap = 14, padX = 18, pillH = 40;
@@ -3010,8 +3008,7 @@ const MonInfoScreen = (() => {
     const shiny = mon.shiny || false;
     const dark  = mon.dark  || false;
     elName.textContent   = mon.name.toUpperCase();
-    elRarity.textContent = dark ? 'DARK' : shiny ? 'SHINY' : '';
-    elRarity.className   = `mon-info-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : ''}`;
+    fillRarityLabels(elRarity, mon, { shiny, dark });
     const elDexNum = document.getElementById('mon-info-dexnum');
     if (elDexNum) elDexNum.textContent = mon.dexNum ? `#${String(mon.dexNum).padStart(3, '0')}` : '';
     const elType = document.getElementById('mon-info-type');

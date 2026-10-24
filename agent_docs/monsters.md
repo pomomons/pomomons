@@ -16,6 +16,7 @@
   color:     String,   // hex — used by procedural block-art fallback
   accent:    String,   // hex — darker accent for fallback art
   rarity:    String,   // LEGACY — inert, not read anywhere
+  rare:      Boolean,  // optional — Donot only. 1/10th spawn weight + RARE label
   // catchRate was removed 2026-10. It had never been read: catches always
   // succeed (game.js: "Escape path only"). It survived long enough to be
   // mistaken for live data and written into the public FAQ as "rarer mons can
@@ -66,7 +67,7 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 1  | 1   | Tomotot    | Savory  | 16 → Marinaro #2 (Savory), 36 → Strangletti #3 (Savory) |
 | 3  | 4   | Avocuddle  | Savory  | 20 → Pittsworth #5 (Bitter), 36 → Guacamonger #6 (Savory) |
 | 4  | 7   | Chilino    | Spicy   | 20 → Scorchpepper #8 (Spicy), 36 → Ghostpepper #9 (Spicy) |
-| 6  | 10  | Donot      | Sweet   | —                                                    |
+| 6  | 10  | Donot      | Sweet   | — (**rare**: 1/10th spawn rate)                      |
 | 5  | 11  | Bluble     | Sweet   | 20 → Bluebeary #12 (Sweet)                           |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
 | 19 | 15  | Manglet    | Sweet   | 20 → Mambango #16 (Sweet)                            |
@@ -80,7 +81,8 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 17 | 27  | Spud       | Savory  | 20 → Idabro #28 (Savory)                             |
 | 18 | 29  | Pinapip    | Sweet   | 20 → Pikeapple #30 (Sweet)                           |
 
-Spawning is **uniform** across base mons (no rarity weighting). Shiny (1/500,
+Spawning is **uniform** across base mons except Donot, the one `rare`
+species, which spawns at 1/10th the rate (see game-mechanics.md). Shiny (1/500,
 0.2%) and dark (1/100, 1% — 0.998% effective, since the dark roll only happens
 if the shiny roll failed) variant rolls are independent of species — see
 game-mechanics.md. These were documented here as 1% and 5%, which never matched

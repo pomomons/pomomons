@@ -593,6 +593,11 @@
         <div class="spawn-info-row"><span class="swatch normal"></span><span class="spawn-info-label">NORMAL</span><span class="spawn-info-odds">98.8%</span></div>
         <div class="spawn-info-row"><span class="swatch dark"></span><span class="spawn-info-label">DARK</span><span class="spawn-info-odds">1%</span></div>
         <div class="spawn-info-row"><span class="swatch shiny"></span><span class="spawn-info-label">SHINY</span><span class="spawn-info-odds">0.2%</span></div>
+        <!-- Species rarity, separate from the variant rolls above: Donot spawns
+             at RARE_SPAWN_WEIGHT (monsters.js) of any other form's rate, and
+             can still roll shiny/dark on top. Quoted as a ratio because the
+             percentage moves with how many evolutions the player has unlocked. -->
+        <div class="spawn-info-row"><span class="swatch rare"></span><span class="spawn-info-label">RARE DONOT</span><span class="spawn-info-odds">1/10</span></div>
       </div>
       <div class="pxb"><button class="btn btn-primary" id="btn-spawn-info-close">GOT IT!</button></div>
     </div>

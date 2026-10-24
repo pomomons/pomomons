@@ -31,9 +31,14 @@ what a player can meet, so a level 50 player still runs into Tomotot. A side
 effect worth knowing: a species with evolutions unlocked occupies more of the
 pool than one without, so it spawns more often. That is deliberate.
 
-Picking is uniform across the pool. Rarity tiers were removed for launch and
-the `rarity` field is inert legacy. `catchRate` was removed outright in
-2026-10 — it had never been read.
+Picking is uniform across the pool, with one exception: a species flagged
+`rare: true` (only Donot) is weighted at `RARE_SPAWN_WEIGHT` (0.1, monsters.js),
+so it turns up 1/10th as often as any other form — about 0.66% of spawns at
+level 1, 0.34% once all 30 forms are unlocked. It still rolls shiny/dark like
+anything else. Rarity tiers were removed for launch and the `rarity` string
+field is inert legacy — `rare` is the live flag. `catchRate` was removed
+outright in 2026-10 — it had never been read. `tools/check-spawn-levels.js`
+asserts the 0.1 ratio.
 
 **Wild mon level** = player level ± 2, then **clamped into the band that
 produces the form on screen** (`loLevel`/`hiLevel`, attached by
@@ -75,9 +80,14 @@ together.
   animated sparkles, `SHINY` shown in the encounter's centre rarity slot.
 - **Dark** — near-black sprite (`DARK_FILTER` canvas filter, no separate PNG),
   `DARK` shown in the centre rarity slot.
+- **Rare species** (Donot) — purple `RARE` label, shown in front of any
+  variant label, so a shiny Donot reads `RARE SHINY` (the rarest catch).
+  Also a RARE badge on the share card. All slots are filled by
+  `fillRarityLabels` (monsters.js), one span per label.
 - Normal mons show **nothing** in the rarity slot.
 - Variant flags are stored on the caught record (`{ shiny, dark }`) and shown
-  as card labels in My Mons.
+  as card labels in My Mons. Rarity is not stored — it comes from the species.
+- My Mons RARITY sort: shiny Donot > dark Donot > shiny > Donot > dark > plain.
 
 ---
 

@@ -967,11 +967,10 @@ const Collection = (() => {
     nameEl.textContent = rec.nickname || stageMon.name;
     card.appendChild(nameEl);
 
-    // Only shiny/dark variants get a rarity label now (tiers removed)
-    if (rec.dark || rec.shiny) {
-      const rarityEl = document.createElement('p');
-      rarityEl.className   = `mon-card-rarity ${rec.dark ? 'pitch-black' : 'ultra-rare'}`;
-      rarityEl.textContent = rec.dark ? 'DARK' : 'SHINY';
+    // Only rare species and shiny/dark variants get a rarity label
+    const rarityEl = document.createElement('p');
+    rarityEl.className = 'mon-card-rarity';
+    if (fillRarityLabels(rarityEl, stageMon, { shiny: rec.shiny, dark: rec.dark })) {
       card.appendChild(rarityEl);
     }
 
@@ -1159,8 +1158,7 @@ const Collection = (() => {
     const dexEl = document.getElementById('mon-detail-dexnum');
     dexEl.textContent = stageMon.dexNum ? `#${String(stageMon.dexNum).padStart(3, '0')}` : '';
     const rarEl = document.getElementById('mon-detail-rarity');
-    rarEl.textContent = dark ? 'DARK' : shiny ? 'SHINY' : '';
-    rarEl.className   = `mon-detail-rarity ${dark ? 'pitch-black' : shiny ? 'ultra-rare' : ''}`;
+    fillRarityLabels(rarEl, stageMon, { shiny, dark });
 
     // Name: nickname takes the headline, species shown beneath when nicknamed
     const nameEl    = document.getElementById('mon-detail-name');
@@ -1282,8 +1280,13 @@ const Collection = (() => {
   const caughtOrder = (r) => r.caughtAt || 0;
 
   // Shiny outranks dark outranks plain. Shiny wins outright at catch time
-  // (see the roll in game.js), so a record flagged both is shiny.
-  const rarityRank = (r) => (r.shiny ? 2 : r.dark ? 1 : 0);
+  // (see the roll in game.js), so a record flagged both is shiny. A rare
+  // species adds on top, giving shiny Donot > dark Donot > shiny > Donot >
+  // dark > plain.
+  const rarityRank = (r) => {
+    const mon = MONS.find((m) => m.id === r.id);
+    return (r.shiny ? 4 : r.dark ? 2 : 0) + (mon && mon.rare ? 3 : 0);
+  };
 
   // The base species, not the evolved stage on the card. Sorting by species
   // should gather every Tomotot together whether or not it has evolved, and

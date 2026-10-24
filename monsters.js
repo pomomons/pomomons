@@ -62,7 +62,9 @@ const MONS = [
         spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
     ]
   },
-  { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common',
+  // rare: the one rare species. Spawns at RARE_SPAWN_WEIGHT of everyone
+  // else's rate and wears a RARE label wherever SHINY/DARK appear.
+  { id: 6, dexNum: 10, name: 'Donot',      type: 'Sweet', color: '#6b3a2a', accent: '#4a2010', rarity: 'common', rare: true,
     sprite: 'assets/sprites/Donot/Donot.png', spriteFrames: 2, spriteAxis: 'y',
     spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 1200 },
   { id: 5, dexNum: 11, name: 'Bluble',     type: 'Sweet', color: '#2980b9', accent: '#1a5276', rarity: 'common',
@@ -379,12 +381,45 @@ function getRandomMon(playerLevel = 1) {
     console.warn('TEST_FORCE_MON: no mon named ' + TEST_FORCE_MON);
   }
 
-  // Rarity tiers removed — every unlocked form spawns at an equal rate, so a
-  // species with evolutions unlocked is more likely to show up than one
-  // without. That is deliberate: it is the reward for having levelled.
-  const pool = spawnableForms(playerLevel);
-  const pick = pool[Math.floor(Math.random() * pool.length)];
+  // Every unlocked form spawns at an equal rate, except `rare` species, which
+  // get RARE_SPAWN_WEIGHT of a share. A species with evolutions unlocked is
+  // more likely to show up than one without. That is deliberate: it is the
+  // reward for having levelled.
+  const pool   = spawnableForms(playerLevel);
+  const weight = (e) => (e.form.rare ? RARE_SPAWN_WEIGHT : 1);
+  let roll = Math.random() * pool.reduce((sum, e) => sum + weight(e), 0);
+  let pick = pool[pool.length - 1];
+  for (const e of pool) {
+    roll -= weight(e);
+    if (roll < 0) { pick = e; break; }
+  }
   return { ...pick.form, loLevel: pick.loLevel, hiLevel: pick.hiLevel };
+}
+
+// A rare species is met 1/10th as often as any other form.
+const RARE_SPAWN_WEIGHT = 0.1;
+
+// The labels for a mon's rarity slot. RARE is a species trait and SHINY/DARK
+// are per-catch, so a shiny Donot carries both. Dark and shiny never coexist
+// (shiny wins the roll in game.js).
+function rarityLabels(mon, { shiny = false, dark = false } = {}) {
+  const out = [];
+  if (mon && mon.rare) out.push({ text: 'RARE', cls: 'rare' });
+  if (dark)       out.push({ text: 'DARK',  cls: 'pitch-black' });
+  else if (shiny) out.push({ text: 'SHINY', cls: 'ultra-rare' });
+  return out;
+}
+
+// Fills el with one coloured span per label; returns whether any were added.
+function fillRarityLabels(el, mon, variant) {
+  const spans = rarityLabels(mon, variant).map(({ text, cls }) => {
+    const s = document.createElement('span');
+    s.className   = `rarity-label ${cls}`;
+    s.textContent = text;
+    return s;
+  });
+  el.replaceChildren(...spans);
+  return spans.length > 0;
 }
 
 // ── Natures ─────────────────────────────────────────────────
