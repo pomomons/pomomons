@@ -3266,11 +3266,16 @@ html::after,
   padding: 12px 20px;
   white-space: nowrap;
 }
-/* Yellow with black text, same gold as the active tab. Doubled class beats
-   the .btn-ghost / .btn-ghost.btn-sm fills and their hover colours. */
+/* Styled exactly like the active MY MONS tab (.collection-tab--active): same
+   gold, text colour and thin edge highlights. Doubled class beats the
+   .btn-ghost / .btn-ghost.btn-sm fills, their 12px gloss bands (which gave
+   this a dark bottom half) and their hover colours. */
 .btn-save-code.btn-save-code {
   background: var(--gold);
-  color: #000;
+  color: #2a1a02;
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
 }
 .btn-save-code.btn-save-code:hover { background: var(--gold); filter: brightness(1.1); }
 

@@ -1352,6 +1352,24 @@ const EncounterScreen = (() => {
   let rafId    = null;
   let onDone   = null;
 
+  // While a wild mon waits to be caught, it cries again every 30s so a player
+  // who walked away from the tab gets nudged back. A real timer, not the rAF
+  // tick: rAF doesn't run in a hidden tab, which is exactly when the nudge
+  // matters. Gated on 'appearing' as well as 'idle' for the same reason — a
+  // spawn in a hidden tab never ticks past 'appearing' until it's looked at.
+  const REMINDER_CRY_MS = 30000;
+  let reminderTimer = null;
+  function stopReminderCry() {
+    if (reminderTimer) { clearInterval(reminderTimer); reminderTimer = null; }
+  }
+  function startReminderCry() {
+    stopReminderCry();
+    reminderTimer = setInterval(() => {
+      if (st.phase !== 'appearing' && st.phase !== 'idle') return stopReminderCry();
+      SFX.cry(st.mon.dexNum);
+    }, REMINDER_CRY_MS);
+  }
+
   // As in CompanionCanvas, but off this canvas's own reference size: the
   // encounter mon sits in a 480x380 box, captioned at 16px when the stage
   // is at its full 480px. Short-screen tiers cap the stage at 380/300/227px
@@ -2032,6 +2050,7 @@ const EncounterScreen = (() => {
     // above), but the cry should land once the chime has actually finished
     // rather than overlapping it.
     SFX.cry(mon.dexNum, { after: true });
+    startReminderCry();
 
     // Flash transition, then reveal the encounter overlay.
     runFlashTransition(() => {
@@ -2043,6 +2062,7 @@ const EncounterScreen = (() => {
 
   function throw_() {
     if (st.phase !== 'idle') return;
+    stopReminderCry();
     SFX.play('throw');
     enableButtons(false);
 
@@ -2059,6 +2079,7 @@ const EncounterScreen = (() => {
 
   function flee() {
     if (st.phase !== 'idle') return;
+    stopReminderCry();
     if (typeof saveExp === 'function') saveExp(7);
     elSub.textContent = 'YOU FLED SAFELY.';
     close();

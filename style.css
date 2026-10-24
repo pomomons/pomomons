@@ -1899,29 +1899,26 @@ body.run-focus .mon-detail-overlay { background: #af4d4d; }
 }
 .mon-detail-input:focus { border-color: var(--gold); }
 
-/* SAVE / CANCEL — matched small buttons. Fixed wrapper width so the two read
-   as a pair regardless of label length; small clip since 12px notches look
-   overly pointed at this height. */
-.mon-detail-rename-row .pxb {
+/* SAVE / CANCEL — styled like the MY MONS / POMODEX tabs: a flat slab with
+   no outline ring or cast shadow. Fixed wrapper width so the two read as a
+   pair regardless of label length. ID selectors so these outrank style-v3's
+   .pxb ring rules (.pxb:has(.btn-primary) etc.), which load later. */
+#mon-detail-rename-row .pxb {
   flex: 0 0 76px;
   width: 76px;
-  clip-path: var(--pixel-clip-sm);
-  filter: var(--pxdrop-sm);
+  padding: 0;
+  background: transparent;
 }
-.mon-detail-rename-row .btn {
+#mon-detail-rename-row .btn {
   font-size: 8px;
   padding: 8px 4px;
   min-height: 0;
-  clip-path: var(--pixel-clip-sm);
 }
-
-/* Scale the gloss to this button's height. The shared 14px insets are tuned for
-   the ~40px yellow buttons (THROW!, CONTINUE!), where they leave a band of flat
-   gold in the middle; on a ~30px button they meet and lose that band entirely. */
-.mon-detail-rename-row .btn-primary {
+/* Same edge highlights as .collection-tab--active (style-v3.css). */
+#mon-detail-rename-row .btn-primary {
   box-shadow:
-    inset 0 10px 0 rgba(255,255,255,.55),
-    inset 0 -10px 0 rgba(0,0,0,.35);
+    inset 0 3px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.18);
 }
 
 .mon-detail-stats {
