@@ -24,12 +24,17 @@ const SFX = (() => {
   // t     — absolute AudioContext start time
   // dur   — duration in seconds
   // gain  — peak amplitude (0–1)
-  function tone(freq, type, t, dur, gain = 0.22) {
+  // dest  — optional node to play into instead of the speakers. Only the
+  //         evolution loop uses it (see startLoop): its notes go through a
+  //         bus it can fade out on STOP, and they don't count towards
+  //         scheduledUntil — a loop that is always 0.15s ahead of itself
+  //         would otherwise hold every { after: true } sound back forever.
+  function tone(freq, type, t, dur, gain = 0.22, dest = null) {
     const ac  = getCtx();
     const osc = ac.createOscillator();
     const env = ac.createGain();
     osc.connect(env);
-    env.connect(ac.destination);
+    env.connect(dest || ac.destination);
 
     osc.type = type;
     if (typeof freq === 'object') {
@@ -45,7 +50,7 @@ const SFX = (() => {
     const end = t + dur + 0.02;
     osc.start(t);
     osc.stop(end);
-    if (end > scheduledUntil) scheduledUntil = end;
+    if (!dest && end > scheduledUntil) scheduledUntil = end;
   }
 
   // Deterministic PRNG (a classic linear congruential generator) seeded by
@@ -452,6 +457,74 @@ const SFX = (() => {
       tone(1760, 'triangle', t + 0.12, 0.14, 0.13);  // A6 sparkle tail
     },
 
+    // ── Evolution ─────────────────────────────────────────────
+    // Follows the order Gen 1/2 Pokémon play it in (pokered
+    // engine/movie/evolution.asm, pokecrystal evolution_animation.asm):
+    // a tink, the OLD form's cry, a looping tune under the flicker (see
+    // startLoop), silence and a sparkle burst on the change, the NEW form's
+    // cry, then a jingle. Stopping it cuts the tune and plays the old cry
+    // again, with no jingle. The cue points live in EvolutionScreen (game.js).
+
+    // Tiny high tink → evolution screen opens
+    evoTink() {
+      const t = getCtx().currentTime;
+      tone(2093, 'square',   t,        0.035, 0.10);  // C7
+      tone(3136, 'triangle', t + 0.03, 0.07,  0.07);  // G7 ring
+    },
+
+    // Rising charge-up sweep → old/new flicker. Lasts the flicker's 64
+    // frames (~1.07s) and ends right where the sparkle takes over.
+    evoCharge() {
+      const t = getCtx().currentTime;
+      tone({ start: 220, end: 1760 }, 'square',   t, 1.05, 0.05);
+      tone({ start: 110, end: 880  }, 'triangle', t, 1.05, 0.10);
+    },
+
+    // Impact + twinkle cascade → new form appears. Gold/Silver's
+    // SFX_EVOLVED stands in the same spot, with the balls of light.
+    evoSparkle() {
+      const t = getCtx().currentTime;
+      tone(131, 'triangle', t, 0.25, 0.18);                         // C3 whomp
+      [1568, 2093, 2637, 3136, 2637, 3136, 3520, 4186].forEach((f, i) =>
+        tone(f, 'triangle', t + i * 0.045, 0.09, 0.12));            // G6 → C8 twinkles
+      tone({ start: 1047, end: 4186 }, 'sine', t + 0.05, 0.45, 0.05); // shimmer sweep
+    },
+
+    // "Grand March" → "CONGRATULATIONS!". Its own tune on purpose: the
+    // screen used to borrow levelUp, so evolving sounded like any level-up.
+    // Picked by the owner from seven options, then cut to its first 1.5s —
+    // the original went on to a B5-D6-C6 tag, which was dropped on request —
+    // and given a D6 leading into a held C-major chord and a short chord stab.
+    evoFanfare() {
+      const t = getCtx().currentTime;
+      tone(392,  'square', t,        0.12, 0.20);  // G4
+      tone(523,  'square', t + 0.15, 0.12, 0.20);  // C5
+      tone(659,  'square', t + 0.30, 0.12, 0.20);  // E5
+      tone(784,  'square', t + 0.45, 0.28, 0.20);  // G5
+      tone(659,  'square', t + 0.78, 0.12, 0.20);  // E5
+      tone(784,  'square', t + 0.93, 0.12, 0.20);  // G5
+      tone(1175, 'square', t + 1.08, 0.12, 0.20);  // D6 — steps down into the hold
+      tone(1047, 'square', t + 1.23, 0.48, 0.22);  // C6 hold, as a full chord
+      tone(659,  'square', t + 1.23, 0.48, 0.07);  // E5
+      tone(784,  'square', t + 1.23, 0.48, 0.06);  // G5
+      tone(131,  'triangle', t,        0.28, 0.18);  // C3 bass
+      tone(98,   'triangle', t + 0.45, 0.28, 0.18);  // G2
+      tone(110,  'triangle', t + 0.78, 0.28, 0.18);  // A2
+      tone(98,   'triangle', t + 1.08, 0.12, 0.18);  // G2 under the D6
+      tone(131,  'triangle', t + 1.23, 0.51, 0.20);  // C3 — home
+      // A beat of rest, then one short C-major stab over a deep bass to close.
+      [523, 659, 784, 1047].forEach((f, i) =>       // C5 E5 G5 C6
+        tone(f, 'square', t + 1.79, 0.20, i === 0 || i === 3 ? 0.10 : 0.08));
+      tone(65,   'triangle', t + 1.79, 0.28, 0.22);  // C2
+    },
+
+    // Deflating sweep → player pressed STOP
+    evoPowerDown() {
+      const t = getCtx().currentTime;
+      tone({ start: 880, end: 110 }, 'square',   t,        0.50, 0.12);
+      tone({ start: 440, end: 55  }, 'triangle', t + 0.02, 0.55, 0.14);
+    },
+
     // Engine rev + an 8-bit scream → mon blended into smoothie
     // Gains are the original mix at 70%. Every level is scaled by the same
     // factor — engine envelope, LFO depth, both overtones and the exhaust
@@ -777,7 +850,69 @@ const SFX = (() => {
   function toggle() {
     muted = !muted;
     localStorage.setItem('pm_muted', muted ? '1' : '0');
+    if (muted) stopLoop();
     return muted;
+  }
+
+  // ── Evolution loop ───────────────────────────────────────────
+  // The one sound that runs until told to stop, so it can't be a sounds{}
+  // entry: it's scheduled a few notes at a time, 0.15s ahead on the audio
+  // clock, and every note plays through one bus that stopLoop() fades out.
+  // An original tune, not Nintendo's: a minor arpeggio climbing a semitone
+  // every second (A, B♭, B, C) over a pulsing bass — 4s a cycle, so the
+  // ~3.7s it plays for is one long climb that tops out as the flicker ends.
+  const LOOP_STEP  = 0.125;   // seconds per note
+  const LOOP_AHEAD = 0.15;    // how far ahead to schedule
+  const LOOP_ARP   = [0, 3, 7, 12];
+  let loop = null;
+
+  function loopNotes(step, t, bus) {
+    const k = Math.floor(step / 8) % 4;   // semitones up: A, B♭, B, C
+    const i = step % 8;
+    tone(440 * Math.pow(2, (k + LOOP_ARP[i % 4]) / 12), 'square', t, 0.10, 0.06, bus);
+    if (i % 2 === 0) tone(110 * Math.pow(2, k / 12), 'triangle', t, 0.11, 0.16, bus);
+  }
+
+  function startLoop() {
+    if (muted) return;
+    stopLoop();
+    try {
+      const ac  = getCtx();
+      const bus = ac.createGain();
+      bus.connect(ac.destination);
+      const l = { bus, step: 0, nextAt: ac.currentTime + 0.05, timer: null };
+      const pump = () => {
+        // A background tab throttles the timer to ~1s; skip the notes it
+        // missed rather than firing them all at once when it wakes.
+        if (l.nextAt < ac.currentTime) {
+          const missed = Math.ceil((ac.currentTime - l.nextAt) / LOOP_STEP);
+          l.step += missed; l.nextAt += missed * LOOP_STEP;
+        }
+        while (l.nextAt < ac.currentTime + LOOP_AHEAD) {
+          loopNotes(l.step++, l.nextAt, bus);
+          l.nextAt += LOOP_STEP;
+        }
+      };
+      pump();
+      l.timer = setInterval(pump, 25);
+      loop = l;
+      lastPlayAt = performance.now();
+    } catch (_) { /* fail silently if Web Audio is unavailable */ }
+  }
+
+  // Safe to call when nothing is playing. Fades over 30ms rather than
+  // cutting, which would click.
+  function stopLoop() {
+    if (!loop) return;
+    const l = loop;
+    loop = null;
+    clearInterval(l.timer);
+    try {
+      const t = getCtx().currentTime;
+      l.bus.gain.setValueAtTime(1, t);
+      l.bus.gain.linearRampToValueAtTime(0, t + 0.03);
+      setTimeout(() => { try { l.bus.disconnect(); } catch (_) {} }, 400);
+    } catch (_) {}
   }
 
   function isMuted() { return muted; }
@@ -820,5 +955,5 @@ const SFX = (() => {
   // gesture (pointerdown/keydown) so the first real sound has no setup cost.
   function warm() { try { getCtx(); } catch (_) {} }
 
-  return { play, toggle, isMuted, cry, warm };
+  return { play, toggle, isMuted, cry, warm, startLoop, stopLoop };
 })();

@@ -2494,6 +2494,12 @@ const EvolutionScreen = (() => {
   // changing its mind rather than the player stopping something.
   const STOPPABLE = { blackin: 1, text1: 1, silhouette: 1, flash: 1 };
 
+  // Frames into 'flash' at which the silhouette swaps, gaps shrinking from 8
+  // frames to 2 — 16 swaps, ending on the old form, filling the same 64 frames
+  // the old fixed 4-frame strobe did.
+  const FLASH_SWAPS = [8, 7, 6, 6, 5, 5, 4, 4, 3, 3, 3, 2, 2, 2, 2, 2]
+    .reduce((acc, gap) => (acc.push((acc[acc.length - 1] || 0) + gap), acc), []);
+
   // Shiny and dark are recoloured with a canvas filter over the same PNG, and
   // that filter is only applied when drawOnCtx is told about it. Neither draw
   // below used to pass the flags, so a shiny or dark mon evolved as its plain
@@ -2542,6 +2548,7 @@ const EvolutionScreen = (() => {
         st.frame -= 60;
         elMsg.textContent = `WHAT? ${st.fromMon.name.toUpperCase()} IS EVOLVING!`;
         elMsg.style.opacity = '1';
+        SFX.startLoop();
       }
 
     } else if (st.phase === 'text1') {
@@ -2556,16 +2563,26 @@ const EvolutionScreen = (() => {
         st.phase = 'flash';
         st.frame -= 120;
         elMsg.style.opacity = '0';
+        SFX.play('evoCharge');
       }
 
     } else if (st.phase === 'flash') {
-      // Rapidly alternate old / new silhouette (4-frame intervals)
-      const useNew = Math.floor(f / 4) % 2 === 1;
-      drawSilhouette(useNew ? st.toMon : st.fromMon, 1);
+      // Alternate old / new silhouette, faster and faster, the way Gen 1/2
+      // Pokémon do it (see FLASH_SWAPS).
+      let swaps = 0;
+      while (swaps < FLASH_SWAPS.length && f >= FLASH_SWAPS[swaps]) swaps++;
+      drawSilhouette(swaps % 2 === 1 ? st.toMon : st.fromMon, 1);
       // Last chance to stop it goes with the handover into 'reveal' — the same
       // place every other phase change does its UI work, so it can't be missed
       // by a clock that steps over an exact frame number.
-      if (f >= 64) { st.phase = 'reveal'; st.frame -= 64; hideStop(); }
+      if (f >= 64) {
+        st.phase = 'reveal'; st.frame -= 64; hideStop();
+        // The tune cuts on the change, the sparkle plays into the silence,
+        // and the new form's cry waits for it to finish.
+        SFX.stopLoop();
+        SFX.play('evoSparkle');
+        SFX.cry(st.toMon.dexNum, { after: true });
+      }
 
     } else if (st.phase === 'reveal') {
       const bobY = Math.sin(st.bobFrame / 22) * 8;
@@ -2586,7 +2603,7 @@ const EvolutionScreen = (() => {
       if (f >= 120) {
         st.phase = 'done';
         st.frame -= 120;
-        SFX.play('levelUp');
+        SFX.play('evoFanfare');
         showDismiss('AWESOME!');
         autoDismissTimer = setTimeout(dismiss, 4000);
       }
@@ -2640,7 +2657,10 @@ const EvolutionScreen = (() => {
     elMsg.style.opacity = '1';
     elSub.textContent   = `IT STAYS A ${st.fromMon.name.toUpperCase()}.`;
     elSub.style.opacity = '1';
-    SFX.play('select');
+    // As in the originals: the tune cuts and the old form cries — no jingle.
+    SFX.stopLoop();
+    SFX.play('evoPowerDown');
+    SFX.cry(st.fromMon.dexNum, { after: true });
 
     // Fired here, not in dismiss(): dismiss() can be reached by the 4s
     // auto-timer, and the write has to be in flight before onDone re-renders
@@ -2657,6 +2677,7 @@ const EvolutionScreen = (() => {
     if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     hideStop();
+    SFX.stopLoop();
     overlay.classList.remove('active');
     // Told apart by phase, the same way stop() itself is guarded: 'stopped'
     // only ever gets there through stop(). A caller that re-offers a declined
@@ -2740,6 +2761,10 @@ const EvolutionScreen = (() => {
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tick);
+
+    // Both wait their turn: a smoothie plays levelUp just before opening this.
+    SFX.play('evoTink', { after: true });
+    SFX.cry(st.fromMon.dexNum, { after: true });
   }
 
   return { start };
