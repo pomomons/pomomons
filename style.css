@@ -1370,11 +1370,14 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
 
 /* Top bar: LVL pill + type badge on the left (mirrors the main-screen companion
    box), rarity on the right. Headline sits below. */
-/* Stage wraps the canvas so the badges can float in the sky above the mon */
+/* Stage wraps the canvas, the floating name, and the LV/type row above it.
+   Column flex so the topbar (after the canvas in the DOM) can sit on top. */
 .encounter-stage {
   position: relative;
   width: 100%;
   max-width: 480px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Floating mon name above the wild mon's head (bobs in sync via JS, un-bold).
@@ -1396,22 +1399,25 @@ body.run-focus .time-adjust { opacity: 0; pointer-events: none; }
   text-shadow: 2px 2px 0 rgba(0,0,0,.45);
 }
 
+/* LV badge + type badges, in a row of their own ABOVE the canvas. They used to
+   float in the canvas's sky at top: 2%, but the floating name is placed off the
+   top of each mon's art, so on tall forms with long names (Strangletti,
+   Mambango, Portobellord...) the name ran into them — on 21 form/viewport pairs,
+   on ordinary encounters. Shrinking the tall mons to make room would have drawn
+   them at a different pixel size from the ground, so the row moved out instead.
+   The 8px gap below it covers the name's 6px idle bob at its highest. */
 .encounter-topbar {
-  position: absolute;
-  top: 2%;
-  left: 0;
-  right: 0;
+  order: -1;
+  margin-bottom: 8px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
-  padding: 0 4px;
 }
 
 /* Pin each to its own column so the type stays on the right. The centre column
-   is deliberately empty — the rarity label used to live there and now rides in
-   the floating name (see index.html). `auto` collapses it to nothing, so the
-   two badges sit exactly where they always did. */
+   is deliberately empty — the rarity label used to live there and now sits in
+   the headline (see index.html). `auto` collapses it to nothing. */
 .encounter-topbar .encounter-level  { grid-column: 1; justify-self: start; transform: translateX(14px); }
 .encounter-topbar .encounter-tags   { grid-column: 3; justify-self: end; transform: translateX(-14px); }
 

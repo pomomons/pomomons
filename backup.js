@@ -34,7 +34,7 @@ const Backup = (() => {
     'pm_today_sessions', 'pm_today_minutes', 'pm_today_catches', 'pm_today_date',
     'pm_history',
     'pm_focus_mins', 'pm_short_mins', 'pm_long_mins',
-    'pm_items', 'pm_muted', 'pm_stats_scope',
+    'pm_items', 'pm_muted', 'pm_muted_timer', 'pm_stats_scope',
   ];
 
   // app.js USED to run a one-time cleanup that wiped the collection unless this

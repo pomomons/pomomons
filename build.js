@@ -261,6 +261,8 @@ function verify() {
   const TEST_SWITCHES = [
     ['app.js',      ['TEST_FOCUS_SECS', 'TEST_BREAK_SECS']],
     ['monsters.js', ['TEST_FORCE_MON']],
+    ['collection.js', ['TEST_DEMO_FILL']],
+    ['game.js',       ['TEST_FORCE_SHINY']],
   ];
   for (const [file, names] of TEST_SWITCHES) {
     const src = fs.readFileSync(path.join(ROOT, file), 'utf8');

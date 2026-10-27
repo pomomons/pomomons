@@ -51,8 +51,9 @@ const PRECACHE_URLS = [
   'signup.js',
   'assets/backgrounds/greenbackground.webp',
   'assets/backgrounds/redbackground.webp',
-  'assets/sprites/Ground/Ground1.png',
+  'assets/sprites/Ground/Ground2.png',
   'assets/sprites/Tomato/Tomato.png',
+  'assets/sprites/Tomato/Tomato16.png',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png',
   // Both faces are self-hosted now, so both belong in the shell.

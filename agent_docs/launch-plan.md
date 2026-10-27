@@ -624,7 +624,12 @@ before `positionMonName()` had placed the caption, so it read the CSS default
 `top: 26%` instead. Wait on `#encounter-mon-name` reaching `opacity: 1` — that
 is the signal that the sprite size is known and the caption has been placed.
 
-**OPEN — the mon name also overlaps the LV badge and the type badges.**
+**FIXED 2026-10-25 — see the pre-launch audit entry below.** The reserve
+approach described in this entry was NOT used: it would have drawn tall mons at
+a different pixel size from the ground. The LV/type row moved out of the sky
+into its own row above the canvas instead.
+
+**(was) OPEN — the mon name also overlaps the LV badge and the type badges.**
 Found while verifying the fix above, and *not* caused by it: measured on both
 sides of that change at 1440px and 390px and found identical. It needs a long
 name and a tall form, so it is worst on a phone, and unlike the label collision
@@ -689,6 +694,29 @@ only, the documented settings-menu landmark one).
 Still open from keyword-strategy.md §2: 2-3 more named-competitor pages
 (Forest/Study Bunny are next) and the flagship "every app in this category is
 a phone app" category page.
+
+**Pre-launch audit (2026-10-25), uncommitted.** Ran every tools/check-*.js
+against a fresh build plus a code read. Fixed:
+- Name vs LV/type badges: had grown to 21 form/viewport pairs (Vileplum and
+  Mambango joined). `.encounter-topbar` is now a normal-flow row above the
+  canvas (style.css); `positionMonName` places the caption in px off the
+  canvas, not as a % of the stage. Verified across 10 viewports that the screen
+  still fits without scrolling everywhere it did before (the 844x390 landscape
+  phone already scrolled and still does). KNOWN_BADGE_OVERLAP is now empty.
+- A wild mon was lost if the page closed/reloaded on the encounter screen (the
+  session was already credited). Now kept in `pm_pending_encounter` and
+  re-opened on the next load; see game-mechanics.md.
+- The every-4th long break reset on reload (in-memory counter) — now
+  `pm_cycle_sessions`.
+- "?" popup said a mon "MAY APPEAR"; one always does.
+- A failed catch save (private browsing, full storage) used to show as caught;
+  the catch screen now says it couldn't be saved.
+- Thrown tomato drawn at the mons'/ground's pixel size: new
+  `assets/sprites/Tomato/Tomato16.png` (Tomato.png is 2x-blocked 16px art) at
+  16 x MON_BOX/64 units. Tomato.png still used for the logo.
+- Idle bob (both canvases) now honours prefers-reduced-motion.
+- sw.js precached Ground1.png, which nothing uses; now Ground2.png + Tomato16.
+Still needs a human: background-tab alarm timing, desktop SHARE preview.
 
 **Open (P1):**
 - Streaks / completion count.

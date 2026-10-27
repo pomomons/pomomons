@@ -26,6 +26,16 @@ const NAME_TRACKING = 0.1;  // letter-spacing on both name rules, in em
 // these constants, so it has to be kept in step by hand.
 const SHINY_RATE = 1 / 500;   // 0.2%
 const DARK_RATE  = 1 / 100;   // 1% (0.998% effective, after the shiny roll)
+// TESTING ONLY — true makes every wild mon shiny. build.js refuses to build
+// while this is non-null; return it to null before shipping.
+const TEST_FORCE_SHINY = null;
+
+// The CSS reduced-motion block in style.css can't reach the canvases: the idle
+// bob is drawn by rAF here. Read live so changing the OS setting takes effect
+// without a reload. 0 = hold still, 1 = bob as normal.
+const _reduceMotionMQ = window.matchMedia
+  ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+function bobAmount() { return _reduceMotionMQ && _reduceMotionMQ.matches ? 0 : 1; }
 
 // Measurement only — nothing is ever drawn on this context.
 const _nameMeasureCtx = document.createElement('canvas').getContext('2d');
@@ -993,7 +1003,7 @@ const CompanionCanvas = (() => {
     // the travel, tallest and narrowest at the top. b runs +1 (low) to -1
     // (high), so both scales key off the same number the bob does and can
     // never drift out of phase with it. ---
-    const b = Math.sin(state.frame / 22);
+    const b = Math.sin(state.frame / 22) * bobAmount();
     state.y = b * BOB_PX;
     state.squishY = 1 - SQUISH * b;
     state.squishX = 1 + SQUISH * b;
@@ -1282,10 +1292,20 @@ const EncounterScreen = (() => {
   const BOB_PX    = 6;            // idle bob height — as on the companion canvas
   const SQUISH    = 0.0125;       // squash at the bottom of the bob, stretch at the top
   const THROW_Y_SHIFT = -30;                          // shift whole throw animation up
-  const GROUND_Y  = Math.min(H - 50, MON_CY + 110 + THROW_Y_SHIFT); // where tomato lands
 
+  // The thrown tomato is drawn at the same size per art pixel as the mons and
+  // the ground (MON_BOX / 64 — a 64px mon fills MON_BOX). Tomato.png is 32px
+  // but drawn in 2x2 blocks, so drawing it at 44 units gave it pixels ~1.4x
+  // finer than everything around it. Tomato16.png is that art at its true
+  // 16x16, and TOMATO_R follows from it. (Tomato.png stays for the logo.)
+  const TOMATO_ART_PX = 16;
+  const TOMATO_R  = TOMATO_ART_PX * (MON_BOX / 64) / 2;
+  // Where the tomato comes to rest (its centre), in canvas units. Was 270;
+  // tried ENC_GROUND_Y - TOMATO_R (~226, resting where the mon's feet stood)
+  // and it read as too high. 262 is the old spot nudged up a little.
+  const GROUND_Y  = 262;
   const _tomatoImg = new Image();
-  _tomatoImg.src = 'assets/sprites/Tomato/Tomato.png';
+  _tomatoImg.src = 'assets/sprites/Tomato/Tomato16.png';
 
   const _groundImg = new Image();
   _groundImg.src = 'assets/sprites/Ground/Ground2.png';
@@ -1465,10 +1485,12 @@ const EncounterScreen = (() => {
     // transparent rows above it got its name parked well clear of its head.
     const artTop = st.mon
       ? MonSprite.artTopFraction(st.mon, st.mon.shiny && !st.mon.dark) : 0;
-    const boxTop = (monRestY() - st.monSize / 2 + artTop * st.monSize) / H * 100;
+    const boxTop = (monRestY() - st.monSize / 2 + artTop * st.monSize) / H;
     // 9% of the canvas above that box, up from 7, so a big mon's head keeps a
-    // bit of air between it and the caption.
-    elMonName.style.top = (boxTop - 9) + '%';
+    // bit of air between it and the caption. In px off the canvas rather than
+    // a % of the stage: the stage also holds the LV/type row above the canvas,
+    // so its height is no longer the canvas's.
+    elMonName.style.top = (canvas.offsetTop + (boxTop - 0.09) * canvas.offsetHeight) + 'px';
     // Floored at 12px rather than the default 8. The arena's other copy
     // (.encounter-sub is 13px on a phone) doesn't shrink with the canvas,
     // so a pure ratio would leave the mon's own name the smallest text on
@@ -1502,7 +1524,7 @@ const EncounterScreen = (() => {
     const startY = st.throwStartY;  // button position in canvas coords
     const endX   = SIZE / 2;
     const endY   = monRestY() + THROW_Y_SHIFT;
-    // Arc height: peak sits at y=44 so the calyx (34px above centre) stays inside the canvas.
+    // Arc height: peak sits at y=44 so the stem (TOMATO_R above centre) stays inside the canvas.
     const arcH   = (startY + endY) / 2 - 44;
 
     const x = startX + (endX - startX) * t;
@@ -1510,7 +1532,7 @@ const EncounterScreen = (() => {
 
     if (y > H + 4) return;
 
-    const r     = 22;
+    const r     = TOMATO_R;
     const angle = Math.PI * 4 * t; // 2 full forward rotations
 
     // Motion trail — 3 ghost echoes fading behind the ball
@@ -1537,7 +1559,7 @@ const EncounterScreen = (() => {
 
   // ── draw tomato sitting still for shaking / result phases ─
   function drawTomatoBall(x, y, wobble) {
-    const r = 22;
+    const r = TOMATO_R;
     ctx.save();
     ctx.translate(Math.round(x), Math.round(y));
     ctx.rotate(wobble);
@@ -1573,7 +1595,7 @@ const EncounterScreen = (() => {
 
     } else if (st.phase === 'idle') {
       st.monBob += st.step;
-      st.monY = Math.sin(st.monBob / 22) * BOB_PX;
+      st.monY = Math.sin(st.monBob / 22) * BOB_PX * bobAmount();
       drawIdleMon(cx, st.monY);
       positionMonName();
 
@@ -1624,7 +1646,7 @@ const EncounterScreen = (() => {
       ctx.save();
       ctx.translate(cx, y);
       ctx.scale(sx, sy);
-      drawTomatoPixelArt(22);
+      drawTomatoPixelArt(TOMATO_R);
       ctx.restore();
 
     } else if (st.phase === 'shaking') {
@@ -1667,7 +1689,7 @@ const EncounterScreen = (() => {
     } else if (st.phase === 'postcatch') {
       // Mon bobs happily on the encounter canvas while the congrats text is shown
       st.monBob += st.step;
-      st.monY = Math.sin(st.monBob / 22) * BOB_PX;
+      st.monY = Math.sin(st.monBob / 22) * BOB_PX * bobAmount();
       drawIdleMon(cx, st.monY);
       positionMonName();
     }
@@ -1736,6 +1758,10 @@ const EncounterScreen = (() => {
         elMsgText.textContent = 'CONGRATULATIONS!';
         elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
         elSub.style.color = '#fff';
+        if (st.saveFailed) {
+          elSub.textContent = `${st.mon.name} COULDN'T BE SAVED. PRIVATE BROWSING CAN BLOCK SAVING.`;
+          elSub.style.color = '#ffb4a8';
+        }
 
         // Swap buttons: hide throw/flee, show NEXT/INFO/SHARE
         btnThrow.hidden      = true;
@@ -1834,10 +1860,20 @@ const EncounterScreen = (() => {
     // addCaught also stamps gender/nature onto the same object.
     st.caughtRec = record;
 
+    const p = pending();
+    if (p) { p.resolved = true; writePending(p); }
+
     if (typeof Collection !== 'undefined') {
+      st.saveFailed = false;
       st.caughtKey = Collection.addCaught(record)
         .then(key => { record._key = key; return key; })
-        .catch(() => null);
+        .catch(() => {
+          // Storage refused the write (some private-browsing modes, a full
+          // disk). Say so on the catch screen rather than celebrating a mon
+          // that won't be in the collection.
+          st.saveFailed = true;
+          return null;
+        });
       // Re-read the unique-entry count once the record is stored, so the
       // catch screen can animate dexBefore → dexAfter. Runs in parallel with
       // the shake/lock frames, so it's ready by the postcatch reveal.
@@ -1879,8 +1915,33 @@ const EncounterScreen = (() => {
     setTimeout(() => { el.style.transition = 'opacity 550ms ease'; el.style.opacity = '0'; }, 700);
   }
 
+  // ── pending encounter (survives a reload) ─────────────────
+  // The session is credited the moment it ends, but the mon only exists in
+  // memory until it is caught — so closing or reloading the page on this
+  // screen (or a phone discarding the background tab) used to lose it with no
+  // way back. The wild mon is written down when it appears and erased when the
+  // encounter finishes; app.js re-opens it on the next load. `resolved` flips the
+  // moment the record is saved, so a reload after that point finishes the
+  // encounter (pal XP, next session) instead of offering the mon a second time.
+  // Running away sets the same flag (`resolved`), for the same reason.
+  const PENDING_KEY = 'pm_pending_encounter';
+  function pending() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+  function writePending(p) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  function clearPending() {
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+  }
+
   // ── public API ────────────────────────────────────────────
-  function start(doneCb) {
+  // opts.meta   — stored with the pending encounter and handed back by
+  //               pending() (app.js keeps the break that was due in it).
+  // opts.resume — a pending() record: re-open that exact mon at that level
+  //               instead of rolling a new one.
+  function start(doneCb, opts = {}) {
     // Resolve DOM refs once
     if (!overlay) {
       overlay     = document.getElementById('encounter-overlay');
@@ -1923,21 +1984,30 @@ const EncounterScreen = (() => {
       btnCatchShare.addEventListener('click', shareCatch);
     }
 
-    onDone = doneCb;
+    // Every way an encounter ends (flee, NEXT, POMODEX) goes through onDone,
+    // so this is the one place the pending record is erased.
+    onDone = () => { clearPending(); if (typeof doneCb === 'function') doneCb(); };
+
+    const resume = opts.resume && opts.resume.mon ? opts.resume : null;
 
     // Pick a random mon — clone it so shiny/dark rolls never mutate the shared
     // MONS roster. The player's level decides which evolutions are in the
     // pool at all (see spawnableForms), so it has to be read before the pick
     // rather than after it, as it used to be.
     const playerLevel = parseInt(localStorage.getItem('pm_level') || '1', 10) || 1;
-    const mon   = { ...getRandomMon(playerLevel) };
-    mon.shiny   = Math.random() < SHINY_RATE;
-    // Dark variant — rare darkened version of any mon. Shiny takes priority:
-    // dark only applies when the mon did NOT roll shiny, so the dark rate you
-    // actually see is DARK_RATE x (1 - SHINY_RATE) — 0.998% rather than a flat
-    // 1%. The difference is a rounding artifact at these odds; the ? popup
-    // quotes the effective numbers.
-    mon.dark    = !mon.shiny && Math.random() < DARK_RATE;
+    let mon;
+    if (resume) {
+      mon = { ...resume.mon };
+    } else {
+      mon = { ...getRandomMon(playerLevel) };
+      mon.shiny = TEST_FORCE_SHINY || Math.random() < SHINY_RATE;
+      // Dark variant — rare darkened version of any mon. Shiny takes priority:
+      // dark only applies when the mon did NOT roll shiny, so the dark rate you
+      // actually see is DARK_RATE x (1 - SHINY_RATE) — 0.998% rather than a flat
+      // 1%. The difference is a rounding artifact at these odds; the ? popup
+      // quotes the effective numbers.
+      mon.dark  = !mon.shiny && Math.random() < DARK_RATE;
+    }
     st.mon      = mon;
     MonSprite.preload(mon); // start loading PNG early so it's ready by first draw
     st.phase    = 'appearing';
@@ -1950,6 +2020,7 @@ const EncounterScreen = (() => {
     st.caught   = false;
     st.caughtRec = null;
     st.caughtKey = null;
+    st.saveFailed = false;
 
     // Compute wild mon level (player level ±2) once at encounter start, then
     // clamp it into the band that actually produces the form on screen.
@@ -1961,11 +2032,16 @@ const EncounterScreen = (() => {
     // clamp is what lets a high-level player still catch a base form and have
     // it stay a base form. It cuts the other way too: meeting a Marinaro at
     // player level 14 pulls the roll up to 16, the level that makes it one.
-    const offset  = Math.floor(Math.random() * 5) - 2;
-    const rolled  = playerLevel + offset;
-    const loLevel = mon.loLevel || 1;
-    const hiLevel = mon.hiLevel || 100;
-    st.monLevel   = Math.max(loLevel, Math.min(hiLevel, rolled));
+    if (resume && resume.level > 0) {
+      st.monLevel = resume.level;   // the level the player already saw
+    } else {
+      const offset  = Math.floor(Math.random() * 5) - 2;
+      const rolled  = playerLevel + offset;
+      const loLevel = mon.loLevel || 1;
+      const hiLevel = mon.hiLevel || 100;
+      st.monLevel   = Math.max(loLevel, Math.min(hiLevel, rolled));
+    }
+    writePending({ mon, level: st.monLevel, meta: opts.meta || null, resolved: false });
 
     // Populate UI
     elMsgText.textContent = 'A WILD MON APPEARED!';
@@ -2077,6 +2153,8 @@ const EncounterScreen = (() => {
   function flee() {
     if (st.phase !== 'idle') return;
     stopReminderCry();
+    const p = pending();
+    if (p) { p.resolved = true; writePending(p); }
     if (typeof saveExp === 'function') saveExp(7);
     elSub.textContent = 'YOU FLED SAFELY.';
     close();
@@ -2463,7 +2541,7 @@ const EncounterScreen = (() => {
     }, st.phase === 'done' ? 0 : 1400);
   }
 
-  return { start };
+  return { start, pending, clearPending };
 })();
 
 // ── Evolution Screen ───────────────────────────────────────
@@ -2673,12 +2751,24 @@ const EvolutionScreen = (() => {
     autoDismissTimer = setTimeout(dismiss, 4000);
   }
 
+  // The overlay covers My Mons, and the 4s auto-timer can close it under a
+  // click the player aimed at AWESOME/OK — which then lands on the mon card
+  // beneath and opens its detail screen. Eat clicks briefly after closing.
+  // Capture phase on document runs before every card's own handler; the click
+  // that triggered dismiss() is already past capture, so it is unaffected.
+  function swallowClicks(ms) {
+    const eat = (e) => { e.stopPropagation(); e.preventDefault(); };
+    document.addEventListener('click', eat, true);
+    setTimeout(() => document.removeEventListener('click', eat, true), ms);
+  }
+
   function dismiss() {
     if (autoDismissTimer) { clearTimeout(autoDismissTimer); autoDismissTimer = null; }
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     hideStop();
     SFX.stopLoop();
     overlay.classList.remove('active');
+    swallowClicks(500);
     // Told apart by phase, the same way stop() itself is guarded: 'stopped'
     // only ever gets there through stop(). A caller that re-offers a declined
     // evolution needs to know which of the two happened — accepting has to

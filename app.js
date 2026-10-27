@@ -82,7 +82,11 @@ let timeLeft      = MODES.focus;
 let running       = false;
 let intervalId    = null;
 let endTime       = 0;   // wall-clock ms when the current run should finish
-let sessionsToday = 0;
+// Focus sessions toward the next long break. Kept in localStorage: in memory
+// alone, a reload mid-cycle reset it, so a player who refreshed between
+// sessions could go 7 sessions without the long break that's due every 4th.
+const CYCLE_KEY = 'pm_cycle_sessions';
+let sessionsToday = parseInt(localStorage.getItem(CYCLE_KEY) || '0', 10) || 0;
 
 // Background-tab safety net: Chrome throttles setInterval in a hidden tab
 // to roughly once a minute, which could make the end-of-session alarm land
@@ -480,6 +484,7 @@ function onSessionEnd() {
 
   if (currentMode === 'focus') {
     sessionsToday++;
+    try { localStorage.setItem(CYCLE_KEY, String(sessionsToday % 4)); } catch (e) {}
     // Every 4th session → long break; otherwise → short break
     const nextMode = sessionsToday % 4 === 0 ? 'long' : 'short';
     NextSession.suggested = nextMode;
@@ -495,51 +500,7 @@ function onSessionEnd() {
     if (typeof Signup !== 'undefined') Signup.event('session-complete');
     renderStats();
     CompanionCanvas.stop();
-    EncounterScreen.start(() => {
-      // Award pal XP after encounter resolves; trigger evolution screen if needed
-      const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
-      const palResult = activeId ? savePalExp(activeId, 35) : null;
-
-      // Once the encounter (and any evolution) has played out, apply whatever
-      // the player chose on the info card — or, if they never saw it, the
-      // break that was due.
-      const backOnTimer = () => {
-        CompanionCanvas.init(document.getElementById('companion-canvas'));
-        applyNextSession(nextMode);
-      };
-
-      // Collection resolves "the active companion" from pm_active_rec_key
-      // itself, which is why there is no record key to pass from here.
-      const declineHandler = (atLevel) => {
-        const p = (typeof Collection !== 'undefined' && Collection.declineEvolution)
-          ? Collection.declineEvolution(null, atLevel) : Promise.resolve();
-        // The companion box is rebuilt from the mirror, which
-        // declineEvolution has already written by the time this returns.
-        return Promise.resolve(p).then(() => updateCompanionDisplay());
-      };
-
-      if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
-        EvolutionScreen.start(palResult, backOnTimer, declineHandler);
-      } else if (palResult && palResult.reoffer && typeof EvolutionScreen !== 'undefined') {
-        // A previously declined evolution, offered again now that the pal is
-        // EVOLUTION_REPROMPT_LEVELS further past its threshold. Same screen,
-        // same STOP option — declining again just leaves it declined for the
-        // next re-offer. Taking it this time is the one outcome the normal
-        // `evolved` path never has to handle: getMonStage already skips
-        // declined stages forever, so accepting has to erase this one from
-        // the record or the pal would still read as refused on the very next
-        // screen that draws it.
-        const atLevel = palResult.reoffer.toMon && palResult.reoffer.toMon.atLevel;
-        EvolutionScreen.start(palResult.reoffer, (wasStopped) => {
-          if (wasStopped) { backOnTimer(); return; }
-          const p = (typeof Collection !== 'undefined' && Collection.acceptEvolution)
-            ? Collection.acceptEvolution(null, atLevel) : Promise.resolve();
-          Promise.resolve(p).then(() => { updateCompanionDisplay(); backOnTimer(); });
-        }, declineHandler);
-      } else {
-        backOnTimer();
-      }
-    });
+    EncounterScreen.start(afterEncounter(nextMode), { meta: { nextMode } });
     return;
   }
 
@@ -553,6 +514,57 @@ function onSessionEnd() {
   titleOverride = 'Back to work! — PomoMons';
   Notify.fire('Break over', 'Back to it — start your next focus session.');
   setMode('focus');
+}
+
+// What happens once a wild encounter is over: pal XP, any evolution, then the
+// next session. A function of its own so a pending encounter re-opened after a
+// reload (see the bottom of this file) finishes exactly like a live one.
+function afterEncounter(nextMode) {
+  return () => {
+    // Award pal XP after encounter resolves; trigger evolution screen if needed
+    const activeId = parseInt(localStorage.getItem('pm_active') || '0', 10);
+    const palResult = activeId ? savePalExp(activeId, 35) : null;
+
+    // Once the encounter (and any evolution) has played out, apply whatever
+    // the player chose on the info card — or, if they never saw it, the
+    // break that was due.
+    const backOnTimer = () => {
+      CompanionCanvas.init(document.getElementById('companion-canvas'));
+      applyNextSession(nextMode);
+    };
+
+    // Collection resolves "the active companion" from pm_active_rec_key
+    // itself, which is why there is no record key to pass from here.
+    const declineHandler = (atLevel) => {
+      const p = (typeof Collection !== 'undefined' && Collection.declineEvolution)
+        ? Collection.declineEvolution(null, atLevel) : Promise.resolve();
+      // The companion box is rebuilt from the mirror, which
+      // declineEvolution has already written by the time this returns.
+      return Promise.resolve(p).then(() => updateCompanionDisplay());
+    };
+
+    if (palResult && palResult.evolved && typeof EvolutionScreen !== 'undefined') {
+      EvolutionScreen.start(palResult, backOnTimer, declineHandler);
+    } else if (palResult && palResult.reoffer && typeof EvolutionScreen !== 'undefined') {
+      // A previously declined evolution, offered again now that the pal is
+      // EVOLUTION_REPROMPT_LEVELS further past its threshold. Same screen,
+      // same STOP option — declining again just leaves it declined for the
+      // next re-offer. Taking it this time is the one outcome the normal
+      // `evolved` path never has to handle: getMonStage already skips
+      // declined stages forever, so accepting has to erase this one from
+      // the record or the pal would still read as refused on the very next
+      // screen that draws it.
+      const atLevel = palResult.reoffer.toMon && palResult.reoffer.toMon.atLevel;
+      EvolutionScreen.start(palResult.reoffer, (wasStopped) => {
+        if (wasStopped) { backOnTimer(); return; }
+        const p = (typeof Collection !== 'undefined' && Collection.acceptEvolution)
+          ? Collection.acceptEvolution(null, atLevel) : Promise.resolve();
+        Promise.resolve(p).then(() => { updateCompanionDisplay(); backOnTimer(); });
+      }, declineHandler);
+    } else {
+      backOnTimer();
+    }
+  };
 }
 
 // ── Mode dropdown ─────────────────────────────────────────
@@ -1095,6 +1107,38 @@ document.getElementById('btn-go-mymons').addEventListener('click', () => showScr
 document.getElementById('btn-companion-level')?.addEventListener('click', () => {
   if (typeof Collection !== 'undefined') Collection.openActiveMonDetail();
 });
+
+// Clicking the companion itself opens the same detail card as its LV badge.
+// Hit-tested against the canvas's own pixels (the ground is a separate <img>,
+// so anything opaque here is the mon or its sparkles) rather than the whole
+// 200x200 box, which is mostly empty sky. A few px of slack so a click on a
+// thin edge or a gap between limbs still counts. The LV button stays the
+// keyboard route; this is a pointer shortcut.
+(() => {
+  const cv = document.getElementById('companion-canvas');
+  if (!cv) return;
+  const SLACK = 6;   // css px
+  const onSprite = (e) => {
+    const r = cv.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const sx = cv.width / r.width, sy = cv.height / r.height;
+    const x = Math.round((e.clientX - r.left) * sx), y = Math.round((e.clientY - r.top) * sy);
+    const pad = Math.round(SLACK * sx);
+    const x0 = Math.max(0, x - pad), y0 = Math.max(0, y - pad);
+    const w = Math.min(cv.width, x + pad + 1) - x0, h = Math.min(cv.height, y + pad + 1) - y0;
+    if (w <= 0 || h <= 0) return false;
+    try {
+      const d = cv.getContext('2d').getImageData(x0, y0, w, h).data;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 40) return true;
+    } catch (err) {}
+    return false;
+  };
+  cv.addEventListener('click', (e) => {
+    if (onSprite(e) && typeof Collection !== 'undefined') Collection.openActiveMonDetail();
+  });
+  cv.addEventListener('mousemove', (e) => { cv.style.cursor = onSprite(e) ? 'pointer' : ''; });
+  cv.addEventListener('mouseleave', () => { cv.style.cursor = ''; });
+})();
 document.getElementById('btn-back-mymons').addEventListener('click',  () => showScreen('timer'));
 document.getElementById('btn-back-dex').addEventListener('click',     () => showScreen('timer'));
 document.getElementById('btn-to-dex').addEventListener('click',    () => showScreen('dex'));
@@ -1159,7 +1203,7 @@ document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
   // Fill in the "how it works" line with the player's actual focus length.
   const intro = document.getElementById('spawn-info-intro');
   if (intro) intro.textContent =
-    `COMPLETE A ${focusMins}-MINUTE FOCUS SESSION AND A WILD POMOMON MAY APPEAR.`;
+    `COMPLETE A ${focusMins}-MINUTE FOCUS SESSION AND A WILD POMOMON APPEARS.`;
   spawnInfo?.classList.add('active');
 });
 document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
@@ -1198,16 +1242,24 @@ function applyNextSession(fallbackMode) {
 
 // Audio toggle — lives in the settings menu now; icon swaps waves↔X and the
 // row label reads the current state.
-function renderAudioIcon(muted) {
-  document.getElementById('audio-waves').style.display = muted ? 'none' : '';
-  document.getElementById('audio-mute').style.display  = muted ? ''     : 'none';
-  const label = document.getElementById('audio-label');
-  if (label) label.textContent = muted ? 'Sound off' : 'Sound on';
-  btnAudio.setAttribute('aria-checked', String(!muted));
+// Two rows: game sounds (#btn-audio) and timer sounds (#btn-audio-timer).
+const AUDIO_ROWS = {
+  game:  { btn: 'btn-audio',       suffix: '',       name: 'Game sounds' },
+  timer: { btn: 'btn-audio-timer', suffix: '-timer', name: 'Timer sounds' },
+};
+function renderAudioIcon(kind, muted) {
+  const row = AUDIO_ROWS[kind];
+  document.getElementById('audio-waves' + row.suffix).style.display = muted ? 'none' : '';
+  document.getElementById('audio-mute'  + row.suffix).style.display = muted ? ''     : 'none';
+  const label = document.getElementById('audio-label' + row.suffix);
+  if (label) label.textContent = `${row.name} ${muted ? 'off' : 'on'}`;
+  document.getElementById(row.btn).setAttribute('aria-checked', String(!muted));
 }
-const btnAudio = document.getElementById('btn-audio');
-btnAudio.addEventListener('click', () => renderAudioIcon(SFX.toggle()));
-renderAudioIcon(SFX.isMuted()); // restore persisted mute state on load
+for (const kind of Object.keys(AUDIO_ROWS)) {
+  document.getElementById(AUDIO_ROWS[kind].btn)
+    .addEventListener('click', () => renderAudioIcon(kind, SFX.toggle(kind)));
+  renderAudioIcon(kind, SFX.isMuted(kind)); // restore persisted state on load
+}
 
 // Time adjust — applies to whichever mode is currently selected
 document.getElementById('btn-time-minus').addEventListener('click', () => {
@@ -1349,15 +1401,27 @@ fitTimerScreen();
 // page opened on a phone.
 syncModeLabels();
 
-// Footer links navigate away from this page entirely. `running`/`endTime` are
-// in-memory only (see startTimer), so leaving mid-focus-session abandons it
-// silently: no stats credit, no encounter. A break running has nothing at
-// stake, so this only fires for an active focus session.
-document.querySelectorAll('.home-foot .foot-nav a').forEach(a => {
-  a.addEventListener('click', e => {
-    if (running && currentMode === 'focus') {
-      const ok = confirm("You're mid focus session — leaving now won't save it. Leave anyway?");
-      if (!ok) e.preventDefault();
-    }
-  });
-});
+// The homepage prose and footer links (Pomodex, research, privacy...) open in a
+// new tab (target="_blank" in index.html), so following one never leaves this
+// page or stops a running session. There used to be a "leave anyway?" confirm
+// on the footer links for that reason; it went when they stopped navigating
+// away.
+
+// A wild mon left on screen when the page was closed or reloaded. The session
+// was already credited when it ended, so this only brings the mon back (or, if
+// it had already been caught or fled from, runs the rest of the encounter: pal
+// XP, any evolution, the next session). See the pending-encounter note in
+// game.js's EncounterScreen.
+(() => {
+  const p = EncounterScreen.pending();
+  if (!p) return;
+  const nextMode = (p.meta && p.meta.nextMode in MODES) ? p.meta.nextMode : 'short';
+  NextSession.suggested = nextMode;
+  if (p.resolved || !p.mon) {
+    EncounterScreen.clearPending();
+    afterEncounter(nextMode)();
+    return;
+  }
+  CompanionCanvas.stop();
+  EncounterScreen.start(afterEncounter(nextMode), { resume: p, meta: p.meta });
+})();

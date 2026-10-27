@@ -9,8 +9,13 @@
 
 - An encounter fires after every **focus session** completes (not breaks).
 - Handled in `app.js → onSessionEnd()` when `currentMode === 'focus'`.
-- Calls `EncounterScreen.start(onDone)` in `game.js`.
+- Calls `EncounterScreen.start(afterEncounter(nextMode), { meta })` in `game.js`.
 - Every 4th completed focus session queues a long break; otherwise short break.
+  The count is kept in `pm_cycle_sessions` so a reload doesn't reset it.
+- The wild mon is written to `pm_pending_encounter` when it appears and erased
+  when the encounter ends. If the page closes first, the next load re-opens the
+  same mon at the same level (or, if it was already caught/fled, just runs the
+  rest: pal XP, evolution, next session).
 
 ---
 
@@ -138,10 +143,12 @@ straight to the collection).
 
 ## Blender & Smoothies
 
-- On My Mons (desktop only — hidden under 480px, drag-and-drop needs a pointer):
-  drag a mon card onto BLEND → confirm modal → record is deleted, +1 smoothie
-  item (`pm_items` in localStorage).
-- Drag the SMOOTHIES box onto a mon card → consume 1 smoothie, +1 pal level.
+- On My Mons, desktop: drag a mon card onto BLEND → confirm modal → record is
+  deleted, +1 smoothie item (`pm_items` in localStorage). Drag the SMOOTHIES
+  box onto a mon card → consume 1 smoothie, +1 pal level.
+- Phones (≤479px, no HTML5 drag-and-drop on touch): the same two actions are
+  two taps — tap BLEND or SMOOTHIES to arm it, then tap a card (see the
+  tap-to-blend note in collection.js). The zone is no longer hidden there.
 - Available from the start (no level gate).
 
 ---

@@ -813,7 +813,15 @@ const SFX = (() => {
   };
 
   // ── Public API ───────────────────────────────────────────────
-  let muted = localStorage.getItem('pm_muted') === '1';
+  // Two separate switches. `muted` (pm_muted, the original key, so an
+  // existing "sound off" carries over) covers the game: encounters, catches,
+  // cries, evolutions, button ticks. `timerMuted` covers only the timer's own
+  // cues — START and the session-end chime — so a player can keep the alarm
+  // and silence the game, or the other way round.
+  let muted      = localStorage.getItem('pm_muted') === '1';
+  let timerMuted = localStorage.getItem('pm_muted_timer') === '1';
+  const TIMER_SOUNDS = new Set(['start', 'sessionEnd']);
+  const isSilenced = (name) => (TIMER_SOUNDS.has(name) ? timerMuted : muted);
 
   // performance.now() of the last sound that actually started. The general
   // button tick at the bottom of this file reads it to work out whether a
@@ -826,7 +834,7 @@ const SFX = (() => {
   // nodes (blend) as well as the tone() ones. Mute is re-checked when it
   // actually fires, so muting during the wait still silences it.
   function play(name, opts) {
-    if (muted) return;
+    if (isSilenced(name)) return;
     if (!sounds[name]) return;
 
     if (opts && opts.after) {
@@ -847,7 +855,13 @@ const SFX = (() => {
     } catch (_) { /* fail silently if Web Audio is unavailable */ }
   }
 
-  function toggle() {
+  // kind: 'game' (default) or 'timer'. Returns the new muted state.
+  function toggle(kind) {
+    if (kind === 'timer') {
+      timerMuted = !timerMuted;
+      localStorage.setItem('pm_muted_timer', timerMuted ? '1' : '0');
+      return timerMuted;
+    }
     muted = !muted;
     localStorage.setItem('pm_muted', muted ? '1' : '0');
     if (muted) stopLoop();
@@ -915,7 +929,7 @@ const SFX = (() => {
     } catch (_) {}
   }
 
-  function isMuted() { return muted; }
+  function isMuted(kind) { return kind === 'timer' ? timerMuted : muted; }
 
   // ── General button feedback ──────────────────────────────────
   // Every button that doesn't already make a sound gets the soft tick, so the

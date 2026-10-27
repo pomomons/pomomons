@@ -39,6 +39,59 @@ const Collection = (() => {
   // Post-catch, BACK belongs to the encounter flow rather than the timer.
   let detailOnClose = null;
 
+  // ── TESTING ONLY — demo fill for recording video ─────────────
+  // A number turns it on: opening the Pomodex then reveals up to that many
+  // uncaught entries, in random order, one every TEST_DEMO_FILL_MS. Drawn
+  // only — never written to IndexedDB, never counted in stats — so a reload
+  // puts the real Pomodex back. build.js refuses to build while non-null.
+  const TEST_DEMO_FILL    = null;
+  const TEST_DEMO_FILL_MS = 300;
+  const demoSeen = new Set();       // entry names revealed by the demo so far
+  let demoTimer  = null;
+
+  function startDemoFill(grid, entries, ownedNames, count, total) {
+    if (demoTimer) return;
+    demoTimer = setInterval(() => {
+      const left = entries
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => !ownedNames.has(e.name) && !demoSeen.has(e.name));
+      if (!left.length || demoSeen.size >= TEST_DEMO_FILL ||
+          !document.getElementById('screen-dex')?.classList.contains('active')) {
+        clearInterval(demoTimer); demoTimer = null; return;
+      }
+      // Reveal only what is on screen, in random order; once that is all
+      // filled, glide down a row. Jumping the scroll to each random pick
+      // looked frantic on camera. Index lookup, not a held reference: renderDex
+      // rebuilds the grid when sprites load, and entry order is fixed by dexNum.
+      let scroller = grid;
+      while (scroller && scroller !== document.body &&
+             !(scroller.scrollHeight > scroller.clientHeight &&
+               /auto|scroll/.test(getComputedStyle(scroller).overflowY))) {
+        scroller = scroller.parentElement;
+      }
+      const view = scroller && scroller !== document.body
+        ? scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+      const onScreen = left.filter(({ i }) => {
+        const r = grid.children[i]?.getBoundingClientRect();
+        return r && r.top >= view.top - 2 && r.bottom <= view.bottom + 2;
+      });
+      if (!onScreen.length) {
+        const row = grid.children[left[0].i];
+        if (scroller && scroller !== document.body && row) {
+          scroller.scrollBy({ top: row.getBoundingClientRect().height + 8, behavior: 'smooth' });
+        }
+        return;
+      }
+      const { e, i } = onScreen[Math.floor(Math.random() * onScreen.length)];
+      demoSeen.add(e.name);
+      const card = buildDexCard(e, true);
+      grid.children[i].replaceWith(card);
+      card.animate([{ transform: 'scale(0.5)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
+                   { duration: 180, easing: 'steps(3, end)' });
+      if (count) count.textContent = `${ownedNames.size + demoSeen.size} / ${total}`;
+    }, TEST_DEMO_FILL_MS);
+  }
+
   // ── IndexedDB setup ─────────────────────────────────────────
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -917,7 +970,7 @@ const Collection = (() => {
       return;
     }
 
-    if (count) count.textContent = `${ownedNames.size} / ${TOTAL_DEX}`;
+    if (count) count.textContent = `${ownedNames.size + demoSeen.size} / ${TOTAL_DEX}`;
 
     // This screen carries a MY MONS tab too, and a player can reach it without
     // ever opening My Mons this session, so its tally is filled in from here
@@ -927,9 +980,11 @@ const Collection = (() => {
     grid.innerHTML = '';
     const fragment = document.createDocumentFragment();
     for (const entry of allDexEntries) {
-      fragment.appendChild(buildDexCard(entry, ownedNames.has(entry.name)));
+      fragment.appendChild(buildDexCard(entry,
+        ownedNames.has(entry.name) || demoSeen.has(entry.name)));
     }
     grid.appendChild(fragment);
+    if (TEST_DEMO_FILL) startDemoFill(grid, allDexEntries, ownedNames, count, TOTAL_DEX);
 
     if (typeof MonSprite !== 'undefined') {
       MonSprite.preloadAll(allDexEntries, renderDex);

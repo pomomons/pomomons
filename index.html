@@ -854,7 +854,7 @@
       <p>
         <strong>Dark</strong> mons are about <strong>1 in 100</strong>; a
         <strong>shiny</strong> is rarer, about <strong>1 in 500</strong>, and
-        wins if both roll. <a href="/pomodex/">See every mon and its
+        wins if both roll. <a href="/pomodex/" target="_blank" rel="noopener">See every mon and its
         evolution level</a>.
       </p>
 
@@ -868,7 +868,7 @@
         Psychology Review</em>, 2020) and Zeng et al. (<em>British Journal
         of Educational Technology</em>, 2024) covering thousands of
         students, all finding gamified learning improves outcomes.
-        <a href="/research/">Read all nine studies, including the two that disagree with us</a>.
+        <a href="/research/" target="_blank" rel="noopener">Read all nine studies, including the two that disagree with us</a>.
       </p>
 
       <h2>Free, no account, works offline</h2>
@@ -902,11 +902,11 @@
       <div class="prose-col">
         <p class="foot-mark">POMOMONS &mdash; FOCUS &middot; CATCH &middot; COLLECT</p>
         <nav class="foot-nav" aria-label="Site">
-          <a href="/pomodex/">All 30 Pomomons</a>
-          <a href="/research/">The research</a>
-          <a href="/focus-friend-alternative/">Focus Friend alternative</a>
-          <a href="/privacy/">Privacy</a>
-          <a href="/terms/">Terms</a>
+          <a href="/pomodex/" target="_blank" rel="noopener">All 30 Pomomons</a>
+          <a href="/research/" target="_blank" rel="noopener">The research</a>
+          <a href="/focus-friend-alternative/" target="_blank" rel="noopener">Focus Friend alternative</a>
+          <a href="/privacy/" target="_blank" rel="noopener">Privacy</a>
+          <a href="/terms/" target="_blank" rel="noopener">Terms</a>
           <a href="https://discord.gg/jaWsqRdymV" rel="noopener">Discord</a>
         </nav>
       </div>
@@ -933,7 +933,9 @@
        same fixed-position pattern as .mode-dropdown above. Holds the
        controls that used to sit loose in the header corners. -->
   <div class="settings-menu" id="settings-menu" hidden role="menu" aria-label="Settings">
-    <button class="settings-row" id="btn-audio" role="menuitemcheckbox" aria-label="Toggle sound">
+    <!-- Two sound switches: the timer's own cues (START, the session-end
+         chime) and everything else. See the note above `muted` in audio.js. -->
+    <button class="settings-row" id="btn-audio" role="menuitemcheckbox" aria-label="Toggle game sounds">
       <svg id="audio-icon" class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
            xmlns="http://www.w3.org/2000/svg"
            style="display:block;shape-rendering:crispEdges" aria-hidden="true">
@@ -956,7 +958,33 @@
           <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
         </g>
       </svg>
-      <span class="settings-label" id="audio-label">Sound on</span>
+      <span class="settings-label" id="audio-label">Game sounds on</span>
+    </button>
+
+    <button class="settings-row" id="btn-audio-timer" role="menuitemcheckbox" aria-label="Toggle timer sounds">
+      <svg id="audio-icon-timer" class="settings-ico" width="20" height="18" viewBox="0 0 10 10"
+           xmlns="http://www.w3.org/2000/svg"
+           style="display:block;shape-rendering:crispEdges" aria-hidden="true">
+        <rect x="1" y="3" width="2" height="4" fill="currentColor"/>
+        <rect x="3" y="2" width="1" height="6" fill="currentColor"/>
+        <rect x="4" y="1" width="1" height="8" fill="currentColor"/>
+        <g id="audio-waves-timer">
+          <rect x="6" y="2" width="1" height="6" fill="currentColor"/>
+          <rect x="8" y="1" width="1" height="8" fill="currentColor"/>
+        </g>
+        <g id="audio-mute-timer" style="display:none">
+          <rect x="5" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="2" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="3" width="1" height="1" fill="currentColor"/>
+          <rect x="7" y="4" width="1" height="1" fill="currentColor"/>
+          <rect x="6" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="8" y="5" width="1" height="1" fill="currentColor"/>
+          <rect x="5" y="6" width="1" height="1" fill="currentColor"/>
+          <rect x="9" y="6" width="1" height="1" fill="currentColor"/>
+        </g>
+      </svg>
+      <span class="settings-label" id="audio-label-timer">Timer sounds on</span>
     </button>
 
     <!-- Opens the day-by-day breakdown. The stats strip only ever shows two
