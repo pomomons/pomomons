@@ -95,10 +95,14 @@
   <!-- Favicons. favicon.ico (16/32/48 in one file) at the repo root is the
        universal fallback browsers auto-request; the two PNG links are the
        explicit modern path. All are a tight-cropped tomato on a transparent
-       background — the old link pointed straight at a 32px sprite frame. -->
+       background — the old link pointed straight at a 32px sprite frame.
+       The 192px link is for search results: Google's favicon rules ask for a
+       square that is a multiple of 48px, and a 16/32 is below that. Browser
+       tabs still take the 16/32 sizes. -->
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
 
   <!-- Installable web app (PWA). manifest.webmanifest + sw.js at the repo root;
        the "Install" prompt needs both, plus HTTPS (GitHub Pages is). The

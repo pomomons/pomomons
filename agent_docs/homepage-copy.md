@@ -101,17 +101,18 @@ working with no connection at all.
    counted frame by frame, so it stays correct while the tab sits in the
    background. You can have it notify you when the session is up.
 3. **Meet what turns up.** A wild Pomomon appears the moment the session ends.
-4. **Throw a tomato.** Every species has its own catch rate, so a throw can
-   miss and a rarer one can break free. Or press RUN AWAY and go straight to
-   your break.
+4. **Throw a tomato.** Every catch succeeds. Or press RUN AWAY and go
+   straight to your break. (Corrected 2026-10-31: the draft said rarer mons
+   can break free, which was never true; see monsters.md on catchRate.)
 5. **Take the break.** After every fourth focus session you get the long one.
 
 ### What you are collecting
 
 There are **30 Pomomon forms across 15 base species**, numbered #1 to #30 in
-the Pomodex. Only the 16 base forms appear in the wild — the other 14 are
-evolutions, which a Pomomon you have already caught reaches on its own at level
-16, 20 or 36.
+the Pomodex: 15 base forms and 15 evolutions, reached at level 16, 20 or 36.
+Base forms appear in the wild at every level; an evolved form starts turning
+up once you're within 2 levels of the level it evolves at. (Corrected
+2026-10-31 to match monsters.js.)
 
 Every one is drawn from food. Tomotot is a tomato that evolves into a pot of
 marinara and then into a tangle of spaghetti. Chilino is a chilli that ends up

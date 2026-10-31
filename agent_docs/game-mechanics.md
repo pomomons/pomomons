@@ -22,7 +22,7 @@
 ## Spawning
 
 **Every form can spawn, gated by player level.** `getRandomMon(playerLevel)` in
-`monsters.js` builds its pool from `spawnableForms(playerLevel)`: all 16 base
+`monsters.js` builds its pool from `spawnableForms(playerLevel)`: all 15 base
 forms, always, plus every evolution the player has earned. An evolution is
 earned when `playerLevel >= evo.atLevel - SPAWN_LEVEL_GRACE` (grace = 2).
 

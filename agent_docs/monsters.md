@@ -1,7 +1,7 @@
 # PomoMons — Monster Roster Reference
 
 > Read this before adding new mons, evolutions, or changing sprite logic.
-> Updated Aug 2026 for launch.
+> Updated 2026-10-31 against monsters.js.
 
 ---
 
@@ -43,15 +43,17 @@ unlocked evolution's fields.
 
 ---
 
-## Current Roster (16 lines, 30 dex entries)
+## Current Roster (15 lines, 30 dex entries)
 
 Dex numbers run 1-30 with no gaps. #17 used to be a hole — Wedgling was
 removed and its number retired — and was closed by shifting every entry above
 it down one; Purrplant holds 17 now. Dex 15/16 were Marshpuff/Marshmelt,
 removed 2026-10-11; rather than close that gap by shifting, Manglet/Mambango
-were added straight into the vacated 15/16 slots. The *id*s 9 (Wedgling) and
-8 (Marshpuff) stay retired, as does id 2, because caught records store the id
-and reusing one would re-label an existing catch. dexNum carries no such
+were added straight into the vacated 15/16 slots. Dex 18 was Chillcone, also
+removed 2026-10-11; Purrplant's new evolution Vileplum took it. The *id*s 9
+(Wedgling), 8 (Marshpuff) and 11 (Chillcone) stay retired, as does id 2,
+because caught records store the id and reusing one would re-label an
+existing catch. dexNum carries no such
 risk: nothing persists it, so it can be renumbered freely.
 
 Types are **flavour-based** (Sweet, Spicy, Savory, Sour, Bitter) — every mon
@@ -71,10 +73,9 @@ Sour is used by Soursquad (grapes) and Citrano (orange).
 | 5  | 11  | Bluble     | Sweet   | 20 → Bluebeary #12 (Sweet)                           |
 | 7  | 13  | Pumplet    | Savory  | 20 → Jackwicks #14 (Savory)                          |
 | 19 | 15  | Manglet    | Sweet   | 20 → Mambango #16 (Sweet)                            |
-| 10 | 17  | Purrplant  | Savory  | —                                                    |
-| 11 | 18  | Chillcone  | Sweet   | —                                                    |
+| 10 | 17  | Purrplant  | Savory  | 20 → Vileplum #18 (Savory)                           |
 | 12 | 19  | Cocokid    | Sweet   | 20 → Cocokong #20 (Sweet)                            |
-| 13 | 21  | Pitapal   | Sweet   | 20 → Pitagon #22 (Sweet)                             |
+| 13 | 21  | Pitapal    | Sweet   | 20 → Pitagon #22 (Sweet)                             |
 | 14 | 23  | Soursquad  | Sour    | —                                                    |
 | 15 | 24  | Mushkin    | Savory  | 20 → Portobellord #25 (Savory)                       |
 | 16 | 26  | Citrano    | Sour    | —                                                    |
@@ -96,15 +97,16 @@ game-mechanics.md. These were documented here as 1% and 5%, which never matched
 - **2-frame vertical blink sheet**: frame 0 (top) = blink, frame 1 (bottom) = open.
   File height = 2× frame height.
 - **Frame size scales with evolution stage — intentional** (bigger = more evolved):
-  - Basic mons: 32×32 (some 48)
+  - Basic mons: 32×32 (Donot, Purrplant, Mushkin are 48; Soursquad is 64)
   - Middle evolutions: 48×48 (mostly)
   - Final evolutions: 64×64
   Do NOT "fix" a 32px basic to match larger mons.
 - Renderer (`MonSprite` in game.js) draws at 3× logical scale, fit-capped per
   screen; the procedural block-art renderer is the fallback if `sprite` is unset.
 - Dark variant reuses the normal PNG through a canvas darken filter — no
-  separate art needed. Shiny uses `shinySprite` if present, else a gold
-  hue-rotate filter + sparkles.
+  separate art needed. No mon sets `shinySprite`, so every shiny uses
+  the `hue-rotate(120deg) saturate(1.6) brightness(1.08)` filter + sparkles (a
+  colour swap, not a gold tint).
 
 ---
 
