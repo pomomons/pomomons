@@ -20,48 +20,78 @@ launch-posts.md and seo-audit-2026-10-31.md).
 
 | Day | Date | Video | Kind | YouTube title |
 |---|---|---|---|---|
-| 1 | Mon, Nov 2 | 01-full-loop.mp4 | game | I turned my Pomodoro timer into a monster-catching game #shorts |
-| 2 | Tue, Nov 3 | 14-shiny.mp4 | game | A 1 in 500 shiny from my study timer #shorts |
-| 3 | Wed, Nov 4 | 49-game-vs-timer.mp4 | sci | Pomodoro vs gamified studying: which has more science behind it? #shorts |
-| 4 | Thu, Nov 5 | 24-every-cry.mp4 | game | Every monster's 8-bit cry in my Pomodoro timer game #shorts |
-| 5 | Fri, Nov 6 | 06-meet-tomotot.mp4 | game | Meet Tomotot: the tomato monster from my study timer #shorts |
-| 6 | Sat, Nov 7 | 02-pov-finish.mp4 | game | POV: you finally finish your Pomodoro study session #shorts |
-| 7 | Sun, Nov 8 | 20-guess-cocokid.mp4 | guess | Guess what Cocokid evolves into #shorts |
-| 8 | Mon, Nov 9 | 46-gamified-works.mp4 | sci | Does gamified studying actually work? What 4 meta-analyses found #shorts |
-| 9 | Tue, Nov 10 | 37-story.mp4 | game | I made studying work like grinding for rare drops #shorts |
-| 10 | Wed, Nov 11 | 07-meet-chilino.mp4 | game | Meet Chilino: the chilli monster that becomes a ghost pepper #shorts |
-| 11 | Thu, Nov 12 | 27-all-30.mp4 | game | All 30 monsters in my free Pomodoro timer game #shorts |
-| 12 | Fri, Nov 13 | 03-zero.mp4 | game | What happens when my Pomodoro timer hits 0:00 #shorts |
-| 13 | Sat, Nov 14 | 48-session-length.mp4 | sci | How long should a study session be? What the research actually says #shorts |
-| 14 | Sun, Nov 15 | 18-smoothie-evolve.mp4 | game | Feeding my monster smoothies until it evolves #shorts |
-| 15 | Mon, Nov 16 | 30-keep-one.mp4 | game | You can only keep one: which monster are you picking? #shorts |
-| 16 | Tue, Nov 17 | 47-pomodoro-works.mp4 | sci | Does the Pomodoro technique actually work? What the research says #shorts |
-| 17 | Wed, Nov 18 | 08-meet-avocuddle.mp4 | game | Meet Avocuddle: the avocado monster that turns into guacamole #shorts |
-| 18 | Thu, Nov 19 | 52-laptop.mp4 | game | A free Pomodoro timer for your laptop (runs in a browser tab) #shorts |
-| 19 | Fri, Nov 20 | 26-catch-asmr.mp4 | game | The most satisfying part of my study timer (sound on) #shorts |
-| 20 | Sat, Nov 21 | 17-rarest.mp4 | game | The rarest monster in my Pomodoro timer game #shorts |
-| 21 | Sun, Nov 22 | 51-what-works.mp4 | sci | What actually works best for studying? (Not a timer) #shorts |
-| 22 | Mon, Nov 23 | 23-stop.mp4 | game | Would you stop your monster from evolving? #shorts |
-| 23 | Tue, Nov 24 | 04-four-sessions.mp4 | game | 4 Pomodoro sessions, 4 new monsters #shorts |
-| 24 | Wed, Nov 25 | 19-every-evolution.mp4 | game | Every evolution in my Pomodoro timer game #shorts |
-| 25 | Thu, Nov 26 | 50-own-breaks.mp4 | sci | Pomodoro breaks vs your own breaks: what 3 studies found #shorts |
-| 26 | Fri, Nov 27 | 21-guess-pitapal.mp4 | guess | Guess what Pitapal evolves into #shorts |
-| 27 | Sat, Nov 28 | 34-companion.mp4 | game | My study companion evolved after one more Pomodoro session #shorts |
-| 28 | Sun, Nov 29 | 15-dark.mp4 | game | The 1 in 100 dark variant in my study timer #shorts |
-| 29 | Mon, Nov 30 | 31-flavour.mp4 | game | Which flavour are you? Every monster is a food #shorts |
-| 30 | Tue, Dec 1 | 22-guess-manglet.mp4 | guess | Guess what Manglet evolves into #shorts |
+| 1 | Mon, Nov 2 | 01-full-loop.mp4 | game | I turned my Pomodoro timer into a monster-catching game |
+| 2 | Tue, Nov 3 | 14-shiny.mp4 | game | A 1 in 500 shiny from my study timer |
+| 3 | Wed, Nov 4 | 49-game-vs-timer.mp4 | sci | Pomodoro vs gamified studying: which has more science behind it? |
+| 4 | Thu, Nov 5 | 24-every-cry.mp4 | game | Every monster's 8-bit cry in my Pomodoro timer game |
+| 5 | Fri, Nov 6 | 06-meet-tomotot.mp4 | game | Meet Tomotot: the tomato monster from my study timer |
+| 6 | Sat, Nov 7 | 02-pov-finish.mp4 | game | POV: you finally finish your Pomodoro study session |
+| 7 | Sun, Nov 8 | 20-guess-cocokid.mp4 | guess | Guess what Cocokid evolves into |
+| 8 | Mon, Nov 9 | 46-gamified-works.mp4 | sci | Does gamified studying actually work? What 4 meta-analyses found |
+| 9 | Tue, Nov 10 | 37-story.mp4 | game | I made studying work like grinding for rare drops |
+| 10 | Wed, Nov 11 | 07-meet-chilino.mp4 | game | Meet Chilino: the chilli monster that becomes a ghost pepper |
+| 11 | Thu, Nov 12 | 27-all-30.mp4 | game | All 30 monsters in my free Pomodoro timer game |
+| 12 | Fri, Nov 13 | 03-zero.mp4 | game | What happens when my Pomodoro timer hits 0:00 |
+| 13 | Sat, Nov 14 | 48-session-length.mp4 | sci | How long should a study session be? What the research actually says |
+| 14 | Sun, Nov 15 | 18-smoothie-evolve.mp4 | game | Feeding my monster smoothies until it evolves |
+| 15 | Mon, Nov 16 | 30-keep-one.mp4 | game | You can only keep one: which monster are you picking? |
+| 16 | Tue, Nov 17 | 47-pomodoro-works.mp4 | sci | Does the Pomodoro technique actually work? What the research says |
+| 17 | Wed, Nov 18 | 08-meet-avocuddle.mp4 | game | Meet Avocuddle: the avocado monster that turns into guacamole |
+| 18 | Thu, Nov 19 | 52-laptop.mp4 | game | A free Pomodoro timer for your laptop (runs in a browser tab) |
+| 19 | Fri, Nov 20 | 26-catch-asmr.mp4 | game | The most satisfying part of my study timer (sound on) |
+| 20 | Sat, Nov 21 | 17-rarest.mp4 | game | The rarest monster in my Pomodoro timer game |
+| 21 | Sun, Nov 22 | 51-what-works.mp4 | sci | What actually works best for studying? (Not a timer) |
+| 22 | Mon, Nov 23 | 23-stop.mp4 | game | Would you stop your monster from evolving? |
+| 23 | Tue, Nov 24 | 04-four-sessions.mp4 | game | 4 Pomodoro sessions, 4 new monsters |
+| 24 | Wed, Nov 25 | 19-every-evolution.mp4 | game | Every evolution in my Pomodoro timer game |
+| 25 | Thu, Nov 26 | 50-own-breaks.mp4 | sci | Pomodoro breaks vs your own breaks: what 3 studies found |
+| 26 | Fri, Nov 27 | 21-guess-pitapal.mp4 | guess | Guess what Pitapal evolves into |
+| 27 | Sat, Nov 28 | 34-companion.mp4 | game | My study companion evolved after one more Pomodoro session |
+| 28 | Sun, Nov 29 | 15-dark.mp4 | game | The 1 in 100 dark variant in my study timer |
+| 29 | Mon, Nov 30 | 31-flavour.mp4 | game | Which flavour are you? Every monster is a food |
+| 30 | Tue, Dec 1 | 22-guess-manglet.mp4 | guess | Guess what Manglet evolves into |
 
 Spares for next month (20): 05-three-steps.mp4, 09-meet-mushkin.mp4, 10-meet-pinapip.mp4, 11-meet-bluble.mp4, 12-meet-spud.mp4, 13-meet-pumplet.mp4, 16-variants.mp4, 25-blender.mp4, 29-catch-all.mp4, 32-rate.mp4, 33-no-app.mp4, 35-focus-length.mp4, 36-technique.mp4, 39-meet-purrplant.mp4, 40-meet-manglet.mp4, 41-meet-cocokid.mp4, 42-meet-pitapal.mp4, 43-meet-citrano.mp4, 44-meet-soursquad.mp4, 45-meet-donot.mp4
 
-## One-time: the long YouTube video
+## One-time: the long YouTube videos
 
-1. Upload it in YouTube Studio (it is too long for Buffer). Post it in week 1 so the Shorts have something to point to.
-2. Paste the title, description and tags below. The chapter times in the description are exact.
-3. Upload the thumbnail (YouTube asks you to verify your phone number once before custom thumbnails work).
-4. End screen: the last 15 seconds are an end card, so add a Subscribe element there.
-5. Then, on each Short already posted, set this video as its Related video, so Shorts viewers can tap through to it.
+1. Upload them in YouTube Studio (they are too long for Buffer). Post the 1-hour one in week 1 and the 25-minute one in week 2, so the Shorts have something to point to.
+2. Paste each one's title, description and tags below. The chapter times in the descriptions are exact.
+3. Upload the thumbnails (YouTube asks you to verify your phone number once before custom thumbnails work).
+4. End screen: the last 15 seconds are an end card, so add a Subscribe element and the other long video there.
+5. Then, on each Short already posted, set the 1-hour video as its Related video, so Shorts viewers can tap through to it.
+6. Make a playlist called "Study With Me" with both videos in it.
 
-File: `youtube-25min-pomodoro.mp4`, thumbnail: `youtube-25min-thumbnail.png`
+### youtube-1hour-pomodoro.mp4
+
+Thumbnail: `youtube-1hour-thumbnail.png`
+
+**Title:** 1 Hour Pomodoro Timer - Study With Me (No Music) | 25/5 x 2 Pixel Art Study Timer
+
+**Description**
+```
+One hour of Pomodoro: two rounds of 25 minutes of focus, each followed by a 5 minute break. No music, just the timer. When each focus session ends, a wild pixel monster appears and gets caught.
+
+This is PomoMons, a free Pomodoro timer that runs in your browser. No account, no download, no ads. Use it for your own sessions: https://pomomons.io
+
+Chapters
+0:00 Round 1: focus (25:00)
+25:05 A wild mon appears
+25:20 Round 1: break (5:00)
+30:20 Round 2: focus (25:00)
+55:21 A wild mon appears
+55:36 Round 2: break (5:00)
+60:32 Done
+
+Does the Pomodoro technique actually work? What the research says, with all 9 sources: https://pomomons.io/research/
+
+#pomodoro #studywithme #pomodorotimer
+```
+**Tags:** 1 hour pomodoro, pomodoro timer, 1 hour study with me, study with me no music, pomodoro 25 5, 1 hour timer, study timer, focus timer, pomodoro technique, pixel art
+
+### youtube-25min-pomodoro.mp4
+
+Thumbnail: `youtube-25min-thumbnail.png`
 
 **Title:** 25 Minute Pomodoro Timer - Study With Me (No Music) | Pixel Art Study Timer
 
@@ -101,7 +131,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** I turned my Pomodoro timer into a monster-catching game #shorts
+**YouTube title:** I turned my Pomodoro timer into a monster-catching game
 
 **YouTube description**
 ```
@@ -131,7 +161,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** A 1 in 500 shiny from my study timer #shorts
+**YouTube title:** A 1 in 500 shiny from my study timer
 
 **YouTube description**
 ```
@@ -161,7 +191,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** Pomodoro vs gamified studying: which has more science behind it? #shorts
+**YouTube title:** Pomodoro vs gamified studying: which has more science behind it?
 
 **YouTube description**
 ```
@@ -192,7 +222,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #chiptune
 ```
-**YouTube title:** Every monster's 8-bit cry in my Pomodoro timer game #shorts
+**YouTube title:** Every monster's 8-bit cry in my Pomodoro timer game
 
 **YouTube description**
 ```
@@ -222,7 +252,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Meet Tomotot: the tomato monster from my study timer #shorts
+**YouTube title:** Meet Tomotot: the tomato monster from my study timer
 
 **YouTube description**
 ```
@@ -252,7 +282,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studywithme
 ```
-**YouTube title:** POV: you finally finish your Pomodoro study session #shorts
+**YouTube title:** POV: you finally finish your Pomodoro study session
 
 **YouTube description**
 ```
@@ -282,7 +312,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Guess what Cocokid evolves into #shorts
+**YouTube title:** Guess what Cocokid evolves into
 
 **YouTube description**
 ```
@@ -312,7 +342,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** Does gamified studying actually work? What 4 meta-analyses found #shorts
+**YouTube title:** Does gamified studying actually work? What 4 meta-analyses found
 
 **YouTube description**
 ```
@@ -343,7 +373,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #gamedev
 ```
-**YouTube title:** I made studying work like grinding for rare drops #shorts
+**YouTube title:** I made studying work like grinding for rare drops
 
 **YouTube description**
 ```
@@ -373,7 +403,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Meet Chilino: the chilli monster that becomes a ghost pepper #shorts
+**YouTube title:** Meet Chilino: the chilli monster that becomes a ghost pepper
 
 **YouTube description**
 ```
@@ -403,7 +433,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** All 30 monsters in my free Pomodoro timer game #shorts
+**YouTube title:** All 30 monsters in my free Pomodoro timer game
 
 **YouTube description**
 ```
@@ -433,7 +463,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** What happens when my Pomodoro timer hits 0:00 #shorts
+**YouTube title:** What happens when my Pomodoro timer hits 0:00
 
 **YouTube description**
 ```
@@ -463,7 +493,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** How long should a study session be? What the research actually says #shorts
+**YouTube title:** How long should a study session be? What the research actually says
 
 **YouTube description**
 ```
@@ -494,7 +524,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Feeding my monster smoothies until it evolves #shorts
+**YouTube title:** Feeding my monster smoothies until it evolves
 
 **YouTube description**
 ```
@@ -524,7 +554,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** You can only keep one: which monster are you picking? #shorts
+**YouTube title:** You can only keep one: which monster are you picking?
 
 **YouTube description**
 ```
@@ -554,7 +584,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** Does the Pomodoro technique actually work? What the research says #shorts
+**YouTube title:** Does the Pomodoro technique actually work? What the research says
 
 **YouTube description**
 ```
@@ -585,7 +615,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Meet Avocuddle: the avocado monster that turns into guacamole #shorts
+**YouTube title:** Meet Avocuddle: the avocado monster that turns into guacamole
 
 **YouTube description**
 ```
@@ -615,7 +645,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studywithme
 ```
-**YouTube title:** A free Pomodoro timer for your laptop (runs in a browser tab) #shorts
+**YouTube title:** A free Pomodoro timer for your laptop (runs in a browser tab)
 
 **YouTube description**
 ```
@@ -645,7 +675,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #asmr
 ```
-**YouTube title:** The most satisfying part of my study timer (sound on) #shorts
+**YouTube title:** The most satisfying part of my study timer (sound on)
 
 **YouTube description**
 ```
@@ -675,7 +705,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** The rarest monster in my Pomodoro timer game #shorts
+**YouTube title:** The rarest monster in my Pomodoro timer game
 
 **YouTube description**
 ```
@@ -705,7 +735,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** What actually works best for studying? (Not a timer) #shorts
+**YouTube title:** What actually works best for studying? (Not a timer)
 
 **YouTube description**
 ```
@@ -736,7 +766,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Would you stop your monster from evolving? #shorts
+**YouTube title:** Would you stop your monster from evolving?
 
 **YouTube description**
 ```
@@ -766,7 +796,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studywithme
 ```
-**YouTube title:** 4 Pomodoro sessions, 4 new monsters #shorts
+**YouTube title:** 4 Pomodoro sessions, 4 new monsters
 
 **YouTube description**
 ```
@@ -796,7 +826,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Every evolution in my Pomodoro timer game #shorts
+**YouTube title:** Every evolution in my Pomodoro timer game
 
 **YouTube description**
 ```
@@ -826,7 +856,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
 ```
-**YouTube title:** Pomodoro breaks vs your own breaks: what 3 studies found #shorts
+**YouTube title:** Pomodoro breaks vs your own breaks: what 3 studies found
 
 **YouTube description**
 ```
@@ -857,7 +887,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Guess what Pitapal evolves into #shorts
+**YouTube title:** Guess what Pitapal evolves into
 
 **YouTube description**
 ```
@@ -887,7 +917,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** My study companion evolved after one more Pomodoro session #shorts
+**YouTube title:** My study companion evolved after one more Pomodoro session
 
 **YouTube description**
 ```
@@ -917,7 +947,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** The 1 in 100 dark variant in my study timer #shorts
+**YouTube title:** The 1 in 100 dark variant in my study timer
 
 **YouTube description**
 ```
@@ -947,7 +977,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Which flavour are you? Every monster is a food #shorts
+**YouTube title:** Which flavour are you? Every monster is a food
 
 **YouTube description**
 ```
@@ -977,7 +1007,7 @@ Free Pomodoro study timer that runs in your browser. Link in bio.
 
 #pomodoro #studygram #pixelart #indiegame #studymotivation
 ```
-**YouTube title:** Guess what Manglet evolves into #shorts
+**YouTube title:** Guess what Manglet evolves into
 
 **YouTube description**
 ```

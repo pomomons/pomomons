@@ -193,8 +193,15 @@ that page changes, re-check these six. Keep the caveats on screen ("results
 vary", "self-reported", "no study has tested PomoMons itself"). They are what
 make these citable rather than marketing.
 
+- **`youtube-1hour-pomodoro.mp4`** (`long/study60.js`, added 2026-11-01):
+  two rounds of 25/5 back to back, 1:00:54, with a Chilino catch in round 2
+  and a green thumbnail (`HOUR=1 node long/thumb.js`). The companion is
+  seeded at LV 15 so two sessions of XP can't trigger an evolution mid-video.
+  Post this one first and make it every Short's Related video, since it
+  covers more searches than the 25-minute one.
+
 **Next, if these do well:**
-- a 2-hour version (4 x 25/5) of the long video, the most-searched format;
+- a 2-hour version (4 x 25/5) of the long video;
 - a 50/10 version;
 - a YouTube-only "Focus Friend is phone-only" comparison that mirrors
   /focus-friend-alternative/;
