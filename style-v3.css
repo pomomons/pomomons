@@ -892,6 +892,14 @@ html::after {
    .pxb:has(.btn-primary) rule above. */
 #evolution-overlay .pxb { --btn-ring: #000; }
 
+/* STOP borrows .btn-timer-dark for its shape, but that class's forest green
+   was the only coloured thing on the black overlay and read as a stray panel
+   from another screen. A neutral charcoal keeps it clearly secondary to the
+   gold AWESOME! that replaces it, without tinting the drama. */
+#btn-evo-stop { background: #2b2b2b; color: var(--cream); }
+#btn-evo-stop:hover:not(:disabled) { background: #3a3a3a; }
+#btn-evo-stop:active:not(:disabled) { background: #1f1f1f; }
+
 /* FOCUS SESSION, RESET, START and POMODEX get the LV badge's shallower
    corner cut (--pixel-clip-xs) instead of the panels' deep 12px staircase —
    the smaller notch is what reads as "rounded" rather than diagonally cut.
