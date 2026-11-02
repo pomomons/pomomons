@@ -160,6 +160,47 @@ The scripts that make these are in `tools/video/`. Run
 `node tools/video/shorts/<name>.js` to render a final, or set `PREVIEW=1`
 first for a quick low-res check.
 
+## Round 2 (2026-10-31): videos for search
+
+The 30-day order above is replaced by `posting-kit.md`, which has dates and
+the text for each channel.
+
+**The gap round 1 left.** All 43 videos show off the game, and they work on
+people who already like creature collectors. None of them answers a question
+anyone types into YouTube or TikTok search ("does pomodoro work", "how long
+should a study session be", "pomodoro timer 25 minutes"). There was no
+long-form YouTube video, which is what YouTube search and Google's AI answers
+cite. No video showed the app on a laptop either, which is the use the site's
+own pages are built around. Round 2 fills those three gaps.
+
+**Built:**
+- **46–51, the evidence series** (`shorts/evidence.js`). Each answers one
+  searched question using only figures from /research/, names the source on
+  screen, and ends on "see all 9 sources". 46 does gamified studying work,
+  47 does Pomodoro work, 48 how long should a study session be, 49 the game
+  half has more evidence than the timer, 50 Pomodoro vs your own breaks,
+  51 what works best for studying (testing yourself and spaced practice;
+  Dunlosky et al., 2013).
+- **52 laptop** (`long/laptop.js`): the desktop app in a browser-window frame.
+  Covers "pomodoro timer for laptop / PC / browser".
+- **`youtube-25min-pomodoro.mp4`** (`long/study25.js`): one real Pomodoro at
+  1920x1080, 25:00 focus, the catch, a 5:00 break, then a 15s end card for
+  YouTube's end screen. No music. Has a thumbnail,
+  `youtube-25min-thumbnail.png`. Upload text is in posting-kit.md.
+
+**Rules for the evidence videos.** Every number has to match /research/. If
+that page changes, re-check these six. Keep the caveats on screen ("results
+vary", "self-reported", "no study has tested PomoMons itself"). They are what
+make these citable rather than marketing.
+
+**Next, if these do well:**
+- a 2-hour version (4 x 25/5) of the long video, the most-searched format;
+- a 50/10 version;
+- a YouTube-only "Focus Friend is phone-only" comparison that mirrors
+  /focus-friend-alternative/;
+- adding TikTok's built-in text-to-speech to the evidence videos, so TikTok
+  search has spoken words to index.
+
 ## Post text for each video
 
 Paste as-is, then add 3–5 hashtags from the list above. Every one ends with
