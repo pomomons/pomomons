@@ -3324,6 +3324,18 @@ html::after,
   text-align: center;
 }
 
+/* The export half is one flex item of the box, so the box's own gap never
+   reached inside it — title, sentence and email row sat flush against each
+   other. Its own column gap spaces them instead. */
+.save-code-export {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+}
+.save-code-export > .save-code-body,
+.save-code-export > .save-code-request,
+.save-code-export > .save-code-row { margin: 0; }
 .save-code-body { margin-bottom: 12px; }
 
 /* Request mode (opened from My Mons' "DON'T LOSE YOUR MONS!" button, see
@@ -3402,10 +3414,14 @@ html::after,
 .save-code-rule {
   border: none;
   border-top: 2px solid var(--outline-t);
-  margin: 18px 0 14px;
+  margin: 6px 0 10px;
 }
 
-.save-code-warn { margin: 10px 0 0; }
+.save-code-warn { margin: 6px 0 0; }
+
+/* Empty until RESTORE says something; while empty it was still taking a line
+   plus the box gap, leaving dead space under RESTORE/CLOSE. */
+.save-code-msg--restore:empty { display: none; }
 
 /* Status line. Sized for sentences rather than the modal's shouty pixel
    labels, because it carries real explanations — what a code contains, and
