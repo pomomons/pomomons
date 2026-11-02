@@ -184,18 +184,16 @@ function sendBackup(email, code, origin) {
   const site = /^https:\/\/[^\s"'<>]+$/.test(String(origin || '')) ? origin : SITE;
   const link = site + '#restore=' + encodeURIComponent(code);
 
+  // Kept short, personal and free of promo vocabulary ("save", "code") so
+  // Gmail files it in Primary rather than Promotions. The link carries the
+  // whole code, so the raw code is no longer pasted in as well.
   const body =
-    'Here is your PomoMons save code.\n\n' +
-    'Your collection lives in your browser, so if you clear it, switch\n' +
-    'computers, or use a different browser, this code is how you get your\n' +
-    'mons back.\n\n' +
-    'One-click restore:\n' + link + '\n\n' +
-    'Or open PomoMons, go to MY MONS, press "DON\'T LOSE YOUR MONS!", and\n' +
-    'paste this in:\n\n' +
-    code + '\n\n' +
-    'Keep this email. Catch more mons and send yourself a fresh code any\n' +
-    'time from the envelope button — this one only covers the mons you had\n' +
-    'when you asked for it.\n';
+    'Hi,\n\n' +
+    'Here is the backup of your PomoMons collection. If you ever clear your\n' +
+    'browser or switch devices, open this link to bring your mons back:\n\n' +
+    link + '\n\n' +
+    'It covers the mons you had today. Ask for a new one any time from the\n' +
+    'envelope button.\n';
 
   try {
     const key = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY');
@@ -207,9 +205,9 @@ function sendBackup(email, code, origin) {
       headers: { 'api-key': key },
       muteHttpExceptions: true,
       payload: JSON.stringify({
-        sender: { email: 'hello@pomomons.io', name: 'PomoMons' },
+        sender: { email: 'hello@pomomons.io', name: 'David from PomoMons' },
         to: [{ email: email }],
-        subject: 'Your PomoMons save code',
+        subject: 'Your PomoMons backup link',
         textContent: body,
       }),
     });
