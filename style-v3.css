@@ -2810,15 +2810,31 @@ html::after,
     gap: clamp(8px, calc(1.67vh - 3.7px), 12px);
   }
 
-  /* Companion box — stage and its bottom padding shrink together so the
-     grass platform stays framed the way it is on a full monitor. */
+  /* Companion box — the bottom padding is derived from the stage size, not
+     clamped on its own line. It used to be, and it shrank faster than the
+     ground did, so every laptop height between ~520 and ~930px clipped the
+     bottom of the grass by 1-8px.
+     The ground's art hangs 0.2448 x stage below the stage's bottom edge:
+     .companion-ground sits at bottom -35.48% and is 82.5% tall, and its last
+     opaque row is 52 of the PNG's 60, so 0.3548 - 0.825 x 8/60 = 0.2448.
+     The lift (negative) takes some of that back, and 7px is the gap a full
+     monitor shows under the grass. At the 224px stage this works out to the
+     50px the full-monitor layout uses, so nothing steps at 940px.
+     Mon and ground are both children of .companion-stage, so the lift moves
+     them together and their relationship never changes. */
+  :root {
+    --companion-stage: clamp(150px, calc(30.8vh - 66px), 224px);
+    --companion-lift: clamp(-12px, calc(7.6px - 2.08vh), -7px);
+  }
   #companion-canvas,
   .companion-stage {
-    width: clamp(150px, calc(30.8vh - 66px), 224px);
-    height: clamp(150px, calc(30.8vh - 66px), 224px);
+    width: var(--companion-stage);
+    height: var(--companion-stage);
   }
-  .companion-area { padding: 16px 16px clamp(22px, calc(11.67vh - 60px), 50px); }
-  .companion-stage { transform: translateY(clamp(-12px, calc(7.6px - 2.08vh), -7px)); }
+  .companion-area {
+    padding: 16px 16px calc(var(--companion-stage) * 0.2448 + var(--companion-lift) + 7px);
+  }
+  .companion-stage { transform: translateY(var(--companion-lift)); }
 
   /* Timer box padding (the numerals step separately, below). */
   .timer-display { padding: clamp(8px, calc(3.33vh - 15px), 16px); }
