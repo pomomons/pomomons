@@ -403,6 +403,250 @@ like a person, disclosing it:
 
 ---
 
+## 5. Indie Hackers — build-in-public post (not done yet)
+
+IH readers follow a project over months, so this is post #1 of a series, not
+a one-off ad. What does well there: real numbers (even small ones), what you
+tried, what failed, one clear question at the end. What flops: a feature list
+with a link.
+
+**Before posting:** fill in the `[brackets]` with real figures from
+GoatCounter. Small honest numbers beat vague ones on IH.
+
+**Title:** Building a Pomodoro timer where every focus session catches a
+monster: [X] visitors, $0, and what I got wrong
+
+**Body:**
+
+> I've used Pomodoro timers on and off for years and always quit them for the
+> same reason: finishing a session gives you nothing. On a bad day there's no
+> pull into the next one.
+>
+> So I built PomoMons (https://pomomons.io). Finish a focus session and a
+> food-themed pixel monster appears. You throw a tomato to catch it, it goes in
+> your Pomodex, levels up as you keep working, and evolves. 30 forms across 16
+> species right now, shinies at 1 in 500.
+>
+> **Where it is**
+>
+> - Free, no ads, no account. Installable, works offline.
+> - Vanilla HTML/CSS/JS on GitHub Pages. Running cost is the domain.
+> - [X] visitors last 30 days, [Y] email signups, [Z] people in the Discord.
+>
+> **What's worked so far**
+>
+> - Listings on AlternativeTo and itch.io: [what they brought in, even if
+>   "not much"].
+> - [anything else with a number attached]
+>
+> **What I got wrong**
+>
+> - I spent months polishing before doing any distribution. The app was ready
+>   long before anyone knew it existed.
+> - I planned around Product Hunt's "Coming Soon" page, then found out it had
+>   been discontinued. So I'm building an audience first and treating PH as the
+>   finish line, not the start.
+>
+> **What's next**
+>
+> - Short videos of the catch and shiny animations (the animation already is
+>   the content).
+> - More mons, and streaks.
+> - Product Hunt, once there are people who'd actually show up.
+>
+> **My question for you:** for a free side project with no revenue yet, would
+> you add a paid tier now (cosmetics, extra mons) or wait until there's a real
+> user base? I keep going back and forth.
+>
+> I'll post an update every couple of weeks with the numbers, good or bad.
+
+**Follow-up posts (every 2 weeks):** same shape — numbers, one thing that
+worked, one that didn't, one question. Topics in the bank: the first short
+video's results, the backlink/SEO experiment, the PH launch itself.
+
+## 6. Dev.to — two "war story" posts (not done yet)
+
+Post one, wait about a week, post the other. Each stands alone. Dev.to's
+rules ask AI-assisted posts to say so; the italic line at the end of each
+draft covers that.
+
+**Tags (max 4):** post 1 `javascript` `webdev` `gamedev` `performance`;
+post 2 `javascript` `webdev` `pwa` `serviceworker`.
+
+**Cross-posting to Hashnode:** publish on Dev.to first. On Hashnode, paste the
+same text and set "canonical URL" in the post settings to the Dev.to link, so
+Google doesn't treat it as a copy.
+
+### Post 1 — the animation that ran 4x too slow
+
+**Title:** My 7-second animation took 31 seconds whenever you came back to the
+tab
+
+**Body:**
+
+> I make PomoMons, a Pomodoro timer where finishing a focus session spawns a
+> pixel monster you throw a tomato at to catch. Here's a bug you'll hit too if
+> you count animation frames.
+>
+> ## The symptom
+>
+> The throw-and-catch sequence normally takes about 7.7 seconds. Sometimes it
+> crawled: the tomato drifted through the air, the shakes dragged on, and the
+> whole thing took around 30 seconds. Once the mon was caught, everything
+> looked normal again.
+>
+> It only happened when you came back to the tab after it had been hidden for a
+> while. That's exactly when it matters, because the timer ends while you're
+> off in another tab.
+>
+> ## The cause
+>
+> Every timed animation was written in 60fps frames: the throw arc was 90
+> frames, each shake window 40, the evolution silhouette 120. Each
+> `requestAnimationFrame` callback moved the animation forward one frame.
+>
+> That only works if the browser calls you 60 times a second. When a
+> long-hidden tab comes back, Chrome takes several seconds to get its rendering
+> back to full speed. At 15 callbacks a second, a 463-frame sequence takes 31
+> seconds.
+>
+> What made it confusing: the sprites animated off `Date.now()`, so they kept
+> normal speed. It didn't look like the page was slow. It looked like the throw
+> animation was broken.
+>
+> ## The fix
+>
+> Keep the frame numbers (they're a nice way to think about timing), but work
+> out how many frames each callback covers from the time that actually passed:
+>
+> ```js
+> function frameClock(maxStep = 6) {
+>   const FRAME_MS = 1000 / 60;
+>   let last = null;
+>   return {
+>     step(now) {
+>       const t = typeof now === 'number' ? now : performance.now();
+>       if (last === null) { last = t; return 1; }
+>       const frames = (t - last) / FRAME_MS;
+>       last = t;
+>       return Math.min(maxStep, Math.max(0, frames));
+>     },
+>     reset() { last = null; },
+>   };
+> }
+> ```
+>
+> The cap of 6 matters. Without it, a tab hidden mid-sequence comes back with a
+> huge time gap and skips straight to the end. With it, the animation picks up
+> where it paused.
+>
+> ## The gotcha that came with it
+>
+> Sound effects fired on `if (st.frame === 15)`. Once frames are fractional,
+> the clock goes 14.7, then 15.3, and never equals 15, so the sounds just
+> stopped. Now each cue fires on the tick that carries the clock *past* its
+> mark.
+>
+> Same idea when one phase hands off to the next: carry the leftover fraction
+> forward instead of resetting to zero, or six phases in a row each lose a bit
+> of time.
+>
+> ## Proving it
+>
+> I wrote a test that plays a real catch and a real evolution against a fake
+> clock at three frame rates:
+>
+> | fps | callbacks | catch  | evolution |
+> |----:|----------:|-------:|----------:|
+> | 60  | 463       | 7717ms | 6750ms    |
+> | 30  | 232       | 7733ms | 6767ms    |
+> | 15  | 116       | 7733ms | 6800ms    |
+>
+> Before the fix, 15fps gave 30,867ms.
+>
+> **Takeaway:** if your animation's length is measured in callbacks, it's
+> measured in something the browser is free to change. Measure time.
+>
+> *Written with help from an AI assistant; the bug, fix and numbers are from
+> the real project.* PomoMons is free at https://pomomons.io.
+
+### Post 2 — the deploy that turned every font into Courier New
+
+**Title:** My service worker paired new HTML with an old stylesheet, and the
+whole site turned into Courier New
+
+**Body:**
+
+> I make PomoMons, a Pomodoro timer that installs and works offline, which
+> means it has a service worker. After one deploy, people coming back to the
+> site saw the entire interface in Courier New instead of the pixel font.
+> First-time visitors were fine.
+>
+> ## The setup
+>
+> The service worker used two common strategies:
+>
+> - **The page (HTML): network-first.** Always try for the newest version.
+> - **CSS and JS: stale-while-revalidate.** Serve the cached copy instantly,
+>   fetch the new one in the background for next time.
+>
+> Each is reasonable alone. Together, a returning visitor's first load after a
+> deploy gets the **new** HTML and the **old** CSS.
+>
+> ## Why that broke the font
+>
+> Usually a mismatched pair is survivable. This one wasn't. I'd moved the pixel
+> font from Google Fonts to self-hosted, so the new HTML dropped its Google
+> Fonts `<link>` and the new CSS carried the `@font-face` rules. The old cached
+> CSS knew about none of that. Result: no font anywhere, so the browser fell
+> back to Courier New.
+>
+> I reproduced it reliably with a script that serves the old deploy, lets the
+> service worker cache it, swaps in the new build, and reloads. Sample text
+> measured 172.8px wide, exactly the fallback font's width.
+>
+> ## Why bumping the cache version didn't help
+>
+> The usual advice is to bump `CACHE_VERSION`. But the *old* service worker is
+> still in charge of the load that's already happening. The new one doesn't
+> take over until later, so that first load still gets the mismatch.
+>
+> ## The fix: a content hash in every URL
+>
+> The build script now adds `?v=<hash of the file>` to every stylesheet and
+> script reference, in the HTML and in the service worker's precache list:
+>
+> ```html
+> <link rel="stylesheet" href="style.css?v=3f9a1c2e">
+> ```
+>
+> The HTML is always fetched fresh, so it always names the current hashes, and
+> an old cached file under an old hash never matches. The bad pairing can't
+> happen. The build also derives `CACHE_VERSION` from those hashes, so nobody
+> has to remember to bump it.
+>
+> One exception: fonts aren't stamped. The HTML preloads them and the CSS
+> requests them, and if those two URLs disagree the font downloads twice.
+> Their filenames already change when their content does.
+>
+> ## The bonus bug
+>
+> While in there I found the precache was never actually read. Install filled
+> one cache, but every request only looked in the *other* one, so the app shell
+> downloaded twice on a first visit and was never served from where it was
+> stored. Lookups now fall back to the precache.
+>
+> After the fix, the same reproduction measures 288.0px with the pixel font
+> loaded, on the first reload and the second.
+>
+> **Takeaway:** network-first HTML plus cached assets will eventually pair new
+> markup with old styles. Make the asset URL change whenever its content does.
+>
+> *Written with help from an AI assistant; the bug, fix and numbers are from
+> the real project.* PomoMons is free at https://pomomons.io.
+
+---
+
 ## Also worth doing, no writing required
 
 - **GitHub topics** — already done 2026-10-03.
