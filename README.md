@@ -6,12 +6,14 @@ collection.
 
 **[pomomons.io](https://pomomons.io)**
 
+![Catching a Citrano in PomoMons](.github/catch.gif)
+
 ## What it does
 
 - **Focus / short break / long break timer**, wall-clock based so it stays
   accurate even if the tab sits in the background — every 4th completed
   focus session earns a long break.
-- **Catch a Pomomon after every focus session.** 15 base species, 30 forms
+- **Catch a Pomomon after every focus session.** 16 base species, 30 forms
   once evolutions are counted, with 0.2% shiny and 1% dark variants.
 - **My Mons / Pomodex** — a collection screen and a full dex of everything
   you've caught, stored locally per browser (IndexedDB).
