@@ -342,7 +342,7 @@ of every focus session
 > So I built one that hands you something small at the end. Finish a focus
 > session and a wild "Pomomon" appears — a food-themed pixel monster — and you
 > throw a tomato at it to catch it. It goes in your Pomodex, levels up as you
-> do more sessions, and evolves. 30 forms across 15 species so far, with shiny
+> do more sessions, and evolves. 30 forms across 16 species so far, with shiny
 > variants at 1 in 500.
 >
 > The timer part is real, not a gimmick: adjustable focus and break lengths, a
