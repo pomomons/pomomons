@@ -1377,7 +1377,11 @@ const EncounterScreen = (() => {
   // tick: rAF doesn't run in a hidden tab, which is exactly when the nudge
   // matters. Gated on 'appearing' as well as 'idle' for the same reason — a
   // spawn in a hidden tab never ticks past 'appearing' until it's looked at.
+  // It carries on after a catch too, until NEXT or INFO moves the player on:
+  // the next session doesn't start until they do, so a player who threw and
+  // walked off would otherwise sit on the congratulations screen forever.
   const REMINDER_CRY_MS = 30000;
+  const REMINDER_PHASES = ['appearing', 'idle', 'postcatch'];
   let reminderTimer = null;
   function stopReminderCry() {
     if (reminderTimer) { clearInterval(reminderTimer); reminderTimer = null; }
@@ -1385,10 +1389,51 @@ const EncounterScreen = (() => {
   function startReminderCry() {
     stopReminderCry();
     reminderTimer = setInterval(() => {
-      if (st.phase !== 'appearing' && st.phase !== 'idle') return stopReminderCry();
+      if (!REMINDER_PHASES.includes(st.phase)) return stopReminderCry();
       SFX.cry(st.mon.dexNum);
     }, REMINDER_CRY_MS);
   }
+
+  // The throw-to-catch sequence keeps running in a hidden tab. rAF doesn't
+  // fire there at all, and frameClock() caps each step so a sequence resumes
+  // where it paused — so without this, a player who threw and switched tabs
+  // came back to the tomato still in mid-air. While hidden, a plain timer
+  // feeds advance() the real elapsed time instead (Chrome throttles it to
+  // about once a second, which is plenty for a ~7.7s sequence). It sub-steps
+  // in rAF-sized slices so every phase handover and sound cue still happens,
+  // in order — the fanfare and cry at the end are the player's signal that
+  // the catch landed.
+  const IN_FLIGHT = ['throwing', 'absorbing', 'falling', 'landing', 'shaking', 'locked'];
+  const BG_STEP_MS = 250;
+  let bgTimer = null, bgLast = 0;
+  function stopBgDriver() {
+    if (bgTimer) { clearInterval(bgTimer); bgTimer = null; }
+  }
+  function startBgDriver() {
+    stopBgDriver();
+    bgLast = performance.now();
+    bgTimer = setInterval(() => {
+      if (!IN_FLIGHT.includes(st.phase)) return stopBgDriver();
+      const now = performance.now();
+      let frames = (now - bgLast) / (1000 / 60);
+      bgLast = now;
+      while (frames > 0 && IN_FLIGHT.includes(st.phase)) {
+        const step = Math.min(6, frames);
+        advance(step);
+        frames -= step;
+      }
+    }, BG_STEP_MS);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (overlay && overlay.classList.contains('active') && IN_FLIGHT.includes(st.phase)) startBgDriver();
+    } else {
+      stopBgDriver();
+      // The pending rAF picks up from here. Without the reset its first step
+      // would measure from the last frame drawn before the tab was hidden.
+      clock.reset();
+    }
+  });
 
   // As in CompanionCanvas, but off this canvas's own reference size: the
   // encounter mon sits in a 480x380 box, captioned at 16px when the stage
@@ -1698,8 +1743,15 @@ const EncounterScreen = (() => {
 
   // ── rAF tick ──────────────────────────────────────────────
   function tick(now) {
+    if (advance(clock.step(now))) rafId = requestAnimationFrame(tick);
+  }
+
+  // One step of the state machine, `step` frames long. Returns false once the
+  // encounter has closed. Driven by tick() normally and by the background
+  // driver above while the tab is hidden.
+  function advance(step) {
     const prev = st.frame;
-    st.step = clock.step(now);
+    st.step = step;
     st.frame += st.step;
     draw();
 
@@ -1753,6 +1805,7 @@ const EncounterScreen = (() => {
 
         SFX.play('fanfare');
         SFX.cry(st.mon.dexNum, { after: true });
+        startReminderCry();
 
         // Update encounter overlay to show congratulations
         elMsgText.textContent = 'CONGRATULATIONS!';
@@ -1777,10 +1830,10 @@ const EncounterScreen = (() => {
     } else if (st.phase === 'result' && st.frame >= 40) {
       st.phase = 'done';
       close();
-      return;
+      return false;
     }
 
-    rafId = requestAnimationFrame(tick);
+    return true;
   }
 
   // ── UI helpers ────────────────────────────────────────────
@@ -2474,6 +2527,7 @@ const EncounterScreen = (() => {
   // is z-index 170 against the encounter overlay's 100, so it covers it from
   // the moment it appears.
   async function openMonInfo() {
+    stopReminderCry();
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     try {
       await MonInfoScreen.start(st.mon, onDone, { chooseNext: true });
@@ -2496,6 +2550,7 @@ const EncounterScreen = (() => {
   // session, so it has to run exactly once, and the post-catch card owns it
   // from the moment the detail card opens.
   async function openCaughtInfo() {
+    stopReminderCry();
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
 
     // Same ordering as openMonInfo above: resolve everything this needs while
