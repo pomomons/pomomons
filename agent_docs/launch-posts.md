@@ -405,6 +405,10 @@ like a person, disclosing it:
 
 ## 5. Indie Hackers — build-in-public post (not done yet)
 
+**Blocked 2026-11-08:** new accounts can't publish until they've left a few
+thoughtful comments on other posts (or pay for IH+, not worth it). Leave 3-5
+real comments over a week, no PomoMons links in them, then post.
+
 IH readers follow a project over months, so this is post #1 of a series, not
 a one-off ad. What does well there: real numbers (even small ones), what you
 tried, what failed, one clear question at the end. What flops: a feature list
@@ -464,186 +468,66 @@ monster: [X] visitors, $0, and what I got wrong
 worked, one that didn't, one question. Topics in the bank: the first short
 video's results, the backlink/SEO experiment, the PH launch itself.
 
-## 6. Dev.to — two "war story" posts (not done yet)
+## 6. Dev.to — beginner build story (final draft, 2026-11-08)
 
-Post one, wait about a week, post the other. Each stands alone. Dev.to's
-rules ask AI-assisted posts to say so; the italic line at the end of each
-draft covers that.
+Replaced the two technical "war story" drafts (animation timing, service
+worker font bug). Those were written as if the owner had debugged them
+personally, and Dev.to commenters ask follow-up questions an author has to be
+able to answer. This post is told from where the owner actually stands: a
+non-technical person who built it with AI. Don't re-pitch the war stories as
+written; their bugs survive here in plain language.
 
-**Tags (max 4):** post 1 `javascript` `webdev` `gamedev` `performance`;
-post 2 `javascript` `webdev` `pwa` `serviceworker`.
+Setup notes:
+- Make the URL a real link (`[pomomons.io](https://pomomons.io)`) — plain
+  text may not link, and an unlinked mention is no backlink.
+- Set Settings → Profile → Website URL to `https://pomomons.io`.
+- The owner chose the "June" / "four months" timeline and to drop the line
+  saying AI helped write the post. Dev.to's guidelines ask AI-assisted posts to
+  say so; if anyone asks, answer straight.
 
-**Cross-posting to Hashnode:** publish on Dev.to first. On Hashnode, paste the
-same text and set "canonical URL" in the post settings to the Dev.to link, so
-Google doesn't treat it as a copy.
+**Title:** My developer friends kept telling me to build something, so I
+finally did
 
-### Post 1 — the animation that ran 4x too slow
-
-**Title:** My 7-second animation took 31 seconds whenever you came back to the
-tab
-
-**Body:**
-
-> I make PomoMons, a Pomodoro timer where finishing a focus session spawns a
-> pixel monster you throw a tomato at to catch. Here's a bug you'll hit too if
-> you count animation frames.
->
-> ## The symptom
->
-> The throw-and-catch sequence normally takes about 7.7 seconds. Sometimes it
-> crawled: the tomato drifted through the air, the shakes dragged on, and the
-> whole thing took around 30 seconds. Once the mon was caught, everything
-> looked normal again.
->
-> It only happened when you came back to the tab after it had been hidden for a
-> while. That's exactly when it matters, because the timer ends while you're
-> off in another tab.
->
-> ## The cause
->
-> Every timed animation was written in 60fps frames: the throw arc was 90
-> frames, each shake window 40, the evolution silhouette 120. Each
-> `requestAnimationFrame` callback moved the animation forward one frame.
->
-> That only works if the browser calls you 60 times a second. When a
-> long-hidden tab comes back, Chrome takes several seconds to get its rendering
-> back to full speed. At 15 callbacks a second, a 463-frame sequence takes 31
-> seconds.
->
-> What made it confusing: the sprites animated off `Date.now()`, so they kept
-> normal speed. It didn't look like the page was slow. It looked like the throw
-> animation was broken.
->
-> ## The fix
->
-> Keep the frame numbers (they're a nice way to think about timing), but work
-> out how many frames each callback covers from the time that actually passed:
->
-> ```js
-> function frameClock(maxStep = 6) {
->   const FRAME_MS = 1000 / 60;
->   let last = null;
->   return {
->     step(now) {
->       const t = typeof now === 'number' ? now : performance.now();
->       if (last === null) { last = t; return 1; }
->       const frames = (t - last) / FRAME_MS;
->       last = t;
->       return Math.min(maxStep, Math.max(0, frames));
->     },
->     reset() { last = null; },
->   };
-> }
-> ```
->
-> The cap of 6 matters. Without it, a tab hidden mid-sequence comes back with a
-> huge time gap and skips straight to the end. With it, the animation picks up
-> where it paused.
->
-> ## The gotcha that came with it
->
-> Sound effects fired on `if (st.frame === 15)`. Once frames are fractional,
-> the clock goes 14.7, then 15.3, and never equals 15, so the sounds just
-> stopped. Now each cue fires on the tick that carries the clock *past* its
-> mark.
->
-> Same idea when one phase hands off to the next: carry the leftover fraction
-> forward instead of resetting to zero, or six phases in a row each lose a bit
-> of time.
->
-> ## Proving it
->
-> I wrote a test that plays a real catch and a real evolution against a fake
-> clock at three frame rates:
->
-> | fps | callbacks | catch  | evolution |
-> |----:|----------:|-------:|----------:|
-> | 60  | 463       | 7717ms | 6750ms    |
-> | 30  | 232       | 7733ms | 6767ms    |
-> | 15  | 116       | 7733ms | 6800ms    |
->
-> Before the fix, 15fps gave 30,867ms.
->
-> **Takeaway:** if your animation's length is measured in callbacks, it's
-> measured in something the browser is free to change. Measure time.
->
-> *Written with help from an AI assistant; the bug, fix and numbers are from
-> the real project.* PomoMons is free at https://pomomons.io.
-
-### Post 2 — the deploy that turned every font into Courier New
-
-**Title:** My service worker paired new HTML with an old stylesheet, and the
-whole site turned into Courier New
+**Tags:** `ai` `beginners` `productivity` `sideprojects`
 
 **Body:**
 
-> I make PomoMons, a Pomodoro timer that installs and works offline, which
-> means it has a service worker. After one deploy, people coming back to the
-> site saw the entire interface in Courier New instead of the pixel font.
-> First-time visitors were fine.
+> I'm not technical, but my friends and coworkers are, and they kept telling me
+> to try building something with AI. I've always wanted to make something
+> bigger someday, but they pushed me to start small and learn the basics first.
+> In June I finally did.
 >
-> ## The setup
+> I picked a problem I had. I've used Pomodoro timers on and off for years, but
+> I always fell off them. Finishing a session never gave me anything, so there
+> was nothing pulling me into the next one. Then I realized how long I'd happily
+> grind something completely monotonous in a game just for the chance at a
+> shiny or a rare drop. So I made a timer where every finished focus session
+> spawns a little pixel monster you throw a tomato at to catch, with a small
+> chance it's a rare one. I called it PomoMons.
 >
-> The service worker used two common strategies:
+> I built it with an AI coding assistant. I made the decisions and tested
+> everything. A few things I learned:
 >
-> - **The page (HTML): network-first.** Always try for the newest version.
-> - **CSS and JS: stale-while-revalidate.** Serve the cached copy instantly,
->   fetch the new one in the background for next time.
+> Don't believe something is fixed until you see it. My logo got "fixed" three
+> times with no change on my screen, because it was being tested on a different
+> screen size than mine.
 >
-> Each is reasonable alone. Together, a returning visitor's first load after a
-> deploy gets the **new** HTML and the **old** CSS.
+> The weird bugs happen when you're not looking. The catch animation took 30
+> seconds instead of 7 if you left the tab and came back. One update turned the
+> whole site into Courier New, but only for returning visitors. You have to use
+> the app like a real person would.
 >
-> ## Why that broke the font
+> Write your plans down somewhere permanent. Mine lived in one chat for weeks
+> and would have been gone if it got cleared.
 >
-> Usually a mismatched pair is survivable. This one wasn't. I'd moved the pixel
-> font from Google Fonts to self-hosted, so the new HTML dropped its Google
-> Fonts `<link>` and the new CSS carried the `@font-face` rules. The old cached
-> CSS knew about none of that. Result: no font anywhere, so the browser fell
-> back to Courier New.
+> Four months later it's live at [pomomons.io](https://pomomons.io). It's free,
+> works offline, and doesn't need an account. And it works on me. Wanting to
+> see what shows up at the end of a session is often what gets me to start the
+> next one.
 >
-> I reproduced it reliably with a script that serves the old deploy, lets the
-> service worker cache it, swaps in the new build, and reloads. Sample text
-> measured 172.8px wide, exactly the fallback font's width.
->
-> ## Why bumping the cache version didn't help
->
-> The usual advice is to bump `CACHE_VERSION`. But the *old* service worker is
-> still in charge of the load that's already happening. The new one doesn't
-> take over until later, so that first load still gets the mismatch.
->
-> ## The fix: a content hash in every URL
->
-> The build script now adds `?v=<hash of the file>` to every stylesheet and
-> script reference, in the HTML and in the service worker's precache list:
->
-> ```html
-> <link rel="stylesheet" href="style.css?v=3f9a1c2e">
-> ```
->
-> The HTML is always fetched fresh, so it always names the current hashes, and
-> an old cached file under an old hash never matches. The bad pairing can't
-> happen. The build also derives `CACHE_VERSION` from those hashes, so nobody
-> has to remember to bump it.
->
-> One exception: fonts aren't stamped. The HTML preloads them and the CSS
-> requests them, and if those two URLs disagree the font downloads twice.
-> Their filenames already change when their content does.
->
-> ## The bonus bug
->
-> While in there I found the precache was never actually read. Install filled
-> one cache, but every request only looked in the *other* one, so the app shell
-> downloaded twice on a first visit and was never served from where it was
-> stored. Lookups now fall back to the precache.
->
-> After the fix, the same reproduction measures 288.0px with the pixel font
-> loaded, on the first reload and the second.
->
-> **Takeaway:** network-first HTML plus cached assets will eventually pair new
-> markup with old styles. Make the asset URL change whenever its content does.
->
-> *Written with help from an AI assistant; the bug, fix and numbers are from
-> the real project.* PomoMons is free at https://pomomons.io.
+> If people keep telling you to build something, pick a problem you actually
+> have and start small. You'll care enough to keep testing it, and that matters
+> more than knowing how to code.
 
 ---
 
