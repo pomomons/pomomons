@@ -548,11 +548,9 @@ You can only keep one. 1, 2 or 3? Free, link in bio.
 ```
 **Instagram**
 ```
-You can only keep one. 1, 2 or 3?
+You can only keep one. 1, 2 or 3? Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** You can only keep one: which monster are you picking?
 
@@ -578,11 +576,9 @@ Does the Pomodoro technique actually work? With 87 students, fixed breaks meant 
 ```
 **Instagram**
 ```
-Does the Pomodoro technique actually work? With 87 students, fixed breaks meant less fatigue and more focus, but no study has shown it makes you learn more.
+Does the Pomodoro technique actually work? With 87 students, fixed breaks meant less fatigue and more focus, but no study has shown it makes you learn more. Sources linked in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
+#pomodoro #studytok #pixelart #indiegame #studytips
 ```
 **YouTube title:** Does the Pomodoro technique actually work? What the research says
 
@@ -609,11 +605,9 @@ Meet Avocuddle: Pittsworth at LV 20, Guacamonger at LV 36. Avocado to guac 🥑 
 ```
 **Instagram**
 ```
-Meet Avocuddle: Pittsworth at LV 20, Guacamonger at LV 36. Avocado to guac 🥑
+Meet Avocuddle: Pittsworth at LV 20, Guacamonger at LV 36. Avocado to guac 🥑 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Meet Avocuddle: the avocado monster that turns into guacamole
 
@@ -639,11 +633,9 @@ A Pomodoro timer for your laptop. It runs in a browser tab, and when it hits 0:0
 ```
 **Instagram**
 ```
-A Pomodoro timer for your laptop. It runs in a browser tab, and when it hits 0:00 a wild mon shows up.
+A Pomodoro timer for your laptop. It runs in a browser tab, and when it hits 0:00 a wild mon shows up. Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #studywithme
+#pomodoro #studytok #pixelart #indiegame #studywithme
 ```
 **YouTube title:** A free Pomodoro timer for your laptop (runs in a browser tab)
 
@@ -669,11 +661,9 @@ The catch. Sound on 🔊 Free, link in bio.
 ```
 **Instagram**
 ```
-The catch. Sound on 🔊
+The catch. Sound on 🔊 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #asmr
+#pomodoro #studytok #pixelart #indiegame #asmr
 ```
 **YouTube title:** The most satisfying part of my study timer (sound on)
 
@@ -699,11 +689,9 @@ Donot shows up 10x less often than any other mon. Caught one yet? 🍩 Free, lin
 ```
 **Instagram**
 ```
-Donot shows up 10x less often than any other mon. Caught one yet? 🍩
+Donot shows up 10x less often than any other mon. Caught one yet? 🍩 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** The rarest monster in my Pomodoro timer game
 
@@ -729,11 +717,9 @@ What actually works best for studying? Testing yourself and spacing your practic
 ```
 **Instagram**
 ```
-What actually works best for studying? Testing yourself and spacing your practice out. Neither is a timer, but both work fine during one.
+What actually works best for studying? Testing yourself and spacing your practice out. Neither is a timer, but both work fine during one. Sources linked in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
+#pomodoro #studytok #pixelart #indiegame #studytips
 ```
 **YouTube title:** What actually works best for studying? (Not a timer)
 
@@ -760,11 +746,9 @@ Would you press STOP? Be honest. Free, link in bio.
 ```
 **Instagram**
 ```
-Would you press STOP? Be honest.
+Would you press STOP? Be honest. Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Would you stop your monster from evolving?
 
@@ -790,11 +774,9 @@ Play free: https://pomomons.io
 ```
 **Instagram**
 ```
-4 focus sessions, 4 new mons. How many sessions are you getting through today?
+4 focus sessions, 4 new mons. How many sessions are you getting through today? Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #studywithme
+#pomodoro #studytok #pixelart #indiegame #studywithme
 ```
 **YouTube title:** 4 Pomodoro sessions, 4 new monsters
 
@@ -820,11 +802,9 @@ All 15 evolutions. Which one is the best glow-up? Free, link in bio.
 ```
 **Instagram**
 ```
-All 15 evolutions. Which one is the best glow-up?
+All 15 evolutions. Which one is the best glow-up? Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Every evolution in my Pomodoro timer game
 
@@ -850,11 +830,9 @@ Pomodoro breaks or your own? Three studies, no clear winner yet. Which are you: 
 ```
 **Instagram**
 ```
-Pomodoro breaks or your own? Three studies, no clear winner yet. Which are you: timer or freestyle?
+Pomodoro breaks or your own? Three studies, no clear winner yet. Which are you: timer or freestyle? Sources linked in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation #studytips
+#pomodoro #studytok #pixelart #indiegame #studytips
 ```
 **YouTube title:** Pomodoro breaks vs your own breaks: what 3 studies found
 
@@ -881,11 +859,9 @@ Comment your guess before it evolves 👀 Free, link in bio.
 ```
 **Instagram**
 ```
-Comment your guess before it evolves 👀
+Comment your guess before it evolves 👀 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Guess what Pitapal evolves into
 
@@ -911,11 +887,9 @@ Your companion gets XP every time you finish a session... until one day 👑 Fre
 ```
 **Instagram**
 ```
-Your companion gets XP every time you finish a session... until one day 👑
+Your companion gets XP every time you finish a session... until one day 👑 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** My study companion evolved after one more Pomodoro session
 
@@ -941,11 +915,9 @@ Play free: https://pomomons.io
 ```
 **Instagram**
 ```
-1 in 100 mons shows up dark. Cooler than normal, or no?
+1 in 100 mons shows up dark. Cooler than normal, or no? Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** The 1 in 100 dark variant in my study timer
 
@@ -971,11 +943,9 @@ Every mon is a food. Which flavour are you? Free, link in bio.
 ```
 **Instagram**
 ```
-Every mon is a food. Which flavour are you?
+Every mon is a food. Which flavour are you? Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Which flavour are you? Every monster is a food
 
@@ -1001,11 +971,9 @@ Comment your guess before it evolves 👀 Free, link in bio.
 ```
 **Instagram**
 ```
-Comment your guess before it evolves 👀
+Comment your guess before it evolves 👀 Free, link in bio.
 
-Free Pomodoro study timer that runs in your browser. Link in bio.
-
-#pomodoro #studygram #pixelart #indiegame #studymotivation
+#pomodoro #studytok #pixelart #indiegame
 ```
 **YouTube title:** Guess what Manglet evolves into
 
