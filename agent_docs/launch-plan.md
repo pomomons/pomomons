@@ -31,6 +31,11 @@ network tires on a second ask, and a weak first result stays on the product
 page. User agreed — launch once, when the following is there. Only revisit if a
 genuine v2 is already planned.
 
+**Growth priorities reset 2026-11-09 (80/20 check)** — see the section at the
+top of `agent_docs/backlink-plan.md`. In short: short-form video, first catch
+within a minute of the first visit, student-sub Reddit, small creators. SEO
+pages, maker-audience posts, directories and the newsletter are paused.
+
 **Distribution kit — superseded 2026-10-09, see `agent_docs/backlink-plan.md`.**
 User decided to build a following BEFORE the PH launch rather than launch
 first — PH is now the capstone, not the starting gate, and the Oct 18 date is

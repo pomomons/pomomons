@@ -11,6 +11,45 @@ Treat this as a companion to `launch-plan.md` (overall project state) and
 DONE, don't revisit). This file is the new work: pre-PH audience building,
 backlinks, and AI-answer-engine citation.
 
+## PRIORITIES RESET 2026-11-09 — read this before the phases below
+
+The user asked for an honest 80/20 check of this plan ("AI wrote that"). The
+verdict: at ~5 visitors/day the bottleneck is getting attention and turning
+it into a first catch, not search. Most of the phases below are aimed at
+search, links, or other app makers rather than students. Work in this order:
+
+**The 20% (do these):**
+1. **Short-form video, doubled down.** The 30-day Buffer calendar started
+   2026-11-02 (`posting-kit.md`). It's the only channel where one hit brings
+   thousands in a day, and the breakout apps in this category grew through
+   video and creators, not search. What matters: post daily, reply in the
+   first hour, and from week 2 make more of whatever got views.
+2. **First catch within a minute of the first visit.** Suspected biggest
+   leak: a new visitor has to focus 25 minutes before seeing the best part
+   of the app, and someone arriving from TikTok likely leaves first. A free
+   first catch on the very first visit would make every channel pay off
+   better. **Check first:** GoatCounter visitors vs `session-complete` over
+   30 days. If only a small share of visitors finish a session, this goes
+   to #1. Numbers not pulled yet.
+3. **Reddit posts and replies in student subs:** r/GetStudying,
+   r/studytips, r/pomodoro, plus replies in older threads that rank in
+   Google. Brings users within days and gets quoted by AI assistants later.
+   An r/pomodoro draft is in `launch-posts.md`.
+4. **5-10 small study creators** (StudyTok, study-with-me YouTube) using it
+   on screen. Free to ask; one mid-sized creator can beat everything else
+   here.
+
+**The 80% (paused, not cancelled):**
+- **More "alternative to" pages / SEO work.** New sites take 6-12 months to
+  rank, and people searching "Focus Friend alternative" mostly want a phone
+  app from an app store. `/focus-friend-alternative/` is live. Build no more
+  until Search Console shows it getting impressions.
+- **Dev.to, Indie Hackers, Show HN, Product Hunt.** Those readers are mostly
+  other app makers, not students: good for links, not users. Product Hunt
+  stays the capstone for when there's a following.
+- **More directory listings.** Small trickle; the main ones are done.
+- **Newsletter.** The list is too small to matter yet.
+
 ## Why this order
 
 PH's old "Coming Soon" page (what we planned around) was discontinued ~Aug

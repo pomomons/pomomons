@@ -342,7 +342,7 @@ of every focus session
 > So I built one that hands you something small at the end. Finish a focus
 > session and a wild "Pomomon" appears — a food-themed pixel monster — and you
 > throw a tomato at it to catch it. It goes in your Pomodex, levels up as you
-> do more sessions, and evolves. 30 forms across 16 species so far, with shiny
+> do more sessions, and evolves. 30 forms across 15 species so far, with shiny
 > variants at 1 in 500.
 >
 > The timer part is real, not a gimmick: adjustable focus and break lengths, a
@@ -359,6 +359,39 @@ of every focus session
 > The thing I would most like feedback on: is the reward big enough to actually
 > pull you back in, or does it wear off after a week? I genuinely do not know
 > yet.
+
+### Draft for r/pomodoro (added 2026-11-09)
+
+Same story as r/SideProject with the build details cut: these readers already
+use the method. Check the sub's rules for self-promotion first.
+
+**Title:** I made a Pomodoro timer where finishing a focus session catches you
+a monster
+
+**Body:**
+
+> I've used Pomodoro for a while, and the method works for me. What I
+> struggled with was the end of a session: nothing happens, so on a bad day
+> nothing pulls me into the next one.
+>
+> So I built a timer that gives you something small each time. Finish a focus
+> session and a food-themed pixel monster appears. You throw a tomato to catch
+> it, and it goes into your collection. Your monsters level up as you do more
+> sessions and eventually evolve. There are 30 forms across 15 species, and
+> shinies show up 1 in 500.
+>
+> The timer is a proper timer: you set your own focus and break lengths, you
+> get a long break every fourth session, and it keeps accurate time even when
+> the tab is in the background.
+>
+> It's free, with no account and no ads. It runs in your browser, and you can
+> install it on your phone or laptop and use it offline.
+>
+> https://pomomons.io
+>
+> I'd like to hear from people who've used Pomodoro for a long time: does a
+> small reward at the end help you start the next session, or does the novelty
+> wear off after a week?
 
 ### Draft for r/webdev (Showoff Saturday ONLY)
 

@@ -44,6 +44,12 @@ and even those are weak bets that should wait for the Search Console data in §7
 
 ## 2. The best opportunity: "alternative to" pages
 
+> **Downgraded 2026-11-09** (see the priorities reset at the top of
+> `backlink-plan.md`). Still a fair long-term bet, but not the best
+> opportunity now: a new site ranks slowly, and these searchers mostly want
+> a phone app from an app store. Build no more until Search Console shows
+> `/focus-friend-alternative/` getting impressions.
+
 This is the strongest lower-hanging fruit, and it is validated rather than
 guessed.
 
