@@ -497,7 +497,10 @@ function onSessionEnd() {
     addStat('sessions', 1);
     addStat('minutes',  focusMins);
     // Pageviews alone can't tell a finished session from a tab left open.
-    if (typeof Signup !== 'undefined') Signup.event('session-complete');
+    if (typeof Signup !== 'undefined') {
+      Signup.event('session-complete');
+      Signup.funnelStep('session', 'first-session');
+    }
     renderStats();
     CompanionCanvas.stop();
     EncounterScreen.start(afterEncounter(nextMode), { meta: { nextMode } });

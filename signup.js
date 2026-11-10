@@ -78,6 +78,39 @@ const Signup = (() => {
     } catch (e) { /* analytics must never break the app */ }
   }
 
+  // ── New-player funnel ───────────────────────────────────
+  // The events above count everyone — the owner's own daily sessions
+  // included — so they can't say how strangers get on. These fire once per
+  // brand-new player and never for anyone who had already played when this
+  // shipped: new-player on arrival, then first-catch and first-session.
+  // pm_funnel holds the steps already sent ('arrived,catch,session'). A
+  // player who has stats but no pm_funnel is a returning player and is left
+  // out for good.
+  const FUNNEL_KEY  = 'pm_funnel';
+  const PLAYED_KEYS = ['pm_total_sessions', 'pm_total_catches', 'pm_history', 'pm_caught'];
+
+  function startFunnel() {
+    if (get(FUNNEL_KEY, null) !== null) return;
+    if (PLAYED_KEYS.some(k => get(k, null) !== null)) return;
+    set(FUNNEL_KEY, 'arrived');
+    // No storage (private mode, blocked) means every load would look new —
+    // better to count nothing than to count the same person over and over.
+    if (get(FUNNEL_KEY) !== 'arrived') return;
+    // count.js loads async after this file; async scripts hold up the load
+    // event, so by then it's either ready or blocked.
+    if (document.readyState === 'complete') event('new-player');
+    else window.addEventListener('load', () => event('new-player'), { once: true });
+  }
+
+  function funnelStep(step, name) {
+    const raw = get(FUNNEL_KEY, null);
+    if (raw === null) return;   // returning player, not in the funnel
+    const steps = raw.split(',');
+    if (steps.includes(step)) return;
+    set(FUNNEL_KEY, steps.concat(step).join(','));
+    event(name);
+  }
+
   // ── Sending ─────────────────────────────────────────────
   // Content-Type has to be text/plain: anything else makes this a "preflighted"
   // request, the browser sends an OPTIONS first, and Apps Script doesn't answer
@@ -354,7 +387,9 @@ const Signup = (() => {
     flushQueue();
   }
 
-  return { init, open, maybePrompt, noteRareCatch, event, sendBackupCode };
+  startFunnel();
+
+  return { init, open, maybePrompt, noteRareCatch, event, funnelStep, sendBackupCode };
 })();
 
 if (document.readyState === 'loading') {

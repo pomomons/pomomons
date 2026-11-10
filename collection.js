@@ -189,11 +189,16 @@ const Collection = (() => {
   // per-day bucket side by side. app.js owns that pairing (addStat); this
   // falls back to the lifetime total alone if it somehow isn't loaded, the
   // same defensive shape the renderStats calls below use.
+  // The events sit above the early return: they used to come after it, so
+  // mon-caught only fired on the fallback path and never reached GoatCounter.
   function bumpCatchCount() {
+    if (typeof Signup !== 'undefined') {
+      Signup.event('mon-caught');
+      Signup.funnelStep('catch', 'first-catch');
+    }
     if (typeof addStat === 'function') { addStat('catches', 1); return; }
     const prev = parseInt(localStorage.getItem('pm_total_catches') || '0', 10);
     localStorage.setItem('pm_total_catches', prev + 1);
-    if (typeof Signup !== 'undefined') Signup.event('mon-caught');
   }
 
   // ── Public: addCaught ────────────────────────────────────────

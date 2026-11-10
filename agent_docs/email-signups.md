@@ -369,6 +369,15 @@ Pageviews come for free. `signup.js` adds three counted events:
 | `session-complete` | A focus session finishes (not breaks) |
 | `mon-caught` | A mon is added to the collection |
 | `email-signup` | Someone joins the list |
+| `new-player` | A brand-new player opens the app (once per player) |
+| `first-catch` | That new player catches their first mon |
+| `first-session` | That new player finishes their first focus session |
+
+The last three are the new-player funnel (added 2026-11-09). They fire once
+per player and only for players who had no stats when it shipped, so the
+owner's own daily use never shows up in them. State lives in `pm_funnel`.
+`mon-caught` never actually fired before 2026-11-09: it sat after an early
+return in `collection.js` `bumpCatchCount()`.
 
 They show in the dashboard under **Pages**, alongside real page paths.
 The calls are wrapped in a `try` and a feature check — an ad blocker stops
