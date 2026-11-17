@@ -166,9 +166,9 @@ const Signup = (() => {
     // A backup taken three mons ago is not a backup, so this path has to be
     // easy — otherwise the promise quietly rots as they keep playing.
     const rejoining = get(K.state) === 'joined';
-    if (titleEl) titleEl.textContent = rejoining ? 'SEND A FRESH BACKUP' : firstTitle;
+    if (titleEl) titleEl.textContent = rejoining ? T('SEND A FRESH BACKUP') : firstTitle;
     if (msgEl)   defaultMsg = rejoining
-      ? 'Your last code only covers the mons you had then. This one covers all of them.'
+      ? T('Your last code only covers the mons you had then. This one covers all of them.')
       : firstMsg;
     message('');
 
@@ -213,11 +213,11 @@ const Signup = (() => {
     if (honeypot && honeypot.value) { close(); return; }   // bot: drop silently
 
     const email = (input.value || '').trim();
-    if (!looksLikeEmail(email)) { message('That address looks off — check it?', 'err'); return; }
+    if (!looksLikeEmail(email)) { message(T('That address looks off — check it?'), 'err'); return; }
     if (Date.now() - shownAt < MIN_FILL_MS) { message('One moment…', 'err'); return; }
 
     const btn = form.querySelector('button[type="submit"]');
-    if (btn) { btn.disabled = true; btn.textContent = 'SENDING'; }
+    if (btn) { btn.disabled = true; btn.textContent = T('SENDING'); }
 
     // The backup code is the whole reason someone hands over an address, so a
     // failure to build one must not be silent — better to say so than to send
@@ -229,7 +229,7 @@ const Signup = (() => {
       code = '';
     }
     if (!code) {
-      message("Couldn't build your backup code — try again in a moment.", 'err');
+      message(T("Couldn't build your backup code — try again in a moment."), 'err');
       if (btn) { btn.disabled = false; btn.textContent = 'SEND'; }
       return;
     }
@@ -265,7 +265,7 @@ const Signup = (() => {
     set(K.state, 'joined');
     set(K.addr, email);            // so a later "send me a fresh one" is one tap
     event('email-signup');
-    message('Sent! Check your email for your code.', 'ok');
+    message(T('Sent! Check your email for your code.'), 'ok');
     if (btn) { btn.disabled = false; btn.textContent = 'SEND'; }
     setTimeout(close, 2200);
   }
@@ -380,7 +380,7 @@ const Signup = (() => {
     });
 
     if (get(K.state) === 'joined' && btnOpen) {
-      btnOpen.setAttribute('aria-label', "You're on the mailing list");
+      btnOpen.setAttribute('aria-label', T("You're on the mailing list"));
       btnOpen.classList.add('is-joined');
     }
 

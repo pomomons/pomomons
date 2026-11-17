@@ -3951,3 +3951,54 @@ html::after,
   .timer-display { min-height: 84px; }
   .time-adjust { top: 50%; transform: translateY(-50%); right: 8px; }
 }
+
+/* ── Japanese (<html lang="ja">) ─────────────────────────────────────────
+   Press Start 2P draws on an 8px grid and is legible at 8-10px. DotGothic16,
+   the Japanese fallback face, draws kana and kanji on a 16px grid, so the
+   same font-size makes them unreadable. Every rule below only raises sizes the
+   app set for the English face; nothing here applies to English. Found by
+   measuring the real /ja/ page (tools/check-ja-ui.js), not by guessing. */
+html:lang(ja) .blender-hint,
+html:lang(ja) .smoothie-hint {
+  font-size: 10px;
+  line-height: 1.35;
+}
+html:lang(ja) #save-code-body,
+html:lang(ja) .save-code-warn,
+html:lang(ja) .history-head > span,
+html:lang(ja) .history-day,
+html:lang(ja) #history-empty,
+html:lang(ja) .history-row,
+html:lang(ja) .spawn-info-label,
+html:lang(ja) .blender-confirm-warn,
+html:lang(ja) #history-title,
+html:lang(ja) #spawn-info-intro,
+html:lang(ja) .spawn-info-title,
+html:lang(ja) #save-code-title,
+html:lang(ja) .empty-state,
+html:lang(ja) .stat-label,
+html:lang(ja) #stats-scope-val,
+html:lang(ja) .stat-scope-ghost,
+html:lang(ja) .signup-legal,
+html:lang(ja) .signup-legal a,
+html:lang(ja) .blender-label {
+  font-size: 11px;
+}
+html:lang(ja) #audio-label,
+html:lang(ja) #audio-label-timer,
+html:lang(ja) .settings-label,
+html:lang(ja) .settings-row {
+  font-size: 12px;
+}
+@media (max-width: 479px) {
+  html:lang(ja) #btn-back-mymons,
+  html:lang(ja) #btn-back-dex,
+  html:lang(ja) #mymons-sort-label,
+  html:lang(ja) #btn-tab-mymons,
+  html:lang(ja) #btn-tab-dex,
+  html:lang(ja) #btn-to-dex,
+  html:lang(ja) #btn-to-mymons,
+  html:lang(ja) #btn-save-code {
+    font-size: 11px;
+  }
+}

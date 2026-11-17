@@ -48,6 +48,8 @@ const EXCLUDE = new Set([
   // Pomodex page. It sits at the root rather than in tools/ because tools/ is
   // gitignored and so does not exist on the Pages runner.
   'gen-pomodex.js',
+  // The Japanese prose fragment build.js swaps into /ja/. Source, not a page.
+  'ja-prose.html',
 ].map((s) => s.toLowerCase()));
 
 // Individual files kept in the repo but not published. The full 568-glyph TTF
@@ -56,6 +58,10 @@ const EXCLUDE = new Set([
 // 84KB nobody downloads on purpose.
 const EXCLUDE_FILES = new Set([
   'assets/fonts/PressStart2P-SMBTLL.ttf',
+  // Same story: the 2 MB source for the Japanese subset, and the list of the
+  // subset's characters that verify() checks the Japanese text against.
+  'assets/fonts/DotGothic16-Regular.ttf',
+  'assets/fonts/DotGothic16-ja.chars.txt',
 ].map((s) => s.toLowerCase()));
 
 const JS_OPTS = {
@@ -356,6 +362,29 @@ function verify() {
     }
   }
 
+  // ── Japanese: the committed font subset must cover every character used ──
+  // A character missing from DotGothic16-ja.woff2 does not error: it silently
+  // falls back to a system face and breaks the pixel look on that one glyph.
+  try {
+    const vm = require('vm');
+    const sandbox = { document: { documentElement: { lang: 'en' }, body: null } };
+    vm.createContext(sandbox);
+    vm.runInContext(fs.readFileSync(path.join(ROOT, 'strings.js'), 'utf8') + '\n;this.__ja = I18N.ja;', sandbox);
+    const used = new Set();
+    for (const v of Object.values(sandbox.__ja)) for (const ch of v) used.add(ch);
+    const prose = fs.readFileSync(path.join(ROOT, 'ja-prose.html'), 'utf8')
+      .replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+    for (const ch of prose) used.add(ch);
+    const have = new Set(fs.readFileSync(path.join(ROOT, 'assets/fonts/DotGothic16-ja.chars.txt'), 'utf8'));
+    const cjk = (ch) => /[\u3000-\u30ff\u3400-\u9fff\uff00-\uffef]/.test(ch);
+    const missing = [...used].filter((ch) => cjk(ch) && !have.has(ch));
+    if (missing.length) {
+      problems.push(`Japanese text uses ${missing.length} character(s) missing from DotGothic16-ja.woff2: ${missing.join('')} — run: node tools/subset-ja-font.js`);
+    }
+  } catch (e) {
+    problems.push('Japanese font check could not run: ' + e.message);
+  }
+
   // ── Every sitemap URL must be a page that exists ──
   // A sitemap is a direct instruction to Google to go and fetch these URLs.
   // Pointing it at one that 404s is the fastest way to teach a crawler the
@@ -388,6 +417,61 @@ function verify() {
   }
 
   return problems;
+}
+
+// ── The Japanese page ──────────────────────────────────────
+// /ja/ is the app itself, not a separate site: same scripts, same stylesheets,
+// same localStorage and IndexedDB (it is the same origin), so a player's
+// collection is the same on / and /ja/. It differs by <html lang="ja"> (which
+// strings.js reads to translate the UI), the head tags, the prose between the
+// PROSE markers, and a <base href="/"> so every relative path in the HTML, the
+// CSS-free JS image loads and the service worker registration still resolve
+// from the site root. Generated from the stamped source index.html, so the
+// ?v= hashes match the English page exactly.
+const JA_META = {
+  title: 'PomoMons:モンスターをつかまえるポモドーロタイマー(無料・登録不要)',
+  description: '集中セッションが終わるたびに、ポモモンがあらわれます。トマトを投げてつかまえて、コレクションを増やそう。無料のポモドーロタイマー。登録不要、オフラインでも使えます。',
+  ogTitle: 'PomoMons:集中セッションでモンをつかまえるポモドーロタイマー',
+};
+
+async function buildJa(hashes, version) {
+  const raw = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  let html = stampRefs(raw, 'index.html', hashes, version);
+  // Source lines are wrapped for editing; in English a newline is a space, in
+  // Japanese it would show as a gap between two characters. Join them.
+  const CJK = '[\u3000-\u30ff\u3400-\u9fff\uff00-\uffef]';
+  const prose = fs.readFileSync(path.join(ROOT, 'ja-prose.html'), 'utf8')
+    .replace(new RegExp(`(${CJK})[ \t]*\n[ \t]*(?=${CJK}|<)`, 'g'), '$1');
+  const A = '<!--PROSE-START-->', B = '<!--PROSE-END-->';
+  const a = html.indexOf(A), b = html.indexOf(B);
+  if (a < 0 || b < a) throw new Error('index.html is missing its PROSE-START / PROSE-END markers');
+  html = html.slice(0, a) + prose + html.slice(b + B.length);
+
+  const sub = (re, rep, label) => {
+    if (!re.test(html)) throw new Error(`/ja/: could not find ${label} in index.html`);
+    html = html.replace(re, rep);
+  };
+  sub(/<html lang="en">/, '<html lang="ja">', '<html lang>');
+  sub(/<title>[\s\S]*?<\/title>/, () => `<title>${JA_META.title}</title>`, '<title>');
+  sub(/(<meta name="description" content=")[^"]*(")/, (m, p, q) => p + JA_META.description + q, 'meta description');
+  sub(/(<meta property="og:title" content=")[^"]*(")/, (m, p, q) => p + JA_META.ogTitle + q, 'og:title');
+  sub(/(<meta property="og:description" content=")[^"]*(")/, (m, p, q) => p + JA_META.description + q, 'og:description');
+  sub(/(<meta property="og:url" content=")[^"]*(")/, (m, p, q) => p + SITE_ORIGIN + '/ja/' + q, 'og:url');
+  sub(/(<meta property="og:type" content="website">)/, '$1\n  <meta property="og:locale" content="ja_JP">', 'og:type');
+  sub(/(<link rel="canonical" href=")[^"]*(")/, (m, p, q) => p + SITE_ORIGIN + '/ja/' + q, 'canonical');
+  // The language switch points back at the English page from here.
+  sub(/<a href="\/ja\/" lang="ja" hreflang="ja">日本語<\/a>/, '<a href="/" lang="en" hreflang="en">English</a>', 'language link');
+  // <base> makes `#about` mean "/#about"; the one in-page link has to be
+  // spelled out so it scrolls this page instead of navigating to the English one.
+  sub(/href="#about"/, 'href="/ja/#about"', 'scroll cue link');
+  sub(/(<meta charset="UTF-8">)/, '$1\n  <base href="/">', 'meta charset');
+
+  const min = await minifyHTML(html, HTML_OPTS);
+  const dest = path.join(OUT, 'ja', 'index.html');
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.writeFileSync(dest, min);
+  record('ja/index.html', html, min);
+  console.log('  ja/index.html generated');
 }
 
 (async () => {
@@ -425,6 +509,8 @@ function verify() {
   fs.writeFileSync(dexDest, dexMin);
   record('pomodex/index.html', dex.html, dexMin);
   console.log(`  pomodex/index.html generated — ${dex.formCount} forms across ${dex.baseCount} species`);
+
+  await buildJa(hashes, version);
 
   stampSitemap();
 

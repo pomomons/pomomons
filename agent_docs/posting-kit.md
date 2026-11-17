@@ -35,23 +35,23 @@ launch-posts.md and seo-audit-2026-10-31.md).
 | 13 | Sat, Nov 14 | 48-session-length.mp4 | sci | How long should a study session be? What the research actually says |
 | 14 | Sun, Nov 15 | 18-smoothie-evolve.mp4 | game | Feeding my monster smoothies until it evolves |
 | 15 | Mon, Nov 16 | 30-keep-one.mp4 | game | You can only keep one: which monster are you picking? |
-| 16 | Tue, Nov 17 | 47-pomodoro-works.mp4 | sci | Does the Pomodoro technique actually work? What the research says |
+| 16 | Tue, Nov 17 | 16-variants.mp4 | game | Normal vs dark vs shiny: which would you want? |
 | 17 | Wed, Nov 18 | 08-meet-avocuddle.mp4 | game | Meet Avocuddle: the avocado monster that turns into guacamole |
 | 18 | Thu, Nov 19 | 52-laptop.mp4 | game | A free Pomodoro timer for your laptop (runs in a browser tab) |
 | 19 | Fri, Nov 20 | 26-catch-asmr.mp4 | game | The most satisfying part of my study timer (sound on) |
 | 20 | Sat, Nov 21 | 17-rarest.mp4 | game | The rarest monster in my Pomodoro timer game |
-| 21 | Sun, Nov 22 | 51-what-works.mp4 | sci | What actually works best for studying? (Not a timer) |
+| 21 | Sun, Nov 22 | 29-catch-all.mp4 | game | Can you catch all 30 monsters in my Pomodoro timer game? |
 | 22 | Mon, Nov 23 | 23-stop.mp4 | game | Would you stop your monster from evolving? |
 | 23 | Tue, Nov 24 | 04-four-sessions.mp4 | game | 4 Pomodoro sessions, 4 new monsters |
 | 24 | Wed, Nov 25 | 19-every-evolution.mp4 | game | Every evolution in my Pomodoro timer game |
-| 25 | Thu, Nov 26 | 50-own-breaks.mp4 | sci | Pomodoro breaks vs your own breaks: what 3 studies found |
+| 25 | Thu, Nov 26 | 25-blender.mp4 | game | Blending my extra monsters into smoothies |
 | 26 | Fri, Nov 27 | 21-guess-pitapal.mp4 | guess | Guess what Pitapal evolves into |
 | 27 | Sat, Nov 28 | 34-companion.mp4 | game | My study companion evolved after one more Pomodoro session |
 | 28 | Sun, Nov 29 | 15-dark.mp4 | game | The 1 in 100 dark variant in my study timer |
 | 29 | Mon, Nov 30 | 31-flavour.mp4 | game | Which flavour are you? Every monster is a food |
 | 30 | Tue, Dec 1 | 22-guess-manglet.mp4 | guess | Guess what Manglet evolves into |
 
-Spares for next month (20): 05-three-steps.mp4, 09-meet-mushkin.mp4, 10-meet-pinapip.mp4, 11-meet-bluble.mp4, 12-meet-spud.mp4, 13-meet-pumplet.mp4, 16-variants.mp4, 25-blender.mp4, 29-catch-all.mp4, 32-rate.mp4, 33-no-app.mp4, 35-focus-length.mp4, 36-technique.mp4, 39-meet-purrplant.mp4, 40-meet-manglet.mp4, 41-meet-cocokid.mp4, 42-meet-pitapal.mp4, 43-meet-citrano.mp4, 44-meet-soursquad.mp4, 45-meet-donot.mp4
+Spares for next month (17): 05-three-steps.mp4, 09-meet-mushkin.mp4, 10-meet-pinapip.mp4, 11-meet-bluble.mp4, 12-meet-spud.mp4, 13-meet-pumplet.mp4, 32-rate.mp4, 33-no-app.mp4, 35-focus-length.mp4, 36-technique.mp4, 39-meet-purrplant.mp4, 40-meet-manglet.mp4, 41-meet-cocokid.mp4, 42-meet-pitapal.mp4, 43-meet-citrano.mp4, 44-meet-soursquad.mp4, 45-meet-donot.mp4
 
 ## One-time: the long YouTube videos
 
@@ -566,34 +566,33 @@ Play free: https://pomomons.io
 ```
 **Pin:** Free to play, no account: pomomons.io (link in bio)
 
-### Day 16 · Tue, Nov 17 · 47-pomodoro-works.mp4
+### Day 16 · Tue, Nov 17 · 16-variants.mp4
 
 **TikTok**
 ```
-Does the Pomodoro technique actually work? With 87 students, fixed breaks meant less fatigue and more focus, but no study has shown it makes you learn more. Sources linked in bio.
+Normal, dark or shiny. Which one are you hoping for? Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame
 ```
 **Instagram**
 ```
-Does the Pomodoro technique actually work? With 87 students, fixed breaks meant less fatigue and more focus, but no study has shown it makes you learn more. Sources linked in bio.
+Normal, dark or shiny. Which one are you hoping for? Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame
 ```
-**YouTube title:** Does the Pomodoro technique actually work? What the research says
+**YouTube title:** Normal vs dark vs shiny: which would you want?
 
 **YouTube description**
 ```
-In a randomised experiment with 87 students (Biwer et al., 2023), fixed breaks led to less fatigue and distraction and more concentration and motivation than choosing your own breaks, with the same work done in less time. Those are self-reported, and no study has shown Pomodoro makes you learn more.
+The same mon three ways: normal, dark (about 1 in 100 encounters) and shiny (1 in 500).
 
 PomoMons is a free Pomodoro study timer that runs in your browser. Finish a focus session and a wild pixel monster appears to catch. No account, no download, no ads.
 
 Play free: https://pomomons.io
-All sources: https://pomomons.io/research/
 
 #pomodoro #studywithme #shorts
 ```
-**Pin:** All 9 sources (with DOIs) are on pomomons.io/research. Happy to answer questions.
+**Pin:** Free to play, no account: pomomons.io (link in bio)
 
 ### Day 17 · Wed, Nov 18 · 08-meet-avocuddle.mp4
 
@@ -707,34 +706,33 @@ Play free: https://pomomons.io
 ```
 **Pin:** Free to play, no account: pomomons.io (link in bio)
 
-### Day 21 · Sun, Nov 22 · 51-what-works.mp4
+### Day 21 · Sun, Nov 22 · 29-catch-all.mp4
 
 **TikTok**
 ```
-What actually works best for studying? Testing yourself and spacing your practice out. Neither is a timer, but both work fine during one. Sources linked in bio.
+Every ??? is one I haven't met yet. Can you catch all 30? Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame
 ```
 **Instagram**
 ```
-What actually works best for studying? Testing yourself and spacing your practice out. Neither is a timer, but both work fine during one. Sources linked in bio.
+Every ??? is one I haven't met yet. Can you catch all 30? Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame
 ```
-**YouTube title:** What actually works best for studying? (Not a timer)
+**YouTube title:** Can you catch all 30 monsters in my Pomodoro timer game?
 
 **YouTube description**
 ```
-A review of 10 study techniques (Dunlosky et al., 2013) rated practice testing and spaced practice as high utility. Neither is a timer, and both work fine alongside one.
+The Pomodex has 30 forms to fill. The ones you have not caught yet show as silhouettes.
 
 PomoMons is a free Pomodoro study timer that runs in your browser. Finish a focus session and a wild pixel monster appears to catch. No account, no download, no ads.
 
 Play free: https://pomomons.io
-All sources: https://pomomons.io/research/
 
 #pomodoro #studywithme #shorts
 ```
-**Pin:** All 9 sources (with DOIs) are on pomomons.io/research. Happy to answer questions.
+**Pin:** Free to play, no account: pomomons.io (link in bio)
 
 ### Day 22 · Mon, Nov 23 · 23-stop.mp4
 
@@ -820,34 +818,33 @@ Play free: https://pomomons.io
 ```
 **Pin:** Free to play, no account: pomomons.io (link in bio)
 
-### Day 25 · Thu, Nov 26 · 50-own-breaks.mp4
+### Day 25 · Thu, Nov 26 · 25-blender.mp4
 
 **TikTok**
 ```
-Pomodoro breaks or your own? Three studies, no clear winner yet. Which are you: timer or freestyle? Sources linked in bio.
+Too many duplicates? Into the blender they go 🥤 Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame #asmr
 ```
 **Instagram**
 ```
-Pomodoro breaks or your own? Three studies, no clear winner yet. Which are you: timer or freestyle? Sources linked in bio.
+Too many duplicates? Into the blender they go 🥤 Free, link in bio.
 
-#pomodoro #studytok #pixelart #indiegame #studytips
+#pomodoro #studytok #pixelart #indiegame #asmr
 ```
-**YouTube title:** Pomodoro breaks vs your own breaks: what 3 studies found
+**YouTube title:** Blending my extra monsters into smoothies
 
 **YouTube description**
 ```
-Biwer et al. (2023): fixed breaks, less fatigue and more concentration. Smits et al. (2025): fatigue rose faster with Pomodoro breaks. Goksu et al. (2026): self-chosen breaks gave better mood than short fixed ones. No clear winner yet.
+Blend spare mons into smoothies; each one gives another mon +1 level.
 
 PomoMons is a free Pomodoro study timer that runs in your browser. Finish a focus session and a wild pixel monster appears to catch. No account, no download, no ads.
 
 Play free: https://pomomons.io
-All sources: https://pomomons.io/research/
 
 #pomodoro #studywithme #shorts
 ```
-**Pin:** All 9 sources (with DOIs) are on pomomons.io/research. Happy to answer questions.
+**Pin:** Free to play, no account: pomomons.io (link in bio)
 
 ### Day 26 · Fri, Nov 27 · 21-guess-pitapal.mp4
 

@@ -48,6 +48,7 @@ const PRECACHE_URLS = [
   'backup.js',
   'audio.js',
   'app.js',
+  'strings.js',
   'signup.js',
   'assets/backgrounds/greenbackground.webp',
   'assets/backgrounds/redbackground.webp',

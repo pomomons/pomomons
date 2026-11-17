@@ -165,6 +165,9 @@ first for a quick low-res check.
 The 30-day order above is replaced by `posting-kit.md`, which has dates and
 the text for each channel.
 
+> Update 2026-11-16: the 46–51 evidence series below was dropped from the
+> calendar after it underperformed. See "Evidence series retired" further down.
+
 **The gap round 1 left.** All 43 videos show off the game, and they work on
 people who already like creature collectors. None of them answers a question
 anyone types into YouTube or TikTok search ("does pomodoro work", "how long
@@ -199,6 +202,21 @@ make these citable rather than marketing.
   seeded at LV 15 so two sessions of XP can't trigger an evolution mid-video.
   Post this one first and make it every Short's Related video, since it
   covers more searches than the 25-minute one.
+
+**Evidence series retired from the calendar (2026-11-16).** Days 3, 8 and 13
+(49, 46, 48) posted in the first two weeks and got almost no views on
+Instagram; the game videos that did best were the unique-format ones ("all 30
+monsters", "every cry"). The six evidence shorts also looked alike (same
+layout, different text). Days 16, 21 and 25 were swapped for `16-variants`,
+`29-catch-all` and `25-blender`, and 46–51 are excluded from the spares list
+in `build-kit.js`. Do not schedule them again. They were never SEO for the
+site: Instagram and TikTok links are nofollow bio links, and `/research/`
+ranks on its own content. YouTube is the only place they could have been
+searched, and the two long videos already link `/research/`. The files and
+`evidence.js` stay, in case a YouTube-only test is ever wanted. Rule for new
+videos: each needs a visibly different format, not the same template with new
+text. All of the kit's videos also use Mushkin as the study companion, which
+reads as repetitive; vary it when re-rendering.
 
 **Next, if these do well:**
 - a 2-hour version (4 x 25/5) of the long video;

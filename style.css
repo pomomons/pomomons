@@ -38,9 +38,30 @@
   font-display: swap;
 }
 
+/* Japanese pixel face (DotGothic16, OFL), subset to the characters the Japanese
+   UI uses. Only the /ja/ page ever renders a glyph that Press Start 2P lacks, so
+   the browser only downloads this there; English visitors never fetch it.
+   Rebuild with tools/subset-ja-font.js whenever the Japanese text changes. */
+@font-face {
+  font-family: 'DotGothic16 JA';
+  src: url('assets/fonts/DotGothic16-ja.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  /* Kana, CJK ideographs and full-width punctuation only. Without this the
+     browser downloads the file on the English page too, the first time any
+     symbol Press Start 2P lacks (the arrows, the close X) asks it for a glyph. */
+  unicode-range: U+3000-30FF, U+3400-9FFF, U+FF00-FFEF;
+}
+
 /* ── Design Tokens ───────────────────────────────────────── */
 :root {
-  --font-pixel:  'Press Start 2P', 'Courier New', monospace;
+  /* The CJK names sit before the generic `monospace` on purpose: Press Start 2P
+     is Latin-only, so Japanese/Korean/Chinese text falls through per glyph to
+     the first installed face below instead of a random system default. English
+     is unaffected (Press Start 2P answers every Latin glyph first). See
+     agent_docs/asia-plan.md. */
+  --font-pixel:  'Press Start 2P', 'DotGothic16 JA', 'Courier New', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', monospace;
   /* Timer only. Metrically identical to --font-pixel, so every breakpoint
      keeps the font-size it always had. The one visible difference is the
      squared-off zero, which is the whole reason for the swap. */

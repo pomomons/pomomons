@@ -217,14 +217,14 @@ const Backup = (() => {
     modal.setAttribute('aria-labelledby', 'save-code-title');
     say(copyMsg, ''); say(restoreMsg, '');
 
-    if (titleEl) titleEl.textContent = requestMode ? "DON'T LOSE YOUR MONS!" : 'YOUR SAVE CODE';
+    if (titleEl) titleEl.textContent = requestMode ? T("DON'T LOSE YOUR MONS!") : T('YOUR SAVE CODE');
     if (bodyEl) bodyEl.innerHTML = requestMode
-      ? 'GET A CODE THAT BRINGS YOUR MONS BACK ANYWHERE.<br>ADD YOUR EMAIL TO ALSO GET IT BY MAIL.'
-      : 'YOUR MONS LIVE IN THIS BROWSER ONLY.<br>KEEP THIS CODE TO BRING THEM BACK ANYWHERE.';
+      ? T('GET A CODE THAT BRINGS YOUR MONS BACK ANYWHERE.') + '<br>' + T('ADD YOUR EMAIL TO ALSO GET IT BY MAIL.')
+      : T('YOUR MONS LIVE IN THIS BROWSER ONLY.') + '<br>' + T('KEEP THIS CODE TO BRING THEM BACK ANYWHERE.');
 
     if (requestForm) requestForm.hidden = !requestMode;
     if (emailInput) emailInput.value = '';
-    if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = 'SUBMIT'; }
+    if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = T('SUBMIT'); }
 
     if (codeBox) codeBox.hidden = !!requestMode;
     if (copyRow) copyRow.hidden = !!requestMode;
@@ -232,7 +232,7 @@ const Backup = (() => {
     if (!requestMode && codeBox) {
       codeBox.value = 'BUILDING…';
       try { codeBox.value = await create(); }
-      catch (e) { codeBox.value = ''; say(copyMsg, "Couldn't build a code.", true); }
+      catch (e) { codeBox.value = ''; say(copyMsg, T("Couldn't build a code."), true); }
     }
     if (prefill && restoreBox) {
       restoreBox.value = prefill;
@@ -255,19 +255,19 @@ const Backup = (() => {
     e.preventDefault();
     const email = (emailInput ? emailInput.value : '').trim();
     if (email && !looksLikeEmail(email)) {
-      say(copyMsg, 'That address looks off — fix it, or leave it blank.', true);
+      say(copyMsg, T('That address looks off — fix it, or leave it blank.'), true);
       return;
     }
 
-    if (getCodeBtn) { getCodeBtn.disabled = true; getCodeBtn.textContent = 'BUILDING…'; }
+    if (getCodeBtn) { getCodeBtn.disabled = true; getCodeBtn.textContent = T('BUILDING…'); }
 
     let code = '';
     try { code = await create(); }
     catch (e2) { code = ''; }
 
     if (!code) {
-      say(copyMsg, "Couldn't build a code — try again in a moment.", true);
-      if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = 'SUBMIT'; }
+      say(copyMsg, T("Couldn't build a code — try again in a moment."), true);
+      if (getCodeBtn) { getCodeBtn.disabled = false; getCodeBtn.textContent = T('SUBMIT'); }
       return;
     }
 
@@ -285,9 +285,9 @@ const Backup = (() => {
       } catch (e3) { emailed = false; }
     }
 
-    say(copyMsg, emailed ? 'Code ready below — also emailed to you.'
-      : (email ? "Code ready below. Couldn't email it — copy it instead."
-                : 'Code ready below — copy it.'));
+    say(copyMsg, emailed ? T('Code ready below — also emailed to you.')
+      : (email ? T("Code ready below. Couldn't email it — copy it instead.")
+                : T('Code ready below — copy it.')));
   }
 
   async function doRestore() {
@@ -302,15 +302,17 @@ const Backup = (() => {
 
       pending = payload;
       const s = summarise(payload);
-      const when = s.made ? s.made.toLocaleDateString() : 'an unknown date';
-      say(restoreMsg, `${s.mons} mon${s.mons === 1 ? '' : 's'}, level ${s.level}, saved ${when}. Press RESTORE again to replace what you have now.`);
+      const when = s.made ? s.made.toLocaleDateString() : T('an unknown date');
+      say(restoreMsg, LANG !== 'en'
+        ? T('{mons} mons, level {level}, saved {when}. Press RESTORE again to replace what you have now.', { mons: s.mons, level: s.level, when })
+        : `${s.mons} mon${s.mons === 1 ? '' : 's'}, level ${s.level}, saved ${when}. Press RESTORE again to replace what you have now.`);
       return;
     }
 
     try {
       await restore(pending);
     } catch (e) {
-      say(restoreMsg, "Something went wrong writing the save. Nothing was changed.", true);
+      say(restoreMsg, T("Something went wrong writing the save. Nothing was changed."), true);
       pending = null;
       return;
     }
@@ -327,7 +329,7 @@ const Backup = (() => {
     if (!codeBox || !codeBox.value) return;
     try {
       await navigator.clipboard.writeText(codeBox.value);
-      say(copyMsg, 'Copied.');
+      say(copyMsg, T('Copied.'));
     } catch (e) {
       // Clipboard access is refused on insecure origins and in some browsers;
       // selecting the text is still a working answer.

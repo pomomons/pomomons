@@ -150,14 +150,14 @@ const btnReset     = document.getElementById('btn-reset');
 const btnMode      = document.getElementById('btn-mode');
 const modeDropdown = document.getElementById('mode-dropdown');
 
-const MODE_LABELS = { focus: 'FOCUS SESSION', short: 'SHORT BREAK', long: 'LONG BREAK' };
+const MODE_LABELS = { focus: T('FOCUS SESSION'), short: T('SHORT BREAK'), long: T('LONG BREAK') };
 
 // On a phone the mode button shares a row with RESET and START, and
 // "FOCUS SESSION" is by far the longest of the three labels — it crowds that
 // row for no gain, since the mode is already obvious from the screen. Below
 // the 479px breakpoint the rest of the phone layout uses, focus goes by its
 // short name. The breaks are short enough already and keep their full names.
-const MODE_LABELS_NARROW = { ...MODE_LABELS, focus: 'FOCUS' };
+const MODE_LABELS_NARROW = { ...MODE_LABELS, focus: T('FOCUS') };
 const narrowLabels = window.matchMedia('(max-width: 479px)');
 const modeLabel = mode => (narrowLabels.matches ? MODE_LABELS_NARROW : MODE_LABELS)[mode];
 
@@ -249,7 +249,7 @@ function renderTime() {
   elSeconds.textContent = ss;
   // A running clock names the mode it is counting down, so a glance at the
   // tab strip says whether the player is meant to be working or resting.
-  const runningName = currentMode === 'focus' ? 'PomoMons' : 'Break Time';
+  const runningName = currentMode === 'focus' ? 'PomoMons' : T('Break Time');
   document.title = running       ? `${mm}:${ss} — ${runningName}`
                  : titleOverride ? titleOverride
                  :                 BASE_TITLE;
@@ -368,13 +368,13 @@ function renderStats() {
   if (scopeBtn) {
     // Only the visible span — the button also holds the hidden width-setting
     // twin, which textContent would wipe out.
-    el('stats-scope-val').textContent = statsScope === 'today' ? 'TODAY' : 'ALL TIME';
+    el('stats-scope-val').textContent = statsScope === 'today' ? T('TODAY') : T('ALL TIME');
     // Tells a screen reader which set is showing, and what pressing it does.
     scopeBtn.setAttribute('aria-label',
-      statsScope === 'today' ? "Showing today's stats — switch to all time"
-                             : 'Showing all-time stats — switch to today');
-    scopeBtn.title = statsScope === 'today' ? 'Showing today — tap for all time'
-                                            : 'Showing all time — tap for today';
+      statsScope === 'today' ? T("Showing today's stats — switch to all time")
+                             : T('Showing all-time stats — switch to today'));
+    scopeBtn.title = statsScope === 'today' ? T('Showing today — tap for all time')
+                                            : T('Showing all time — tap for today');
   }
 }
 
@@ -384,8 +384,8 @@ function updateButtonStates() {
   // with a controlled gap — the ▶ / ⏸ glyphs fall back to a non-pixel font
   // and their wide advance threw the plain "▶ START" string off-centre.
   btnStart.innerHTML = running
-    ? '<span class="btn-ico btn-ico--pause">⏸</span>PAUSE'
-    : '<span class="btn-ico">▶</span>START';
+    ? '<span class="btn-ico btn-ico--pause">⏸</span>' + T('PAUSE')
+    : '<span class="btn-ico">▶</span>' + T('START');
   btnStart.classList.toggle('btn-timer-start', !running);
   btnStart.classList.toggle('btn-timer-pause', running);
   btnReset.disabled = isIdle;
@@ -491,8 +491,8 @@ function onSessionEnd() {
     // Signal that survives the alarm: title stays changed until the break is
     // started (or a mode is picked by hand); notification reaches a stepped-
     // away player. setMode(nextMode) below never touches titleOverride.
-    titleOverride = 'Break time! — PomoMons';
-    Notify.fire('Focus session complete', 'Nice work — time for a break. A wild Pomomon showed up.');
+    titleOverride = T('Break time! — PomoMons');
+    Notify.fire(T('Focus session complete'), T('Nice work — time for a break. A wild Pomomon showed up.'));
     // Update persistent stats (lifetime + today, see addStat)
     addStat('sessions', 1);
     addStat('minutes',  focusMins);
@@ -514,8 +514,8 @@ function onSessionEnd() {
   // back to work. setMode() moves the label, the dropdown's ticked row, the
   // clock and the buttons together, and leaves it stopped: the player starts
   // the next focus session themselves.
-  titleOverride = 'Back to work! — PomoMons';
-  Notify.fire('Break over', 'Back to it — start your next focus session.');
+  titleOverride = T('Back to work! — PomoMons');
+  Notify.fire(T('Break over'), T('Back to it — start your next focus session.'));
   setMode('focus');
 }
 
@@ -656,13 +656,14 @@ function stampToDate(stamp) {
 
 function dayLabel(stamp) {
   const today = todayStamp();
-  if (stamp === today) return 'TODAY';
+  if (stamp === today) return T('TODAY');
   const yest = new Date(stampToDate(today).getTime() - 86400000);
   const p = n => String(n).padStart(2, '0');
   const yestStamp =
     `${yest.getFullYear()}-${p(yest.getMonth() + 1)}-${p(yest.getDate())}`;
-  if (stamp === yestStamp) return 'YESTERDAY';
+  if (stamp === yestStamp) return T('YESTERDAY');
   const d = stampToDate(stamp);
+  if (LANG === 'ja') return `${d.getMonth() + 1}/${d.getDate()}(${'日月火水木金土'[d.getDay()]})`;
   return `${DAY_ABBR[d.getDay()]} ${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
 }
 
@@ -804,15 +805,15 @@ function openNotifyHelp(state) {
   // Nothing to say in the blocked case — the title and the steps carry it.
   // The quiet-prompt case still needs a word, because the steps alone do not
   // explain why no prompt ever appeared.
-  notifyIntro.textContent = denied ? '' : 'Your browser hid the request.';
+  notifyIntro.textContent = denied ? '' : T('Your browser hid the request.');
   notifyIntro.hidden = denied;
 
   const steps = denied
-    ? ['Click the icon left of the web address.',
-       'Set Notifications to Allow.',
-       'Reload the page.']
-    : ['Click the bell in the address bar.',
-       'Choose Allow.'];
+    ? [T('Click the icon left of the web address.'),
+       T('Set Notifications to Allow.'),
+       T('Reload the page.')]
+    : [T('Click the bell in the address bar.'),
+       T('Choose Allow.')];
 
   notifySteps.replaceChildren(...steps.map(text => {
     const li = document.createElement('li');
@@ -1076,7 +1077,7 @@ function showLevelUpBanner(level) {
   SFX.play('levelUp');
   const banner = document.createElement('div');
   banner.className = 'level-up-banner';
-  banner.textContent = `LEVEL UP! LV ${level}`;
+  banner.textContent = T('LEVEL UP! LV {n}', { n: level });
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 2200);
 }
@@ -1206,7 +1207,7 @@ document.getElementById('btn-spawn-help')?.addEventListener('click', () => {
   // Fill in the "how it works" line with the player's actual focus length.
   const intro = document.getElementById('spawn-info-intro');
   if (intro) intro.textContent =
-    `COMPLETE A ${focusMins}-MINUTE FOCUS SESSION AND A WILD POMOMON APPEARS.`;
+    T('COMPLETE A {n}-MINUTE FOCUS SESSION AND A WILD POMOMON APPEARS.', { n: focusMins });
   spawnInfo?.classList.add('active');
 });
 document.getElementById('btn-spawn-info-close')?.addEventListener('click', () => spawnInfo?.classList.remove('active'));
@@ -1255,7 +1256,7 @@ function renderAudioIcon(kind, muted) {
   document.getElementById('audio-waves' + row.suffix).style.display = muted ? 'none' : '';
   document.getElementById('audio-mute'  + row.suffix).style.display = muted ? ''     : 'none';
   const label = document.getElementById('audio-label' + row.suffix);
-  if (label) label.textContent = `${row.name} ${muted ? 'off' : 'on'}`;
+  if (label) label.textContent = T(`${row.name} ${muted ? 'off' : 'on'}`);
   document.getElementById(row.btn).setAttribute('aria-checked', String(!muted));
 }
 for (const kind of Object.keys(AUDIO_ROWS)) {

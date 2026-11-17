@@ -1808,11 +1808,11 @@ const EncounterScreen = (() => {
         startReminderCry();
 
         // Update encounter overlay to show congratulations
-        elMsgText.textContent = 'CONGRATULATIONS!';
-        elSub.textContent = `${st.mon.name} WAS CAUGHT!${st.mon.shiny ? ' \u2728 SHINY!' : ''}`;
+        elMsgText.textContent = T('CONGRATULATIONS!');
+        elSub.textContent = T('{name} WAS CAUGHT!', { name: st.mon.name }) + (st.mon.shiny ? T(' \u2728 SHINY!') : '');
         elSub.style.color = '#fff';
         if (st.saveFailed) {
-          elSub.textContent = `${st.mon.name} COULDN'T BE SAVED. PRIVATE BROWSING CAN BLOCK SAVING.`;
+          elSub.textContent = T("{name} COULDN'T BE SAVED. PRIVATE BROWSING CAN BLOCK SAVING.", { name: st.mon.name });
           elSub.style.color = '#ffb4a8';
         }
 
@@ -2097,7 +2097,7 @@ const EncounterScreen = (() => {
     writePending({ mon, level: st.monLevel, meta: opts.meta || null, resolved: false });
 
     // Populate UI
-    elMsgText.textContent = 'A WILD MON APPEARED!';
+    elMsgText.textContent = T('A WILD MON APPEARED!');
     if (elMonName) {
       if (elMonNameText) elMonNameText.textContent = mon.name;
       else elMonName.textContent = mon.name;
@@ -2127,7 +2127,7 @@ const EncounterScreen = (() => {
         elTags.appendChild(makeTypeBadges(mon.type, { frame: true }));
       }
     }
-    if (elLevel) { elLevel.textContent = `LV ${st.monLevel}`; elLevel.style.display = ''; }
+    if (elLevel) { elLevel.textContent = T('LV {n}', { n: st.monLevel }); elLevel.style.display = ''; }
 
     // Reset button state for repeat encounters
     btnThrow.hidden      = false;
@@ -2209,7 +2209,7 @@ const EncounterScreen = (() => {
     const p = pending();
     if (p) { p.resolved = true; writePending(p); }
     if (typeof saveExp === 'function') saveExp(7);
-    elSub.textContent = 'YOU FLED SAFELY.';
+    elSub.textContent = T('YOU FLED SAFELY.');
     close();
   }
 
@@ -2439,13 +2439,13 @@ const EncounterScreen = (() => {
       } else {
         await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
       }
-      say(msgEl, 'Copied! Paste it in Discord or anywhere.');
+      say(msgEl, T('Copied! Paste it in Discord or anywhere.'));
     } catch (_) {
       try {
         await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
-        say(msgEl, 'Copied! Paste it in Discord or anywhere.');
+        say(msgEl, T('Copied! Paste it in Discord or anywhere.'));
       } catch (__) {
-        say(msgEl, "Couldn't copy — try again?", true);
+        say(msgEl, T("Couldn't copy — try again?"), true);
       }
     }
   }
@@ -2502,7 +2502,7 @@ const EncounterScreen = (() => {
         document.body.appendChild(a);
         a.click();
         a.remove();
-        say(msgEl, 'Saved to your downloads.');
+        say(msgEl, T('Saved to your downloads.'));
       });
     }
 
@@ -2679,7 +2679,7 @@ const EvolutionScreen = (() => {
       if (f >= 60) {
         st.phase = 'text1';
         st.frame -= 60;
-        elMsg.textContent = `WHAT? ${st.fromMon.name.toUpperCase()} IS EVOLVING!`;
+        elMsg.textContent = T('WHAT? {name} IS EVOLVING!', { name: st.fromMon.name.toUpperCase() });
         elMsg.style.opacity = '1';
         SFX.startLoop();
       }
@@ -2727,9 +2727,9 @@ const EvolutionScreen = (() => {
         drawColored(st.toMon, bobY);
         if (crossed(19)) {
           elMsg.textContent =
-            `${st.fromMon.name.toUpperCase()} EVOLVED INTO ${st.toMon.name.toUpperCase()}!`;
+            T('{from} EVOLVED INTO {to}!', { from: st.fromMon.name.toUpperCase(), to: st.toMon.name.toUpperCase() });
           elMsg.style.opacity = '1';
-          elSub.textContent  = 'CONGRATULATIONS!';
+          elSub.textContent  = T('CONGRATULATIONS!');
           elSub.style.opacity = '1';
         }
       }
@@ -2737,7 +2737,7 @@ const EvolutionScreen = (() => {
         st.phase = 'done';
         st.frame -= 120;
         SFX.play('evoFanfare');
-        showDismiss('AWESOME!');
+        showDismiss(T('AWESOME!'));
         autoDismissTimer = setTimeout(dismiss, 4000);
       }
 
@@ -2786,9 +2786,9 @@ const EvolutionScreen = (() => {
     st.frame = 0;
     hideStop();
 
-    elMsg.textContent   = `${st.fromMon.name.toUpperCase()} STOPPED EVOLVING!`;
+    elMsg.textContent   = T('{name} STOPPED EVOLVING!', { name: st.fromMon.name.toUpperCase() });
     elMsg.style.opacity = '1';
-    elSub.textContent   = `IT STAYS A ${st.fromMon.name.toUpperCase()}.`;
+    elSub.textContent   = T('IT STAYS A {name}.', { name: st.fromMon.name.toUpperCase() });
     elSub.style.opacity = '1';
     // As in the originals: the tune cuts and the old form cries — no jingle.
     SFX.stopLoop();
@@ -2802,7 +2802,7 @@ const EvolutionScreen = (() => {
       ? Promise.resolve(onCancel(st.atLevel)).catch(() => {})
       : null;
 
-    showDismiss('OK');
+    showDismiss(T('OK'));
     autoDismissTimer = setTimeout(dismiss, 4000);
   }
 
@@ -2892,7 +2892,7 @@ const EvolutionScreen = (() => {
     elMsg.style.opacity = '0';
     elSub.textContent  = '';
     elSub.style.opacity = '0';
-    btnDismiss.textContent         = 'AWESOME!';
+    btnDismiss.textContent         = T('AWESOME!');
     btnDismiss.style.pointerEvents = 'none';
     if (wrapDismiss) wrapDismiss.hidden = true;
 
@@ -2973,7 +2973,7 @@ const CatchScreen = (() => {
     st.frame  = 0;
 
     elName.textContent  = mon.name.toUpperCase();
-    elShiny.textContent = mon.dark ? '🖤 DARK!' : mon.shiny ? '✨ SHINY!' : '';
+    elShiny.textContent = mon.dark ? T('🖤 DARK!') : mon.shiny ? T('✨ SHINY!') : '';
 
     overlay.classList.add('active');
     if (rafId) cancelAnimationFrame(rafId);
@@ -3075,16 +3075,16 @@ const MonInfoScreen = (() => {
     }
 
     if (!rootMon.evolutions || rootMon.evolutions.length === 0) {
-      elChain.appendChild(makeNode(rootMon, 'FINAL FORM', true));
+      elChain.appendChild(makeNode(rootMon, T('FINAL FORM'), true));
       return;
     }
 
-    elChain.appendChild(makeNode(rootMon, 'BASE', true));
+    elChain.appendChild(makeNode(rootMon, T('BASE'), true));
 
     for (const evo of rootMon.evolutions) {
       elChain.appendChild(makeArrow());
       const evoMon = { ...rootMon, ...evo };
-      elChain.appendChild(makeNode(evoMon, `LV ${evo.atLevel}`, false));
+      elChain.appendChild(makeNode(evoMon, T('LV {n}', { n: evo.atLevel }), false));
     }
 
     // If any chain sprites weren't loaded yet, redraw once they finish

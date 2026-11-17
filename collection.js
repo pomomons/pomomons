@@ -529,13 +529,13 @@ const Collection = (() => {
     // Kept short on purpose: the text column beside the icon is ~110px wide
     // on a 390px phone, and a long string wraps to five lines and doubles the
     // height of a bar that sits in a sticky header.
-    const ARMED = 'PICK A MON · TAP TO CANCEL';
+    const ARMED = T('PICK A MON · TAP TO CANCEL');
     drop.querySelector('.blender-hint').textContent =
       !tapMQ.matches ? tapHints.blend
-      : tapArmed === 'blend' ? ARMED : 'TAP, THEN PICK A MON';
+      : tapArmed === 'blend' ? ARMED : T('TAP, THEN PICK A MON');
     box.querySelector('.smoothie-hint').textContent =
       !tapMQ.matches ? tapHints.smoothie
-      : tapArmed === 'smoothie' ? ARMED : 'TAP, THEN PICK A MON';
+      : tapArmed === 'smoothie' ? ARMED : T('TAP, THEN PICK A MON');
   }
 
   // ── Public: cancelBlendTap — drop any armed state ────────────
@@ -877,7 +877,7 @@ const Collection = (() => {
     if (catchData) {
       const lvlEl = document.createElement('p');
       lvlEl.className   = 'mon-card-pallvl';
-      lvlEl.textContent = `LV ${palLevel}`;
+      lvlEl.textContent = T('LV {n}', { n: palLevel });
       card.appendChild(lvlEl);
 
       if (typeof makeTypeBadges === 'function' && displayMon.type) {
@@ -963,7 +963,7 @@ const Collection = (() => {
     if (!db) {
       setMyMonsTabCount(0);
       if (count) count.textContent = `0 / ${TOTAL_DEX}`;
-      if (grid)  grid.innerHTML    = '<p class="empty-state">Collection unavailable (storage not supported).</p>';
+      if (grid)  grid.innerHTML    = '<p class="empty-state">' + T('Collection unavailable (storage not supported).') + '</p>';
       return;
     }
 
@@ -971,7 +971,7 @@ const Collection = (() => {
     try {
       ownedNames = await getCaughtNames();
     } catch (err) {
-      if (grid) grid.innerHTML = '<p class="empty-state">Could not load collection.</p>';
+      if (grid) grid.innerHTML = '<p class="empty-state">' + T('Could not load collection.') + '</p>';
       return;
     }
 
@@ -1036,7 +1036,7 @@ const Collection = (() => {
 
     const lvlEl = document.createElement('p');
     lvlEl.className   = 'mon-card-pallvl';
-    lvlEl.textContent = `LV ${palLevel}`;
+    lvlEl.textContent = T('LV {n}', { n: palLevel });
     card.appendChild(lvlEl);
 
     // Type badges — listed just like on the pomodex page
@@ -1235,7 +1235,7 @@ const Collection = (() => {
 
     // Stat rows
     document.getElementById('mds-species').textContent = stageMon.name.toUpperCase();
-    document.getElementById('mds-level').textContent   = `LV ${palLevel}`;
+    document.getElementById('mds-level').textContent   = T('LV {n}', { n: palLevel });
 
     // How close this mon is to its next level — same idea as the EXP bar
     // under a Pokémon's level on its summary screen: current/needed XP as
@@ -1254,7 +1254,7 @@ const Collection = (() => {
         : (rec.palExp || 0);
 
       if (palLevel >= PAL_MAX) {
-        xpTextEl.textContent = 'MAX LEVEL';
+        xpTextEl.textContent = T('MAX LEVEL');
         xpBarEl.style.width  = '100%';
       } else {
         const needed = typeof palExpThreshold === 'function' ? palExpThreshold(palLevel) : 1;
@@ -1272,8 +1272,8 @@ const Collection = (() => {
     }
 
     const g = rec.gender === 'F'
-      ? { sym: '♀', label: 'FEMALE', cls: 'female' }
-      : { sym: '♂', label: 'MALE',   cls: 'male'   };
+      ? { sym: '♀', label: T('FEMALE'), cls: 'female' }
+      : { sym: '♂', label: T('MALE'),   cls: 'male'   };
     const genEl = document.getElementById('mds-gender');
     genEl.className = `mds-v ${g.cls}`;
     genEl.innerHTML = '';
@@ -1297,13 +1297,13 @@ const Collection = (() => {
     }
 
     const itemEl = document.getElementById('mds-item');
-    itemEl.textContent = rec.heldItem ? String(rec.heldItem).toUpperCase() : 'NONE';
+    itemEl.textContent = rec.heldItem ? String(rec.heldItem).toUpperCase() : T('NONE');
     itemEl.classList.toggle('muted', !rec.heldItem);
 
     const caughtEl = document.getElementById('mds-caught');
     caughtEl.textContent = rec.caughtAt
       ? new Date(rec.caughtAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()
-      : 'UNKNOWN';
+      : T('UNKNOWN');
 
     updateEquipButton();
 
@@ -1318,7 +1318,7 @@ const Collection = (() => {
   function updateEquipButton() {
     const btn = document.getElementById('btn-mon-detail-equip');
     if (!btn || !detailRec) return;
-    btn.textContent = isEquipped(detailRec) ? 'UNEQUIP' : 'SET AS COMPANION';
+    btn.textContent = isEquipped(detailRec) ? T('UNEQUIP') : T('SET AS COMPANION');
   }
 
   function isEquipped(rec) {
@@ -1358,21 +1358,21 @@ const Collection = (() => {
 
   const SORTS = {
     newest: {
-      label: 'NEWEST',
+      label: T('NEWEST'),
       cmp: (a, b) => caughtOrder(b) - caughtOrder(a),
     },
     species: {
-      label: 'SPECIES',
+      label: T('SPECIES'),
       cmp: (a, b) => speciesRank(a) - speciesRank(b)
                   || (b.palLevel || 1) - (a.palLevel || 1),
     },
     level: {
-      label: 'LEVEL',
+      label: T('LEVEL'),
       cmp: (a, b) => (b.palLevel || 1) - (a.palLevel || 1)
                   || speciesRank(a) - speciesRank(b),
     },
     rarity: {
-      label: 'RARITY',
+      label: T('RARITY'),
       cmp: (a, b) => rarityRank(b) - rarityRank(a)
                   || (b.palLevel || 1) - (a.palLevel || 1)
                   || speciesRank(a) - speciesRank(b),
@@ -1455,7 +1455,7 @@ const Collection = (() => {
 
     if (!db) {
       setMyMonsTabCount(0);
-      if (grid) grid.innerHTML = '<p class="empty-state">Collection unavailable.</p>';
+      if (grid) grid.innerHTML = '<p class="empty-state">' + T('Collection unavailable.') + '</p>';
       return;
     }
 
@@ -1463,14 +1463,14 @@ const Collection = (() => {
     try {
       allCaught = await getAllCaughtWithKeys();
     } catch (err) {
-      if (grid) grid.innerHTML = '<p class="empty-state">Could not load mons.</p>';
+      if (grid) grid.innerHTML = '<p class="empty-state">' + T('Could not load mons.') + '</p>';
       return;
     }
 
     setMyMonsTabCount(allCaught.length);
 
     if (allCaught.length === 0) {
-      grid.innerHTML = '<p class="empty-state">Catch your first Pomomon to see it here!</p>';
+      grid.innerHTML = '<p class="empty-state">' + T('Catch your first Pomomon to see it here!') + '</p>';
       return;
     }
 

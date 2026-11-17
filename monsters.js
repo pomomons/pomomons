@@ -471,7 +471,7 @@ function makeTypeBadges(type, opts) {
   for (const t of types) {
     const badge = document.createElement('span');
     badge.className = `type-badge type-${t.toLowerCase()}`;
-    badge.textContent = t.toUpperCase();
+    badge.textContent = T(t.toUpperCase());
     if (frame) {
       const outline = document.createElement('span');
       outline.className = 'lv-frame';
