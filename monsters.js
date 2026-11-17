@@ -299,7 +299,7 @@ const MONS = [
       // same shape as Spud -> Idabro and Pinapip -> Pikeapple.
       { atLevel: 20, dexNum: 16, name: 'Mambango', type: 'Sweet', color: '#f5901e', accent: '#c0392b',
         sprite: 'assets/sprites/Mambango/Mambango.png', spriteFrames: 2, spriteAxis: 'y',
-        spriteBlinkMode: true, blinkInterval: 6000, blinkDuration: 900 },
+        spriteBlinkMode: true, blinkInterval: 3000, blinkDuration: 150 },
     ]
   },
 ];
