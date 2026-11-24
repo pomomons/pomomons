@@ -4,6 +4,7 @@ const Collection = (() => {
   const DB_NAME    = 'pomomons_db';
   const DB_VERSION = 1;
   const STORE_NAME = 'caught';
+  const SEEN_KEY   = 'pm_dex_seen';   // names ever owned; survives blending
   // Backing size of the sprite canvas on My Mons / Pomodex cards. CSS
   // (.mon-card canvas) sets the on-screen size; this just has to be at least
   // that big so the sprite is drawn up, never squashed down.
@@ -132,9 +133,18 @@ const Collection = (() => {
   }
 
   // ── Public: init ─────────────────────────────────────────────
+  // Resolves once init() has finished opening the DB (or given up). app.js
+  // calls init() without awaiting it, and a resumed encounter starts in the
+  // same tick at load — so readers that run that early used to see db === null
+  // and get an empty set, which put an owned mon behind a silhouette on the
+  // catch screen. They await this instead.
+  let markReady;
+  const ready = new Promise(r => { markReady = r; });
+
   async function init() {
     if (typeof indexedDB === 'undefined') {
       console.warn('Collection: IndexedDB unavailable');
+      markReady();
       return;
     }
     try {
@@ -143,6 +153,7 @@ const Collection = (() => {
     } catch (err) {
       console.warn('Collection: failed to open DB', err);
     }
+    markReady();
 
     // Blender confirm modal — bind once
     document.getElementById('btn-blend-yes')?.addEventListener('click', async () => {
@@ -152,6 +163,7 @@ const Collection = (() => {
       document.getElementById('blender-confirm').classList.remove('active');
 
       try {
+        await getCaughtNames();   // bank the Pomodex entry before the record goes
         await deleteRecord(key);
         addSmoothieItem(displayName, rarity);
         renderSmoothieCount();
@@ -244,6 +256,7 @@ const Collection = (() => {
     });
 
     bumpCatchCount();
+    getCaughtNames().catch(() => {});   // bank the Pomodex entry right away
 
     // First catch → auto-equip it as the companion on the main screen.
     if (isFirstCatch) {
@@ -1494,6 +1507,7 @@ const Collection = (() => {
 
   // ── Public: clearAll — wipe every caught record from the store ─
   function clearAll() {
+    try { localStorage.removeItem(SEEN_KEY); } catch (_) { /* ignore */ }
     return new Promise((resolve, reject) => {
       if (!db) { resolve(); return; }
       const tx    = db.transaction(STORE_NAME, 'readwrite');
@@ -1550,6 +1564,8 @@ const Collection = (() => {
   // Returns a Set of mon names the player has obtained, including
   // evolution stages they have already reached.
   async function getCaughtNames() {
+    // Bounded, so a page that never calls init() can't hang the catch screen.
+    if (!db) await Promise.race([ready, new Promise(r => setTimeout(r, 3000))]);
     if (!db) return new Set();
     const records = await getAllCaught();
     const names = new Set();
@@ -1568,6 +1584,19 @@ const Collection = (() => {
               !declined.includes(evo.atLevel)) names.add(evo.name);
         }
       }
+    }
+    // The Pomodex is a record of what the player has EVER had, not of what they
+    // hold now. Blending deletes the record, so deriving this from the store
+    // alone made a blended mon (Manglet, in the report) flip back to "not
+    // caught". Union with a remembered set, and write it back on every read so
+    // it self-heals; addCaught and the blend path both read it before any delete.
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'); } catch (_) { /* start fresh */ }
+    if (!Array.isArray(seen)) seen = [];
+    const before = seen.length;
+    for (const n of seen) if (typeof n === 'string') names.add(n);
+    if (names.size !== before) {
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify([...names])); } catch (_) { /* full/blocked */ }
     }
     return names;
   }

@@ -2430,23 +2430,32 @@ const EncounterScreen = (() => {
     const withTimeout = p => Promise.race([
       p, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
     ]);
+    const ok = () => say(msgEl, T('Copied! Paste it in Discord or anywhere.'));
+    // Image first, alone: it's the most widely supported shape (Chrome, Edge,
+    // Safari, Firefox) and mixing text/plain in is what some browsers refuse.
+    // Then image + text, then text only. The old code fell straight from the
+    // combined attempt to text-only and still said "Copied!", so a player whose
+    // image copy failed got a caption on the clipboard and no picture.
+    if (blob && typeof ClipboardItem !== 'undefined' && navigator.clipboard && navigator.clipboard.write) {
+      const attempts = [
+        { 'image/png': blob },
+        { 'image/png': blob, 'text/plain': new Blob([`${text} ${url}`], { type: 'text/plain' }) },
+      ];
+      for (const items of attempts) {
+        try {
+          await withTimeout(navigator.clipboard.write([new ClipboardItem(items)]));
+          return ok();
+        } catch (_) { /* try the next shape */ }
+      }
+    }
     try {
-      if (blob && typeof ClipboardItem !== 'undefined') {
-        await withTimeout(navigator.clipboard.write([new ClipboardItem({
-          'text/plain': new Blob([`${text} ${url}`], { type: 'text/plain' }),
-          'image/png':  blob,
-        })]));
-      } else {
-        await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
-      }
-      say(msgEl, T('Copied! Paste it in Discord or anywhere.'));
-    } catch (_) {
-      try {
-        await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
-        say(msgEl, T('Copied! Paste it in Discord or anywhere.'));
-      } catch (__) {
-        say(msgEl, T("Couldn't copy — try again?"), true);
-      }
+      await withTimeout(navigator.clipboard.writeText(`${text} ${url}`));
+      // Be honest: only the caption made it, not the picture.
+      say(msgEl, blob
+        ? T("Copied the text, but the image wouldn't copy. Use SAVE instead.")
+        : T('Copied! Paste it in Discord or anywhere.'));
+    } catch (__) {
+      say(msgEl, T("Couldn't copy — try again?"), true);
     }
   }
 
