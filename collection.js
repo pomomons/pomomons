@@ -39,6 +39,23 @@ const Collection = (() => {
   // Optional one-shot handler for this card's BACK button, set per open().
   // Post-catch, BACK belongs to the encounter flow rather than the timer.
   let detailOnClose = null;
+  // The post-catch card cries every 30s while open, like the encounter and
+  // post-catch screens (REMINDER_CRY_MS in game.js). detailCryDex is the dex number of the
+  // form on screen, set by renderDetail so an evolved form cries as itself.
+  const DETAIL_CRY_MS = 30000;
+  let detailCryTimer = null;
+  let detailCryDex   = null;
+  function stopDetailCry() {
+    if (detailCryTimer) { clearInterval(detailCryTimer); detailCryTimer = null; }
+  }
+  function startDetailCry() {
+    stopDetailCry();
+    detailCryTimer = setInterval(() => {
+      const ov = document.getElementById('mon-detail-overlay');
+      if (!ov || !ov.classList.contains('active')) return stopDetailCry();
+      if (detailCryDex != null && typeof SFX !== 'undefined') SFX.cry(detailCryDex);
+    }, DETAIL_CRY_MS);
+  }
 
   // ── TESTING ONLY — demo fill for recording video ─────────────
   // A number turns it on: opening the Pomodex then reveals up to that many
@@ -1159,6 +1176,7 @@ const Collection = (() => {
 
       document.getElementById('btn-mon-detail-back').addEventListener('click', async () => {
         MonDetailCanvas.stop();
+        stopDetailCry();
         // Read and clear first: a second click while the next card is still
         // opening must not run it twice.
         const after = detailOnClose;
@@ -1195,6 +1213,9 @@ const Collection = (() => {
     document.getElementById('mon-detail-rename-row').hidden = true;
     renderDetail();
     overlay.classList.add('active');
+    // Only the card the catch flow opens (the one handed an onClose) cries.
+    // My Mons and the LV badge open the same card silently.
+    if (detailOnClose) startDetailCry(); else stopDetailCry();
   }
 
   // ── Public: openActiveMonDetail — open the equipped companion's own
@@ -1319,6 +1340,7 @@ const Collection = (() => {
       : T('UNKNOWN');
 
     updateEquipButton();
+    detailCryDex = stageMon.dexNum;
 
     // Animated sprite (canvas drawing lives in game.js)
     if (typeof MonDetailCanvas !== 'undefined') {
